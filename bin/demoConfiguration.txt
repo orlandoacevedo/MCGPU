@@ -1,0 +1,22 @@
+#size of area
+20.0
+20.0
+20.0
+#temperature
+298.15
+#max translation
+.15
+#number of steps
+1000
+#number of molecues
+10
+#path to opls file
+Utilities/bossFiles/oplsaa.par
+#path to z matrix file
+Utilities/bossFiles/t3p.z
+#path to state input
+none
+#path to state output
+stateOutput
+#pdb output path
+pdbOutput.pdb
