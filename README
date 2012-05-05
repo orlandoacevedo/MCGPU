@@ -21,24 +21,24 @@ Required Software:
 
 
 Build Instructions:
-    >> git clone git://github.com/rlyspn/SeniorDesign_COMP4710.git
-    >> cd SeniorDesign_COMP4710/
+    >> git clone git://github.com/orlandoacevedo/MCGPU.git
+    >> cd MCGPU/
     >> make
 
     If on the ASC:
-    >> git clone git://github.com/rlyspn/SeniorDesign_COMP4710.git
-    --scp Senior Design Directory to the ASC into the directory of your choice.
-    >> cd /path/to/SeniorDesign_COMP4710/
+    >> git clone git://github.com/orlandoacevedo/MCGPU.git
+    --sftp Senior Design Directory to the ASC into the directory of your choice.
+    >> cd /path/to/MCGPU/
     >> make
 
 To Run a Simulation on a local machine:
-    >> cd /path/to/SeniorDesign_COMP4710/
+    >> cd /path/to/MCGPU/
     >> cd bin/
     >> ./ParallelExample
 
 To Run a Simulation on the Alabama Supercomputer Center:
 
-    >> cd /path/to/SeniorDesign_COMP4710/
+    >> cd /path/to/MCGPU/
     >> run_gpu bin/ParallelExample
     Choose a batch job queue:
      
@@ -59,8 +59,6 @@ To Run a Simulation on the Alabama Supercomputer Center:
     Enter Time Limit (default <cr>: 40:00:00 HH:MM:SS) <enter time limit>
     Enter memory limit (default <cr>: 500mb ) <enter required memory>
     Enter GPU architecture [t10/fermi/any] (default <cr>: any) <fermi>
-    Enter a name for your job (default: bin/parallelTe)
-    <name of your job>
     
     You standard out for your job will be written to 
     <jobname>.o<job number>
