@@ -27,7 +27,7 @@ Build Instructions:
 
     If on the ASC:
     >> git clone git://github.com/orlandoacevedo/MCGPU.git
-    --sftp Senior Design Directory to the ASC into the directory of your choice.
+    --sftp MCGPU Directory to the ASC into the directory of your choice.
     >> cd /path/to/MCGPU/
     >> make
 
