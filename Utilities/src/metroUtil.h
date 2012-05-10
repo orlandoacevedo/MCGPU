@@ -383,6 +383,13 @@ void copyMolecule(Molecule *molec1, Molecule *molec2);
 void printAtoms(Atom *atoms, int count);
 
 /**
+  @param atoms - array of atoms to be written to the file
+  @param enviro - structure holding environmental data.
+  @param filename - the name of the file that is to be written
+*/
+void writePDB(Atom *atoms, Environment enviro, string filename);
+
+/**
   @param molecules - array of molecules to be written to the file
   @param enviro - structure holding environmental data.
   @param filename - the name of the file that is to be written

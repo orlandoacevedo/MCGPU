@@ -105,7 +105,6 @@ void testGetFourier(Opls_Scan scan){
     cout << "Testing Opls_Scan.getVvalues Completed\n" << endl;
 }
 
-/*
 void testPDBoutput(){
     cout << "Testing PDBoutput" << endl;
     Atom* pdbAtoms;
@@ -151,7 +150,6 @@ void testPDBoutput(){
 
     free(pdbAtoms);
 }
-*/
 
 void testLogOutput(){
     cout << "Testing OutputLog writer... \n--May Take some time due to system call" <<endl;

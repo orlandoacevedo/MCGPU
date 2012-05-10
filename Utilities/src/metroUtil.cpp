@@ -147,6 +147,18 @@ void printAtoms(Atom *atoms, int count){
     }
 }
 
+void writePDB(Atom *atoms, Environment enviro, string filename){
+    ofstream outputFile;
+    outputFile.open(filename.c_str());
+    for(int i = 0; i < enviro.numOfAtoms; i++){
+        Atom currentAtom = atoms[i];
+        //ATOM number name residueName residueNumber chain x y z occupancy temp
+        outputFile << "ATOM " << currentAtom.id << " NAME" << " residueName residueNumber chain "
+            << currentAtom.x << " " << currentAtom.y << " " << currentAtom.z << endl;
+    }
+    outputFile.close();
+}
+
 void writePDB(Molecule *molecules, Environment enviro, string filename){
     ofstream outputFile;
     outputFile.open(filename.c_str());
