@@ -136,7 +136,7 @@ void runParallel(Molecule *molecules, Environment *enviro, int numberOfSteps, st
     ss << "Final Energy: " << currentEnergy << endl;
     ss << "Accepted Moves: " << accepted << endl;
     ss << "Rejected Moves: " << rejected << endl;
-	ss << "Acceptence Rate: " << (int) ((float) accepted/ (float) numberOfSteps*100) << "%" << endl;
+	ss << "Acceptance Rate: " << (int) ((float) accepted/ (float) numberOfSteps*100) << "%" << endl;
 	cout << ss.str();
 	writeToLog(ss);
 }

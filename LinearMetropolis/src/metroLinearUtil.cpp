@@ -38,14 +38,15 @@ double wrapBox(double x, double box){
 }
 
 void keepMoleculeInBox(Molecule *molecule, Environment *enviro){
+    double maxX = DBL_MIN;
+    double maxY = DBL_MIN;
+    double maxZ = DBL_MIN;
 
-    double maxX = 0.0;
-    double maxY = 0.0;
-    double maxZ = 0.0;
+    double minX = DBL_MAX;
+    double minY = DBL_MAX;
+    double minZ = DBL_MAX;
 
-    double minX = 0.0;
-    double minY = 0.0;
-    double minZ = 0.0;
+    double nudge = pow(10.0, -15.0);
 
     //determine extreme boundaries for molecule
     for (int i = 0; i < molecule->numOfAtoms; i++){
@@ -70,9 +71,9 @@ void keepMoleculeInBox(Molecule *molecule, Environment *enviro){
     
     }
 
-    bool isFullyOutX = (minX > enviro->x || maxX < 0);
-    bool isFullyOutY = (minY > enviro->y || maxY < 0);
-    bool isFullyOutZ = (minZ > enviro->z || maxZ < 0);
+    bool isFullyOutX = (minX > enviro->x || maxX < 0) ? true : false;
+    bool isFullyOutY = (minY > enviro->y || maxY < 0) ? true : false;
+    bool isFullyOutZ = (minZ > enviro->z || maxZ < 0) ? true : false;
 
     //for each axis, determine if the molecule escapes the environment 
     //and wrap it around into the environment
@@ -81,36 +82,37 @@ void keepMoleculeInBox(Molecule *molecule, Environment *enviro){
         double* currentY = &(molecule->atoms[i].y);
         double* currentZ = &(molecule->atoms[i].z);
         if (maxX > enviro->x){
-            if (!isFullyOutX)
+            if (!isFullyOutX){
                 *currentX += (enviro->x - minX);
-            *currentX = wrapBox(*currentX, enviro->x);
+            }
+            *currentX = wrapBox(*currentX + nudge, enviro->x);
         }
         else if (minX < 0){
             if (!isFullyOutX)
                 *currentX -= maxX;
-            *currentX = wrapBox(*currentX, enviro->x);
+            *currentX = wrapBox(*currentX - nudge, enviro->x);
         }
 
         if (maxY > enviro->y){
             if (!isFullyOutY)
                 *currentY += (enviro->y - minY);
-            *currentY = wrapBox(*currentY, enviro->y);
+            *currentY = wrapBox(*currentY + nudge, enviro->y);
         }
         else if (minY < 0){
             if (!isFullyOutY)
                 *currentY -= maxY;
-            *currentY = wrapBox(*currentY, enviro->y);
+            *currentY = wrapBox(*currentY - nudge, enviro->y);
         }
 
         if (maxZ > enviro->z){
             if (!isFullyOutZ)
                 *currentZ += (enviro->z - minZ);
-            *currentZ = wrapBox(*currentZ, enviro->z);
+            *currentZ = wrapBox(*currentZ + nudge, enviro->z);
         }
         else if (minZ < 0){
             if (!isFullyOutZ)
                 *currentZ -= maxZ;
-            *currentZ = wrapBox(*currentZ, enviro->z);
+            *currentZ = wrapBox(*currentZ - nudge, enviro->z);
         }
     }
 }
@@ -133,16 +135,15 @@ double calc_lj(Atom atom1, Atom atom2, Environment enviro){
                       (deltaY * deltaY) + 
                       (deltaZ * deltaZ);
 
-    //calculate terms
-    const double sig2OverR2 = pow(sigma, 2) / r2;
-    const double sig6OverR6 = pow(sig2OverR2, 3);
-    const double sig12OverR12 = pow(sig6OverR6, 2);
-    const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-    
     if (r2 == 0.0){
         return 0.0;
     }
     else{
+    	//calculate terms
+    	const double sig2OverR2 = pow(sigma, 2) / r2;
+   		const double sig6OverR6 = pow(sig2OverR2, 3);
+    	const double sig12OverR12 = pow(sig6OverR6, 2);
+    	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
     }
 }
@@ -163,27 +164,22 @@ void assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev
     }
 }
 
-void generatePoints(Molecule *molec, Environment *enviro){
-    double *devXDoubles = (double*)malloc(enviro->numOfMolecules * sizeof(double));
-    double *devYDoubles = (double*)malloc(enviro->numOfMolecules * sizeof(double));
-    double *devZDoubles = (double*)malloc(enviro->numOfMolecules * sizeof(double));
-   
+void generatePoints(Molecule *molecules, Environment *enviro){
+
     srand((unsigned int) time(NULL));
 	 //for each Molecule assign a new XYZ
-    for (int i = 0; i < enviro->numOfMolecules; i = i++){
-        double newDouble = ((double) rand()) / ((double) (RAND_MAX));
-        devXDoubles[i] = newDouble;
-        newDouble = ((double) rand()) / ((double) (RAND_MAX));
-        devYDoubles[i] = newDouble;
-        newDouble = ((double) rand()) / ((double) (RAND_MAX));
-        devZDoubles[i] = newDouble;
-    }
+    for (int i = 0; i < enviro->numOfMolecules; i++){
+        double baseX = ( (double) rand() / RAND_MAX) * enviro->x;
+        double baseY = ( (double) rand() / RAND_MAX) * enviro->y;
+        double baseZ = ( (double) rand() / RAND_MAX) * enviro->z;
+        for (int j = 0; j < molecules[i].numOfAtoms; j++){
+            molecules[i].atoms[j].x += baseX;
+            molecules[i].atoms[j].y += baseY;
+            molecules[i].atoms[j].z += baseZ;
+        }
 
-    //assign the doubles to the coordinates
-    assignAtomPositions(devXDoubles, devYDoubles, devZDoubles, molec, enviro);
-    free(devXDoubles);
-    free(devYDoubles);
-    free(devZDoubles);
+        keepMoleculeInBox(&(molecules[i]), enviro);
+    }
 }
 
 double calcEnergyWrapper(Molecule *molecules, Environment *enviro){
@@ -265,7 +261,8 @@ void calcEnergy(Atom *atoms, Environment *enviro, double *energySum){
 }
 
 double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
-    const double e = 1.602176565 * pow(10.f,-19.f);
+    // conversion factor below for units of kcal/mol
+    const double e = 332.06;
  
     //calculate difference in coordinates
     double deltaX = atom1.x - atom2.x;
@@ -287,7 +284,7 @@ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
         return 0.0;
     }
     else{
-        return (atom1.charge * atom2.charge * pow(e,2) / r);
+        return (atom1.charge * atom2.charge * e) / r;
     }
 }
 
@@ -349,6 +346,7 @@ void rotateMolecule(Molecule molecule, Atom pivotAtom, double maxRotation){
     }
 
     srand(time(NULL));
+    // degrees to radians conversion
     double dtr = PI / 180.0;
 
     //rotate molecule about origin

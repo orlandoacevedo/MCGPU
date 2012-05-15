@@ -1,6 +1,6 @@
 /*!\file
   \brief Functions used for benchmarking against a linear implementation.
-  \author Alexander Luchs, Riley Spahn, Seth Wooten
+  \author Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo
  
   This file contains functions that are used as a linear benchmark to compare
   to our parallel implmentation.
@@ -8,6 +8,7 @@
 #ifndef METROLINEARUTIL_H
 #define METROLINEARUTIL_H
 
+#include <float.h>
 #include <cstdlib>
 #include <math.h>
 #include "../../Utilities/src/metroUtil.h"

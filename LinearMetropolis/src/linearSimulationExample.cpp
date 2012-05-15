@@ -28,7 +28,6 @@ double randomFloat(const double start, const double end)
 void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, string stateFile, string pdbFile){
     int accepted = 0; // number of accepted moves
     int rejected = 0; // number of rejected moves
-    int numberOfAtoms = enviro->numOfAtoms;
     double maxTranslation = enviro->maxTranslation;
     double temperature = enviro->temperature;
     double kT = kBoltz * temperature;
@@ -39,10 +38,9 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
     ss << "Finished Assigning Molecule Positions" << endl;
     writeToLog(ss);
 		
-    int atomTotal = 0;
-    int aIndex = 0;
-    int mIndex = 0;
-	 double currentEnergy=0.0;
+	double currentEnergy = 0.0;
+	double oldEnergy = 0.0;
+	double newEnergy = 0.0;
 
     printState(enviro, molecules, enviro->numOfMolecules, "initialState");
 
@@ -50,7 +48,10 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
     writeToLog(ss);
 	 
     for(int move = 0; move < numberOfSteps; move++){
-        double oldEnergy = calcEnergyWrapper(molecules, enviro);
+        if(move < 1)
+        	oldEnergy = calcEnergyWrapper(molecules, enviro);
+        else
+        	oldEnergy = currentEnergy;
 
         //Pick a molecule to move
         int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
@@ -77,7 +78,7 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
 
         molecules[moleculeIndex] = toMove;
 
-        double newEnergy = calcEnergyWrapper(molecules, enviro);
+        newEnergy = calcEnergyWrapper(molecules, enviro);
 
         bool accept = false;
 
@@ -97,27 +98,28 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
 
         if(accept){
             accepted++;
-            if (move == numberOfSteps - 1){
-                currentEnergy = newEnergy;
-            }
+            currentEnergy = newEnergy;
         }
         else{
             rejected++;
+            currentEnergy = oldEnergy;
             //restore previous configuration
             molecules[moleculeIndex] = oldToMove;
-            if (move == numberOfSteps - 1){
-                currentEnergy = oldEnergy;
-            }
         }
 
 
         //Print the state every 100 moves.
         if(move % 100 == 0){
-            printState(enviro, molecules, enviro->numOfMolecules, stateFile);
-			cout << ss << "Step Number: "<< move <<  endl;
-			cout<< ss << "Current Energy: " << currentEnergy << endl;
+            char fileName[50];
+            sprintf(fileName, "%dState.state", move);
+            string fileNameStr(fileName);
+            printState(enviro, molecules, enviro->numOfMolecules, fileNameStr);
 
-            ss << "Accepted: "<< accepted <<" Rejected: "<< rejected << endl;
+			ss << "Step Number: "<< move <<  endl;
+			ss << "Current Energy: " << currentEnergy << endl;
+			cout << ss.str();
+
+            ss << "Accepted: "<< accepted << endl <<"Rejected: "<< rejected << endl;
             writeToLog(ss);
         }
     }
@@ -125,9 +127,10 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
     ss << "Final Energy: " << currentEnergy << endl;
     ss << "Accepted Moves: " << accepted << endl;
     ss << "Rejected Moves: " << rejected << endl;
-	 ss << "Aceptence Rate: " <<  accepted/numberOfSteps*100 << "%" << endl;
+    ss << "Acceptance Rate: " << (int) ((float) accepted/ (float) numberOfSteps*100) << "%" << endl;
 	 cout << ss.str();
 	 writeToLog(ss);
+	 writePDB(molecules, *enviro, pdbFile);
 }
 
 
@@ -197,52 +200,60 @@ int main(int argc, char ** argv){
         cout<<ss.str()<<endl; writeToLog(ss);
 
         //Convert molecule vectors into an array
-        molecules = (Molecule *)malloc(sizeof(Molecule) * enviro.numOfMolecules);
         int moleculeIndex = 0;
         int atomCount = 0;
-        while(moleculeIndex < enviro.numOfMolecules){
+
         vector<Molecule> molecVec = zMatrixScan.buildMolecule(atomCount);
+        int molecMod = enviro.numOfMolecules % molecVec.size();
+        if (molecMod != 0){
+            enviro.numOfMolecules += molecVec.size() - molecMod;
+            cout << "Number of molecules not divisible by specified z-matrix. Changing number of molecules to: " << enviro.numOfMolecules << endl;
+        }
+        molecules = (Molecule *)malloc(sizeof(Molecule) * enviro.numOfMolecules);
+            
+        while(moleculeIndex < enviro.numOfMolecules){
+            molecVec = zMatrixScan.buildMolecule(atomCount);
+            //cycle through the number of molecules from the zMatrix
+            for(int j = 0; j < molecVec.size(); j++){
+                //Copy data from vector to molecule
+                Molecule molec1 = molecVec[j];
 
-        //cycle through the number of molecules from the zMatrix
-        for(int j = 0; j < molecVec.size(); j++){
-            //Copy data from vector to molecule
-            Molecule molec1 = molecVec[j];
-            molecules[moleculeIndex].id = molec1.id;
-            molecules[moleculeIndex].atoms = (Atom *)malloc(sizeof(Atom) * molec1.numOfAtoms);
-            molecules[moleculeIndex].bonds = (Bond *)malloc(sizeof(Bond) * molec1.numOfBonds);
-            molecules[moleculeIndex].angles = (Angle *)malloc(sizeof(Angle) * molec1.numOfAngles);
-            molecules[moleculeIndex].dihedrals = (Dihedral *)malloc(sizeof(Dihedral) * molec1.numOfDihedrals);
-            molecules[moleculeIndex].hops = (Hop *)malloc(sizeof(Hop) * molec1.numOfHops);
-            molecules[moleculeIndex].numOfAtoms = molec1.numOfAtoms;                
-            molecules[moleculeIndex].numOfBonds = molec1.numOfBonds;
-            molecules[moleculeIndex].numOfAngles = molec1.numOfAngles;
-            molecules[moleculeIndex].numOfDihedrals = molec1.numOfDihedrals;
-            molecules[moleculeIndex].numOfHops = molec1.numOfHops;
+                molecules[moleculeIndex].atoms = (Atom *)malloc(sizeof(Atom) * molec1.numOfAtoms);
+                molecules[moleculeIndex].bonds = (Bond *)malloc(sizeof(Bond) * molec1.numOfBonds);
+                molecules[moleculeIndex].angles = (Angle *)malloc(sizeof(Angle) * molec1.numOfAngles);
+                molecules[moleculeIndex].dihedrals = (Dihedral *)malloc(sizeof(Dihedral) * molec1.numOfDihedrals);
+                molecules[moleculeIndex].hops = (Hop *)malloc(sizeof(Hop) * molec1.numOfHops);
 
-            //get the atoms from the vector molecule
-            for(int k = 0; k < molec1.numOfAtoms; k++){
-                molecules[moleculeIndex].atoms[k] = molec1.atoms[k];
-            }
-            //get the bonds from the vector molecule
-            for(int k = 0; k < molec1.numOfBonds; k++){
-                molecules[moleculeIndex].bonds[k] = molec1.bonds[k];
-            }
-            //get the angles from the vector molecule
-            for(int k = 0; k < molec1.numOfAngles; k++){
-                molecules[moleculeIndex].angles[k] = molec1.angles[k];
-            }
-            //get the dihedrals from the vector molecule
-            for(int k = 0; k < molec1.numOfDihedrals; k++){
-                molecules[moleculeIndex].dihedrals[k] = molec1.dihedrals[k];
-            }
-            //get the hops from the vector molecule
-            for(int k = 0; k < molec1.numOfHops; k++){
-                molecules[moleculeIndex].hops[k] = molec1.hops[k];
-            }               
+                molecules[moleculeIndex].id = molec1.id;
+                molecules[moleculeIndex].numOfAtoms = molec1.numOfAtoms;
+                molecules[moleculeIndex].numOfBonds = molec1.numOfBonds;
+                molecules[moleculeIndex].numOfDihedrals = molec1.numOfDihedrals;
+                molecules[moleculeIndex].numOfAngles = molec1.numOfAngles;
+                molecules[moleculeIndex].numOfHops = molec1.numOfHops;
 
-            atomCount += molecules[moleculeIndex].numOfAtoms;
+                //get the atoms from the vector molecule
+                for(int k = 0; k < molec1.numOfAtoms; k++){
+                    molecules[moleculeIndex].atoms[k] = molec1.atoms[k];
+                }               
+               
+                //assign bonds
+                for(int k = 0; k < molec1.numOfBonds; k++){
+                    molecules[moleculeIndex].bonds[k] = molec1.bonds[k];
+                }
 
-            moleculeIndex++;
+                //assign angles
+                for(int k = 0; k < molec1.numOfAngles; k++){
+                    molecules[moleculeIndex].angles[k] = molec1.angles[k];
+                }
+
+                //assign dihedrals
+                for(int k = 0; k < molec1.numOfDihedrals; k++){
+                    molecules[moleculeIndex].dihedrals[k] = molec1.dihedrals[k];
+                }
+
+                atomCount += molecules[moleculeIndex].numOfAtoms;
+               
+                moleculeIndex++;
             }
         }
         enviro.numOfAtoms = atomCount;
@@ -289,7 +300,7 @@ int main(int argc, char ** argv){
     writeToLog(ss);
     runLinear(molecules, &enviro, simulationSteps, configScan.getStateOutputPath(),
     configScan.getPdbOutputPath());
-     
+         
     for (int i = 0; i < enviro.numOfMolecules; i++){
         free(molecules[i].atoms);
         free(molecules[i].bonds);
