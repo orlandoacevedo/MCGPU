@@ -167,18 +167,17 @@ __device__ double calc_lj(Atom atom1, Atom atom2, Environment enviro){
                       (deltaY * deltaY) + 
                       (deltaZ * deltaZ);
 
-    //calculate terms
-    const double sig2OverR2 = pow(sigma, 2) / r2;
-    const double sig6OverR6 = pow(sig2OverR2, 3);
-    const double sig12OverR12 = pow(sig6OverR6, 2);
-    const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-    
     if (r2 == 0){
         return 0.0;
     }
     else{
+    	//calculate terms
+    	const double sig2OverR2 = pow(sigma, 2) / r2;
+    	const double sig6OverR6 = pow(sig2OverR2, 3);
+    	const double sig12OverR12 = pow(sig6OverR6, 2);
+    	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
-    }
+    }    
 }
 
 __global__ void assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Atom *atoms, Environment *enviro){
@@ -373,7 +372,7 @@ double calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules){
 }
 
 double calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules){
-    //define terms
+    //define terms in kcal/mol
     const double e = 332.06;
     double sigma = sqrt(atom1.sigma * atom2.sigma);
     double epsilon = sqrt(atom1.epsilon * atom2.epsilon);
@@ -391,35 +390,36 @@ double calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *m
                       (deltaY * deltaY) + 
                       (deltaZ * deltaZ);
 
-    double r = sqrt(r2);
-
-    //combine terms and calculate energies
-    double sig2OverR2 = pow(sigma, 2) / r2;
-    double sig6OverR6 = pow(sig2OverR2, 3);
-    double sig12OverR12 = pow(sig6OverR6, 2);
-    double lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-
-    double charge_energy = (atom2.charge * atom1.charge * e) / r;
-    
     //check if atoms overlap
     if (r2 == 0.0){
-        lj_energy = 0.0;
-        charge_energy = 0.0;
+        //lj_energy = 0.0;
+        //charge_energy = 0.0;
+        return 0.0;
     }
+    else{
+    	//calculate LJ energies
+    	double sig2OverR2 = pow(sigma, 2) / r2;
+        double sig6OverR6 = pow(sig2OverR2, 3);
+    	double sig12OverR12 = pow(sig6OverR6, 2);
+    	double lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+    	
+    	//calculate Coulombic energies
+    	double r = sqrt(r2);
+    	double charge_energy = (atom2.charge * atom1.charge * e) / r;
+    	
+    	// Check for 1,3-nonbonded interaction
+    	double fValue = 1.0;
+		if (molecules != NULL)
+        	fValue = getFValueHost(atom1, atom2, molecules, enviro);
 
-    double fValue = 1.0;
-
-    if (molecules != NULL)
-        fValue = getFValueHost(atom1, atom2, molecules, enviro);
-
-    return fValue * (lj_energy + charge_energy);
-
+    	return fValue * (lj_energy + charge_energy);
+	}
 }
 
 __global__ void calcEnergy(Atom *atoms, Environment *enviro, double *energySum, DeviceMolecule *dev_molecules, Hop *hops){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    double lj_energy, charge_energy, fValue;
+    double lj_energy, charge_energy;
 
     int N =(int) ( pow( (float) enviro->numOfAtoms,2)-enviro->numOfAtoms)/2;
 
@@ -450,6 +450,7 @@ __global__ void calcEnergy(Atom *atoms, Environment *enviro, double *energySum, 
 }
 
 __device__ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
+    // conversion factor below for units in kcal/mol
     const double e = 332.06;
  
     //calculate difference in coordinates
@@ -466,13 +467,11 @@ __device__ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
                       (deltaY * deltaY) + 
                       (deltaZ * deltaZ);
     
-    double r = sqrt(r2);
-
-
-    if (r == 0.0){
+    if (r2 == 0.0){
         return 0.0;
     }
     else{
+    	double r = sqrt(r2);
         return (atom1.charge * atom2.charge * e) / r;
     }
 }

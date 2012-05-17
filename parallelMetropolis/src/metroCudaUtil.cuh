@@ -125,7 +125,7 @@ double wrapBox(double x, double box);
 void keepMoleculeInBox(Molecule *molecule, Environment *enviro);
 
 /**
-  Calculates the energy between 2 atoms
+  Calculates the Lennard-Jones energy between 2 atoms
   @param atom1 - the first atom in the pair
   @param atom2 - the second atom in the pair
   @param enviro - the environmental variables
@@ -154,7 +154,7 @@ __global__ void assignAtomPositions(double *dev_doublesX, double *dev_doublesY, 
 void generatePoints(Atom *atoms, Environment *enviro);
 
 /**
-  Generate random positions for atoms in all molecules  in the box
+  Generate random positions for atoms in all molecules in the box
   Does this on the CPU side unlike the atoms version.
   @param molecules - array of molecules to generate positions
   @param enviro - enviroment structure defining the box
@@ -178,7 +178,7 @@ double calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules=N
 double calcEnergyWrapper(Molecule *molecules, Environment *enviro);
 
 /**
-  This calculates energy between two atoms on host for fringe
+  This calculates nonbonded energy between two atoms on host for fringe
   disagreeable atoms.
   @param atom1 - first atom
   @param atom2 - second atom

@@ -15,8 +15,8 @@
 Will run simulations of any system consisting of a single molecule type.  Can run from either z matrix
 file or from a state file.
 
-Date: 1/26/2012
-Author(s): Riley Spahn, Seth Wooten, Alexander Luchs
+Date: 5/16/2012
+Author(s): Riley Spahn, Seth Wooten, Alexander Luchs, and Orlando Acevedo
 */
 
 // boltzman constant
@@ -34,12 +34,13 @@ double randomFloat(const double start, const double end)
 void runParallel(Molecule *molecules, Environment *enviro, int numberOfSteps, string stateFile, string pdbFile){
     int accepted = 0; // number of accepted moves
     int rejected = 0; // number of rejected moves
-    //int numberOfAtoms = enviro->numOfAtoms;//UNUSED?
     double maxTranslation = enviro->maxTranslation;
     double temperature = enviro->temperature;
     double kT = kBoltz * temperature;
 	     
     double currentEnergy = 0.0;
+    double oldEnergy = 0.0;
+	double newEnergy = 0.0;
 	 
 	ss << "Assigning Molecule Positions..." << endl;
 	cout << ss.str();
@@ -56,8 +57,11 @@ void runParallel(Molecule *molecules, Environment *enviro, int numberOfSteps, st
     writeToLog(ss);
 
     for(int move = 0; move < numberOfSteps; move++){
-        double oldEnergy = calcEnergyWrapper(molecules, enviro);
-            
+        if(move < 1)
+        	oldEnergy = calcEnergyWrapper(molecules, enviro);
+        else
+        	oldEnergy = currentEnergy;
+                    
         //Pick a molecule to move
         int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
         Molecule toMove = molecules[moleculeIndex];
@@ -82,8 +86,8 @@ void runParallel(Molecule *molecules, Environment *enviro, int numberOfSteps, st
         keepMoleculeInBox(&toMove, enviro);
         molecules[moleculeIndex] = toMove;
 
-        double newEnergy = calcEnergyWrapper(molecules, enviro);
-
+		newEnergy = calcEnergyWrapper(molecules, enviro);
+        
         bool accept = false;
         if(newEnergy < oldEnergy){
             accept = true;
@@ -107,8 +111,7 @@ void runParallel(Molecule *molecules, Environment *enviro, int numberOfSteps, st
             rejected++;
             currentEnergy = oldEnergy;
             //restore previous configuration
-            copyMolecule(&toMove, &oldToMove);
-            molecules[moleculeIndex] = toMove;
+            molecules[moleculeIndex] = oldToMove;
         }
 
         //Print the state every 100 moves.
