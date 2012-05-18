@@ -40,7 +40,8 @@ Atom createAtom(unsigned long id, double x, double y, double z){
     return atom;
 }
 
-Environment createEnvironment(double x, double y, double z, double maxTrans, double temp, int numOfAtoms){
+Environment createEnvironment(double x, double y, double z, double maxTrans, double temp, 
+							  int numOfAtoms, double cutoff){
     Environment enviro;
     enviro.x = x;
     enviro.y = y;
@@ -48,6 +49,7 @@ Environment createEnvironment(double x, double y, double z, double maxTrans, dou
     enviro.maxTranslation = maxTrans;
     enviro.temperature = temp;
     enviro.numOfAtoms = numOfAtoms;
+    enviro.cutoff = cutoff;
 
     return enviro;
 }

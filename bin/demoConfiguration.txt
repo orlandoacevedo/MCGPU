@@ -1,8 +1,8 @@
-#size of area
+#size of periodic box (x, y, z in angstroms)
 20.0
 20.0
 20.0
-#temperature
+#temperature in Kelvin
 298.15
 #max translation
 .15
@@ -10,7 +10,7 @@
 1000
 #number of molecues
 10
-#path to opls file
+#path to opls.par file
 Utilities/bossFiles/oplsaa.par
 #path to z matrix file
 Utilities/bossFiles/t3p.z
@@ -20,3 +20,5 @@ none
 stateOutput
 #pdb output path
 pdbOutput.pdb
+#cutoff distance in angstroms
+9.0

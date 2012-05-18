@@ -1,6 +1,6 @@
 /*!\file
   \brief Class used to read and write configuration files.
-  \author Alexander Luchs, Riley Spahn, Seth Wooten
+  \author Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo
  
  */
 #include "Config_Scan.h"
@@ -64,6 +64,9 @@ void Config_Scan::readInConfig(){
                     if(line.length() > 0){
                         pdbOutputPath = line;
                     }
+                    break;
+                case 24:
+                    enviro.cutoff = atof(line.c_str());
                     break;
             }
             currentLine++;

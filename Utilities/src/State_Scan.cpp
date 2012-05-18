@@ -10,7 +10,7 @@ void printState(Environment *enviro, Molecule *molecules, int numOfMolecules, st
     outFile.open(filename.c_str());
     //print the environment
     outFile << enviro->x << " " << enviro->y << " " << enviro->z << " " << enviro->numOfAtoms
-        << " " << enviro->temperature << endl;
+        << " " << enviro->temperature << " " << enviro->cutoff <<endl;
     outFile << endl; // blank line
     for(int i = 0; i < numOfMolecules; i++){
         Molecule currentMol = molecules[i];
@@ -89,7 +89,7 @@ Environment getEnvironmentFromLine(string line){
     tokens = strtok(charLine, " ");
     //extract data from line
     int tokenNumber = 0;
-    double x, y, z;
+    double x, y, z, cutoff;
     int numOfAtoms;
     while(tokens != NULL){
         switch(tokenNumber){
@@ -107,6 +107,9 @@ Environment getEnvironmentFromLine(string line){
                 break;
             case 4:
                 enviro.temperature = atof(tokens);
+                break;
+            case 5:
+                enviro.cutoff = atof(tokens);
                 break;
         }
         tokens = strtok(NULL, " ");

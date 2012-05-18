@@ -46,6 +46,11 @@ void runParallel(Molecule *molecules, Environment *enviro, int numberOfSteps, st
 	cout << ss.str();
     writeToLog(ss);
     generatePoints(molecules, enviro);
+    
+    for(int i = 0; i < enviro->numOfMolecules; i++){
+        keepMoleculeInBox(&molecules[i], enviro);
+    }
+    
     ss << "Finished Assigning Molecule Positions" << endl;
 	cout << ss.str();
     writeToLog(ss);

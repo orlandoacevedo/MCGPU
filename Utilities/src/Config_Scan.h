@@ -1,6 +1,6 @@
 /*!\file
   \brief Class used to read and write configuration files.
-  \author Alexander Luchs, Riley Spahn, Seth Wooten
+  \author Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo
   Class used to read and write configuration files.
  
  */
@@ -54,6 +54,10 @@ class Config_Scan{
           The path where to write the pdb output files.
         */
         string pdbOutputPath;
+        /**
+          The nonbonded cutoff distance.
+        */
+        long cutoff;
 
     public:
 
@@ -109,6 +113,10 @@ class Config_Scan{
           @return - returns the path to the pdb output file(s) for the simulation.
         */
         string getPdbOutputPath();
+        /**
+          @return getSteps - returns the nonbonded cutoff in the simulation.
+        */
+        long getcutoff();
 
 };
 

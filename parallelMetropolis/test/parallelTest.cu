@@ -7,8 +7,9 @@ void testKeepMoleculeInBox(){
     double temp = 100.0;
     double maxTrans = .5;
     int numOfAtoms = 3;
+    double cutoff = 9.0;
 
-    Environment enviro = createEnvironment(X, Y, Z, maxTrans, temp, numOfAtoms);
+    Environment enviro = createEnvironment(X, Y, Z, maxTrans, temp, numOfAtoms, cutoff);
 
     //test molecule compeletely outside of box.
     Atom a1 = createAtom(1, 11, 10.3, 5);
@@ -207,7 +208,7 @@ void setupCalc_lj(){
     cudaMalloc((void **) &energy_device, sizeof(double));
 
     Environment stableEnviro = createEnvironment(10, 10, 10, .5,
-            298.15, numberOfAtoms);
+            298.15, numberOfAtoms, 9.0);
 
     Environment *enviro = &stableEnviro;
     generatePoints(atoms, enviro);
@@ -243,7 +244,7 @@ void testGeneratePoints(){
     for (int i = 0; i < numberOfAtoms; i++){
         atoms[i] = createAtom(i, 0, 0, 0);
     }
-    Environment enviro = createEnvironment(10.0, 20.0, 35.0, 1.0, 298.15, numberOfAtoms);
+    Environment enviro = createEnvironment(10.0, 20.0, 35.0, 1.0, 298.15, numberOfAtoms, 9.0);
 
     generatePoints(atoms, &enviro);
 
@@ -312,7 +313,7 @@ void testCalcEnergy(){
 
     //Generate enviorment and atoms
     int numberOfAtoms = 1000;
-    Environment stableEnviro = createEnvironment(5.0, 10.0, 15.0, 1.0, 298.15, numberOfAtoms);
+    Environment stableEnviro = createEnvironment(5.0, 10.0, 15.0, 1.0, 298.15, numberOfAtoms, 9.0);
 
     Environment *enviro = &stableEnviro;
 
@@ -372,7 +373,7 @@ void testCalcEnergyWithMolecules(){
 
     //Generate enviorment and atoms
     int numberOfAtoms = 500;
-    Environment stableEnviro = createEnvironment(5.0, 10.0, 15.0, 1.0, 298.15, numberOfAtoms);
+    Environment stableEnviro = createEnvironment(5.0, 10.0, 15.0, 1.0, 298.15, numberOfAtoms, 9.0);
 
     Environment *enviro = &stableEnviro;
 
@@ -573,7 +574,7 @@ void testGetFValueWrapper(){
 
     int numberOfTests = 5;
 
-    Environment stable_enviro = createEnvironment(5.0,5.0,5.0,1.0,270.0,5);
+    Environment stable_enviro = createEnvironment(5.0,5.0,5.0,1.0,270.0,5,9.0);
     enviro = &stable_enviro;
     mol1_atoms = (Atom *)malloc(sizeof(Atom)*5);
     mol2_atoms = (Atom *)malloc(sizeof(Atom));

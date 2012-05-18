@@ -134,7 +134,8 @@ double calc_lj(Atom atom1, Atom atom2, Environment enviro){
     const double r2 = (deltaX * deltaX) +
                       (deltaY * deltaY) + 
                       (deltaZ * deltaZ);
-
+/*
+	// Original code
     if (r2 == 0.0){
         return 0.0;
     }
@@ -146,6 +147,24 @@ double calc_lj(Atom atom1, Atom atom2, Environment enviro){
     	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
     }
+*/
+
+    //Hard code Rcutoff of 9 Ang (81 = Rcutoff^2) as a test
+    if (r2 == 0.0){
+        return 0.0;
+    }
+    else if (r2 < 81.0){
+    	//calculate terms
+    	const double sig2OverR2 = pow(sigma, 2) / r2;
+   		const double sig6OverR6 = pow(sig2OverR2, 3);
+    	const double sig12OverR12 = pow(sig6OverR6, 2);
+    	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+        return energy;
+    }
+    else{
+        return 0.0;
+    }
+
 }
 
 void assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Molecule *molec, Environment *enviro){
@@ -230,7 +249,7 @@ double calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules){
 }
 
 void calcEnergy(Atom *atoms, Environment *enviro, double *energySum){
-    double lj_energy,charge_energy, fValue;
+    double lj_energy,charge_energy, fValue, nonbonded_energy;
 
     //determine number of calculations
     int N =(int) ( pow( (float) enviro->numOfAtoms,2)-enviro->numOfAtoms)/2;
@@ -251,17 +270,19 @@ void calcEnergy(Atom *atoms, Environment *enviro, double *energySum){
             energySum[idx] = 0.0;
         }
         else{
-            lj_energy = calc_lj(xAtom,yAtom,*enviro);
-            charge_energy = calcCharge(xAtom, yAtom, enviro);
+            //lj_energy = calc_lj(xAtom,yAtom,*enviro);
+            //charge_energy = calcCharge(xAtom, yAtom, enviro);
+            nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
 
             //store the sum in array
-            energySum[idx] = (lj_energy + charge_energy);
+            //energySum[idx] = (lj_energy + charge_energy);
+            energySum[idx] = (nonbonded_energy);
         }
 	 }
 }
 
 double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
-    // conversion factor below for units of kcal/mol
+    // conversion factor below for units in kcal/mol
     const double e = 332.06;
  
     //calculate difference in coordinates
@@ -277,16 +298,79 @@ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
     const double r2 = (deltaX * deltaX) +
                       (deltaY * deltaY) + 
                       (deltaZ * deltaZ);
-    
-    const double r = sqrt(r2);
 
-    if (r == 0.0){
+/* 
+	// Original Code   
+    if (r2 == 0.0){
         return 0.0;
     }
     else{
+        const double r = sqrt(r2);
         return (atom1.charge * atom2.charge * e) / r;
     }
+*/    
+
+    //Hard code Rcutoff of 9 Ang (81 = Rcutoff^2) as a test
+    if (r2 == 0.0){
+        return 0.0;
+    }
+    else if (r2 < 81.0){
+        const double r = sqrt(r2);
+        return (atom1.charge * atom2.charge * e) / r;
+    }
+    else{
+        return 0.0;
+    }
+
 }
+
+double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
+    //store LJ constants locally and define terms in kcal/mol
+    const double e = 332.06;
+    double sigma = calcBlending(atom1.sigma, atom2.sigma);
+    double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+    
+    //square cutoff value for easy comparison
+    double cutoffSQ = enviro->cutoff * enviro->cutoff;
+        
+    //calculate difference in coordinates
+    double deltaX = atom1.x - atom2.x;
+    double deltaY = atom1.y - atom2.y;
+    double deltaZ = atom1.z - atom2.z;
+  
+  	//calculate distance between atoms
+    deltaX = makePeriodic(deltaX, enviro->x);
+    deltaY = makePeriodic(deltaY, enviro->y);
+    deltaZ = makePeriodic(deltaZ, enviro->z);
+    
+    const double r2 = (deltaX * deltaX) +
+                	  (deltaY * deltaY) + 
+                	  (deltaZ * deltaZ);
+
+    //check if atoms overlap
+    if (r2 == 0.0){
+        return 0.0;
+    }
+    else if (r2 < cutoffSQ){
+    	//calculate LJ energies
+    	const double sig2OverR2 = pow(sigma, 2) / r2;
+        const double sig6OverR6 = pow(sig2OverR2, 3);
+    	const double sig12OverR12 = pow(sig6OverR6, 2);
+    	const double lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+    	
+    	//calculate Coulombic energies
+    	const double r = sqrt(r2);
+    	double charge_energy = (atom1.charge * atom2.charge * e) / r;
+    	
+    	//return total nonbonded energy
+    	return (lj_energy + charge_energy);
+    	
+	}
+	else{
+        return 0.0;
+    }
+}
+
 
 double calcBlending(double d1, double d2){
     return sqrt(d1 * d2);

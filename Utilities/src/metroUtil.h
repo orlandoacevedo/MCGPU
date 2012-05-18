@@ -99,7 +99,7 @@ struct Environment{
     double z; 
 
     /*!
-    the maximum distance that an atom can move
+    the maximum distance in angstroms that an atom can move
     */
     double maxTranslation; 
     
@@ -116,7 +116,12 @@ struct Environment{
     /*!
     the number of molecues in the environment
     */
-    int numOfMolecules; 
+    int numOfMolecules;
+    
+    /*!
+    the nonbonded cutoff distance in the environment
+    */
+    double cutoff; 
 };
 
 /*!
@@ -126,9 +131,10 @@ struct Environment{
    @param maxTrans - the maximum translation of an atom/molecule in the simulation.
    @param temp - the temperature in kelvin of the environment.
    @param numOfAtoms - the number of atoms in the environment.
+   @param cutoff - the nonbonded cutoff distance in the environment.
    @return - an instance of an environment structure.
 */
-Environment createEnvironment(double x, double y, double z, double maxTrans, double temp, int numOfAtoms);
+Environment createEnvironment(double x, double y, double z, double maxTrans, double temp, int numOfAtoms, double cutoff);
 
 /**
   Writes the list of atoms to the file named filename

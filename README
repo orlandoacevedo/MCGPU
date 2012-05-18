@@ -91,6 +91,8 @@ Configuration File:
 [20]    <path to the stateoutput file>
 [21]    #line 21 is a comment and is ignored.
 [22]    <path to the pdb output file>
+[23]    #line 23 is a comment and is ignored.
+[24]    <nonbonded cutoff distance in angstroms>
 
 There are some known issues and TODOs listed here:
 https://github.com/rlyspn/SeniorDesign_COMP4710/wiki/Known-Issues-and-TODOs

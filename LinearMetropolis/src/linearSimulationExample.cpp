@@ -16,7 +16,7 @@ using namespace std;
 // boltzman constant
 const double kBoltz = 1.987206504191549E-003;
 
-const double maxRotation = 10.0; // degrees
+const double maxRotation = 15.0; // degrees
 
 stringstream ss;
 
@@ -35,6 +35,11 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
     ss << "Assigning Molecule Positions..." << endl;
     writeToLog(ss);
     generatePoints(molecules, enviro);
+    
+    for(int i = 0; i < enviro->numOfMolecules; i++){
+        keepMoleculeInBox(&molecules[i], enviro);
+    }
+   
     ss << "Finished Assigning Molecule Positions" << endl;
     writeToLog(ss);
 		
@@ -123,6 +128,12 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
             writeToLog(ss);
         }
     }
+    char fileName[50];
+    sprintf(fileName, "FinalState.state");
+    string fileNameStr(fileName);
+    printState(enviro, molecules, enviro->numOfMolecules, fileNameStr);
+    writePDB(molecules, *enviro, pdbFile);
+    
     ss << "Steps Complete"<<endl;        
     ss << "Final Energy: " << currentEnergy << endl;
     ss << "Accepted Moves: " << accepted << endl;
@@ -130,7 +141,6 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
     ss << "Acceptance Rate: " << (int) ((float) accepted/ (float) numberOfSteps*100) << "%" << endl;
 	 cout << ss.str();
 	 writeToLog(ss);
-	 writePDB(molecules, *enviro, pdbFile);
 }
 
 

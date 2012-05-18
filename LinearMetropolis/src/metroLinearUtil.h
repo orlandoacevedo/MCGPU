@@ -120,6 +120,15 @@ void calcEnergy(Atom *atoms, Environment *enviro, double *energySum);
 double calcCharge(Atom atom1, Atom atom2, Environment *enviro);
 
 /**
+  Calculates the nonbonded energy portion of the force field energy calculation between two atoms.
+  @param atom1 - the first atom in the calculation
+  @param atom2 - the second atom in the calculation
+  @param enviro - simulation environment pointer
+  @return - the nonbonded energy portion of the force field.
+*/
+double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro);
+
+/**
   Returns the "fudge factor" to be used in force field calculation.
   @param atom1 - the first atom in calculation
   @param atom2 - the second atom in the calculation
