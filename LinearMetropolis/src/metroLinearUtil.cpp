@@ -201,6 +201,87 @@ void generatePoints(Molecule *molecules, Environment *enviro){
     }
 }
 
+void generatefccBox(Molecule *molecules, Environment *enviro){
+	
+	double cells, dcells, cellL, halfcellL;
+	
+	//Determine the number of unit cells in each coordinate direction
+	dcells = pow(0.25 * (double) enviro->numOfMolecules, 1.0/3.0);
+	cells = (int)(dcells + 0.5);
+		
+	//Check if numOfMolecules is a non-fcc number of molecules
+	//and increase the number of cells if necessary
+	while((4 * cells * cells * cells) < enviro->numOfMolecules)
+			cells++;
+			
+	//Determine length of unit cell
+	cellL = enviro->x/ (double) cells;
+	halfcellL = 0.5 * cellL;
+	
+	//Construct the unit cell
+	for (int j = 0; j < molecules[0].numOfAtoms; j++){
+	molecules[0].atoms[j].x += 0.0;
+    molecules[0].atoms[j].y += 0.0;
+    molecules[0].atoms[j].z += 0.0;
+	}
+	
+	for (int j = 0; j < molecules[1].numOfAtoms; j++){
+	molecules[1].atoms[j].x += halfcellL;
+    molecules[1].atoms[j].y += halfcellL;
+    molecules[1].atoms[j].z += 0.0;
+    }
+    
+    for (int j = 0; j < molecules[2].numOfAtoms; j++){	
+	molecules[2].atoms[j].x += 0.0;
+    molecules[2].atoms[j].y += halfcellL;
+    molecules[2].atoms[j].z += halfcellL;
+    }
+    
+    for (int j = 0; j < molecules[3].numOfAtoms; j++){
+    molecules[3].atoms[j].x += halfcellL;
+    molecules[3].atoms[j].y += 0.0;
+    molecules[3].atoms[j].z += halfcellL;
+    }
+    
+	//Init all other molecules to initial coordinates
+	//Build the lattice from the unit cell by repeatedly translating
+	//the four vectors of the unit cell through a distance cellL in
+	//the x, y, and z directions
+	for(int i = 4; i < enviro->numOfMolecules; i++){
+		for (int j = 0; j < molecules[i].numOfAtoms; j++){
+			molecules[i].atoms[j].x += 0.0;
+    		molecules[i].atoms[j].y += 0.0;
+   	 		molecules[i].atoms[j].z += 0.0;
+   	 	}		
+	}
+	
+	int offset = 0;
+	for(int z = 1; z <= cells; z++)
+		for(int y = 1; y <= cells; y++)
+			for(int x = 1; x <= cells; x++){
+				for(int a = 0; a < 4; a++){
+					int i = a + offset;
+					if(i < enviro->numOfMolecules){								
+						for (int j = 0; j < molecules[i].numOfAtoms; j++){
+							molecules[i].atoms[j].x = molecules[a].atoms[j].x + cellL * (x-1);
+							molecules[i].atoms[j].y = molecules[a].atoms[j].y + cellL * (y-1);
+							molecules[i].atoms[j].z = molecules[a].atoms[j].z + cellL * (z-1);
+						}
+					}
+				}
+				offset += 4;
+			}
+	
+	//Shift center of box to the origin
+	for(int i = 0; i < enviro->numOfMolecules; i++){
+		for (int j = 0; j < molecules[i].numOfAtoms; j++){
+			molecules[i].atoms[j].x -= halfcellL;
+			molecules[i].atoms[j].y -= halfcellL;
+			molecules[i].atoms[j].z -= halfcellL;
+		}
+	}
+}
+
 double calcEnergyWrapper(Molecule *molecules, Environment *enviro){
     //Copy atoms out of molecules
     Atom *atoms = (Atom *) malloc(sizeof(Atom) * enviro->numOfAtoms);

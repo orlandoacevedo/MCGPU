@@ -85,6 +85,14 @@ void assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev
 void generatePoints(Molecule *molec, Environment *enviro);
 
 /**
+  Generate positions for molecules in the box based on fcc-lattice.
+  Ideal # = 4*molecules^3, i.e., 4, 32, 104, 256.
+  @param molec - array of molecules to generate positions
+  @param enviro - enviroment structure defining the box
+*/
+void generatefccBox(Molecule *molecules, Environment *enviro);
+
+/**
   This is a wrapper function for the calcEnergy kernel.
   @param atoms - the array of atoms to calculate energies between
   @param enviro - simulation environment pointer

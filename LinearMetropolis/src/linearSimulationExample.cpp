@@ -34,11 +34,7 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
 
     ss << "Assigning Molecule Positions..." << endl;
     writeToLog(ss);
-    generatePoints(molecules, enviro);
-    
-    for(int i = 0; i < enviro->numOfMolecules; i++){
-        keepMoleculeInBox(&molecules[i], enviro);
-    }
+	generatefccBox(molecules, enviro);
    
     ss << "Finished Assigning Molecule Positions" << endl;
     writeToLog(ss);
