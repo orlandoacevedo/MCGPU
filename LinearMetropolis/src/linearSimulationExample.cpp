@@ -15,7 +15,6 @@ using namespace std;
 
 // boltzman constant
 const double kBoltz = 1.987206504191549E-003;
-
 const double maxRotation = 15.0; // degrees
 
 stringstream ss;
@@ -50,7 +49,7 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
 	 
     for(int move = 0; move < numberOfSteps; move++){
         if(move < 1)
-        	oldEnergy = calcEnergyWrapper(molecules, enviro);
+        	oldEnergy = calcEnergyWrapper_NLC(molecules, enviro);
         else
         	oldEnergy = currentEnergy;
 
@@ -79,7 +78,7 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
 
         molecules[moleculeIndex] = toMove;
 
-        newEnergy = calcEnergyWrapper(molecules, enviro);
+        newEnergy = calcEnergyWrapper_NLC(molecules, enviro);
 
         bool accept = false;
 
@@ -138,7 +137,6 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
 	 cout << ss.str();
 	 writeToLog(ss);
 }
-
 
 /**
   ./bin/linearSim flag path/to/config/file

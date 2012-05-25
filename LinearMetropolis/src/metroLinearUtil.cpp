@@ -134,7 +134,7 @@ double calc_lj(Atom atom1, Atom atom2, Environment enviro){
     const double r2 = (deltaX * deltaX) +
                       (deltaY * deltaY) + 
                       (deltaZ * deltaZ);
-/*
+
 	// Original code
     if (r2 == 0.0){
         return 0.0;
@@ -147,8 +147,8 @@ double calc_lj(Atom atom1, Atom atom2, Environment enviro){
     	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
     }
-*/
 
+/*
     //Hard code Rcutoff of 9 Ang (81 = Rcutoff^2) as a test
     if (r2 == 0.0){
         return 0.0;
@@ -164,7 +164,7 @@ double calc_lj(Atom atom1, Atom atom2, Environment enviro){
     else{
         return 0.0;
     }
-
+*/
 }
 
 void assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Molecule *molec, Environment *enviro){
@@ -380,7 +380,7 @@ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
                       (deltaY * deltaY) + 
                       (deltaZ * deltaZ);
 
-/* 
+ 
 	// Original Code   
     if (r2 == 0.0){
         return 0.0;
@@ -389,8 +389,8 @@ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
         const double r = sqrt(r2);
         return (atom1.charge * atom2.charge * e) / r;
     }
-*/    
-
+    
+/*
     //Hard code Rcutoff of 9 Ang (81 = Rcutoff^2) as a test
     if (r2 == 0.0){
         return 0.0;
@@ -402,7 +402,7 @@ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
     else{
         return 0.0;
     }
-
+*/
 }
 
 double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
@@ -452,6 +452,147 @@ double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
     }
 }
 
+double calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro){
+    //setup storage
+    double totalEnergy = 0.0;
+    //Copy atoms out of molecules
+    Atom *atoms = (Atom *) malloc(sizeof(Atom) * enviro->numOfAtoms);
+    int atomIndex = 0;
+    for(int i = 0; i < enviro->numOfMolecules; i++){
+        Molecule currentMolecule = molecules[i];
+        for(int j = 0; j < currentMolecule.numOfAtoms; j++){
+            atoms[atomIndex] = currentMolecule.atoms[j];
+            atomIndex++;
+        }
+    }
+
+    totalEnergy = calcEnergy_NLC(atoms, enviro, molecules);
+    free(atoms);
+
+    return totalEnergy;
+}
+
+double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules){
+	// Variables for linked-cell neighbor list	
+	int lc[3];            /* Number of cells in the x|y|z direction */
+	double rc[3];         /* Length of a cell in the x|y|z direction */
+	int head[NCLMAX];     /* Headers for the linked cell lists */
+	int mc[3];			  /* Vector cell */
+	int lscl[NMAX];       /* Linked cell lists */
+	int mc1[3];			  /* Neighbor cells */
+	double rshift[3];	  /* Shift coordinates for periodicity */
+	const double Region[3] = {enviro->x, enviro->y, enviro->z};  /* MD box lengths */
+	int c1;				  /* Used for scalar cell index */
+	double dr[3];		  /* Pair vector dr = atom[i]-atom[j] */
+	double rrCut = enviro->cutoff * enviro->cutoff;	/* Cutoff squared */
+	double rr;			  /* Distance between atoms */
+	double nonbonded_energy;	/* Holds current nonbonded energy */
+	double totalEnergy = 0.0;	/* Total nonbonded energy x fudge factor */
+			
+	// Compute the # of cells for linked cell lists
+	for (int k=0; k<3; k++) {
+		lc[k] = Region[k] / enviro->cutoff; 
+		rc[k] = Region[k] / lc[k];
+	}
+		
+  /* Make a linked-cell list, lscl--------------------------------------------*/
+	int lcyz = lc[1]*lc[2];
+	int lcxyz = lc[0]*lcyz;
+		
+	// Reset the headers, head
+	for (int c = 0; c < lcxyz; c++) 
+		head[c] = EMPTY;
+
+	// Scan atoms to construct headers, head, & linked lists, lscl
+	for (int i = 0; i < enviro->numOfAtoms; i++) {
+		mc[0] = atoms[i].x / rc[0]; 
+		mc[1] = atoms[i].y / rc[1];
+		mc[2] = atoms[i].z / rc[2];
+		
+		// Translate the vector cell index, mc, to a scalar cell index
+		int c = mc[0]*lcyz + mc[1]*lc[2] + mc[2];
+
+		// Link to the previous occupant (or EMPTY if you're the 1st)
+		lscl[i] = head[c];
+
+		// The last one goes to the header
+		head[c] = i;
+	} /* Endfor molecule i */
+
+  /* Calculate pair interaction-----------------------------------------------*/
+		
+	// Scan inner cells
+	for (mc[0] = 0; mc[0] < lc[0]; (mc[0])++)
+	for (mc[1] = 0; mc[1] < lc[1]; (mc[1])++)
+	for (mc[2] = 0; mc[2] < lc[2]; (mc[2])++) {
+
+		// Calculate a scalar cell index
+		int c = mc[0]*lcyz + mc[1]*lc[2] + mc[2];
+		// Skip this cell if empty
+		if (head[c] == EMPTY) continue;
+
+		// Scan the neighbor cells (including itself) of cell c
+		for (mc1[0] = mc[0]-1; mc1[0] <= mc[0]+1; (mc1[0])++)
+		for (mc1[1] = mc[1]-1; mc1[1] <= mc[1]+1; (mc1[1])++)
+		for (mc1[2] = mc[2]-1; mc1[2] <=mc [2]+1; (mc1[2])++) {
+			// Periodic boundary condition by shifting coordinates
+			for (int a = 0; a < 3; a++) {
+				if (mc1[a] < 0)
+					rshift[a] = -Region[a];
+				else if (mc1[a] >= lc[a])
+					rshift[a] = Region[a];
+				else
+					rshift[a] = 0.0;
+			}
+			// Calculate the scalar cell index of the neighbor cell
+			c1 = ((mc1[0] + lc[0]) % lc[0]) * lcyz
+			    +((mc1[1] + lc[1]) % lc[1]) * lc[2]
+			    +((mc1[2] + lc[2]) % lc[2]);
+			// Skip this neighbor cell if empty
+			if (head[c1] == EMPTY) continue;
+
+			// Scan atom i in cell c
+			int i = head[c];
+			while (i != EMPTY) {
+
+				// Scan atom in cell c1
+				int j = head[c1];
+				while (j != EMPTY) {
+
+					// Avoid double counting of pairs
+					if (i < j) {
+						// Pair vector dr = atom[i]-atom[j]
+						rr = 0.0;
+						dr[0] = atoms[i].x - (atoms[j].x + rshift[0]);
+						dr[1] = atoms[i].y - (atoms[j].y + rshift[1]);
+						dr[2] = atoms[i].z - (atoms[j].z + rshift[2]);
+						rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);
+						}
+
+						// Calculate energy if rij < Cutoff
+						if (rr < rrCut) {
+							Atom xAtom, yAtom;
+        					xAtom = atoms[i];
+        					yAtom = atoms[j];
+        						if (xAtom.sigma < 0 || xAtom.epsilon < 0 || yAtom.sigma < 0 || yAtom.epsilon < 0){
+            						nonbonded_energy = 0.0;
+        						}
+        						else{
+    								nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
+    								nonbonded_energy = nonbonded_energy * getFValue(&xAtom, &yAtom, molecules, enviro);
+    							}
+    						totalEnergy += nonbonded_energy;
+						} /* Endif i<j */
+
+						j = lscl[j];
+					} /* Endwhile j not empty */
+
+					i = lscl[i];
+				} /* Endwhile i not empty */
+			} /* Endfor neighbor cells, c1 */
+		} /* Endfor central cell, c */
+		return totalEnergy;
+}
 
 double calcBlending(double d1, double d2){
     return sqrt(d1 * d2);

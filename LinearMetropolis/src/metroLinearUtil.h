@@ -15,6 +15,10 @@
 #include <curand.h>
 #define THREADS_PER_BLOCK 128
 #define PI 3.14159265
+// Linked-cell neighbor list constants
+#define NMAX 100000  /* Maximum number of atoms which can be simulated */
+#define NCLMAX 10000 /* Maximum number of linked-list cells */
+#define EMPTY -1
 
 /**
   Gets the X atom in an energy calculation based on the thread index.  
@@ -86,7 +90,7 @@ void generatePoints(Molecule *molec, Environment *enviro);
 
 /**
   Generate positions for molecules in the box based on fcc-lattice.
-  Ideal # = 4*molecules^3, i.e., 4, 32, 104, 256.
+  Ideal # = 4*molecules^3, i.e., 4, 32, 108, 256.
   @param molec - array of molecules to generate positions
   @param enviro - enviroment structure defining the box
 */
@@ -135,6 +139,22 @@ double calcCharge(Atom atom1, Atom atom2, Environment *enviro);
   @return - the nonbonded energy portion of the force field.
 */
 double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro);
+
+/**
+  Wrapper function for the calcEnergy_NLC kernel.
+  @param molecules - array of molecules in the system
+  @param enviro - the environment of the system.
+*/
+double calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro);
+
+/**
+  Calculates the energy between all atoms using a 
+  linked-cell neighbor list.
+  @param atoms - the array of atoms
+  @param enviro - simulation environment pointer
+  @param molecules - array of molecules in the system
+*/
+double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules);
 
 /**
   Returns the "fudge factor" to be used in force field calculation.
