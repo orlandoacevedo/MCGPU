@@ -633,7 +633,7 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded){
 	 if(m>0)
 	     x=molec[m-1].numOfAtoms;
 	 while( i < molec[m].numOfAtoms){
-	     molec[m].atoms[i].x = atomVector[x].x;
+	      molec[m].atoms[i].x = atomVector[x].x;
 		  molec[m].atoms[i].y = atomVector[x].y;
 		  molec[m].atoms[i].z = atomVector[x].z;
 		  i++;x++;
@@ -642,3 +642,153 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded){
 	}//for loop for molecule
 }
 
+void buildMoleculeXYZ(Molecule *molec, int numBonded){
+	 vector<Molecule> retVector;
+    vector<Atom> atomVector;
+	 vector<Bond> bondVector;
+    vector<Angle> angleVector;
+	 vector<Dihedral> dihedralVector;
+    vector<unsigned long> dummies;
+	
+	Atom lineAtom;
+	
+	//run a build on each molecule in zmatrix
+	for(int m=0; m<numBonded; m++){
+	 	//run build on atom 1 in the molecule
+	 	lineAtom = molec[m].atoms[0];
+	 	//set the vectors with appropiate contents as if in Zmatrix 
+		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
+		
+		// First atom at (0,0,0)
+		molec[m].atoms[0].x = 0.0;
+		molec[m].atoms[0].y = 0.0;
+		molec[m].atoms[0].z = 0.0;
+	
+		//run build on atom 2 in the molecule
+		lineAtom = molec[m].atoms[1];		  
+		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
+	
+		int bondFound = hasBond(bondVector,lineAtom.id);
+		if(bondFound >= 0){
+			Bond lineBond =  bondVector[bondFound];
+	
+			// Second atom on x-axis
+			molec[m].atoms[1].x = lineBond.distance;
+			molec[m].atoms[1].y = 0.0;
+			molec[m].atoms[1].z = 0.0;
+		}
+		else
+			break;
+		
+		//run build on atom 3 in the molecule
+		lineAtom = molec[m].atoms[2];
+		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
+	
+		int angleFound = hasAngle(angleVector,lineAtom.id);
+		if(angleFound >=0 ){
+			int bondFound = hasBond(bondVector,lineAtom.id);
+			Bond lineBond =  bondVector[bondFound];
+			Angle lineAngle = angleVector[angleFound];
+			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.id);
+			double thetaRadians = degreesToRadians(lineAngle.value);
+			
+			// Third atom in XY plane
+			if(BondedTo == 1)
+				molec[m].atoms[2].x = lineBond.distance * cos(thetaRadians);
+			else if(BondedTo == 2)
+				molec[m].atoms[2].x = molec[m].atoms[1].x - lineBond.distance * cos(thetaRadians);
+			molec[m].atoms[2].y = lineBond.distance * sin(thetaRadians);
+			molec[m].atoms[2].z = 0.0;
+		}
+		else
+			break;
+		
+		//check if atom 4 exists
+		if(molec[m].numOfAtoms < 4)
+			break;
+		
+		//run build on atoms 4 and above in the molecule
+		double xbs, ybs, zbs, sinval;
+		double ia[3], ib[3], ic[3];
+		double vecangdih[3],vecangbnd[3];
+		double vx[3], vy[3], vz[3];
+		
+		for(int N = 3; N < molec[m].numOfAtoms; N++){
+			lineAtom = molec[m].atoms[N];
+			setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
+			int bondFound = hasBond(bondVector,lineAtom.id);
+			Bond lineBond =  bondVector[bondFound];
+			int angleFound = hasAngle(angleVector,lineAtom.id);
+			Angle lineAngle = angleVector[angleFound];
+			double thetaRadians = degreesToRadians(lineAngle.value);
+			// Dihedral angle is defined counterclockwise
+			int dihedralFound = hasDihedral(dihedralVector,lineAtom.id);
+			Dihedral lineDihedral = dihedralVector[dihedralFound];
+			double phiRadians = degreesToRadians(lineDihedral.value);
+			
+			// x|y|z in the local system
+			// xbs = bndlgth * sin(ang) * cos(dih)
+			// ybs = bndlgth * sin(ang) * sin(dih)
+			// zbs = -bndlgth * cos(ang)
+
+			sinval = sin(thetaRadians);
+			xbs = lineBond.distance * sinval * cos(phiRadians);
+			ybs = lineBond.distance * sinval * sin(phiRadians);
+			zbs = -lineBond.distance * cos(thetaRadians);
+			
+			// Determine transformation (direction cosine) matrix
+			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.id);
+			unsigned long AngleWith = getOppositeAtom(lineAngle, lineAtom.id);
+			unsigned long DihedralWith = getOppositeAtom(lineDihedral, lineAtom.id);
+			ia[0] = molec[m].atoms[DihedralWith - 1].x;
+			ia[1] = molec[m].atoms[DihedralWith - 1].y;
+			ia[2] = molec[m].atoms[DihedralWith - 1].z;
+			ib[0] = molec[m].atoms[AngleWith - 1].x;
+			ib[1] = molec[m].atoms[AngleWith - 1].y;
+			ib[2] = molec[m].atoms[AngleWith - 1].z;
+			ic[0] = molec[m].atoms[BondedTo - 1].x;
+			ic[1] = molec[m].atoms[BondedTo - 1].y;
+			ic[2] = molec[m].atoms[BondedTo - 1].z;
+			
+			for(int i = 0; i < 3; i++){
+				vecangdih[i] = ia[i] - ic[i];
+				vecangbnd[i] = ib[i] - ic[i];
+    		}
+    		
+			cross(vecangdih,vecangbnd,vy);
+			cross(vecangbnd,vy,vx);
+			cross(vx,vy,vz);
+    		
+			//Map the coordinates in this basis set to our cartesian coordinates
+			//     x = xbs*vx(0) + ybs*vy(0) + zbs*vz(0)
+			//     y = xbs*vx(1) + ybs*vy(1) + zbs*vz(1)
+			//     z = xbs*vx(2) + ybs*vy(2) + zbs*vz(2)
+			//
+			//These coordinates are based at the origin - they need to be based from 
+			//the coordinates of the bond atom e.g.
+			// x += xbnd     y+= ybnd   z+= zbnd
+			
+			molec[m].atoms[N].x = vx[0]*xbs + vy[0]*ybs + vz[0]*zbs + ic[0];
+			molec[m].atoms[N].y = vx[1]*xbs + vy[1]*ybs + vz[1]*zbs + ic[1];
+			molec[m].atoms[N].z = vx[2]*xbs + vy[2]*ybs + vz[2]*zbs + ic[2];
+		} //End for dihedral atoms loop
+	} //End for molecules loop
+}
+
+void cross(double *A, double *B, double *C){
+	// C = A X B; C returned normalized
+	const double tiny = 1.00e-36;
+	double x, y, z;
+	
+	x = A[1]*B[2] - B[1]*A[2];
+	y = B[0]*A[2] - A[0]*B[2];
+	z = A[0]*B[1] - B[0]*A[1];
+	
+	//Avoid division by zero
+	double length = max(tiny, (x*x) + (y*y) + (z*z));
+	double lengthSQRT = sqrt(length);
+	
+	C[0] = x / lengthSQRT;
+	C[1] = y / lengthSQRT;
+	C[2] = z / lengthSQRT;
+}

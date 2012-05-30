@@ -404,7 +404,8 @@ vector<Molecule> Zmatrix_Scan::buildMolecule(int startingID){
     }
 				
 	 //Assign/calculate the appropiate x,y,z positions to the molecules. 									
-	 buildMoleculeInSpace(newMolecules, numOfMolec);
+	 //buildMoleculeInSpace(newMolecules, numOfMolec);
+	 buildMoleculeXYZ(newMolecules, numOfMolec);
 	 
 
     for (int i = 0; i < numOfMolec; i++)

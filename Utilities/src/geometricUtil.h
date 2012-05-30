@@ -380,7 +380,7 @@ int hasDihedral(vector<Dihedral> Dihedrals, unsigned long atomId);
 
 /**
   Sets the Bond, Angle, and Dihedral vectors with their corresponding values from the Molecule
-  where the the structures have an atom1 id <= lineAtomId. Used in buildMoleculeInSpace() to
+  where the the structures have an atom1 id <= lineAtomId. Used in buildMoleculeXYZ() to
   fill the vectors with defined Structs from the Molecule that contain relationships between
   atoms that are >= to the lineAtom.
   @param *molec - the molecule structure to copy the data from.
@@ -401,5 +401,23 @@ void setMoleculeVectors(Molecule *molec, int numBonded, unsigned long lineAtomId
   @param numBounded - the number of bonded molecules being passed in
 */
 void buildMoleculeInSpace(Molecule *molec,int numBonded=1);
+
+/**
+  Converts z-matrix to Cartesian coordinates.
+  Calculates and sets the Atom positions in a Molecule based on the atom to atom relationships
+  defined in the Bond, Angle, and Dihedral structures. 
+  @param *molec - an array of bonded molecules to be set
+  @param numBounded - the number of bonded molecules being passed in
+*/
+void buildMoleculeXYZ(Molecule *molec,int numBonded=1);
+
+/**
+  Calculates the cross product for the transformation (direction cosine) matrix
+  in buildMoleculeXYZ(). Returns normalized values.
+  @param *A - accepts an array of vectors for bond, angle, dihedrals coordinates
+  @param *B - accepts an array of vectors for bond, angle, dihedrals coordinates
+  @param *C - returns array of normalized coordinates
+*/
+void cross(double *A, double *B, double *C);
 
 #endif //GEOMETRICUTIL_H
