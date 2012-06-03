@@ -41,6 +41,12 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
 	double currentEnergy = 0.0;
 	double oldEnergy = 0.0;
 	double newEnergy = 0.0;
+	
+	// Compute long-range correction to LJ energy,
+    // only need to do once for NVT simulation
+    double energyLRC = Energy_LRC(molecules, enviro);
+    ss << "Long-range cutoff energy: "<< energyLRC << endl;
+    writeToLog(ss);
 
     printState(enviro, molecules, enviro->numOfMolecules, "initialState");
 
@@ -48,10 +54,14 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
     writeToLog(ss);
 	 
     for(int move = 0; move < numberOfSteps; move++){
-        if(move < 1)
+        if(move < 1){
         	oldEnergy = calcEnergyWrapper_NLC(molecules, enviro);
-        else
+        	// Include long-range correction to LJ energy below
+        	oldEnergy += energyLRC;
+        }
+        else{
         	oldEnergy = currentEnergy;
+        }
 
         //Pick a molecule to move
         int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
@@ -79,6 +89,8 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
         molecules[moleculeIndex] = toMove;
 
         newEnergy = calcEnergyWrapper_NLC(molecules, enviro);
+        // Include long-range correction to LJ energy below
+        newEnergy += energyLRC;
 
         bool accept = false;
 

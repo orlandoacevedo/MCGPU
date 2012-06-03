@@ -203,4 +203,12 @@ Molecule* getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *envi
 */
 void rotateMolecule(Molecule molecule, Atom pivotAtom, double maxRotation);
 
+/**
+  Returns the Lennard-Jones long-range correction for the cutoff in the
+  solvent-solvent energy.
+  @param molec - array of molecules in the system
+  @param enviro - enviroment structure defining the box
+*/
+double Energy_LRC(Molecule *molec, Environment *enviro);
+
 #endif

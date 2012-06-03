@@ -696,3 +696,46 @@ void rotateMolecule(Molecule molecule, Atom pivotAtom, double maxRotation){
         molecule.atoms[i].z += pivotAtomZ;
     }
 }
+
+double Energy_LRC(Molecule *molec, Environment *enviro){
+	double Ecut = 0.0;		/* Holds LJ long-range cutoff energy correction */
+	double NMOL = enviro->numOfMolecules;	/* Number of molecules in simulation */
+	// Need to update to accept more than 1 molecule from z-matrix
+	int a = 0;
+	int NATM = molec[a].numOfAtoms;	/* Number of atoms in molecule */
+	// Volume below will have to accept new values in NPT simulations
+	double Vnew = enviro->x * enviro->y * enviro->z;	/* Volume of box in Ang^3 */
+	
+	// Setup arrays to hold all sigma and epsilon atom values
+	double Sigma[NATM], Epsilon[NATM];
+	for(int i = 0; i < NATM; i++){
+		if (molec[a].atoms[i].sigma < 0 || molec[a].atoms[i].epsilon < 0){
+			Sigma[i] = 0.0;
+			Epsilon[i] = 0.0;
+		}
+		else{
+			Sigma[i] = molec[a].atoms[i].sigma;
+			Epsilon[i] = molec[a].atoms[i].epsilon;
+		}
+	}
+		
+	// (4 * epsilon * sigma^6 or 12)^0.5
+	double A6[NATM], A12[NATM];
+	double sig2, sig6, sig12;
+	for(int i = 0; i < NATM; i++){
+		sig2 = pow(Sigma[i], 2);
+        sig6 = pow(sig2, 3);
+    	sig12 = pow(sig6, 2);
+		A6[i] = sqrt(4 * Epsilon[i] * sig6);
+		A12[i] = sqrt(4 * Epsilon[i] * sig12);
+	}	
+	
+	double RC3 = 1.00 / pow(enviro->cutoff, 3);		/* 1 / cutoff^3 */
+	double RC9 = pow(RC3, 3);		/* 1 / cutoff^9 */
+	// Loop over all atoms in a pair
+	for(int i = 0; i < NATM; i++)
+		for(int j = 0; j < NATM; j++)
+			Ecut += (2*PI*NMOL*NMOL/(3.0*Vnew)) * (A12[i]*A12[j]*RC9/3.0 - A6[i]*A6[j]*RC3);
+	
+	return Ecut;
+}
