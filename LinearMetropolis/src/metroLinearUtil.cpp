@@ -37,84 +37,15 @@ double wrapBox(double x, double box){
     return x;
 }
 
-void keepMoleculeInBox(Molecule *molecule, Environment *enviro){
-    double maxX = DBL_MIN;
-    double maxY = DBL_MIN;
-    double maxZ = DBL_MIN;
-
-    double minX = DBL_MAX;
-    double minY = DBL_MAX;
-    double minZ = DBL_MAX;
-
-    double nudge = pow(10.0, -15.0);
-
-    //determine extreme boundaries for molecule
-    for (int i = 0; i < molecule->numOfAtoms; i++){
-        double currentX = molecule->atoms[i].x;
-        double currentY = molecule->atoms[i].y;
-        double currentZ = molecule->atoms[i].z;
-
-        if (currentX > maxX)
-           maxX = currentX;
-        else if (currentX < minX)
-           minX = currentX;
-
-        if (currentY > maxY)
-            maxY = currentY;
-        else if (currentY < minY)
-            minY = currentY;
-
-        if (currentZ > maxZ)
-            maxZ = currentZ;
-        else if (currentZ < minZ)
-            minZ = currentZ;
-    
-    }
-
-    bool isFullyOutX = (minX > enviro->x || maxX < 0) ? true : false;
-    bool isFullyOutY = (minY > enviro->y || maxY < 0) ? true : false;
-    bool isFullyOutZ = (minZ > enviro->z || maxZ < 0) ? true : false;
-
-    //for each axis, determine if the molecule escapes the environment 
-    //and wrap it around into the environment
-    for (int i = 0; i < molecule->numOfAtoms; i++){
-        double* currentX = &(molecule->atoms[i].x);
-        double* currentY = &(molecule->atoms[i].y);
-        double* currentZ = &(molecule->atoms[i].z);
-        if (maxX > enviro->x){
-            if (!isFullyOutX){
-                *currentX += (enviro->x - minX);
-            }
-            *currentX = wrapBox(*currentX + nudge, enviro->x);
-        }
-        else if (minX < 0){
-            if (!isFullyOutX)
-                *currentX -= maxX;
-            *currentX = wrapBox(*currentX - nudge, enviro->x);
-        }
-
-        if (maxY > enviro->y){
-            if (!isFullyOutY)
-                *currentY += (enviro->y - minY);
-            *currentY = wrapBox(*currentY + nudge, enviro->y);
-        }
-        else if (minY < 0){
-            if (!isFullyOutY)
-                *currentY -= maxY;
-            *currentY = wrapBox(*currentY - nudge, enviro->y);
-        }
-
-        if (maxZ > enviro->z){
-            if (!isFullyOutZ)
-                *currentZ += (enviro->z - minZ);
-            *currentZ = wrapBox(*currentZ + nudge, enviro->z);
-        }
-        else if (minZ < 0){
-            if (!isFullyOutZ)
-                *currentZ -= maxZ;
-            *currentZ = wrapBox(*currentZ - nudge, enviro->z);
-        }
-    }
+void keepMoleculeInBox(Molecule *molecule, Environment *enviro){		
+		for (int j = 0; j < molecule->numOfAtoms; j++){
+		//X axis
+			wrapBox(molecule->atoms[j].x, enviro->x);
+		//Y axis
+			wrapBox(molecule->atoms[j].y, enviro->y);
+		//Z axis
+			wrapBox(molecule->atoms[j].z, enviro->z);
+		}
 }
 
 double calc_lj(Atom atom1, Atom atom2, Environment enviro){
@@ -434,9 +365,9 @@ double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
     }
     else if (r2 < cutoffSQ){
     	//calculate LJ energies
-    	const double sig2OverR2 = pow(sigma, 2) / r2;
-        const double sig6OverR6 = pow(sig2OverR2, 3);
-    	const double sig12OverR12 = pow(sig6OverR6, 2);
+    	const double sig2OverR2 = (sigma * sigma) / r2;
+        const double sig6OverR6 = sig2OverR2 * sig2OverR2 * sig2OverR2;
+    	const double sig12OverR12 = sig6OverR6 * sig6OverR6;
     	const double lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
     	
     	//calculate Coulombic energies
@@ -568,7 +499,7 @@ double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules){
 						dr[2] = atoms[i].z - (atoms[j].z + rshift[2]);
 						rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);
 						}
-
+						
 						// Calculate energy if rij < Cutoff
 						if (rr < rrCut) {
 							Atom xAtom, yAtom;
@@ -636,65 +567,6 @@ int hopGE3(int atom1, int atom2, Molecule *molecule){
         }
 	}
 	 return 0;
-}
-
-void rotateMolecule(Molecule molecule, Atom pivotAtom, double maxRotation){
-    //save pivot atom coordinates because they will change
-    double pivotAtomX = pivotAtom.x;
-    double pivotAtomY = pivotAtom.y;
-    double pivotAtomZ = pivotAtom.z;
-
-    //translate entire molecule to place pivotAtom at origin
-    for (int i = 0; i < molecule.numOfAtoms; i++){
-        molecule.atoms[i].x -= pivotAtomX;
-        molecule.atoms[i].y -= pivotAtomY;
-        molecule.atoms[i].z -= pivotAtomZ;
-    }
-
-    srand(time(NULL));
-    // degrees to radians conversion
-    double dtr = PI / 180.0;
-
-    //rotate molecule about origin
-    for (int axis = 0; axis < 3; axis++){
-        double rotation = ((double) rand() / (double) RAND_MAX) * maxRotation * dtr;
-        double sinrot = sin(rotation);
-        double cosrot = cos(rotation);
-        if (axis == 0){ //rotate about x-axis
-            for (int i = 0; i < molecule.numOfAtoms; i++){
-                Atom *thisAtom = &(molecule.atoms[i]);
-                double oldY = thisAtom->y;
-                double oldZ = thisAtom->z;
-                thisAtom->y = cosrot * oldY + sinrot * oldZ;
-                thisAtom->z = cosrot * oldZ - sinrot * oldY;
-            }
-        }
-        else if (axis == 1){ //rotate about y-axis
-            for (int i = 0; i < molecule.numOfAtoms; i++){
-                Atom *thisAtom = &(molecule.atoms[i]);
-                double oldX = thisAtom->x;
-                double oldZ = thisAtom->z;
-                thisAtom->x = cosrot * oldX - sinrot * oldZ;
-                thisAtom->z = cosrot * oldZ + sinrot * oldX;
-            }
-        }
-        if (axis == 2){ //rotate about z-axis
-            for (int i = 0; i < molecule.numOfAtoms; i++){
-                Atom *thisAtom = &(molecule.atoms[i]);
-                double oldX = thisAtom->x;
-                double oldY = thisAtom->y;
-                thisAtom->x = cosrot * oldX + sinrot * oldY;
-                thisAtom->y = cosrot * oldY - sinrot * oldX;
-            }
-        }
-    }
-
-    //translate entire molecule back based on original pivot point
-    for (int i = 0; i < molecule.numOfAtoms; i++){
-        molecule.atoms[i].x += pivotAtomX;
-        molecule.atoms[i].y += pivotAtomY;
-        molecule.atoms[i].z += pivotAtomZ;
-    }
 }
 
 double Energy_LRC(Molecule *molec, Environment *enviro){

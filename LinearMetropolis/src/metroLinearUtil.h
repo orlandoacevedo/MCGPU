@@ -90,7 +90,7 @@ void generatePoints(Molecule *molec, Environment *enviro);
 
 /**
   Generate positions for molecules in the box based on fcc-lattice.
-  Ideal # = 4*molecules^3, i.e., 4, 32, 108, 256.
+  Ideal # = 4*molecules^3, i.e., 4, 32, 108, 256, 500.
   @param molec - array of molecules to generate positions
   @param enviro - enviroment structure defining the box
 */
@@ -194,14 +194,6 @@ double calcBlending(double d1, double d2);
   @return - returns a pointer to the molecule
 */
 Molecule* getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro);
-
-/**
-  Rotates a molecule about a given atom a random amount
-  @param molecule - the molecule to be rotated
-  @param pivotAtom - the atom that the molecule is rotated about
-  @param maxRotation - the maximum number of degrees for each axis of rotation
-*/
-void rotateMolecule(Molecule molecule, Atom pivotAtom, double maxRotation);
 
 /**
   Returns the Lennard-Jones long-range correction for the cutoff in the

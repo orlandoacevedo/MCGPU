@@ -158,7 +158,7 @@ void testWriteOutReadInState(){
     Hop h2 = createHop(4,2,5);
     Hop hopArray[2] = {h1, h2};
 
-    Environment enviro = createEnvironment(10.f, 10.f, 10.f, .5, 273, 2, 9.0);
+    Environment enviro = createEnvironment(10.f, 10.f, 10.f, .5, 273, 2, 9.0, 15.0);
 
     Molecule molec1 = createMolecule(1, atomArray, angleArray, bondArray, dihedralArray, hopArray,
             3,2,2,2,2);

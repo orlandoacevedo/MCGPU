@@ -420,6 +420,40 @@ Molecule moveMolecule(Molecule molec, Atom pivot, double xTrans, double yTrans,
     return molec;
 }
 
+double randomNUM(const double start, const double end){
+    return (end-start) * (double(rand()) / RAND_MAX) + start;
+}
+
+Molecule translateMolecule(Molecule molec, double maxTranslation){
+    const double xTrans = randomNUM(-maxTranslation, maxTranslation);
+	const double yTrans = randomNUM(-maxTranslation, maxTranslation);
+	const double zTrans = randomNUM(-maxTranslation, maxTranslation);
+	
+    for(int i = 0; i < molec.numOfAtoms; i++){
+    	molec.atoms[i] = translateAtom(molec.atoms[i], xTrans, yTrans, zTrans);
+    }  
+    return molec;
+}
+
+Molecule rotateMolec(Molecule molec, Atom pivot, double maxRotation){    
+	const double xRot = randomNUM(-maxRotation, maxRotation);
+	const double yRot = randomNUM(-maxRotation, maxRotation);
+	const double zRot = randomNUM(-maxRotation, maxRotation);
+    
+    for(int i = 0; i < molec.numOfAtoms; i++){
+        //translate molecule to the origin to rotate
+        molec.atoms[i] = translateAtom(molec.atoms[i], -pivot.x, -pivot.y, -pivot.z);
+        //rotateAboutX
+        molec.atoms[i] = rotateAboutX(molec.atoms[i], xRot);
+        //rotateAboutY
+        molec.atoms[i] = rotateAboutY(molec.atoms[i], yRot);
+        //rotateAboutZ
+        molec.atoms[i] = rotateAboutZ(molec.atoms[i], zRot);
+        //translate to original position
+        molec.atoms[i] = translateAtom(molec.atoms[i], pivot.x, pivot.y, pivot.z);
+    }
+    return molec;
+}
 
 //returns the index of the first Bond found where Atom1 = atomID
 //else returns -1

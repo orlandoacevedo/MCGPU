@@ -68,6 +68,9 @@ void Config_Scan::readInConfig(){
                 case 24:
                     enviro.cutoff = atof(line.c_str());
                     break;
+                case 26:
+                    enviro.maxRotation = atof(line.c_str());
+                    break;
             }
             currentLine++;
         }

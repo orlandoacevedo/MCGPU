@@ -349,6 +349,28 @@ Molecule moveMolecule(Molecule molec, Atom pivot, double xTrans, double yTrans,
         double zTrans, double xRot, double yRot, double zRot);
 
 /**
+	Returns a random number
+	@param start - lowest value possible
+	@param end - largest value possible
+*/
+double randomNUM(const double start, const double end);
+
+/**
+  Translates a molecule a random amount and returns it
+  @param molecule - the molecule to be translated
+  @param maxTranslation - the maximum distance (Ang) for each axis of translation
+*/
+Molecule translateMolecule(Molecule molec, double maxTranslation);
+
+/**
+  Rotates a molecule about a given atom a random amount and returns it
+  @param molecule - the molecule to be rotated
+  @param pivot - the atom that the molecule is rotated about
+  @param maxRotation - the maximum number of degrees for each axis of rotation
+*/
+Molecule rotateMolec(Molecule molec, Atom pivot, double maxRotation);
+
+/**
   Checks the vector of bonds to see if the atom has a bond with another atom in the Molecule.
   If the atomId is 1, and X is other atoms it looks for 1--X and not X--1.
   @param Bonds - the vector of Bond structs that it seaches.

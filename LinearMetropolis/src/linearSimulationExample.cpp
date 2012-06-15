@@ -13,9 +13,8 @@
    
 using namespace std;
 
-// boltzman constant
-const double kBoltz = 1.987206504191549E-003;
-const double maxRotation = 15.0; // degrees
+// boltzman constant in kcal mol-1 K-1
+const double kBoltz = 0.00198717;
 
 stringstream ss;
 
@@ -28,6 +27,7 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
     int accepted = 0; // number of accepted moves
     int rejected = 0; // number of rejected moves
     double maxTranslation = enviro->maxTranslation;
+    double maxRotation = enviro->maxRotation;
     double temperature = enviro->temperature;
     double kT = kBoltz * temperature;
 
@@ -70,21 +70,23 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
         copyMolecule(&oldToMove, &toMove);
 
         //Pick an atom in the molecule about which to rotate
-        int atomIndex = randomFloat(0, molecules[moleculeIndex].numOfAtoms);
+        //int atomIndex = randomFloat(0, molecules[moleculeIndex].numOfAtoms);
+        //Atom vertex = molecules[moleculeIndex].atoms[atomIndex];
+        
+        //DEBUG
+        //For water always use O to rotate
+        int atomIndex = 0;
         Atom vertex = molecules[moleculeIndex].atoms[atomIndex];
-
-        const double deltaX = randomFloat(-maxTranslation, maxTranslation);
-        const double deltaY = randomFloat(-maxTranslation, maxTranslation);
-        const double deltaZ = randomFloat(-maxTranslation, maxTranslation);
-
-        const double degreesX = randomFloat(-maxRotation, maxRotation);
-        const double degreesY = randomFloat(-maxRotation, maxRotation);
-        const double degreesZ = randomFloat(-maxRotation, maxRotation); 
-
-        toMove = moveMolecule(toMove, vertex, deltaX, deltaY, deltaZ,
-        degreesX, degreesY, degreesZ);
-
+        //END-DEBUG
+        
+        //Translate molecule
+        toMove = translateMolecule(toMove, maxTranslation);
+        
+        //Get back in box
         keepMoleculeInBox(&toMove, enviro);
+        
+        //Rotate entire molecule
+        toMove = rotateMolec(toMove, vertex, maxRotation);
 
         molecules[moleculeIndex] = toMove;
 

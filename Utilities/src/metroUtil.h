@@ -122,6 +122,12 @@ struct Environment{
     the nonbonded cutoff distance in the environment
     */
     double cutoff; 
+    
+    /*!
+    the maximum rotation in degrees that an atom can rotate
+    */
+    double maxRotation;
+    
 };
 
 /*!
@@ -132,9 +138,10 @@ struct Environment{
    @param temp - the temperature in kelvin of the environment.
    @param numOfAtoms - the number of atoms in the environment.
    @param cutoff - the nonbonded cutoff distance in the environment.
+   @param maxRot - the maximum rotation of an atom/molecule in the simulation.
    @return - an instance of an environment structure.
 */
-Environment createEnvironment(double x, double y, double z, double maxTrans, double temp, int numOfAtoms, double cutoff);
+Environment createEnvironment(double x, double y, double z, double maxTrans, double temp, int numOfAtoms, double cutoff, double maxRot);
 
 /**
   Writes the list of atoms to the file named filename

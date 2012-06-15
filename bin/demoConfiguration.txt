@@ -1,7 +1,7 @@
 #size of periodic box (x, y, z in angstroms)
-20.0
-20.0
-20.0
+19.8
+19.8
+19.8
 #temperature in Kelvin
 298.15
 #max translation
@@ -9,7 +9,7 @@
 #number of steps
 1000
 #number of molecues
-10
+256
 #path to opls.par file
 Utilities/bossFiles/oplsaa.par
 #path to z matrix file
@@ -22,3 +22,5 @@ stateOutput
 pdbOutput.pdb
 #cutoff distance in angstroms
 9.0
+#max rotation
+15.0
