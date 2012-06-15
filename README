@@ -12,7 +12,7 @@ Required Software:
     NVIDIA Developer Toolkit
         Download from http://developer.nvidia.com/cuda-downloads based on your
         OS and follow the instructions given to install.
-        Tested with: CUDA 4.0
+        Tested with: CUDA 4.2
 
     If you are using the Alabama Supercomputer Center(ASC) configure based on the
     instructions received when you set up your account.
@@ -23,12 +23,6 @@ Required Software:
 Build Instructions:
     >> git clone git://github.com/orlandoacevedo/MCGPU.git
     >> cd MCGPU/
-    >> make
-
-    If on the ASC:
-    >> git clone git://github.com/orlandoacevedo/MCGPU.git
-    --sftp MCGPU Directory to the ASC into the directory of your choice.
-    >> cd /path/to/MCGPU/
     >> make
 
 To Run a Simulation on a local machine:
@@ -76,7 +70,7 @@ Configuration File:
 [5]     #line 5 is a comment and will be ignored
 [6]     <temperature in kelvin>
 [7]     #line seven is a comment and will be ignored
-[8]     <max translation for an atom in angstroms>
+[8]     <max translation for a molecule in angstroms>
 [9]     #line 9 is a comment and is ignored
 [10]    <number of steps for which to run the simulation> 
 [11]    #line 11 is a commend and is ignored
@@ -93,6 +87,8 @@ Configuration File:
 [22]    <path to the pdb output file>
 [23]    #line 23 is a comment and is ignored.
 [24]    <nonbonded cutoff distance in angstroms>
+[25]    #line 25 is a comment and is ignored.
+[26]    <max rotation for a molecule in degrees>
 
 There are some known issues and TODOs listed here:
 https://github.com/rlyspn/SeniorDesign_COMP4710/wiki/Known-Issues-and-TODOs
