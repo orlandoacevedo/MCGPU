@@ -94,7 +94,7 @@ void runParallel(Molecule *molecules, Environment *enviro, int numberOfSteps, st
 		newEnergy = calcEnergyWrapper(molecules, enviro);
         
         bool accept = false;
-        if(newEnergy < oldEnergy){
+        if(newEnergy <= oldEnergy){
             accept = true;
         }
         else{

@@ -96,7 +96,7 @@ void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, stri
 
         bool accept = false;
 
-        if(newEnergy < oldEnergy){
+        if(newEnergy <= oldEnergy){
             accept = true;
         }
         else{
