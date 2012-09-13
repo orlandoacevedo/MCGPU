@@ -1,0 +1,4 @@
+#!/bin/sh
+source /opt/asn/etc/asn-bash-profiles-special/modules.sh
+module load cuda/4.2
+./bin/parallelExample bin/demoConfiguration.txt
