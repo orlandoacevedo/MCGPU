@@ -15,8 +15,8 @@
 Will run simulations of any system consisting of a single molecule type.  Can run from either z matrix
 file or from a state file.
 
-Date: 5/16/2012
-Author(s): Riley Spahn, Seth Wooten, Alexander Luchs, and Orlando Acevedo
+Date: 9/13/2012
+Author(s): Matthew Hardwick, Riley Spahn, Seth Wooten, Alexander Luchs, and Orlando Acevedo
 */
 
 // boltzman constant
@@ -160,23 +160,30 @@ int main(int argc, char ** argv){
     clock_t startTime, endTime;
     startTime = clock();
     
-    /***===================
-      TEMPORARILY WITHOUT COMMANDLINE ARGUMENTS
-    if(argc != 3){
-        printf("Error.  Expected metro flag path.\n");
+	// Do we have the correct number of arguments?
+	
+    if(argc != 2){
+        printf("Error.  Expected \"parallelExample config_path\"\n");
         exit(1);
     }
-
-    // z matrix or state flage
-    string flag = argv[1];
-    //path to the configuration file
-    string configPath = argv[2];
-    ====================*/
+	
+	// Is our config_path argument valid?
+   
+	if (argv[1] == NULL)
+	{
+		ss << "configuration file argument null"<<endl;
+        cout <<ss.str()<< endl; writeToLog(ss);
+		exit(1);
+	}
+	
+    // Copy the config_path argument.
+    
+	string configPath(argv[1]);
    
     string flag = "-z";
-    string configPath = "bin/demoConfiguration.txt";
 
-    //Configuration file scanner
+    // Scan in the configuration file properties.
+	
     Config_Scan configScan(configPath);
     configScan.readInConfig();
 
