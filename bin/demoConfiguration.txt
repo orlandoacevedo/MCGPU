@@ -15,7 +15,7 @@ Utilities/bossFiles/oplsaa.par
 #path to z matrix file
 Utilities/bossFiles/t3p.z
 #path to state input
-none
+
 #path to state output
 stateOutput
 #pdb output path

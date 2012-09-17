@@ -21,6 +21,7 @@ void Config_Scan::readInConfig(){
         int currentLine = 1;
         while (configscanner.good()){
             getline(configscanner,line);
+			
             //assigns attributes based on line number
             switch(currentLine){
                 case 2:
@@ -48,10 +49,14 @@ void Config_Scan::readInConfig(){
                     oplsuaparPath = line;
                     break;
                 case 16:
-                    zmatrixPath = line;
+					if(line.length() > 0)
+					{
+						zmatrixPath = line;
+					}
                     break;
                 case 18:
-                    if(line.length() > 0){
+                    if((line.length() > 0) || (line.compare("none") != 0))
+					{
                         statePath = line;
                     }
                     break;
@@ -72,7 +77,8 @@ void Config_Scan::readInConfig(){
                     enviro.maxRotation = atof(line.c_str());
                     break;
             }
-            currentLine++;
+			
+			currentLine++;
         }
     }
 }
@@ -84,7 +90,6 @@ Environment Config_Scan::getEnviro(){
 string Config_Scan::getConfigPath(){
     return configpath;
 }
-
 
 long Config_Scan::getSteps(){
     return numOfSteps;

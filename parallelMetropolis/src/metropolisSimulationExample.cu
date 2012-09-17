@@ -163,6 +163,9 @@ int main(int argc, char ** argv){
 	// Do we have the correct number of arguments?
 	
     if(argc != 2){
+	
+		// If not, produce an error message.
+		
         printf("Error.  Expected \"parallelExample config_path\"\n");
         exit(1);
     }
@@ -171,6 +174,9 @@ int main(int argc, char ** argv){
    
 	if (argv[1] == NULL)
 	{
+	
+		// If not, produce an error message.
+	
 		ss << "configuration file argument null"<<endl;
         cout <<ss.str()<< endl; writeToLog(ss);
 		exit(1);
@@ -179,13 +185,29 @@ int main(int argc, char ** argv){
     // Copy the config_path argument.
     
 	string configPath(argv[1]);
-   
-    string flag = "-z";
 
     // Scan in the configuration file properties.
 	
     Config_Scan configScan(configPath);
     configScan.readInConfig();
+	
+	// Declare a flag string.
+	
+	string flag;
+	
+	// Do we have a statefile path configured?
+	
+	if (!configScan.getStatePath().empty())
+	{
+		flag = string("-s");
+	}
+	
+	// No statefile path, so we assume z-matrix path.
+	
+	else 
+	{
+		flag = string("-z");
+	}
 
     //Environment for the simulation
     Environment enviro;
@@ -199,7 +221,7 @@ int main(int argc, char ** argv){
 		  		  
         //get environment from the config file
         enviro = configScan.getEnviro();
-		  ss << "Reading Configuation File \nPath: " << configScan.getConfigPath() << endl;
+		  ss << "Reading Configuration File \nPath: " << configScan.getConfigPath() << endl;
         cout <<ss.str()<< endl; writeToLog(ss);
 		  
         //set up Opls scan and zMatrixScan
