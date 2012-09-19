@@ -162,22 +162,53 @@ int main(int argc, char ** argv){
     writeToLog("",START);
     clock_t startTime, endTime;
     startTime = clock();
-
-    if(argc != 3){
-        printf("Error.  Expected usage: run_gpu bin/linearSim {-z | -s} {configPath}\n");
+	
+    if(argc != 2){
+	
+		// If not, produce an error message.
+		
+        printf("Error.  Expected usage: bin/linearSim {configPath}\n");
         exit(1);
     }
+	
+	// Is our config_path argument valid?
+   
+	if (argv[1] == NULL)
+	{
+	
+		// If not, produce an error message.
+	
+		ss << "configuration file argument null"<<endl;
+        cout <<ss.str()<< endl; writeToLog(ss);
+		exit(1);
+	}
+	
+    // Copy the config_path argument.
+    
+	string configPath(argv[1]);
 
-    // z matrix or state flag
-    string flag = argv[1];
-
-    //path to the configuration file
-    string configPath = argv[2];
-
-    //demo configuration path: "bin/demoConfiguration.txt";
-    //Configuration file scanner
+    // Scan in the configuration file properties.
+	
     Config_Scan configScan(configPath);
     configScan.readInConfig();
+	
+	// Declare a flag string.
+	
+	string flag;
+	
+	// Do we have a statefile path configured?
+	
+	if (!configScan.getStatePath().empty())
+	{
+		flag = string("-s");
+	}
+	
+	// No statefile path, so we assume z-matrix path.
+	
+	else 
+	{
+		flag = string("-z");
+	}
 
     //Environment for the simulation
     Environment enviro;
