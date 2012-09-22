@@ -1,10 +1,10 @@
 NV=nvcc
 
-SRC=src/
-TST=test/
-UTIL=Utilities/
-PARA=parallelMetropolis/
-LIN=LinearMetropolis/
+UTILSRC=Utilities/src/
+UTILTST=Utilities/test/
+LINSRC=LinearMetropolis/src/
+PARASRC=parallelMetropolis/src/
+PARATST=parallelMetropolis/test/
 BIN=bin/
 
 FLAGS=-arch sm_20 -lcurand -g -c
@@ -15,55 +15,72 @@ EXE=parallelExample
 LINEXE=linearExample
 UTILTESTEXE=utilTest
 
-CommonUtilHeader=$(UTIL)$(SRC)geometricUtil.h $(UTIL)$(SRC)metroUtil.h
-CommonUtilOBJ=$(UTIL)$(SRC)geometricUtil.o $(UTIL)$(SRC)metroUtil.o
+CommonUtilHeader=$(UTILSRC)geometricUtil.h $(UTILSRC)metroUtil.h
+CommonUtilOBJ=$(UTILSRC)geometricUtil.o $(UTILSRC)metroUtil.o
 
-ScannerHeader=$(UTIL)$(SRC)Zmatrix_Scan.h $(UTIL)$(SRC)Opls_Scan.h $(UTIL)$(SRC)State_Scan.h $(UTIL)$(SRC)Config_Scan.h
-ScannerOBJ=$(UTIL)$(SRC)State_Scan.o $(UTIL)$(SRC)Config_Scan.o $(UTIL)$(SRC)Opls_Scan.o $(UTIL)$(SRC)Zmatrix_Scan.o
+ScannerHeader=$(UTILSRC)Zmatrix_Scan.h $(UTILSRC)Opls_Scan.h $(UTILSRC)State_Scan.h $(UTILSRC)Config_Scan.h
+ScannerOBJ=$(UTILSRC)State_Scan.o $(UTILSRC)Config_Scan.o $(UTILSRC)Opls_Scan.o $(UTILSRC)Zmatrix_Scan.o
 
-linearSimHeader= $(CommonUtilHeader) $(ScannerHeader) $(LIN)$(SRC)metroLinearUtil.h  $(PARA)$(TST)baseTests.h
-linearSimOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(LIN)$(SRC)linearSimulationExample.o  $(LIN)$(SRC)metroLinearUtil.o  $(PARA)$(TST)baseTests.o
+linearSimHeader= $(CommonUtilHeader) $(ScannerHeader) $(LINSRC)metroLinearUtil.h  $(PARATST)baseTests.h
+linearSimOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(LINSRC)linearSimulationExample.o  $(LINSRC)metroLinearUtil.o  $(PARATST)baseTests.o
 
-metroSimHeader= $(CommonUtilHeader) $(ScannerHeader) $(PARA)$(SRC)metroCudaUtil.cuh
-metroSimOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(PARA)$(SRC)metropolisSimulationExample.o  $(PARA)$(SRC)metroCudaUtil.o  $(PARA)$(TST)baseTests.o
+metroSimHeader= $(CommonUtilHeader) $(ScannerHeader) $(PARASRC)metroCudaUtil.cuh
+metroSimOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(PARASRC)metropolisSimulationExample.o  $(PARASRC)metroCudaUtil.o  $(PARATST)baseTests.o
 
-TestsHeader= $(CommonUtilHeader) $(PARA)$(TST)parallelTest.cuh $(PARA)$(TST)copyTests.cuh	$(PARA)$(TST)baseTests.h	\
-	$(PARA)$(SRC)metroCudaUtil.cuh 
-TestsOBJ=$(CommonUtilOBJ)	$(PARA)$(TST)parallelTest.o	$(PARA)$(TST)copyTests.o $(PARA)$(TST)baseTests.o	\
-	 $(PARA)$(SRC)metroCudaUtil.o 
+TestsHeader= $(CommonUtilHeader) $(PARATST)parallelTest.cuh $(PARATST)copyTests.cuh	$(PARATST)baseTests.h	\
+	$(PARASRC)metroCudaUtil.cuh 
+TestsOBJ=$(CommonUtilOBJ)	$(PARATST)parallelTest.o	$(PARATST)copyTests.o $(PARATST)baseTests.o	\
+	 $(PARASRC)metroCudaUtil.o 
 	 
-UtiltestHeader=$(CommonUtilHeader) $(ScannerHeader) $(UTIL)$(TST)stateTest.h $(UTIL)$(TST)configurationTest.h $(UTIL)$(TST)zMatrixTest.h
-UtiltestOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(UTIL)$(TST)stateTest.o $(UTIL)$(TST)configurationTest.o $(UTIL)$(TST)zMatrixTest.o $(UTIL)$(TST)utilityTests.o
+UtiltestHeader=$(CommonUtilHeader) $(ScannerHeader) $(UTILTST)stateTest.h $(UTILSRC)configurationTest.h $(UTILSRC)zMatrixTest.h
+UtiltestOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(UTILTST)stateTest.o $(UTILTST)configurationTest.o $(UTILTST)zMatrixTest.o \
+	$(UTILTST)utilityTests.o $(UTILTST)geometricTest.o 
 
-all: dir tests utilTests metroSim linearSim
+all: dir $(BIN)$(TSTEXE)  $(BIN)$(UTILTESTEXE) $(BIN)$(EXE) $(BIN)$(LINEXE)
 
-metroSim:$(metroSimHeader) $(metroSimOBJ)
+$(BIN)$(EXE):$(metroSimHeader) $(metroSimOBJ)
 	$(NV) $(FLAGSALT) $(metroSimOBJ) -o $(BIN)$(EXE) 
 
-linearSim: $(linearSimHeader) $(linearSimOBJ)
+$(BIN)$(LINEXE): $(linearSimHeader) $(linearSimOBJ)
 	$(NV) $(FLAGSALT) $(linearSimOBJ) -o $(BIN)$(LINEXE) 
 	
-tests: $(TestsHeader) $(TestsOBJ)
+$(BIN)$(TSTEXE) : $(TestsHeader) $(TestsOBJ)
 	$(NV) $(FLAGSALT) $(TestsOBJ) -o $(BIN)$(TSTEXE) 
 	
-utilTests: $(UtiltestOBJ)
+$(BIN)$(UTILTESTEXE): $(UtiltestOBJ)
 	$(NV) $(UtiltestOBJ) -o $(BIN)$(UTILTESTEXE)
+
+OBJS=$(CommonUtilOBJ) $(ScannerOBJ) $(metroSimOBJ) $(linearSimOBJ) $(TestsOBJ) $(UtiltestOBJ)
+-include $(OBJS:.o=.d) 
+	
+%.d:%.cpp
+	dirname $< >$@.p.$$$$;echo "\\" >>$@.p.$$$$;tr -d "\n" <$@.p.$$$$ >$@.$$$$;     \
+	$(NV) -M $(CPPFLAGS) $< >> $@.$$$$;                      \
+  sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;     \
+  rm -f $@.$$$$ $@.p.$$$$
+  
+%.d:%.cu
+	dirname $< >$@.p.$$$$;echo "\\" >>$@.p.$$$$;tr -d "\n" <$@.p.$$$$ >$@.$$$$;     \
+	$(NV) -M $(CPPFLAGS) $< >> $@.$$$$;                      \
+  sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;     \
+  rm -f $@.$$$$ $@.p.$$$$ 
 
 .cpp.o:
 	$(NV) $(FLAGS) $< -o $@
 	
-%.o : %.cu
+%.o:%.cu
 	$(NV) $(FLAGS) $< -o $@
 	
 dir:
 	mkdir -p $(BIN)
 
 clean:
-	rm -f $(UTIL)$(SRC)*.o
-	rm -f $(PARA)$(SRC)*.o
-	rm -f $(LIN)$(SRC)*.o
-	rm -f $(UTIL)$(TST)*.o
-	rm -f $(PARA)$(TST)*.o
+	rm -f $(UTILSRC)*.o $(PARASRC)*.o $(LINSRC)*.o
+	rm -f $(UTILTST)*.o $(PARATST)*.o
+
+	rm -f $(UTILSRC)*.d $(PARASRC)*.d $(LINSRC)*.d
+	rm -f $(UTILTST)*.d $(PARATST)*.d
+
 	rm -f $(BIN)$(UTILTESTEXE)
 	rm -f $(BIN)$(EXE)
 	rm -f $(BIN)$(TSTEXE)
