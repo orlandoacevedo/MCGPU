@@ -1,10 +1,10 @@
 NV=nvcc
 
-SRC=src/
-TST=test/
-UTIL=Utilities/
-PARA=parallelMetropolis/
-LIN=LinearMetropolis/
+UTILSRC=Utilities/src/
+UTILTST=Utilities/test/
+LINSRC=LinearMetropolis/src/
+PARASRC=parallelMetropolis/src/
+PARATST=parallelMetropolis/test/
 BIN=bin/
 
 FLAGS=-arch sm_20 -lcurand -g -c
@@ -14,73 +14,68 @@ TSTEXE=parallelTest
 EXE=parallelExample
 LINEXE=linearExample
 UTILTESTEXE=utilTest
-COMMONUTILO=$(BIN)geometricUtil.o $(BIN)metroUtil.o
-SCANNERO=$(BIN)State_Scan.o $(BIN)Config_Scan.o $(BIN)Opls_Scan.o $(BIN)Zmatrix_Scan.o
 
-all: dir tests utilTests metroSim linearSim
+CommonUtilOBJ=$(UTILSRC)geometricUtil.o $(UTILSRC)metroUtil.o
 
-metroSim: cudaUtil metroUtil stateScan configScan zMatrix OPLSScan baseTest $(PARA)$(SRC)metropolisSimulationExample.cu
-	$(NV) $(FLAGS) $(PARA)$(SRC)metropolisSimulationExample.cu -o $(BIN)metropolisSimulationExample.o 
-	$(NV) $(FLAGSALT) $(COMMONUTILO) $(SCANNERO) $(BIN)metroCudaUtil.o $(BIN)metropolisSimulationExample.o $(BIN)baseTests.o -o $(BIN)$(EXE) 
+ScannerOBJ=$(UTILSRC)State_Scan.o $(UTILSRC)Config_Scan.o $(UTILSRC)Opls_Scan.o $(UTILSRC)Zmatrix_Scan.o
 
-linearSim: linearUtil metroUtil stateScan configScan zMatrix OPLSScan baseTest $(LIN)$(SRC)linearSimulationExample.cpp
-	$(NV) $(FLAGS) $(LIN)$(SRC)linearSimulationExample.cpp -o $(BIN)linearSimulationExample.o 
-	$(NV) $(FLAGSALT) $(COMMONUTILO) $(SCANNERO) $(BIN)metroLinearUtil.o $(BIN)linearSimulationExample.o $(BIN)baseTests.o -o $(BIN)$(LINEXE) 
+linearSimOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(LINSRC)linearSimulationExample.o  $(LINSRC)metroLinearUtil.o  $(PARATST)baseTests.o
 
-tests: cudaUtil geoUtil metroUtil copyTest baseTest $(PARA)$(TST)parallelTest.cu $(PARA)$(TST)parallelTest.cuh
-	$(NV) $(FLAGSALT) $(COMMONUTILO) $(BIN)copyTests.o $(BIN)baseTests.o $(BIN)metroCudaUtil.o $(PARA)$(TST)parallelTest.cu -o $(BIN)$(TSTEXE)
+metroSimOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(PARASRC)metropolisSimulationExample.o  $(PARASRC)metroCudaUtil.o  $(PARATST)baseTests.o
 
-copyTest: $(PARA)$(TST)copyTests.cuh $(PARA)$(TST)copyTests.cu
-	$(NV) $(FLAGS) $(PARA)$(TST)copyTests.cu -o $(BIN)copyTests.o
+TestsOBJ=$(CommonUtilOBJ)	$(PARATST)parallelTest.o	$(PARATST)copyTests.o $(PARATST)baseTests.o	\
+	 $(PARASRC)metroCudaUtil.o 
+	 
+UtiltestOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(UTILTST)stateTest.o $(UTILTST)configurationTest.o $(UTILTST)zMatrixTest.o \
+	$(UTILTST)utilityTests.o $(UTILTST)geometricTest.o 
 
-baseTest: $(PARA)$(TST)baseTests.h $(PARA)$(TST)baseTests.cpp
-	$(NV) $(FLAGS) $(PARA)$(TST)baseTests.cpp -o $(BIN)baseTests.o
+all: dir $(BIN)$(TSTEXE)  $(BIN)$(UTILTESTEXE) $(BIN)$(EXE) $(BIN)$(LINEXE)
 
-cudaUtil: metroUtil baseTest $(PARA)$(SRC)metroCudaUtil.cuh $(PARA)$(SRC)metroCudaUtil.cu
-	$(NV) $(FLAGS) $(PARA)$(SRC)metroCudaUtil.cu -o $(BIN)metroCudaUtil.o
+$(BIN)$(EXE):$(metroSimOBJ)
+	$(NV) $(FLAGSALT) $(metroSimOBJ) -o $(BIN)$(EXE) 
 
-linearUtil: metroUtil baseTest $(LIN)$(SRC)metroLinearUtil.h $(LIN)$(SRC)metroLinearUtil.cpp
-	$(NV) $(FLAGS) $(LIN)$(SRC)metroLinearUtil.cpp -o $(BIN)metroLinearUtil.o
+$(BIN)$(LINEXE): $(linearSimOBJ)
+	$(NV) $(FLAGSALT) $(linearSimOBJ) -o $(BIN)$(LINEXE) 
+	
+$(BIN)$(TSTEXE) : $(TestsOBJ)
+	$(NV) $(FLAGSALT) $(TestsOBJ) -o $(BIN)$(TSTEXE) 
+	
+$(BIN)$(UTILTESTEXE): $(UtiltestOBJ)
+	$(NV) $(UtiltestOBJ) -o $(BIN)$(UTILTESTEXE)
 
-metroUtil: OPLSScan zMatrix geoUtil $(UTIL)$(SRC)metroUtil.h $(UTIL)$(SRC)metroUtil.cpp
-	$(NV) $(FLAGS) $(UTIL)$(SRC)metroUtil.cpp -o $(BIN)metroUtil.o
+OBJS=$(CommonUtilOBJ) $(ScannerOBJ) $(metroSimOBJ) $(linearSimOBJ) $(TestsOBJ) $(UtiltestOBJ)
+-include $(OBJS:.o=.d) 
+	
+%.d:%.cpp
+	@echo "Generate depend file for " $<;                      \
+	dirname $< >$@.p.$$$$;echo "\\" >>$@.p.$$$$;tr -d "\n" <$@.p.$$$$ >$@.$$$$;     \
+	$(NV) -M $(CPPFLAGS) $< >> $@.$$$$;                      \
+  sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;     \
+  rm -f $@.$$$$ $@.p.$$$$
+  
+%.d:%.cu
+	@echo "Generate depend file for " $<;                      \
+	dirname $< >$@.p.$$$$;echo "\\" >>$@.p.$$$$;tr -d "\n" <$@.p.$$$$ >$@.$$$$;     \
+	$(NV) -M $(CPPFLAGS) $< >> $@.$$$$;                      \
+  sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;     \
+  rm -f $@.$$$$ $@.p.$$$$
 
-utilTests: stateScan stateTest configTest metroUtil zMatrix OPLSScan geoTest zMatrixTest
-	$(NV) $(COMMONUTILO) $(SCANNERO) $(BIN)configurationTest.o $(BIN)stateTest.o $(BIN)geometricTest.o $(BIN)zMatrixTest.o Utilities/test/utilityTests.cpp -o $(BIN)$(UTILTESTEXE)
-
-zMatrix: geoUtil $(UTIL)$(SRC)Zmatrix_Scan.cpp $(UTIL)$(SRC)Zmatrix_Scan.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)Zmatrix_Scan.cpp -o $(BIN)Zmatrix_Scan.o
-
-OPLSScan: $(UTIL)$(SRC)Opls_Scan.cpp $(UTIL)$(SRC)Opls_Scan.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)Opls_Scan.cpp -o $(BIN)Opls_Scan.o
-
-geoUtil: $(UTIL)$(SRC)geometricUtil.cpp $(UTIL)$(SRC)geometricUtil.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)geometricUtil.cpp -o $(BIN)geometricUtil.o
-
-stateTest: metroUtil $(UTIL)$(TST)stateTest.cpp $(UTIL)$(TST)stateTest.h 
-	$(NV) $(FLAGS) $(UTIL)$(TST)stateTest.cpp -o $(BIN)stateTest.o
-
-configScan: $(UTIL)$(SRC)Config_Scan.cpp $(UTIL)$(SRC)Config_Scan.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)Config_Scan.cpp -o $(BIN)Config_Scan.o
-
-stateScan: $(UTIL)$(SRC)State_Scan.cpp $(UTIL)$(SRC)State_Scan.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)State_Scan.cpp -o $(BIN)State_Scan.o
-
-configTest: configScan $(UTIL)$(TST)configurationTest.h $(UTIL)$(TST)configurationTest.cpp
-	$(NV) $(FLAGS) $(UTIL)$(TST)configurationTest.cpp -o $(BIN)configurationTest.o
-
-geoTest: geoUtil $(UTIL)$(TST)geometricTest.cpp $(UTIL)$(TST)geometricTest.h
-	$(NV) $(FLAGS) $(UTIL)$(TST)geometricTest.cpp -o $(BIN)geometricTest.o
-
-zMatrixTest: metroUtil zMatrix OPLSScan $(UTIL)$(TST)zMatrixTest.cpp $(UTIL)$(TST)zMatrixTest.h 
-	$(NV) $(FLAGS) $(UTIL)$(TST)zMatrixTest.cpp -o $(BIN)zMatrixTest.o
-
-
+.cpp.o:
+	$(NV) $(FLAGS) $< -o $@
+	
+%.o:%.cu
+	$(NV) $(FLAGS) $< -o $@
+	
 dir:
 	mkdir -p $(BIN)
 
 clean:
-	rm -f $(BIN)*.o
+	rm -f $(UTILSRC)*.o $(PARASRC)*.o $(LINSRC)*.o
+	rm -f $(UTILTST)*.o $(PARATST)*.o
+
+	rm -f $(UTILSRC)*.d $(PARASRC)*.d $(LINSRC)*.d
+	rm -f $(UTILTST)*.d $(PARATST)*.d
+
 	rm -f $(BIN)$(UTILTESTEXE)
 	rm -f $(BIN)$(EXE)
 	rm -f $(BIN)$(TSTEXE)
