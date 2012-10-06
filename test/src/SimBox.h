@@ -22,10 +22,14 @@ private:
  	
 public:
  	SimBox(char const* ConfigFile);
- 	Molecule *GetMolecule();
- 	Environment *GetEnviro();
+ 	~SimBox();
+ 	Molecule *getMolecules(){return molecules;};
+ 	Environment *getEnviro(){return enviro;};
  	int ReadStateFile(char const* StateFile);
+ 	int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());};
  	int WriteStateFile(char const* StateFile); 	
+ 	int WriteStateFile(string StateFile) { return WriteStateFile(StateFile.c_str());};
+ 	int writePDB(char const* pdbFile);
  	int getXFromIndex(int idx);
  	int getYFromIndex(int x, int idx);
  	double makePeriodic(double x, double box);

@@ -18,8 +18,12 @@ LinearSim::LinearSim(SimBox *initbox,int initsteps)
 {
 	box=initbox;
 	steps=initsteps;
-
+	currentEnergy=0;
+	oldEnergy=0;
+	accept=0;
+	reject=0;
 }
+
 double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro){
     //store LJ constants locally
     double sigma = calcBlending(atom1.sigma, atom2.sigma);
@@ -429,4 +433,19 @@ double LinearSim::Energy_LRC(Molecule *molec, Environment *enviro){
 			Ecut += (2*PI*NMOL*NMOL/(3.0*Vnew)) * (A12[i]*A12[j]*RC9/3.0 - A6[i]*A6[j]*RC3);
 	
 	return Ecut;
+}
+void LinearSim::runLinear(int steps){
+	return;
+}
+
+void LinearSim::runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, string stateFile, string pdbFile){
+    int accepted = 0; // number of accepted moves
+    int rejected = 0; // number of rejected moves
+    double maxTranslation = enviro->maxTranslation;
+    double maxRotation = enviro->maxRotation;
+    double temperature = enviro->temperature;
+    double kT = kBoltz * temperature;
+
+
+
 }

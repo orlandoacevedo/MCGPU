@@ -20,14 +20,10 @@ SimBox::SimBox(char const* ConfigFile)
 	enviro=NULL;
 }
 
-Molecule * SimBox::GetMolecule()
+SimBox::~SimBox()
 {
-	return molecules;
-}
-
-Environment * SimBox::GetEnviro()
-{
-	return enviro;
+	molecules=NULL;
+	enviro=NULL;
 }
 
 int SimBox::ReadStateFile(char const* StateFile)
@@ -39,6 +35,12 @@ int SimBox::ReadStateFile(char const* StateFile)
 int SimBox::WriteStateFile(char const* StateFile)
 {
 	printf("%s\n",StateFile);
+	return 0;
+}
+
+int SimBox::writePDB(char const* pdbFile)
+{
+	printf("%s\n",pdbFile);
 	return 0;
 }
 

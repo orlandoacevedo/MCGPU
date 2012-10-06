@@ -22,12 +22,22 @@
 #define NCLMAX 10000 /* Maximum number of linked-list cells */
 #define EMPTY -1
 
+// boltzman constant in kcal mol-1 K-1
+const double kBoltz = 0.00198717;
 
 class LinearSim {
 private:
  	SimBox *box;
  	int steps;
- 	
+ 	float currentEnergy;
+  float oldEnergy;
+  int accept;
+  int reject;
+  
+public:
+	float getcurrentEnergy(){return currentEnergy;}; 	
+ 	int getaccept() {return accept;};
+ 	int getreject() {return reject;};
 public:
  	LinearSim(SimBox *initbox,int initsteps);
  	double calc_lj(Atom atom1, Atom atom2, Environment enviro);
@@ -40,6 +50,8 @@ public:
 	double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules);
 	double calcBlending(double d1, double d2);
 	double Energy_LRC(Molecule *molec, Environment *enviro);
+	void runLinear(int steps);
+	void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, string stateFile, string pdbFile);
    	
 };
  	
