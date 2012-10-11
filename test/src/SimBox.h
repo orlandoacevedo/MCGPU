@@ -21,7 +21,7 @@ private:
  	Environment *enviro;
  	
 public:
- 	SimBox(char const* ConfigFile);
+ 	SimBox(Config_Scan configScan);
  	~SimBox();
  	Molecule *getMolecules(){return molecules;};
  	Environment *getEnviro(){return enviro;};

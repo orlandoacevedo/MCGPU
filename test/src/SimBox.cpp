@@ -13,11 +13,110 @@
 #include <time.h>
 #include "SimBox.h"
 
+using namespace std;
 
-SimBox::SimBox(char const* ConfigFile)
+
+SimBox::SimBox(Config_Scan configScan)
 {
 	molecules=NULL;
 	enviro=NULL;
+	stringstream ss;
+		
+  ss << "Running simulation based on Z-Matrix File"<<endl;
+  cout<<ss.str()<<endl; 
+  writeToLog(ss);
+
+  //get environment from the config file
+  enviro=(Environment *)malloc(sizeof(Environment));
+  memcpy(enviro,(configScan.getEnviro()),sizeof(Environment));
+  
+	ss << "Reading Configuation File \nPath: " << configScan.getConfigPath() << endl;
+  cout<<ss.str()<<endl; writeToLog(ss);
+
+  //set up Opls scan 
+  ss << "Reading OPLS File \nPath: " << configScan.getOplsusaparPath() << endl;
+  cout<<ss.str()<<endl; writeToLog(ss);
+	
+  string oplsPath = configScan.getOplsusaparPath();
+  Opls_Scan oplsScan (oplsPath);
+  oplsScan.scanInOpls(oplsPath);
+	ss << "OplsScan and OPLS ref table Created " << endl;
+  cout<<ss.str()<<endl; writeToLog(ss);
+
+  //set up zMatrixScan
+  ss << "Reading Z-Matrix File \nPath: " << configScan.getZmatrixPath() << endl;
+  cout<<ss.str()<<endl; writeToLog(ss);
+  Zmatrix_Scan zMatrixScan (configScan.getZmatrixPath(), &oplsScan);
+  if (zMatrixScan.scanInZmatrix() == -1){
+  	ss << "Error, Could not open: " << configScan.getZmatrixPath() << endl;
+  	cerr << ss.str()<< endl;
+  	writeToLog(ss);
+    exit(1);
+   }
+   
+   ss << "Opened Z-Matrix File \nBuilding "<< enviro->numOfMolecules << " Molecules..." << endl;
+   cout<<ss.str()<<endl; writeToLog(ss);
+
+   //Convert molecule vectors into an array
+   int moleculeIndex = 0;
+   int atomCount = 0;
+
+   vector<Molecule> molecVec = zMatrixScan.buildMolecule(atomCount);
+   int molecMod = enviro->numOfMolecules % molecVec.size();
+   if (molecMod != 0){
+       enviro->numOfMolecules += molecVec.size() - molecMod;
+       cout << "Number of molecules not divisible by specified z-matrix. Changing number of molecules to: " << enviro->numOfMolecules << endl;
+    }
+    molecules = (Molecule *)malloc(sizeof(Molecule) * enviro->numOfMolecules);
+            
+        while(moleculeIndex < enviro->numOfMolecules){
+            molecVec = zMatrixScan.buildMolecule(atomCount);
+            //cycle through the number of molecules from the zMatrix
+            for(int j = 0; j < molecVec.size(); j++){
+                //Copy data from vector to molecule
+                Molecule molec1 = molecVec[j];
+
+                molecules[moleculeIndex].atoms = (Atom *)malloc(sizeof(Atom) * molec1.numOfAtoms);
+                molecules[moleculeIndex].bonds = (Bond *)malloc(sizeof(Bond) * molec1.numOfBonds);
+                molecules[moleculeIndex].angles = (Angle *)malloc(sizeof(Angle) * molec1.numOfAngles);
+                molecules[moleculeIndex].dihedrals = (Dihedral *)malloc(sizeof(Dihedral) * molec1.numOfDihedrals);
+                molecules[moleculeIndex].hops = (Hop *)malloc(sizeof(Hop) * molec1.numOfHops);
+
+                molecules[moleculeIndex].id = molec1.id;
+                molecules[moleculeIndex].numOfAtoms = molec1.numOfAtoms;
+                molecules[moleculeIndex].numOfBonds = molec1.numOfBonds;
+                molecules[moleculeIndex].numOfDihedrals = molec1.numOfDihedrals;
+                molecules[moleculeIndex].numOfAngles = molec1.numOfAngles;
+                molecules[moleculeIndex].numOfHops = molec1.numOfHops;
+
+                //get the atoms from the vector molecule
+                for(int k = 0; k < molec1.numOfAtoms; k++){
+                    molecules[moleculeIndex].atoms[k] = molec1.atoms[k];
+                }               
+               
+                //assign bonds
+                for(int k = 0; k < molec1.numOfBonds; k++){
+                    molecules[moleculeIndex].bonds[k] = molec1.bonds[k];
+                }
+
+                //assign angles
+                for(int k = 0; k < molec1.numOfAngles; k++){
+                    molecules[moleculeIndex].angles[k] = molec1.angles[k];
+                }
+
+                //assign dihedrals
+                for(int k = 0; k < molec1.numOfDihedrals; k++){
+                    molecules[moleculeIndex].dihedrals[k] = molec1.dihedrals[k];
+                }
+
+                atomCount += molecules[moleculeIndex].numOfAtoms;
+               
+                moleculeIndex++;
+            }
+        }
+        enviro->numOfAtoms = atomCount;
+		  ss << "Molecules Created into an Array" << endl;
+        writeToLog(ss);
 }
 
 SimBox::~SimBox()
@@ -34,7 +133,82 @@ int SimBox::ReadStateFile(char const* StateFile)
 
 int SimBox::WriteStateFile(char const* StateFile)
 {
-	printf("%s\n",StateFile);
+    ofstream outFile;
+    int numOfMolecules=enviro->numOfMolecules;
+    
+    outFile.open(StateFile);
+    
+    //print the environment
+    outFile << enviro->x << " " << enviro->y << " " << enviro->z << " " << enviro->numOfAtoms
+        << " " << enviro->temperature << " " << enviro->cutoff <<endl;
+    outFile << endl; // blank line
+    
+    for(int i = 0; i < numOfMolecules; i++){
+        Molecule currentMol = molecules[i];
+        outFile << currentMol.id << endl;
+        outFile << "= Atoms" << endl; // delimiter
+    
+        //write atoms
+        for(int j = 0; j < currentMol.numOfAtoms; j++){
+            Atom currentAtom = currentMol.atoms[j];
+            outFile << currentAtom.id << " "
+                << currentAtom.x << " " << currentAtom.y << " " << currentAtom.z
+                << " " << currentAtom.sigma << " " << currentAtom.epsilon  << " "
+                << currentAtom.charge << endl;
+        }
+        outFile << "= Bonds" << endl; // delimiter
+        
+        //write bonds
+        for(int j = 0; j < currentMol.numOfBonds; j++){
+            Bond currentBond = currentMol.bonds[j];
+            outFile << currentBond.atom1 << " " << currentBond.atom2 << " "
+                << currentBond.distance << " ";
+            if(currentBond.variable)
+                outFile << "1" << endl;
+            else
+                outFile << "0" << endl;
+
+        }
+        outFile << "= Dihedrals" << endl; // delimiter
+        for(int j = 0; j < currentMol.numOfDihedrals; j++){
+            Dihedral currentDi = currentMol.dihedrals[j];
+            outFile << currentDi.atom1 << " " << currentDi.atom2 << " "
+                << currentDi.value << " ";
+            if(currentDi.variable)
+                outFile << "1" << endl;
+            else
+                outFile << "0" << endl;
+        }
+
+        outFile << "=Hops" << endl;
+
+        for(int j = 0; j < currentMol.numOfHops; j++){
+            Hop currentHop = currentMol.hops[j];
+
+            outFile << currentHop.atom1 << " " << currentHop.atom2 << " "
+                << currentHop.hop << endl;
+        }
+        
+        
+        outFile << "= Angles" << endl; // delimiter
+
+        //print angless
+        for(int j = 0; j < currentMol.numOfAngles; j++){
+            Angle currentAngle = currentMol.angles[j];
+
+            outFile << currentAngle.atom1 << " " << currentAngle.atom2 << " "
+                << currentAngle.value << " ";
+            if(currentAngle.variable)
+                outFile << "1" << endl;
+            else
+                outFile << "0" << endl;
+        }
+
+
+        //write a == line
+        outFile << "==" << endl;
+    }
+    outFile.close();
 	return 0;
 }
 

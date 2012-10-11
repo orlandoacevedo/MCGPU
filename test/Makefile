@@ -9,8 +9,8 @@ CLASSSRC=src/
 TESTSRC=test/
 BIN=bin/
 
-FLAGS=-pg -c
-FLAGSALT=-lstdc++ -pg
+FLAGS=-g -c
+FLAGSALT=-lstdc++ -g
 
 TESTCLASS=testclass
 TSTEXE=parallelTest
@@ -22,7 +22,7 @@ CommonUtilOBJ=$(UTILSRC)geometricUtil.o $(UTILSRC)metroUtil.o
 
 ScannerOBJ=$(UTILSRC)State_Scan.o $(UTILSRC)Config_Scan.o $(UTILSRC)Opls_Scan.o $(UTILSRC)Zmatrix_Scan.o
 
-TESTCLASSOBJ=$(CommonUtilOBJ)	$(CLASSSRC)SimBox.o	$(TESTSRC)testSimBox.o 
+TESTCLASSOBJ=$(CommonUtilOBJ)	$(ScannerOBJ) $(CLASSSRC)SimBox.o	$(CLASSSRC)linearSim.o $(CLASSSRC)linearSimulationExample.o 
 	 
 all: $(TESTCLASS)
 

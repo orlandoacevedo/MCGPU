@@ -31,13 +31,13 @@ private:
  	int steps;
  	float currentEnergy;
   float oldEnergy;
-  int accept;
-  int reject;
+  int accepted;
+  int rejected;
   
 public:
 	float getcurrentEnergy(){return currentEnergy;}; 	
- 	int getaccept() {return accept;};
- 	int getreject() {return reject;};
+ 	int getaccepted() {return accepted;};
+ 	int getrejected() {return rejected;};
 public:
  	LinearSim(SimBox *initbox,int initsteps);
  	double calc_lj(Atom atom1, Atom atom2, Environment enviro);
@@ -51,8 +51,7 @@ public:
 	double calcBlending(double d1, double d2);
 	double Energy_LRC(Molecule *molec, Environment *enviro);
 	void runLinear(int steps);
-	void runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, string stateFile, string pdbFile);
-   	
+ 	
 };
  	
 #endif

@@ -13,6 +13,10 @@
 #include <time.h>
 #include "linearSim.h"
 
+double randomFloat(const double start, const double end)
+{
+    return (end-start) * (double(rand()) / RAND_MAX) + start;
+}
 
 LinearSim::LinearSim(SimBox *initbox,int initsteps)
 {
@@ -20,8 +24,8 @@ LinearSim::LinearSim(SimBox *initbox,int initsteps)
 	steps=initsteps;
 	currentEnergy=0;
 	oldEnergy=0;
-	accept=0;
-	reject=0;
+	accepted=0;
+	rejected=0;
 }
 
 double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro){
@@ -434,18 +438,81 @@ double LinearSim::Energy_LRC(Molecule *molec, Environment *enviro){
 	
 	return Ecut;
 }
-void LinearSim::runLinear(int steps){
-	return;
-}
 
-void LinearSim::runLinear(Molecule *molecules, Environment *enviro, int numberOfSteps, string stateFile, string pdbFile){
-    int accepted = 0; // number of accepted moves
-    int rejected = 0; // number of rejected moves
+void LinearSim::runLinear(int steps){
+    Molecule *molecules=box->getMolecules();
+ 	  Environment *enviro=box->getEnviro();
+ 	  
+    int numberOfAtoms = enviro->numOfAtoms;
     double maxTranslation = enviro->maxTranslation;
     double maxRotation = enviro->maxRotation;
     double temperature = enviro->temperature;
     double kT = kBoltz * temperature;
 
+    int atomTotal = 0;
+    int aIndex = 0;
+    int mIndex = 0;
+    double newEnergy;
 
 
+	 
+    for(int move = 0; move < steps; move++){
+        if (oldEnergy==0)
+            oldEnergy = calcEnergyWrapper(molecules, enviro);
+
+        //Pick a molecule to move
+        int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
+        Molecule toMove = molecules[moleculeIndex];
+        Molecule oldToMove;
+        copyMolecule(&oldToMove, &toMove);
+
+        //Pick an atom in the molecule about which to rotate
+        int atomIndex = randomFloat(0, molecules[moleculeIndex].numOfAtoms);
+        Atom vertex = molecules[moleculeIndex].atoms[atomIndex];
+
+        const double deltaX = randomFloat(-maxTranslation, maxTranslation);
+        const double deltaY = randomFloat(-maxTranslation, maxTranslation);
+        const double deltaZ = randomFloat(-maxTranslation, maxTranslation);
+
+        const double degreesX = randomFloat(-maxRotation, maxRotation);
+        const double degreesY = randomFloat(-maxRotation, maxRotation);
+        const double degreesZ = randomFloat(-maxRotation, maxRotation); 
+
+        toMove = moveMolecule(toMove, vertex, deltaX, deltaY, deltaZ,
+        degreesX, degreesY, degreesZ);
+
+        box->keepMoleculeInBox(&toMove, enviro);
+
+        molecules[moleculeIndex] = toMove;
+
+        newEnergy = calcEnergyWrapper(molecules, enviro);
+
+        bool accept = false;
+
+        if(newEnergy < oldEnergy){
+            accept = true;
+        }
+        else{
+            double x = exp(-(newEnergy - oldEnergy) / kT);
+
+            if(x >= randomFloat(0.0, 1.0)){
+                accept = true;
+            }
+            else{
+                accept = false;
+            }
+        }
+
+        if(accept){
+            accepted++;
+            oldEnergy=newEnergy;
+        }
+        else{
+            rejected++;
+            //restore previous configuration
+            molecules[moleculeIndex] = oldToMove;
+            oldEnergy=oldEnergy;//meanless, just show we assigned the same energy values.
+        }
+      }
+      currentEnergy=oldEnergy;
 }
