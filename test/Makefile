@@ -9,8 +9,8 @@ CLASSSRC=src/
 TESTSRC=test/
 BIN=bin/
 
-FLAGS=-g -c
-FLAGSALT=-lstdc++ -g
+FLAGS=-g -pg -c
+FLAGSALT=-lstdc++ -pg -g
 
 TESTCLASS=testclass
 TSTEXE=parallelTest

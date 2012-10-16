@@ -70,8 +70,18 @@ int main(int argc, char ** argv){
 
     //Molecule *molecules;
     LinearSim sim(&box,100);   
-     
+
+    unsigned int seed = configScan.getrandomseed();
     
+    if (seed==0){
+      seed = (unsigned int)time(NULL);
+    }
+
+    srand(seed);
+    ss << "Using seed number:"<<seed<<endl;
+    cout << ss.str();
+    writeToLog(ss);      
+        
     ss << "\nBeginning simulation with: " << endl;
     ss << "\tmolecules "<< box.getEnviro()->numOfMolecules << endl;
     ss << "\tatoms: "<< box.getEnviro()->numOfAtoms << endl;

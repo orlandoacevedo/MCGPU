@@ -7,6 +7,7 @@
 #ifndef METROUTIL_H
 #define METROUTIL_H
 
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -127,6 +128,11 @@ struct Environment{
     the maximum rotation in degrees that an atom can rotate
     */
     double maxRotation;
+
+    /*!
+    seed used in rand() function, make it repeatable 
+    */
+    unsigned int randomseed;
     
 };
 

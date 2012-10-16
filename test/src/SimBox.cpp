@@ -236,7 +236,7 @@ void SimBox::assignAtomPositions(double *dev_doublesX, double *dev_doublesY, dou
 
 void SimBox::generatePoints(Molecule *molecules, Environment *enviro){
 
-    srand((unsigned int) time(NULL));
+    //zx mod for global seed used srand((unsigned int) time(NULL));
 	 //for each Molecule assign a new XYZ
     for (int i = 0; i < enviro->numOfMolecules; i++){
         double baseX = ( (double) rand() / RAND_MAX) * enviro->x;

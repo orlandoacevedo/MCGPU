@@ -4,7 +4,9 @@
  
  */
 
+
 #ifndef GEOMETRICUTIL_H
+
 #define GEOMETRICUTIL_H
 
 #include "metroUtil.h"

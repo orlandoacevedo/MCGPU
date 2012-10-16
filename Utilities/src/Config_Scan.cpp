@@ -1,18 +1,22 @@
+
 /*!\file
   \brief Class used to read and write configuration files.
   \author Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo
  
  */
 #include "Config_Scan.h"
+#include "errno.h"
 
 Config_Scan::Config_Scan(string configPath){
     configpath = configPath;
+    memset(&enviro,0,sizeof(Environment));
+    numOfSteps=0;
 }
 
 void Config_Scan::readInConfig(){
     ifstream configscanner(configpath.c_str());
     if (! configscanner.is_open()){
-        cerr << "Configuration file failed to open." << endl;
+        cerr << "Configuration file failed to open." << errno << endl;
     
         return;
     }
@@ -44,6 +48,7 @@ void Config_Scan::readInConfig(){
                     break;
                 case 12:
                     enviro.numOfMolecules = atoi(line.c_str());
+                    printf("number is %d",enviro.numOfMolecules);
                     break;
                 case 14:
                     oplsuaparPath = line;
@@ -76,6 +81,9 @@ void Config_Scan::readInConfig(){
                 case 26:
                     enviro.maxRotation = atof(line.c_str());
                     break;
+                case 28:
+                		enviro.randomseed=atoi(line.c_str());
+                		break;
             }
 			
 			currentLine++;
@@ -83,8 +91,8 @@ void Config_Scan::readInConfig(){
     }
 }
 
-Environment Config_Scan::getEnviro(){
-    return enviro;
+Environment *Config_Scan::getEnviro(){
+    return &enviro;
 }
 
 string Config_Scan::getConfigPath(){
