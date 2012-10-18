@@ -19,6 +19,11 @@ class SimBox {
 private:
  	Molecule *molecules;
  	Environment *enviro;
+ 	Atom * atompool;
+ 	Bond * bondpool;
+ 	Angle * anglepool;
+ 	Dihedral * dihedralpool;
+ 	Hop *      hoppool;
  	
 public:
  	SimBox(Config_Scan configScan);

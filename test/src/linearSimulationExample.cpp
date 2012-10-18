@@ -51,36 +51,30 @@ int main(int argc, char ** argv){
    	Config_Scan configScan(configPath);
     configScan.readInConfig();
 
+    unsigned int seed = configScan.getrandomseed();
+
+    if (seed==0){
+      seed = (unsigned int)time(NULL);
+    }
+    srand(seed);//init rand sequnce for box positions
+
     //Environment for the simulation
     SimBox box(configScan);
+    ss << "Using seed number in Simulation:"<<seed<<endl;
+    cout << ss.str();writeToLog(ss);
     
+    srand(seed);//init rand sequnce for simulation
+     
     Environment *enviro=box.getEnviro();
     unsigned long simulationSteps = configScan.getSteps();
     
-    ss << "Assigning Molecule Positions..." << endl;
-    writeToLog(ss);
-    box.generatePoints(box.getMolecules(), box.getEnviro());
-    ss << "Finished Assigning Molecule Positions" << endl;
-    writeToLog(ss);
     box.WriteStateFile("InitState.state");
     
     ss << "Starting first step in Simulation" <<endl;
     writeToLog(ss);
 
-
     //Molecule *molecules;
     LinearSim sim(&box,100);   
-
-    unsigned int seed = configScan.getrandomseed();
-    
-    if (seed==0){
-      seed = (unsigned int)time(NULL);
-    }
-
-    srand(seed);
-    ss << "Using seed number:"<<seed<<endl;
-    cout << ss.str();
-    writeToLog(ss);      
         
     ss << "\nBeginning simulation with: " << endl;
     ss << "\tmolecules "<< box.getEnviro()->numOfMolecules << endl;
@@ -100,9 +94,8 @@ int main(int argc, char ** argv){
 				ss << "Accepted: "<< sim.getaccepted() << endl <<"Rejected: "<< sim.getrejected() << endl;
     		writeToLog(ss);
 
-        sprintf(statename,"State%d.state",i+100);
+        sprintf(statename,"%dState.state",i+100);
         box.WriteStateFile(statename);
-
     }
 
     ss << "Steps Complete"<<endl;        
@@ -110,9 +103,7 @@ int main(int argc, char ** argv){
     ss << "Accepted Moves: " << sim.getaccepted() << endl;
     ss << "Rejected Moves: " << sim.getrejected() << endl;
     ss << "Acceptance Rate: " << (int) ((float) sim.getaccepted()/ (float) simulationSteps*100) << "%" << endl;
-	 cout << ss.str();
-	 writeToLog(ss);
-
+	  cout << ss.str();writeToLog(ss);
          
     endTime = clock();
     double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;

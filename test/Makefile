@@ -12,7 +12,7 @@ BIN=bin/
 FLAGS=-g -pg -c
 FLAGSALT=-lstdc++ -pg -g
 
-TESTCLASS=testclass
+TESTCLASS=linearSim
 TSTEXE=parallelTest
 EXE=parallelExample
 LINEXE=linearExample

@@ -48,7 +48,7 @@ void Config_Scan::readInConfig(){
                     break;
                 case 12:
                     enviro.numOfMolecules = atoi(line.c_str());
-                    printf("number is %d",enviro.numOfMolecules);
+                    //printf("number is %d",enviro.numOfMolecules);
                     break;
                 case 14:
                     oplsuaparPath = line;
