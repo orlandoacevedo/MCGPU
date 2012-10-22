@@ -49,7 +49,7 @@ void printState(Environment *enviro, Molecule *molecules, int numOfMolecules, st
                 outFile << "0" << endl;
         }
 
-        outFile << "=Hops" << endl;
+        outFile << "= Hops" << endl;
 
         for(int j = 0; j < currentMol.numOfHops; j++){
             Hop currentHop = currentMol.hops[j];
@@ -327,43 +327,45 @@ vector<Molecule> readInMolecules(string filename){
             //printf("bonds: %d\nangles: %d\natoms: %d\ndihedrals: %d\n\n",
               //      bonds.size(), angles.size(), atoms.size(), dihedrals.size());
             getline(inFile, line);
+			string hold = line.substr(0, 2);
             switch(section){
                 case 0: // id
-                    if(line.compare("=") == 0)
+                    if(hold.compare("= ") == 0)
                         section++;
                     else{
                         currentMolec.id = atoi(line.c_str());
                     }
                     break;
                 case 1: // atom
-                    if(line.compare("=") == 0)
+                    if(hold.compare("= ") == 0)
                         section++;
                     else{
                        atoms.push_back(getAtomFromLine(line)); 
                     }
                     break;
                 case 2: // bond
-                    if(line.compare("=") == 0)
+                    if(hold.compare("= ") == 0)
                         section++;
                     else{
                        bonds.push_back(getBondFromLine(line)); 
                     }
                     break;
                 case 3: // dihedral
-                    if(line.compare("=") == 0)
+                    if(hold.compare("= ") == 0)
                         section++;
                     else{
                        dihedrals.push_back(getDihedralFromLine(line)); 
                     }
                     break;
                 case 4: // hop
-                    if(line.compare("=") == 0)
+                    if(hold.compare("= ") == 0)
                         section++;
                     else{
                         hops.push_back(getHopFromLine(line));
                     }
+					break;
                 case 5: // angle
-                    if(line.compare("==") == 0){
+                    if(hold.compare("==") == 0){
                         section = 0;
                         
                         //convert all vectors to arrays
