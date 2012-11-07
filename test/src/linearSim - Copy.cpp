@@ -113,95 +113,16 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
     //calcEnergy(atoms, enviro, energySum);
     double lj_energy,charge_energy, fValue, nonbonded_energy;
 
+	//for each atom
+
 	//for each molecule
-	for (int mol1_i = 0; mol1_i < enviro->numOfMolecules; mol1_i++){
-		//for every other molecule
-		for (int mol2_i = mol1_i; mol2_i < enviro->numOfMolecules; mol2_i++){
-			Atom atom1 = molecules[mol1_i].atoms[enviro->primaryAtomIndex];
-			Atom atom2 = molecules[mol2_i].atoms[enviro->primaryAtomIndex];
-			
-			//square cutoff value for easy comparison
-			double cutoffSQ = enviro->cutoff * enviro->cutoff;
-				
-			//calculate difference in coordinates
-			double deltaX = atom1.x - atom2.x;
-			double deltaY = atom1.y - atom2.y;
-			double deltaZ = atom1.z - atom2.z;
-		  
-			//calculate distance between atoms
-			deltaX = box->makePeriodic(deltaX, enviro->x);
-			deltaY = box->makePeriodic(deltaY, enviro->y);
-			deltaZ = box->makePeriodic(deltaZ, enviro->z);
-			
-			double r2 = (deltaX * deltaX) +
-						(deltaY * deltaY) + 
-						(deltaZ * deltaZ);
-
-			if (r2 < cutoffSQ){
-			
-				for (int atomIn1_i = 0; atomIn1_i < molecules[mol1_i].numOfAtoms; atomIn1_i++){
-				
-					atom1 = molecules[mol1_i].atoms[atomIn1_i];
-				
-					for (int atomIn2_i = 0; atomIn2_i < molecules[mol2_i].numOfAtoms; atomIn2_i++){
-				
-						atom2 = molecules[mol2_i].atoms[atomIn2_i];
-					
-						if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0){
-							continue;
-						}
-						
-						if(atom1.id > atom2.id)
-							continue;
-
-						//store LJ constants locally and define terms in kcal/mol
-						const double e = 332.06;
-						double sigma = calcBlending(atom1.sigma, atom2.sigma);
-						double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
-					
-						//calculate difference in coordinates
-						deltaX = atom1.x - atom2.x;
-						deltaY = atom1.y - atom2.y;
-						deltaZ = atom1.z - atom2.z;
-					  
-						//calculate distance between atoms
-						deltaX = box->makePeriodic(deltaX, enviro->x);
-						deltaY = box->makePeriodic(deltaY, enviro->y);
-						deltaZ = box->makePeriodic(deltaZ, enviro->z);
-						
-						r2 = (deltaX * deltaX) +
-							 (deltaY * deltaY) + 
-							 (deltaZ * deltaZ);
-										  
-						if (r2 == 0.0)
-							continue;
-					
-						//calculate LJ energies
-						double sig2OverR2 = (sigma * sigma) / r2;
-						double sig6OverR6 = sig2OverR2 * sig2OverR2 * sig2OverR2;
-						double sig12OverR12 = sig6OverR6 * sig6OverR6;
-						double lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-						
-						//calculate Coulombic energies
-						double r = sqrt(r2);
-						double charge_energy = (atom1.charge * atom2.charge * e) / r;
-						
-						//return total nonbonded energy
-						
-						double subtotal = (lj_energy + charge_energy) * box->getFValue(&(molecules[mol1_i].atoms[atomIn1_i]), &(molecules[mol2_i].atoms[atomIn2_i]), molecules, enviro);
-						totalEnergy += subtotal;
-					}
-					
-				}
-				
-			}
-			else{
-				continue;
-			}
-		}
-	}
+	//check distance against cutoff
+	//if good add to calc array
+	//if bad don't add to calc array
+	//endfor
+	//calculate over calc array
+	//endfor
 	
-	/*
     //for each calculation
     for(int idx=0; idx<N; idx++){
         //calculate the x and y positions in the Atom array
@@ -218,13 +139,13 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
             energySum[idx] = 0.0;
         }
         else{
-            lj_energy = calc_lj(xAtom,yAtom,*enviro);
-            charge_energy = calcCharge(xAtom, yAtom, enviro);
-            //nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
+            //lj_energy = calc_lj(xAtom,yAtom,*enviro);
+            //charge_energy = calcCharge(xAtom, yAtom, enviro);
+            nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
 
             //store the sum in array
-            energySum[idx] = (lj_energy + charge_energy);
-            //energySum[idx] = (nonbonded_energy);
+            //energySum[idx] = (lj_energy + charge_energy);
+            energySum[idx] = (nonbonded_energy);
         }
 	}
 	 
@@ -238,7 +159,7 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 
         totalEnergy += energySum[i];
     }
-*/
+
     free(energySum);
     return totalEnergy;
 }
@@ -265,13 +186,13 @@ void LinearSim::calcEnergy(Atom *atoms, Environment *enviro, double *energySum){
             energySum[idx] = 0.0;
         }
         else{
-            lj_energy = calc_lj(xAtom,yAtom,*enviro);
-            charge_energy = calcCharge(xAtom, yAtom, enviro);
-            //nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
+            //lj_energy = calc_lj(xAtom,yAtom,*enviro);
+            //charge_energy = calcCharge(xAtom, yAtom, enviro);
+            nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
 
             //store the sum in array
-            energySum[idx] = (lj_energy + charge_energy);
-            //energySum[idx] = (nonbonded_energy);
+            //energySum[idx] = (lj_energy + charge_energy);
+            energySum[idx] = (nonbonded_energy);
         }
 	 }
 }

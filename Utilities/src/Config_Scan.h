@@ -59,6 +59,8 @@ class Config_Scan{
           The nonbonded cutoff distance.
         */
         long cutoff;
+		
+		void throwScanError(string message);
 
     public:
 

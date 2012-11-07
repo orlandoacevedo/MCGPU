@@ -116,7 +116,7 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 	//for each molecule
 	for (int mol1_i = 0; mol1_i < enviro->numOfMolecules; mol1_i++){
 		//for every other molecule
-		for (int mol2_i = mol1_i; mol2_i < enviro->numOfMolecules; mol2_i++){
+		for (int mol2_i = 0; mol2_i < enviro->numOfMolecules; mol2_i++){
 			Atom atom1 = molecules[mol1_i].atoms[enviro->primaryAtomIndex];
 			Atom atom2 = molecules[mol2_i].atoms[enviro->primaryAtomIndex];
 			
