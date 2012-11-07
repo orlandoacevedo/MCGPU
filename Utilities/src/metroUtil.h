@@ -133,6 +133,11 @@ struct Environment{
     seed used in rand() function, make it repeatable 
     */
     unsigned int randomseed;
+	
+    /*!
+    Which atom(s) from molecule to use as primaries when cutting off atoms. 
+    */
+	int primaryAtomIndex;
     
 };
 

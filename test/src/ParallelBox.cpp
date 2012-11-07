@@ -599,14 +599,13 @@ Molecule* SimBox::getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environme
 }
 
 double SimBox::getFValue(Atom *atom1, Atom *atom2, Molecule *molecules, Environment *enviro){
-    //Molecule *m1 = getMoleculeFromAtomID(atom1, molecules, enviro);
-    //Molecule *m2 = getMoleculeFromAtomID(atom2, molecules, enviro);
+    Molecule *m1 = getMoleculeFromAtomID(atom1, molecules, enviro);
+    Molecule *m2 = getMoleculeFromAtomID(atom2, molecules, enviro);
     
-    if(atom1->id / 3 != atom2->id/ 3) //(m1->id != m2->id)
+    if(m1->id != m2->id)
         return 1.0;
     else{
-        //int hops = hopGE3(atom1->id, atom2->id, m1);
-		int hops = abs(((int)atom1->id % 3) - ((int)atom2->id % 3)) ;
+        int hops = hopGE3(atom1->id, atom2->id, m1);
         if (hops == 3)
             return 0.5;
         else if (hops > 3)

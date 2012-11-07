@@ -9,7 +9,7 @@
 #number of steps
 1000
 #number of molecues
-256
+64
 #path to opls.par file
 Utilities/bossFiles/oplsaa.par
 #path to z matrix file
@@ -24,3 +24,7 @@ pdbOutput.pdb
 9.0
 #max rotation
 15.0
+#Random Seed Input
+
+#Primary Atom Index
+1
