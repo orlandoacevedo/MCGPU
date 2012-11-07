@@ -94,7 +94,7 @@ public:
    Atom *getdevAtom() {return atoms_device;};
    Environment *getdevEnvironment() {return enviro_device;};  
    
-   Atom *gethostAtom() {return innerbox->getAom();};
+   Atom *gethostAtom() {return innerbox->getAtom();};
    Environment *gethostEnvironment() {return innerbox->getEnviro();};  
    Molecule *gethostMolecules() {return innerbox->getMolecules();};  
   

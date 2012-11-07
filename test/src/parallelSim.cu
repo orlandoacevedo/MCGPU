@@ -92,7 +92,7 @@ double ParallelSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro){
 //double ParallelSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules){
 double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
     SimBox *innerbox=box->getSimBox();
-    Atom *atoms=innerbox->getAom();
+    Atom *atoms=innerbox->getAtom();
     Environment *enviro=innerbox->getEnviro();
     Molecule *molecules=innerbox->getMolecules();
     
@@ -100,9 +100,6 @@ double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
     //setup CUDA storage
     double totalEnergy = 0.0;
     
-//    double *energySum_device =getdevEnergySum();
-//    double *energySum_host=gethostEnergySum();
-
     //calculate CUDA thread mgmt
     int N =(int) ( pow( (float) enviro->numOfAtoms,2)-enviro->numOfAtoms)/2;
     int blocks = N / THREADS_PER_BLOCK + (N % THREADS_PER_BLOCK == 0 ? 0 : 1); 
@@ -113,13 +110,6 @@ double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
     size_t atomSize = enviro->numOfAtoms * sizeof(Atom);
     size_t energySumSize = N * sizeof(double);
     
-    //allocate memory on the device
-//    energySum_host = (double *) malloc(energySumSize);
-/*    cudaMalloc((void **) &atoms_device, atomSize);
-    cudaMalloc((void **) &energySum_device, energySumSize);
-    cudaMalloc((void **) &enviro_device, sizeof(Environment));
-*/
-
     //copy data to the device
     box->CopyBoxtoDevice(innerbox);
     Atom *atoms_device=box->getdevAtom();
@@ -132,7 +122,6 @@ double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
     
     calcEnergy <<<blocks, THREADS_PER_BLOCK>>>(atoms_device, enviro_device, energySum_device, molec_d, hops_d);
     
-//    cout<<"energySum_host"<<energySum_host<<"energySum_device"<<energySum_device<<"size"<<energySumSize<<endl;
     cudaErrorCheck(cudaMemcpy(energySum_host, energySum_device, energySumSize, cudaMemcpyDeviceToHost));
 
     for(int i = 0; i < N; i++){
@@ -268,6 +257,7 @@ void ParallelSim::runParallel(int steps){
         if (oldEnergy==0)
             oldEnergy = calcEnergyWrapper(molecules, enviro);
 
+				//innerbox->WriteStateFile("begin.state");
         //Pick a molecule to move
         int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
         Molecule toMove = molecules[moleculeIndex];
@@ -290,10 +280,11 @@ void ParallelSim::runParallel(int steps){
         degreesX, degreesY, degreesZ);
 
         innerbox->keepMoleculeInBox(&toMove, enviro);
-
+        
         molecules[moleculeIndex] = toMove;
 
-				box->CopyBoxtoDevice(innerbox);
+				//innerbox->WriteStateFile("end.state");
+				//box->CopyBoxtoDevice(innerbox);
 				
         newEnergy = calcEnergyWrapper(this->getGPUSimBox());
 
@@ -317,7 +308,8 @@ void ParallelSim::runParallel(int steps){
         if(accept){
             accepted++;
             oldEnergy=newEnergy;
-            box->CopyBoxtoHost(innerbox);
+            
+            //box->CopyBoxtoHost(innerbox);
         }
         else{
             rejected++;
