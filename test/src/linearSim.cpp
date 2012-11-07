@@ -569,8 +569,6 @@ void LinearSim::runLinear(int steps){
     int aIndex = 0;
     int mIndex = 0;
     double newEnergy;
-
-
 	 
     for(int move = 0; move < steps; move++){
         if (oldEnergy==0)

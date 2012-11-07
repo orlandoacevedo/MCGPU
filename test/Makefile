@@ -1,4 +1,5 @@
 CC=gcc
+NVCC=nvcc
 
 UTILSRC=../Utilities/src/
 UTILTST=../Utilities/test/
@@ -9,10 +10,14 @@ CLASSSRC=src/
 TESTSRC=test/
 BIN=bin/
 
-FLAGS=-g -pg -c
+CFLAGS=-g -pg -c
 FLAGSALT=-lstdc++ -pg -g
 
+CUFLAGS=-arch sm_20 -c
+
 TESTCLASS=linearSim
+PARASIM=parallelSim
+
 TSTEXE=parallelTest
 EXE=parallelExample
 LINEXE=linearExample
@@ -23,11 +28,15 @@ CommonUtilOBJ=$(UTILSRC)geometricUtil.o $(UTILSRC)metroUtil.o
 ScannerOBJ=$(UTILSRC)State_Scan.o $(UTILSRC)Config_Scan.o $(UTILSRC)Opls_Scan.o $(UTILSRC)Zmatrix_Scan.o
 
 TESTCLASSOBJ=$(CommonUtilOBJ)	$(ScannerOBJ) $(CLASSSRC)SimBox.o	$(CLASSSRC)linearSim.o $(CLASSSRC)linearSimulationExample.o 
+
+ParallelOBJS=$(CommonUtilOBJ)	$(ScannerOBJ) $(CLASSSRC)SimBox.o	$(CLASSSRC)parallelSim.o $(CLASSSRC)parallelSimulationExample.o $(CLASSSRC)GPUSimBox.o
 	 
-all: $(TESTCLASS)
+all: $(TESTCLASS) ${PARASIM}
 
 $(TESTCLASS):$(TESTCLASSOBJ)
 	$(CC) $(FLAGSALT) $(TESTCLASSOBJ) -o $(TESTCLASS) 
+${PARASIM}:${ParallelOBJS}
+	$(NVCC) $(FLAGSALT) $(ParallelOBJS) -o $(PARASIM)
 
 -include $(OBJS:.o=.d) 
 	
@@ -46,10 +55,10 @@ $(TESTCLASS):$(TESTCLASSOBJ)
   rm -f $@.$$$$ $@.p.$$$$
 
 .cpp.o:
-	$(CC) $(FLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 	
 %.o:%.cu
-	$(CC) $(FLAGS) $< -o $@
+	$(NVCC) $(CUFLAGS) $< -o $@
 	
 dir:
 	mkdir -p $(BIN)
