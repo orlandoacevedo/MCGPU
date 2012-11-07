@@ -30,6 +30,7 @@ public:
  	~SimBox();
  	Molecule *getMolecules(){return molecules;};
  	Environment *getEnviro(){return enviro;};
+ 	Atom *getAom() {return atompool;};
  	int ReadStateFile(char const* StateFile);
  	int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());};
  	int WriteStateFile(char const* StateFile); 	

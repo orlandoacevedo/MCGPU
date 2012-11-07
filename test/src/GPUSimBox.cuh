@@ -86,21 +86,21 @@ public:
 
   SimBox *getSimBox() { return innerbox;};
 
-   __device__ DeviceMolecule *getdevDeviceMolecule() { return molec_d;};
-   __device__ Bond *getdevBond() { return  bonds_d;};
-   __device__ Angle *getdevAngle() {return angles_d;};
-   __device__ Dihedral * getdevDihedral() {return dihedrals_d;};
-   __device__ Hop * getdevHop() {return hops_d;};
-   __device__ Atom *getdevAtom() {return atoms_device;};
-   __device__ Environment *getdevEnvironment() {return enviro_device;};  
+   DeviceMolecule *getdevDeviceMolecule() { return molec_d;};
+   Bond *getdevBond() { return  bonds_d;};
+   Angle *getdevAngle() {return angles_d;};
+   Dihedral * getdevDihedral() {return dihedrals_d;};
+   Hop * getdevHop() {return hops_d;};
+   Atom *getdevAtom() {return atoms_device;};
+   Environment *getdevEnvironment() {return enviro_device;};  
    
    Atom *gethostAtom() {return innerbox->getAom();};
    Environment *gethostEnvironment() {return innerbox->getEnviro();};  
    Molecule *gethostMolecules() {return innerbox->getMolecules();};  
   
- 	int initGPUSimBox(SimBox *hostbox);
- 	int CopyBoxtoHost(SimBox hostbox);
- 	int CopyBoxtoDevice(SimBox hostbox);
+ 	 int initGPUSimBox(SimBox *hostbox);
+ 	int CopyBoxtoHost(SimBox *hostbox);
+ 	int CopyBoxtoDevice(SimBox *hostbox);
 
  	int getXFromIndex(int idx);
  	int getYFromIndex(int x, int idx);

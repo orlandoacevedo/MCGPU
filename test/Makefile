@@ -13,7 +13,7 @@ BIN=bin/
 CFLAGS=-g -pg -c
 FLAGSALT=-lstdc++ -pg -g
 
-CUFLAGS=-arch sm_20 -c
+CUFLAGS=-arch sm_20 -g -c
 
 TESTCLASS=linearSim
 PARASIM=parallelSim
@@ -29,7 +29,7 @@ ScannerOBJ=$(UTILSRC)State_Scan.o $(UTILSRC)Config_Scan.o $(UTILSRC)Opls_Scan.o 
 
 TESTCLASSOBJ=$(CommonUtilOBJ)	$(ScannerOBJ) $(CLASSSRC)SimBox.o	$(CLASSSRC)linearSim.o $(CLASSSRC)linearSimulationExample.o 
 
-ParallelOBJS=$(CommonUtilOBJ)	$(ScannerOBJ) $(CLASSSRC)SimBox.o	$(CLASSSRC)parallelSim.o $(CLASSSRC)parallelSimulationExample.o $(CLASSSRC)GPUSimBox.o
+ParallelOBJS=$(CommonUtilOBJ)	$(ScannerOBJ) $(CLASSSRC)SimBox.o	$(CLASSSRC)parallelSim.o $(CLASSSRC)parallelSimulationExample.o $(CLASSSRC)GPUSimBox.o $(CLASSSRC)parallelUtil.o
 	 
 all: $(TESTCLASS) ${PARASIM}
 

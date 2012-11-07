@@ -46,8 +46,8 @@ public:
  	int getaccepted() {return accepted;};
  	int getrejected() {return rejected;};
   GPUSimBox * getGPUSimBox() {return box;};
-  __device__ GPUSimBox * getdevGPUSimBox() {return box;};
- 	__device__ double *getdevEnergySum() { return energySum_device;};
+  GPUSimBox * getdevGPUSimBox() {return box;};
+ 	double *getdevEnergySum() { return energySum_device;};
  	double *gethostEnergySum() { return energySum_host;};
  	double calcEnergyWrapper(Molecule *molecules, Environment *enviro);
  	double calcEnergyWrapper(GPUSimBox *box);
@@ -56,7 +56,7 @@ public:
 
 public:
   double wrapBox(double x, double box);
-	__device__ int getXFromIndex(int idx);
+/*	__device__ int getXFromIndex(int idx);
 	__device__ int getYFromIndex(int x, int idx);
 	__device__ double makePeriodic(double x, double box);
 	__device__ double calc_lj(Atom atom1, Atom atom2, Environment enviro);
@@ -65,6 +65,7 @@ public:
 	__device__ int getMoleculeFromAtomID(Atom a1, DeviceMolecule *dev_molecules, Environment enviro);
 	__device__ double getFValue(Atom atom1, Atom atom2, DeviceMolecule *dev_molecules, Environment *enviro, Hop *hops);
 	__device__ int hopGE3(int atom1, int atom2, DeviceMolecule dev_molecule, Hop *molecule_hops);
+	*/
 	Molecule* getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Environment enviro);
  	int hopGE3Host(int atom1, int atom2, Molecule molecule);
   double getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Environment *enviro);

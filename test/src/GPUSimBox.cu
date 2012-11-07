@@ -60,10 +60,9 @@ int GPUSimBox::initGPUSimBox(SimBox *hostbox)
     //allocate memory on the device
     struct DeviceMolecule *dMole_h=(struct DeviceMolecule *)malloc(dMolecSize);
     
-    cudaMalloc((void **) &atoms_device, atomSize);
     cudaMalloc((void **) &enviro_device, sizeof(Environment));
     cudaMalloc((void **) &molec_d, dMolecSize);
-
+    cudaMalloc((void **) &atoms_device, atomSize);
 
     if (molecules != NULL){
         int atomCount = 0;
@@ -105,7 +104,7 @@ int GPUSimBox::initGPUSimBox(SimBox *hostbox)
         dihedralSize = sizeof(Dihedral) * dihedralCount;
         hopSize = sizeof(Hop) * hopCount;
                 
-        cudaMalloc((void **) &molec_d, dMolecSize);
+       // cudaMalloc((void **) &molec_d, dMolecSize);
         cudaMalloc((void **) &bonds_d, bondSize);
         cudaMalloc((void **) &angles_d, angleSize);
         cudaMalloc((void **) &dihedrals_d, dihedralSize);
@@ -128,10 +127,10 @@ GPUSimBox::~GPUSimBox()
 		delete innerbox;
 }
 
-int GPUSimBox::CopyBoxtoHost(SimBox hostbox)
+int GPUSimBox::CopyBoxtoHost(SimBox *hostbox)
 {
-		Environment *enviro=hostbox.getEnviro();
-		Molecule *molecules=hostbox.getMolecules();
+		Environment *enviro=hostbox->getEnviro();
+		Molecule *molecules=hostbox->getMolecules();
 
     cudaErrorCheck(cudaMemcpy(molecules[0].atoms,atoms_device,  atomSize, cudaMemcpyHostToDevice));
     cudaErrorCheck(cudaMemcpy(molecules[0].bonds, bonds_d, bondSize, cudaMemcpyHostToDevice));
@@ -142,10 +141,10 @@ int GPUSimBox::CopyBoxtoHost(SimBox hostbox)
     return 0;
 
 }
-int GPUSimBox::CopyBoxtoDevice(SimBox hostbox)
+int GPUSimBox::CopyBoxtoDevice(SimBox *hostbox)
 {
-		Environment *enviro=hostbox.getEnviro();
-		Molecule *molecules=hostbox.getMolecules();
+		Environment *enviro=hostbox->getEnviro();
+		Molecule *molecules=hostbox->getMolecules();
 
     cudaErrorCheck(cudaMemcpy(atoms_device, molecules[0].atoms, atomSize, cudaMemcpyHostToDevice));
     cudaErrorCheck(cudaMemcpy(bonds_d, molecules[0].bonds, bondSize, cudaMemcpyHostToDevice));
