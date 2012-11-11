@@ -15,11 +15,6 @@
 
 __global__ void calcEnergy(Atom *atoms, Environment *enviro, double *energySum, DeviceMolecule *dev_molecules, Hop *hops);
 
-double randomFloat(const double start, const double end)
-{
-    return (end-start) * (double(rand()) / RAND_MAX) + start;
-}
-
 ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 {
 	box=initbox;

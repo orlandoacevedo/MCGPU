@@ -19,11 +19,17 @@ using namespace std;
 #define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
 
 
+double randomFloat(const double start, const double end)
+{
+    return (end-start) * (double(rand()) / RAND_MAX) + start;
+}
+
 SimBox::SimBox(Config_Scan configScan)
 {
 	molecules=NULL;
 	enviro=NULL;
 	stringstream ss;
+	memset(&changedmole,0,sizeof(changedmole));
 		
   ss << "Running simulation based on Z-Matrix File"<<endl;
   cout<<ss.str()<<endl; 
@@ -170,6 +176,7 @@ SimBox::SimBox(Config_Scan configScan)
         for(int k=0;k<count[0];k++)
           atompool[offset*count[0]+k].id=offset*count[0]+k;
         
+     
         for(int k=0;k<count[1];k++){
           bondpool[offset*count[1]+k].atom1+=m*count[0];
           bondpool[offset*count[1]+k].atom2+=m*count[0];
@@ -217,7 +224,13 @@ SimBox::~SimBox()
   FREE(anglepool);
   FREE(dihedralpool);
   FREE(hoppool);
-
+ 
+  //free memory of changedmole
+  FREE(changedmole.atoms);
+  FREE(changedmole.bonds);
+  FREE(changedmole.angles);
+  FREE(changedmole.dihedrals);
+  FREE(changedmole.hops);
 }
 
 int SimBox::ReadStateFile(char const* StateFile)
@@ -623,4 +636,95 @@ int SimBox::hopGE3(int atom1, int atom2, Molecule *molecule){
     myHop++;
 	}
 	 return 0;
+}
+
+int SimBox::ChangeMolecule()
+{
+    double maxTranslation = enviro->maxTranslation;
+    double maxRotation = enviro->maxRotation;
+
+    //Pick a molecule to move
+    int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
+        
+    saveChangedMole(moleculeIndex);
+        
+   //Pick an atom in the molecule about which to rotate
+   int atomIndex = randomFloat(0, molecules[moleculeIndex].numOfAtoms);
+   Atom vertex = molecules[moleculeIndex].atoms[atomIndex];
+
+   const double deltaX = randomFloat(-maxTranslation, maxTranslation);
+   const double deltaY = randomFloat(-maxTranslation, maxTranslation);
+   const double deltaZ = randomFloat(-maxTranslation, maxTranslation);
+
+   const double degreesX = randomFloat(-maxRotation, maxRotation);
+   const double degreesY = randomFloat(-maxRotation, maxRotation);
+   const double degreesZ = randomFloat(-maxRotation, maxRotation); 
+
+   moveMolecule(molecules[moleculeIndex], vertex, deltaX, deltaY, deltaZ,
+        degreesX, degreesY, degreesZ);
+
+   keepMoleculeInBox(&molecules[moleculeIndex], enviro);
+
+   return moleculeIndex;
+}
+
+int SimBox::Rollback(int moleno)
+{
+	 return copyMolecule(&molecules[moleno],&changedmole);
+}
+
+int SimBox::saveChangedMole(int moleno)
+{
+  Molecule *mole_src=&molecules[moleno];
+  
+  //free memory of changedmole before allocate memory
+  FREE(changedmole.atoms);
+  FREE(changedmole.bonds);
+  FREE(changedmole.angles);
+  FREE(changedmole.dihedrals);
+  FREE(changedmole.hops);
+
+  memcpy(&changedmole,mole_src,sizeof(changedmole));
+  
+  changedmole.atoms = (Atom *)malloc(sizeof(Atom) * mole_src->numOfAtoms);
+  changedmole.bonds = (Bond *)malloc(sizeof(Bond) * mole_src->numOfBonds);
+  changedmole.angles = (Angle *)malloc(sizeof(Angle) * mole_src->numOfAngles);
+  changedmole.dihedrals = (Dihedral *)malloc(sizeof(Dihedral) * mole_src->numOfDihedrals);
+	changedmole.hops = (Hop *)malloc(sizeof(Hop) * mole_src->numOfHops);
+	
+	copyMolecule(&changedmole,mole_src);
+	
+	return 0;
+}
+
+int SimBox::copyMolecule(Molecule *mole_dst, Molecule *mole_src)
+{
+    mole_dst->numOfAtoms = mole_src->numOfAtoms;
+    mole_dst->numOfBonds = mole_src->numOfBonds;
+    mole_dst->numOfAngles = mole_src->numOfAngles;
+    mole_dst->numOfDihedrals = mole_src->numOfDihedrals;
+    mole_dst->numOfHops =  mole_src->numOfHops;
+    mole_dst->id = mole_src->id;
+    
+  for(int i = 0; i < mole_src->numOfAtoms; i++){
+        mole_dst->atoms[i] = mole_src->atoms[i];
+  }
+
+  for(int i = 0; i < mole_src->numOfBonds; i++){
+        mole_dst->bonds[i] = mole_src->bonds[i];
+  }
+  
+  for(int i = 0; i < mole_src->numOfAngles; i++){
+        mole_dst->angles[i] = mole_src->angles[i];
+  }
+  
+  for(int i = 0; i < mole_src->numOfDihedrals; i++){
+        mole_dst->dihedrals[i] = mole_src->dihedrals[i];
+  }
+	
+	for(int i = 0; i < mole_src->numOfHops; i++){
+        mole_dst->hops[i] = mole_src->hops[i];
+  }
+  
+  return 0;  	
 }

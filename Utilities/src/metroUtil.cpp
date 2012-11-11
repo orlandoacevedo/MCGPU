@@ -209,7 +209,7 @@ void writeOutAtoms(Atom *atoms, Environment *enviro, string filename, int accept
    }
    outputFile.close();
 }
-
+/*
 void copyMolecule(Molecule *molec1, Molecule *molec2){
     molec1->atoms = (Atom *)malloc(sizeof(Atom) * molec2->numOfAtoms);
     molec1->bonds = (Bond *)malloc(sizeof(Bond) * molec2->numOfBonds);
@@ -240,7 +240,7 @@ void copyMolecule(Molecule *molec1, Molecule *molec2){
         molec1->hops[i] = molec2->hops[i];
     }
 }
-
+*/
 void writeToLog(string text,int stamp){
     string filename = "OutputLog";
 	 ofstream logFile;

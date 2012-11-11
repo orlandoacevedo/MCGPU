@@ -15,8 +15,11 @@
 #include "../../Utilities/src/Zmatrix_Scan.h"
 #include "../../Utilities/src/State_Scan.h"
 
+extern double randomFloat(const double start, const double end);
+
 class SimBox {
 private:
+ 	Molecule changedmole;
  	Molecule *molecules;
  	Environment *enviro;
  	Atom * atompool;
@@ -24,6 +27,7 @@ private:
  	Angle * anglepool;
  	Dihedral * dihedralpool;
  	Hop *      hoppool;
+
  	
 public:
  	SimBox(Config_Scan configScan);
@@ -47,7 +51,11 @@ public:
  	void generatefccBox(Molecule *molecules, Environment *enviro);
  	void generatePoints(Molecule *molecules, Environment *enviro);
  	void assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Molecule *molec, Environment *enviro);
- 	
+ 	int ChangeMolecule();
+  int Rollback(int moleno);
+private:
+	int copyMolecule(Molecule *mole_dst, Molecule *mole_src);
+	int saveChangedMole(int moleno);
 };
  	
 #endif
