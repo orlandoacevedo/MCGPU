@@ -103,7 +103,7 @@ int main(int argc, char ** argv){
 		cout << ss.str();
    	writeToLog(ss);
     
-   
+/*   
     for(int i=0;i<simulationSteps;i+=100)
     {
         sim.runParallel(100);        
@@ -116,7 +116,7 @@ int main(int argc, char ** argv){
         sprintf(statename,"%dState.state",i+100);
         hostbox->WriteStateFile(statename);
     }
-
+*/
     ss << "Steps Complete"<<endl;        
     ss << "Final Energy: " << sim.getcurrentEnergy() << endl;
     ss << "Accepted Moves: " << sim.getaccepted() << endl;

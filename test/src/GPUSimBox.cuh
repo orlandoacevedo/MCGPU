@@ -79,7 +79,7 @@ private:
    size_t angleSize;
    size_t dihedralSize;
    size_t hopSize;
-   
+
 public:
  	GPUSimBox(Config_Scan configScan);
  	~GPUSimBox();

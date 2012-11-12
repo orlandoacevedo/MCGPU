@@ -102,7 +102,7 @@ double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
     //The number of bytes of shared memory per block of
     //size_t sharedSize = sizeof(double) * THREADS_PER_BLOCK;
     
-    size_t atomSize = enviro->numOfAtoms * sizeof(Atom);
+    //size_t atomSize = enviro->numOfAtoms * sizeof(Atom);
     size_t energySumSize = N * sizeof(double);
     
     //copy data to the device
@@ -113,8 +113,10 @@ double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
     Hop *hops_d=box->getdevHop();    
 
     energySum_device =getdevEnergySum();
-    energySum_host=gethostEnergySum();
-    
+    //energySum_host=gethostEnergySum();
+     energySum_host = (double *) malloc(energySumSize);
+     memset(energySum_host,0,energySumSize);
+
     calcEnergy <<<blocks, THREADS_PER_BLOCK>>>(atoms_device, enviro_device, energySum_device, molec_d, hops_d);
     
     cudaErrorCheck(cudaMemcpy(energySum_host, energySum_device, energySumSize, cudaMemcpyDeviceToHost));
@@ -237,48 +239,22 @@ void ParallelSim::runParallel(int steps){
     Molecule *molecules=innerbox->getMolecules();
  	  Environment *enviro=innerbox->getEnviro();
  	  
-    int numberOfAtoms = enviro->numOfAtoms;
-    double maxTranslation = enviro->maxTranslation;
-    double maxRotation = enviro->maxRotation;
+    //int numberOfAtoms = enviro->numOfAtoms;
+    //double maxTranslation = enviro->maxTranslation;
+    //double maxRotation = enviro->maxRotation;
     double temperature = enviro->temperature;
     double kT = kBoltz * temperature;
 
-    int atomTotal = 0;
-    int aIndex = 0;
-    int mIndex = 0;
+    //int atomTotal = 0;
+    //int aIndex = 0;
+    //int mIndex = 0;
     double newEnergy;
 	 
     for(int move = 0; move < steps; move++){
         if (oldEnergy==0)
             oldEnergy = calcEnergyWrapper(molecules, enviro);
 
-				//innerbox->WriteStateFile("begin.state");
-        //Pick a molecule to move
-        int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
-        Molecule toMove = molecules[moleculeIndex];
-        Molecule oldToMove;
-        copyMolecule(&oldToMove, &toMove);
-
-        //Pick an atom in the molecule about which to rotate
-        int atomIndex = randomFloat(0, molecules[moleculeIndex].numOfAtoms);
-        Atom vertex = molecules[moleculeIndex].atoms[atomIndex];
-
-        const double deltaX = randomFloat(-maxTranslation, maxTranslation);
-        const double deltaY = randomFloat(-maxTranslation, maxTranslation);
-        const double deltaZ = randomFloat(-maxTranslation, maxTranslation);
-
-        const double degreesX = randomFloat(-maxRotation, maxRotation);
-        const double degreesY = randomFloat(-maxRotation, maxRotation);
-        const double degreesZ = randomFloat(-maxRotation, maxRotation); 
-
-        toMove = moveMolecule(toMove, vertex, deltaX, deltaY, deltaZ,
-        degreesX, degreesY, degreesZ);
-
-        innerbox->keepMoleculeInBox(&toMove, enviro);
-        
-        molecules[moleculeIndex] = toMove;
-
-				//innerbox->WriteStateFile("end.state");
+        int changeno=innerbox->ChangeMolecule();
 				//box->CopyBoxtoDevice(innerbox);
 				
         newEnergy = calcEnergyWrapper(this->getGPUSimBox());
@@ -309,7 +285,7 @@ void ParallelSim::runParallel(int steps){
         else{
             rejected++;
             //restore previous configuration
-            molecules[moleculeIndex] = oldToMove;
+            innerbox->Rollback(changeno);
             oldEnergy=oldEnergy;//meanless, just show we assigned the same energy values.
         }
       }

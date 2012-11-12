@@ -63,13 +63,15 @@ int GPUSimBox::initGPUSimBox(SimBox *hostbox)
     cudaMalloc((void **) &enviro_device, sizeof(Environment));
     cudaMalloc((void **) &molec_d, dMolecSize);
     cudaMalloc((void **) &atoms_device, atomSize);
-
+    
+   int atomCount = 0;
+   int bondCount = 0;
+   int angleCount = 0;
+   int dihedralCount = 0;
+   int hopCount = 0;
+   
     if (molecules != NULL){
-        int atomCount = 0;
-        int bondCount = 0;
-        int angleCount = 0;
-        int dihedralCount = 0;
-        int hopCount = 0;
+
         for (int i = 0; i < enviro->numOfMolecules; i++){
             dMole_h[i].id=i;
             
