@@ -112,6 +112,7 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
     //calulate all energies
     //calcEnergy(atoms, enviro, energySum);
     double lj_energy,charge_energy, fValue, nonbonded_energy;
+	fValue = 1.0;
 
 	//for each molecule
 	for (int mol1_i = 0; mol1_i < enviro->numOfMolecules; mol1_i++){
@@ -153,6 +154,7 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 						
 						if(atom1.id > atom2.id)
 							continue;
+							
 
 						//store LJ constants locally and define terms in kcal/mol
 						const double e = 332.06;
@@ -186,9 +188,19 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 						double r = sqrt(r2);
 						double charge_energy = (atom1.charge * atom2.charge * e) / r;
 						
-						//return total nonbonded energy
+						//gets the fValue if in the same molecule
+						//cout << "before getF: "<<endl;
+						if(mol1_i == mol2_i){
+							int ** hopTab1 = box->tables[0].hopTable;//mol1_i % box->molecTypenum].hopTable;
+							//int atomNum = molecules[mol1_i].numOfAtoms;
+							//cout << " bob " <<endl;
+							fValue = box->getFValue(atomIn1_i,atomIn2_i,hopTab1);
+							//int tom = bob[3][3];
+						}
 						
-						double subtotal = (lj_energy + charge_energy) * box->getFValue(&(molecules[mol1_i].atoms[atomIn1_i]), &(molecules[mol2_i].atoms[atomIn2_i]), molecules, enviro);
+						//cout << "after getF: "<<endl;
+						//return total nonbonded energy
+						double subtotal = (lj_energy + charge_energy) * fValue;//box->getFValue(&(molecules[mol1_i].atoms[atomIn1_i]), &(molecules[mol2_i].atoms[atomIn2_i]), molecules, enviro);
 						totalEnergy += subtotal;
 					}
 					
@@ -493,7 +505,7 @@ double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *mol
         						}
         						else{
     								nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
-    								nonbonded_energy = nonbonded_energy * box->getFValue(&xAtom, &yAtom, molecules, enviro);
+    								//nonbonded_energy = nonbonded_energy * box->getFValue(&xAtom, &yAtom, molecules, enviro);
     							}
     						totalEnergy += nonbonded_energy;
 						} /* Endif i<j */
@@ -575,6 +587,8 @@ void LinearSim::runLinear(int steps){
     for(int move = 0; move < steps; move++){
         if (oldEnergy==0)
             oldEnergy = calcEnergyWrapper(molecules, enviro);
+			
+		//cout << "after initial Calc"<<endl;
 
         //Pick a molecule to move
         int moleculeIndex = randomFloat(0, enviro->numOfMolecules);

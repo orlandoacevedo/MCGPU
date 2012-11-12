@@ -297,6 +297,14 @@ struct Hop{
 */
 Hop createHop(int atom1, int atom2, int hops);
 
+struct Table{
+
+int **hopTable;
+
+};
+
+Table * createTable(int **table);
+
 /**
   Structure to represent a molecule in the simulation.
 */

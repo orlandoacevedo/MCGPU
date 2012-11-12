@@ -144,6 +144,19 @@ Hop createHop(int atom1, int atom2, int hop){
     return hops;
 }
 
+Table * createTable(int **table){
+	
+	Table * tab1;
+	tab1=(Table *)malloc(sizeof(table));
+	
+	//Table * tab1;
+
+	//int table[num][num];
+	tab1->hopTable = table;
+	
+	return tab1;
+}
+
 void printAtoms(Atom *atoms, int count){
     for(int i = 0; i < count; i++){
         printf("%lu, %f, %f, %f\n", atoms[i].id, atoms[i].x, atoms[i].y, atoms[i].z);
