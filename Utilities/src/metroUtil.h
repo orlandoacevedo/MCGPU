@@ -298,6 +298,23 @@ struct Hop{
 Hop createHop(int atom1, int atom2, int hops);
 
 /**
+	Used in box consturction. The tables are used to look up hop values between
+	two atom pairs. A table is created for each different type of molecule in the simulation
+*/
+struct Table{
+
+int **hopTable;
+
+};
+
+/**
+	@param table - takes a pointer to a multidimentional array to create the table
+	@return - an instance of the Table structure.
+*/
+
+Table * createTable(int **table);
+
+/**
   Structure to represent a molecule in the simulation.
 */
 struct Molecule{
