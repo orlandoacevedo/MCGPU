@@ -18,11 +18,6 @@ double randomFloat(const double start, const double end)
     return (end-start) * (double(rand()) / RAND_MAX) + start;
 }
 
-/**
-	Initializes data to be used in the simulation
-	@param initbox - Initial box to be used in the simulation
-	@param initsteps - Steps to be taken in the simulation - determines how long the simulation will run 
-*/
 LinearSim::LinearSim(SimBox *initbox,int initsteps)
 {
 	box=initbox;
@@ -33,12 +28,6 @@ LinearSim::LinearSim(SimBox *initbox,int initsteps)
 	rejected=0;
 }
 
-/**
-	Calculates the Lendard Jones energies between atoms
-	@param atom1 - firt atom
-	@param atom2 - second atom
-	@param enviro - the environment in the simulation
-*/
 double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro){
     //store LJ constants locally
     double sigma = calcBlending(atom1.sigma, atom2.sigma);
@@ -89,13 +78,8 @@ double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro){
 */
 }
 
-/**
-	A wrapper method which calculates the energy in the system at each step.
-	Calls various supporter methods which calculate the energies between individual atoms
-	@param molecules - pointer to the molecules in the simulation
-	@param enviro - pointer to the environment
-	@return - returns the totalEnergy in the system
-*/
+
+
 double LinearSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro){
     //Copy atoms out of molecules
     Atom *atoms = (Atom *) malloc(sizeof(Atom) * enviro->numOfAtoms);
@@ -115,16 +99,6 @@ double LinearSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro){
     return totalEnergy;
 }
 
-/**
-
-	Calculates the energy between each atom pair.
-	If the atoms are in the same molecule it applies a fudge factor
-	@param atoms - pointer to the atoms in the simulation
-	@param enviro - pointer to the environment
-	@param molecules - pointer to the molecules in the simulation
-	@return - returns the new sum of energy in the system
-	
-*/
 double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules){
     //setup storage
     double totalEnergy = 0.0;
@@ -138,18 +112,11 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
     //calulate all energies
     //calcEnergy(atoms, enviro, energySum);
     double lj_energy,charge_energy, fValue, nonbonded_energy;
-	fValue = 1.0;
-	int mol1Count = 0;
-	int mol2Count = 0;
 
 	//for each molecule
 	for (int mol1_i = 0; mol1_i < enviro->numOfMolecules; mol1_i++){
 		//for every other molecule
-		//cout << mol1_i <<endl;
-		mol1Count = mol1_i;
 		for (int mol2_i = mol1_i; mol2_i < enviro->numOfMolecules; mol2_i++){
-			//cout << mol2_i <<endl;
-			mol2Count = mol2_i;
 			Atom atom1 = molecules[mol1_i].atoms[enviro->primaryAtomIndex];
 			Atom atom2 = molecules[mol2_i].atoms[enviro->primaryAtomIndex];
 			
@@ -175,14 +142,10 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 				for (int atomIn1_i = 0; atomIn1_i < molecules[mol1_i].numOfAtoms; atomIn1_i++){
 				
 					atom1 = molecules[mol1_i].atoms[atomIn1_i];
-					// int atom1Count = atomIn1_i;
-					// cout << "atom1: " << atom1Count <<endl;
 				
 					for (int atomIn2_i = 0; atomIn2_i < molecules[mol2_i].numOfAtoms; atomIn2_i++){
 				
 						atom2 = molecules[mol2_i].atoms[atomIn2_i];
-						// int atom2Count = atomIn2_i;
-						//cout << "atom2: " << atomIn2_i<<endl;
 					
 						if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0){
 							continue;
@@ -190,7 +153,6 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 						
 						if(atom1.id > atom2.id)
 							continue;
-							
 
 						//store LJ constants locally and define terms in kcal/mol
 						const double e = 332.06;
@@ -224,20 +186,9 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 						double r = sqrt(r2);
 						double charge_energy = (atom1.charge * atom2.charge * e) / r;
 						
-						//gets the fValue if in the same molecule
-						//cout << "before getF: "<<endl;
-						fValue = 1.0;
-						if(mol1Count == mol2Count){
-							//cout << "toggle: " << mol1_i % box->molecTypenum << endl;
-							int ** hopTab1 = box->tables[mol1_i % box->molecTypenum].hopTable;
-							//int atomNum = molecules[mol1_i].numOfAtoms;
-							//cout << " bob: " << atom1Count << " 2: "<< atom2Count <<endl;
-							fValue = box->getFValue(atomIn1_i,atomIn2_i,hopTab1);
-						}
-						
-						//cout << "after getF: "<<endl;
 						//return total nonbonded energy
-						double subtotal = (lj_energy + charge_energy) * fValue;//box->getFValue(&(molecules[mol1_i].atoms[atomIn1_i]), &(molecules[mol2_i].atoms[atomIn2_i]), molecules, enviro);
+						
+						double subtotal = (lj_energy + charge_energy) * box->getFValue(&(molecules[mol1_i].atoms[atomIn1_i]), &(molecules[mol2_i].atoms[atomIn2_i]), molecules, enviro);
 						totalEnergy += subtotal;
 					}
 					
@@ -292,13 +243,6 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
     return totalEnergy;
 }
 
-/**
-	calculates energies based on charges and lenard jones values
-	@param atoms - pointer to the atoms in the simulation
-	@param enviro - pointer to the environment
-	@param energySum - pointer to the current sum of energy
-	
-*/
 void LinearSim::calcEnergy(Atom *atoms, Environment *enviro, double *energySum){
     double lj_energy,charge_energy, fValue, nonbonded_energy;
 
@@ -332,9 +276,6 @@ void LinearSim::calcEnergy(Atom *atoms, Environment *enviro, double *energySum){
 	 }
 }
 
-/**
-	Calculates the charge relative from one atom to another
-*/
 double LinearSim::calcCharge(Atom atom1, Atom atom2, Environment *enviro){
     // conversion factor below for units in kcal/mol
     const double e = 332.06;
@@ -378,9 +319,6 @@ double LinearSim::calcCharge(Atom atom1, Atom atom2, Environment *enviro){
 */
 }
 
-/**
-	Calculates the non bonded energies - depracated
-*/
 double LinearSim::calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
     //store LJ constants locally and define terms in kcal/mol
     const double e = 332.06;
@@ -428,9 +366,6 @@ double LinearSim::calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro)
     }
 }
 
-/**
-	Energy Wrapper used in non bonded energy calculations
-*/
 double LinearSim::calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro){
     //setup storage
     double totalEnergy = 0.0;
@@ -451,9 +386,6 @@ double LinearSim::calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro
     return totalEnergy;
 }
 
-/**
-	Used in non bonded energy calculations
-*/
 double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules){
 	// Variables for linked-cell neighbor list	
 	int lc[3];            /* Number of cells in the x|y|z direction */
@@ -561,7 +493,7 @@ double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *mol
         						}
         						else{
     								nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
-    								//nonbonded_energy = nonbonded_energy * box->getFValue(&xAtom, &yAtom, molecules, enviro);
+    								nonbonded_energy = nonbonded_energy * box->getFValue(&xAtom, &yAtom, molecules, enviro);
     							}
     						totalEnergy += nonbonded_energy;
 						} /* Endif i<j */
@@ -623,9 +555,6 @@ double LinearSim::Energy_LRC(Molecule *molec, Environment *enviro){
 	return Ecut;
 }
 
-/**
-	Starts the linear simulation.
-*/
 void LinearSim::runLinear(int steps){
     Molecule *molecules=box->getMolecules();
  	  Environment *enviro=box->getEnviro();
@@ -644,8 +573,6 @@ void LinearSim::runLinear(int steps){
     for(int move = 0; move < steps; move++){
         if (oldEnergy==0)
             oldEnergy = calcEnergyWrapper(molecules, enviro);
-			
-		//cout << "after initial Calc"<<endl;
 
         //Pick a molecule to move
         int moleculeIndex = randomFloat(0, enviro->numOfMolecules);

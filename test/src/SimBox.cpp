@@ -18,12 +18,7 @@ using namespace std;
 
 #define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
 
-/**
-	Creates the Box for use in the simulation.
-	Builds the environment based on either the configuration file or the state file
-	
-	@param configScan - instance of configScan based on the utility
-*/
+
 SimBox::SimBox(Config_Scan configScan)
 {
 	molecules=NULL;
@@ -69,8 +64,6 @@ SimBox::SimBox(Config_Scan configScan)
    int moleculeIndex = 0;
    int atomCount = 0;
 
-   cout << "before build Molecules"<<endl;
-   
    vector<Molecule> molecVec = zMatrixScan.buildMolecule(atomCount);
    int molecMod = enviro->numOfMolecules % molecVec.size();
    if (molecMod != 0){
@@ -80,59 +73,18 @@ SimBox::SimBox(Config_Scan configScan)
     molecules = (Molecule *)malloc(sizeof(Molecule) * enviro->numOfMolecules);
     
     int molecDiv = enviro->numOfMolecules / molecVec.size();
-    molecTypenum=molecVec.size();
+    int molecTypenum=molecVec.size();
     
     int count[5];//sum up number of atoms,bonds,angles,dihedrals,hops
-	//int * 
-	//molecTables = new int
-	//molecTables[molecVec.size()];
-	//Table * tables;
-	tables = new Table[molecVec.size()];
     memset(count,0,sizeof(count));
-	
-	cout << "before template build"<<endl;
-	
     for(int j = 0; j < molecVec.size(); j++){
-		Molecule molec1 = molecVec[j];   
+       Molecule molec1 = molecVec[j];   
        //Copy data from vector to molecule
-		count[0]+=molec1.numOfAtoms;
-		count[1]+=molec1.numOfBonds;
-		count[2]+=molec1.numOfAngles;
-		count[3]+=molec1.numOfDihedrals;
-		count[4]+=molec1.numOfHops;
-		
-		cout << "before table building"<<endl;
-		
-		Hop *myHop = molec1.hops;
-		int **table;
-		table = new int*[molec1.numOfAtoms];
-		for(int k = 0; k< molec1.numOfAtoms;k++)
-			table[k] = new int[molec1.numOfAtoms];
-		//int table[molec1.numOfAtoms][molec1.numOfAtoms];
-		for(int test = 0; test< molec1.numOfAtoms;test++){
-			for(int test1 = 0; test1 < molec1.numOfAtoms; test1++){
-				table[test][test1] = 0;
-			}
-		}
-		
-		for(int k2 = 0; k2<molec1.numOfHops;k2++){
-			int atom1 = myHop->atom1;
-			cout << "atom1: "<< atom1 <<endl;
-			int atom2 = myHop->atom2;
-			cout << "atom2: "<< atom2 <<endl;
-			cout << "hop: " << myHop->hop <<endl;
-			table[atom1][atom2] = myHop->hop;
-			table[atom2][atom1] = myHop->hop;
-			myHop++;
-			}
-	   
-	   //cout << "after table building"<<endl;
-	   //memset(table,0,sizeof(table));
-	   //int table[molec1.numOfAtoms][molec1.numOfAtoms];
-	   //cout << " this is " << j <<endl;
-	   tables[j] = *createTable(table);
-	   
-	   //cout << "after table creation"<<endl;
+       count[0]+=molec1.numOfAtoms;
+       count[1]+=molec1.numOfBonds;
+       count[2]+=molec1.numOfAngles;
+       count[3]+=molec1.numOfDihedrals;
+       count[4]+=molec1.numOfHops;
      }
      
  	   atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]);
@@ -256,9 +208,6 @@ SimBox::SimBox(Config_Scan configScan)
      }
 }
 
-/**
-	This frees all memory set and used during the simulation to avoid leaks
-*/
 SimBox::~SimBox()
 {
   FREE(molecules);
@@ -271,11 +220,6 @@ SimBox::~SimBox()
 
 }
 
-/**
-	This method is used to read in from a state file.
-	
-	@param StateFile - takes the location of the state file to be read in
-*/
 int SimBox::ReadStateFile(char const* StateFile)
 {
     ifstream inFile;
@@ -391,10 +335,6 @@ int SimBox::ReadStateFile(char const* StateFile)
 	return 0;
 }
 
-/**
-	Used to write to a state file.
-	@param StateFile - writes to a state file at the location given
-*/
 int SimBox::WriteStateFile(char const* StateFile)
 {
     ofstream outFile;
@@ -476,19 +416,12 @@ int SimBox::WriteStateFile(char const* StateFile)
 	return 0;
 }
 
-/**
-	writes to a PDB file for visualizing the box
-	@param pdbFile - Location of the pdbFile to be written to
-*/
 int SimBox::writePDB(char const* pdbFile)
 {
 	printf("%s\n",pdbFile);
 	return 0;
 }
 
-/**
-	Assigns atom position based on an X Y Z position
-*/
 void SimBox::assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Molecule *molec, Environment *enviro){
     //Translates each Molecule a random X,Y,and Z direction
 	 //By translating every atom in that molecule by that translation
@@ -505,9 +438,6 @@ void SimBox::assignAtomPositions(double *dev_doublesX, double *dev_doublesY, dou
     }
 }
 
-/**
-	
-*/
 void SimBox::generatePoints(Molecule *molecules, Environment *enviro){
 
     //zx mod for global seed used srand((unsigned int) time(NULL));
@@ -606,7 +536,6 @@ void SimBox::generatefccBox(Molecule *molecules, Environment *enviro){
 		}
 	}
 }
-
 int SimBox::getXFromIndex(int idx){
     int c = -2 * idx;
     int discriminant = 1 - 4 * c;
@@ -655,13 +584,6 @@ void SimBox::keepMoleculeInBox(Molecule *molecule, Environment *enviro){
 		}
 }
 
-/**
-	Deprecated - highly inefficient.
-	@param a1 - a pointer to the atom you are searching for
-	@param molecules - a pointer ot the molecules in the simulation
-	@param enviro - Pointer to the environment
-	@return - pointer to the atom that matches the atom ID
-*/
 Molecule* SimBox::getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro){
     int atomId = a1->id;
     int currentIndex = enviro->numOfMolecules - 1;
@@ -676,46 +598,23 @@ Molecule* SimBox::getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environme
     return &(molecules[currentIndex]);
 }
 
-/**
-	takes two atoms and does a table look up to find the fudge value based on hop values
-	
-	@param atom1 - the id of the first atom
-	@param atom2 - the id of the second atom
-	@param table1 - the look table for the respective molecule type
-	@return - returns the appropriate fudge factor based on the hop value between two atoms
-*/
-double SimBox::getFValue(int atom1, int atom2, int **table1){
-    //Molecule *m1 = getMoleculeFromAtomID(atom1, molecules, enviro);
-    //Molecule *m2 = getMoleculeFromAtomID(atom2, molecules, enviro);
+double SimBox::getFValue(Atom *atom1, Atom *atom2, Molecule *molecules, Environment *enviro){
+    Molecule *m1 = getMoleculeFromAtomID(atom1, molecules, enviro);
+    Molecule *m2 = getMoleculeFromAtomID(atom2, molecules, enviro);
     
-    //if(atom1->id / 3 != atom2->id/ 3) //(m1->id != m2->id)
-        //return 1.0;
-    //else{
-        //int hops = hopGE3(atom1->id, atom2->id, m1);
-	//cout << "before "<<endl;
-	int hops = table1[atom1][atom2];
-	//if(hops != 0)
-        //cout << "the Hop is: " << hops << ". atom1: "<<atom1<< ". atom2: "<<atom2 <<endl;
-	if (hops == 3)
-        return 0.5;
-    else if (hops > 3)
+    if(m1->id != m2->id)
         return 1.0;
-    else
-        return 0.0;
-    //}
+    else{
+        int hops = hopGE3(atom1->id, atom2->id, m1);
+        if (hops == 3)
+            return 0.5;
+        else if (hops > 3)
+            return 1.0;
+        else
+            return 0.0;
+    }
 }
 
-int SimBox::buildTable(int * tab){
-
-	return 0;
-}
-
-/**
-	Deprecated - inefficient. Used in the old getFValue calculation
-	@param atom1 - id or first atom
-	@param atom2 - id of second atom
-	@param molecules - pointer to the molecule
-*/
 int SimBox::hopGE3(int atom1, int atom2, Molecule *molecule){
     Hop *myHop = molecule->hops;
     for(int x=0; x< molecule->numOfHops; x++){        
