@@ -87,11 +87,11 @@ int GPUSimBox::initGPUSimBox(SimBox *hostbox)
             angleCount += molecules[i].numOfAngles;
             dMole_h[i].numOfAngles=molecules[i].numOfAngles;
             
-						dMole_h[i].angleStart = angleCount;
+						dMole_h[i].dihedralStart = dihedralCount;
             dihedralCount += molecules[i].numOfDihedrals;
             dMole_h[i].numOfDihedrals=molecules[i].numOfDihedrals;
 
-						dMole_h[i].angleStart = angleCount;
+						dMole_h[i].hopStart = hopCount;
             hopCount += molecules[i].numOfHops;
             dMole_h[i].numOfHops=molecules[i].numOfHops;
 
