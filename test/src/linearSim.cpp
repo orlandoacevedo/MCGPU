@@ -13,11 +13,6 @@
 #include <time.h>
 #include "linearSim.h"
 
-double randomFloat(const double start, const double end)
-{
-    return (end-start) * (double(rand()) / RAND_MAX) + start;
-}
-
 LinearSim::LinearSim(SimBox *initbox,int initsteps)
 {
 	box=initbox;
@@ -573,31 +568,8 @@ void LinearSim::runLinear(int steps){
     for(int move = 0; move < steps; move++){
         if (oldEnergy==0)
             oldEnergy = calcEnergyWrapper(molecules, enviro);
-
-        //Pick a molecule to move
-        int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
-        Molecule toMove = molecules[moleculeIndex];
-        Molecule oldToMove;
-        copyMolecule(&oldToMove, &toMove);
-
-        //Pick an atom in the molecule about which to rotate
-        int atomIndex = randomFloat(0, molecules[moleculeIndex].numOfAtoms);
-        Atom vertex = molecules[moleculeIndex].atoms[atomIndex];
-
-        const double deltaX = randomFloat(-maxTranslation, maxTranslation);
-        const double deltaY = randomFloat(-maxTranslation, maxTranslation);
-        const double deltaZ = randomFloat(-maxTranslation, maxTranslation);
-
-        const double degreesX = randomFloat(-maxRotation, maxRotation);
-        const double degreesY = randomFloat(-maxRotation, maxRotation);
-        const double degreesZ = randomFloat(-maxRotation, maxRotation); 
-
-        toMove = moveMolecule(toMove, vertex, deltaX, deltaY, deltaZ,
-        degreesX, degreesY, degreesZ);
-
-        box->keepMoleculeInBox(&toMove, enviro);
-
-        molecules[moleculeIndex] = toMove;
+            
+        int changeno=box->ChangeMolecule();
 
         newEnergy = calcEnergyWrapper(molecules, enviro);
 
@@ -624,7 +596,8 @@ void LinearSim::runLinear(int steps){
         else{
             rejected++;
             //restore previous configuration
-            molecules[moleculeIndex] = oldToMove;
+            box->Rollback(changeno);
+            //molecules[moleculeIndex] = oldToMove;
             oldEnergy=oldEnergy;//meanless, just show we assigned the same energy values.
         }
       }

@@ -103,7 +103,7 @@ int main(int argc, char ** argv){
 		cout << ss.str();
    	writeToLog(ss);
     
-/*    
+/*   
     for(int i=0;i<simulationSteps;i+=100)
     {
         sim.runParallel(100);        
