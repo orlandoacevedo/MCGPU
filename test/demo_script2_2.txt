@@ -1,0 +1,16 @@
+#!/bin/sh
+source /opt/asn/etc/asn-bash-profiles-special/modules.sh
+module load cuda/4.2
+#./test/linearSim autoTestConfiguration1.txt
+#./test/linearSim autoTestConfiguration2.txt
+#./test/linearSim autoTestConfiguration3.txt
+./test/linearSim autoTestConfiguration4.txt
+./test/linearSim autoTestConfiguration5.txt
+./test/linearSim autoTestConfiguration6.txt
+
+#./test/parallelSim autoTestConfiguration1.txt
+#./test/parallelSim autoTestConfiguration2.txt
+#./test/parallelSim autoTestConfiguration3.txt
+#./test/parallelSim autoTestConfiguration4.txt
+#./test/parallelSim autoTestConfiguration5.txt
+#./test/parallelSim autoTestConfiguration6.txt
