@@ -113,10 +113,10 @@ __device__ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
 __device__ int getMoleculeFromAtomID(Atom a1, DeviceMolecule *dev_molecules, Environment enviro){
     int atomId = a1.id;
     int currentIndex = enviro.numOfMolecules - 1;
-    int molecId = dev_molecules[currentIndex].id;
+    int molecId = dev_molecules[currentIndex].atomStart;
     while(atomId < molecId && currentIndex > 0){
         currentIndex -= 1;
-        molecId = dev_molecules[currentIndex].id;
+        molecId = dev_molecules[currentIndex].atomStart;
     }
     return molecId;
 

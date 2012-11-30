@@ -225,10 +225,12 @@ int ParallelSim::hopGE3Host(int atom1, int atom2, Molecule molecule){
 Molecule* ParallelSim::getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Environment enviro){
     int atomId = a1.id;
     int currentIndex = enviro.numOfMolecules - 1;
-    int molecId = molecules[currentIndex].id;
+    Molecule molec = molecules[currentIndex];
+	int molecId = molec.atoms[0].id;
     while(atomId < molecId && currentIndex > 0){
         currentIndex -= 1;
-        molecId = molecules[currentIndex].id;
+		molec = molecules[currentIndex];
+		molecId = molec.atoms[0].id;
     }
     return &molecules[currentIndex];
 

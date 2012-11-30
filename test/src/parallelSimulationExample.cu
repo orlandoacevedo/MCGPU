@@ -42,7 +42,7 @@ int main(int argc, char ** argv){
     writeToLog("",START);
     clock_t startTime, endTime;
     startTime = clock();    
-/*        
+       
     if(argc != 2){
 	     	// If not, produce an error message.
 		    printf("Error.  Expected usage: bin/linearSim {configPath}\n");
@@ -56,9 +56,10 @@ int main(int argc, char ** argv){
         cout <<ss.str()<< endl; writeToLog(ss);
         exit(1);
        }
-  */      
+	   
     // Copy the config_path argument.
-   	string configPath("bin/demoConfiguration.txt");
+    // Copy the config_path argument.
+   	string configPath(argv[1]);
    	Config_Scan configScan(configPath);
     configScan.readInConfig();
 
@@ -103,7 +104,6 @@ int main(int argc, char ** argv){
 		cout << ss.str();
    	writeToLog(ss);
     
-/*   
     for(int i=0;i<simulationSteps;i+=100)
     {
         sim.runParallel(100);        
@@ -116,7 +116,7 @@ int main(int argc, char ** argv){
         sprintf(statename,"%dState.state",i+100);
         hostbox->WriteStateFile(statename);
     }
-*/
+
     ss << "Steps Complete"<<endl;        
     ss << "Final Energy: " << sim.getcurrentEnergy() << endl;
     ss << "Accepted Moves: " << sim.getaccepted() << endl;
