@@ -1,5 +1,6 @@
 /*!\file
   \brief Class used to read and write configuration files.
+
   \author Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo
   Class used to read and write configuration files.
  
@@ -58,6 +59,8 @@ class Config_Scan{
           The nonbonded cutoff distance.
         */
         long cutoff;
+		
+		void throwScanError(string message);
 
     public:
 
@@ -76,7 +79,7 @@ class Config_Scan{
         /**
           @return - returns the environment variable in this Config_Scan 
         */
-        Environment getEnviro();
+        Environment * getEnviro();
 
         /**
           @return - returns the path to the configuration file.
@@ -117,6 +120,11 @@ class Config_Scan{
           @return getSteps - returns the nonbonded cutoff in the simulation.
         */
         long getcutoff();
+
+        /**
+          @return getSteps - returns the nonbonded cutoff in the simulation.
+        */        
+        unsigned int getrandomseed() {return enviro.randomseed;};
 
 };
 
