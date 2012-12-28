@@ -1,49 +1,43 @@
-NV=nvcc
+CC=gcc
+NVCC=nvcc
 
 UTILSRC=Utilities/src/
 UTILTST=Utilities/test/
 LINSRC=LinearMetropolis/src/
 PARASRC=parallelMetropolis/src/
 PARATST=parallelMetropolis/test/
+CLASSSRC=src/
+TESTSRC=test/
 BIN=bin/
 
-FLAGS=-arch sm_20 -lcurand -g -c
-FLAGSALT=-arch sm_20 -lcurand -g
+CFLAGS=-g -pg -c
+FLAGSALT=-lstdc++ -pg -g
+
+CUFLAGS=-arch sm_20 -g -c
+
+TESTCLASS=linearSim
+PARASIM=parallelSim
 
 TSTEXE=parallelTest
 EXE=parallelExample
 LINEXE=linearExample
-UTILTESTEXE=utilTest
+UTILTESTEXE=utilTests
 
 CommonUtilOBJ=$(UTILSRC)geometricUtil.o $(UTILSRC)metroUtil.o
 
 ScannerOBJ=$(UTILSRC)State_Scan.o $(UTILSRC)Config_Scan.o $(UTILSRC)Opls_Scan.o $(UTILSRC)Zmatrix_Scan.o
 
-linearSimOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(LINSRC)linearSimulationExample.o  $(LINSRC)metroLinearUtil.o  $(PARATST)baseTests.o
+TESTCLASSOBJ=$(CommonUtilOBJ)	$(ScannerOBJ) $(LINSRC)SimBox.o	$(LINSRC)linearSim.o $(LINSRC)linearSimulationExample.o 
 
-metroSimOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(PARASRC)metropolisSimulationExample.o  $(PARASRC)metroCudaUtil.o  $(PARATST)baseTests.o
-
-TestsOBJ=$(CommonUtilOBJ)	$(PARATST)parallelTest.o	$(PARATST)copyTests.o $(PARATST)baseTests.o	\
-	 $(PARASRC)metroCudaUtil.o 
+ParallelOBJS=$(CommonUtilOBJ)	$(ScannerOBJ) $(LINSRC)SimBox.o	$(PARASRC)parallelSim.o $(PARASRC)parallelSimulationExample.o $(PARASRC)GPUSimBox.o $(PARASRC)parallelUtil.o
 	 
-UtiltestOBJ=$(CommonUtilOBJ) $(ScannerOBJ) $(UTILTST)stateTest.o $(UTILTST)configurationTest.o $(UTILTST)zMatrixTest.o \
-	$(UTILTST)utilityTests.o $(UTILTST)geometricTest.o 
+all: $(TESTCLASS) ${PARASIM}
 
-all: dir $(BIN)$(TSTEXE)  $(BIN)$(UTILTESTEXE) $(BIN)$(EXE) $(BIN)$(LINEXE)
+$(TESTCLASS):$(TESTCLASSOBJ)
+	$(CC) $(FLAGSALT) $(TESTCLASSOBJ) -o $(BIN)/$(TESTCLASS) 
+${PARASIM}:${ParallelOBJS}
+	$(NVCC) $(FLAGSALT) $(ParallelOBJS) -o $(BIN)/$(PARASIM)
 
-$(BIN)$(EXE):$(metroSimOBJ)
-	$(NV) $(FLAGSALT) $(metroSimOBJ) -o $(BIN)$(EXE) 
-
-$(BIN)$(LINEXE): $(linearSimOBJ)
-	$(NV) $(FLAGSALT) $(linearSimOBJ) -o $(BIN)$(LINEXE) 
-	
-$(BIN)$(TSTEXE) : $(TestsOBJ)
-	$(NV) $(FLAGSALT) $(TestsOBJ) -o $(BIN)$(TSTEXE) 
-	
-$(BIN)$(UTILTESTEXE): $(UtiltestOBJ)
-	$(NV) $(UtiltestOBJ) -o $(BIN)$(UTILTESTEXE)
-
-OBJS=$(CommonUtilOBJ) $(ScannerOBJ) $(metroSimOBJ) $(linearSimOBJ) $(TestsOBJ) $(UtiltestOBJ)
 -include $(OBJS:.o=.d) 
 	
 %.d:%.cpp
@@ -56,27 +50,19 @@ OBJS=$(CommonUtilOBJ) $(ScannerOBJ) $(metroSimOBJ) $(linearSimOBJ) $(TestsOBJ) $
 %.d:%.cu
 	@echo "Generate depend file for " $<;                      \
 	dirname $< >$@.p.$$$$;echo "\\" >>$@.p.$$$$;tr -d "\n" <$@.p.$$$$ >$@.$$$$;     \
-	$(NV) -M $(CPPFLAGS) $< >> $@.$$$$;                      \
+	$(CC) -M $(CPPFLAGS) $< >> $@.$$$$;                      \
   sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;     \
   rm -f $@.$$$$ $@.p.$$$$
 
 .cpp.o:
-	$(NV) $(FLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 	
 %.o:%.cu
-	$(NV) $(FLAGS) $< -o $@
+	$(NVCC) $(CUFLAGS) $< -o $@
 	
 dir:
 	mkdir -p $(BIN)
 
 clean:
-	rm -f $(UTILSRC)*.o $(PARASRC)*.o $(LINSRC)*.o
-	rm -f $(UTILTST)*.o $(PARATST)*.o
-
-	rm -f $(UTILSRC)*.d $(PARASRC)*.d $(LINSRC)*.d
-	rm -f $(UTILTST)*.d $(PARATST)*.d
-
-	rm -f $(BIN)$(UTILTESTEXE)
-	rm -f $(BIN)$(EXE)
-	rm -f $(BIN)$(TSTEXE)
-	rm -f $(BIN)$(LINEXE)
+	rm -f $(PARASRC)*.o $(LINSRC)*.o $(TESTSRC)*.o 
+	rm -f $(BIN)/$(TESTCLASS) $(BIN)/$(PARASIM)

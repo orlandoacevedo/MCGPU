@@ -14,7 +14,7 @@
 #include "../../Utilities/src/metroUtil.h"
 #include "../../Utilities/src/Zmatrix_Scan.h"
 #include "../../Utilities/src/State_Scan.h"
-#include "SimBox.h"
+#include "../../LinearMetropolis/src/SimBox.h"
 
 /*!
 Representation of a molecule on the device. It is difficult to use the original
