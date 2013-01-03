@@ -24,7 +24,7 @@ void testConfigScan(){
     assert(pdbOutputPath.compare(cs.getPdbOutputPath()) == 0);
 
     //test box dimensions
-    Environment enviro = cs.getEnviro();
+    Environment* enviro = cs.getEnviro();
     double x = 10.342;
     double y = 1234.45;
     double z = 100.3;
@@ -33,13 +33,13 @@ void testConfigScan(){
     int numberOfSteps = 10000;
     int numberOfMolecules = 500;
     
-    assert(enviro.x == x);
-    assert(enviro.y == y);
-    assert(enviro.z == z);
+    assert(enviro->x == x);
+    assert(enviro->y == y);
+    assert(enviro->z == z);
 
-    assert(enviro.maxTranslation == maxTranslation);
-    assert(enviro.numOfMolecules == numberOfMolecules);
-    assert(enviro.temperature == temperature);
+    assert(enviro->maxTranslation == maxTranslation);
+    assert(enviro->numOfMolecules == numberOfMolecules);
+    assert(enviro->temperature == temperature);
     assert(cs.getSteps() == numberOfSteps); 
 
     cout << "Configuration completed Complete\n" << endl;

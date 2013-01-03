@@ -1,0 +1,10 @@
+#include "SimBox.h"
+
+int main()
+{
+   SimBox simbox;
+   
+   simbox=new SimBox("boss\abc");
+   
+
+}

@@ -1,54 +1,40 @@
-#include "metroLinearUtil.h"
+/*!\file
+  \Class for simulation Box, including Enviroments and points to molocoles,only save all states
+  \author David(Xiao Zhang).
+ 
+  This file contains implement of SimBox that are used to handle enviroments and common function
+  for box.
+ */
+ 
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+#include <time.h>
+#include "linearSim.h"
 
-int getXFromIndex(int idx){
-    int c = -2 * idx;
-    int discriminant = 1 - 4 * c;
-    int qv = (-1 + sqrtf(discriminant)) / 2;
-    return qv + 1;
+/**
+	Initializes data to be used in the simulation
+	@param initbox - Initial box to be used in the simulation
+	@param initsteps - Steps to be taken in the simulation - determines how long the simulation will run 
+*/
+LinearSim::LinearSim(SimBox *initbox,int initsteps)
+{
+	box=initbox;
+	steps=initsteps;
+	currentEnergy=0;
+	oldEnergy=0;
+	accepted=0;
+	rejected=0;
 }
 
-int getYFromIndex(int x, int idx){
-    return idx - (x * x - x) / 2;
-}
-
-double makePeriodic(double x, double box){
-    
-    while(x < -0.5 * box){
-        x += box;
-    }
-
-    while(x > 0.5 * box){
-        x -= box;
-    }
-
-    return x;
-
-}
-
-double wrapBox(double x, double box){
-
-    while(x > box){
-        x -= box;
-    }
-    while(x < 0){
-        x += box;
-    }
-
-    return x;
-}
-
-void keepMoleculeInBox(Molecule *molecule, Environment *enviro){		
-		for (int j = 0; j < molecule->numOfAtoms; j++){
-		//X axis
-			wrapBox(molecule->atoms[j].x, enviro->x);
-		//Y axis
-			wrapBox(molecule->atoms[j].y, enviro->y);
-		//Z axis
-			wrapBox(molecule->atoms[j].z, enviro->z);
-		}
-}
-
-double calc_lj(Atom atom1, Atom atom2, Environment enviro){
+/**
+	Calculates the Lendard Jones energies between atoms
+	@param atom1 - firt atom
+	@param atom2 - second atom
+	@param enviro - the environment in the simulation
+*/
+double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro){
     //store LJ constants locally
     double sigma = calcBlending(atom1.sigma, atom2.sigma);
     double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
@@ -59,9 +45,9 @@ double calc_lj(Atom atom1, Atom atom2, Environment enviro){
     double deltaZ = atom1.z - atom2.z;
 
     //calculate distance between atoms
-    deltaX = makePeriodic(deltaX, enviro.x);
-    deltaY = makePeriodic(deltaY, enviro.y);
-    deltaZ = makePeriodic(deltaZ, enviro.z);
+    deltaX = box->makePeriodic(deltaX, enviro.x);
+    deltaY = box->makePeriodic(deltaY, enviro.y);
+    deltaZ = box->makePeriodic(deltaZ, enviro.z);
     const double r2 = (deltaX * deltaX) +
                       (deltaY * deltaY) + 
                       (deltaZ * deltaZ);
@@ -98,122 +84,14 @@ double calc_lj(Atom atom1, Atom atom2, Environment enviro){
 */
 }
 
-void assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Molecule *molec, Environment *enviro){
-    //Translates each Molecule a random X,Y,and Z direction
-	 //By translating every atom in that molecule by that translation
-
-    //for each Molecule...
-	 for(int i=0; i<enviro->numOfMolecules; i++){
-	     for(int a=0; a<molec[i].numOfAtoms;a++){
-		      Atom myAtom  =  molec[i].atoms[a];
-		      myAtom.x =  dev_doublesX[i] * enviro->x + myAtom.x;
-				myAtom.y =  dev_doublesY[i] * enviro->y + myAtom.y;
-				myAtom.z =  dev_doublesZ[i] * enviro->z + myAtom.z;
-		  }
-		   keepMoleculeInBox(&molec[i],enviro);
-    }
-}
-
-void generatePoints(Molecule *molecules, Environment *enviro){
-
-    srand((unsigned int) time(NULL));
-	 //for each Molecule assign a new XYZ
-    for (int i = 0; i < enviro->numOfMolecules; i++){
-        double baseX = ( (double) rand() / RAND_MAX) * enviro->x;
-        double baseY = ( (double) rand() / RAND_MAX) * enviro->y;
-        double baseZ = ( (double) rand() / RAND_MAX) * enviro->z;
-        for (int j = 0; j < molecules[i].numOfAtoms; j++){
-            molecules[i].atoms[j].x += baseX;
-            molecules[i].atoms[j].y += baseY;
-            molecules[i].atoms[j].z += baseZ;
-        }
-
-        keepMoleculeInBox(&(molecules[i]), enviro);
-    }
-}
-
-void generatefccBox(Molecule *molecules, Environment *enviro){
-	
-	double cells, dcells, cellL, halfcellL;
-	
-	//Determine the number of unit cells in each coordinate direction
-	dcells = pow(0.25 * (double) enviro->numOfMolecules, 1.0/3.0);
-	cells = (int)(dcells + 0.5);
-		
-	//Check if numOfMolecules is a non-fcc number of molecules
-	//and increase the number of cells if necessary
-	while((4 * cells * cells * cells) < enviro->numOfMolecules)
-			cells++;
-			
-	//Determine length of unit cell
-	cellL = enviro->x/ (double) cells;
-	halfcellL = 0.5 * cellL;
-	
-	//Construct the unit cell
-	for (int j = 0; j < molecules[0].numOfAtoms; j++){
-	molecules[0].atoms[j].x += 0.0;
-    molecules[0].atoms[j].y += 0.0;
-    molecules[0].atoms[j].z += 0.0;
-	}
-	
-	for (int j = 0; j < molecules[1].numOfAtoms; j++){
-	molecules[1].atoms[j].x += halfcellL;
-    molecules[1].atoms[j].y += halfcellL;
-    molecules[1].atoms[j].z += 0.0;
-    }
-    
-    for (int j = 0; j < molecules[2].numOfAtoms; j++){	
-	molecules[2].atoms[j].x += 0.0;
-    molecules[2].atoms[j].y += halfcellL;
-    molecules[2].atoms[j].z += halfcellL;
-    }
-    
-    for (int j = 0; j < molecules[3].numOfAtoms; j++){
-    molecules[3].atoms[j].x += halfcellL;
-    molecules[3].atoms[j].y += 0.0;
-    molecules[3].atoms[j].z += halfcellL;
-    }
-    
-	//Init all other molecules to initial coordinates
-	//Build the lattice from the unit cell by repeatedly translating
-	//the four vectors of the unit cell through a distance cellL in
-	//the x, y, and z directions
-	for(int i = 4; i < enviro->numOfMolecules; i++){
-		for (int j = 0; j < molecules[i].numOfAtoms; j++){
-			molecules[i].atoms[j].x += 0.0;
-    		molecules[i].atoms[j].y += 0.0;
-   	 		molecules[i].atoms[j].z += 0.0;
-   	 	}		
-	}
-	
-	int offset = 0;
-	for(int z = 1; z <= cells; z++)
-		for(int y = 1; y <= cells; y++)
-			for(int x = 1; x <= cells; x++){
-				for(int a = 0; a < 4; a++){
-					int i = a + offset;
-					if(i < enviro->numOfMolecules){								
-						for (int j = 0; j < molecules[i].numOfAtoms; j++){
-							molecules[i].atoms[j].x = molecules[a].atoms[j].x + cellL * (x-1);
-							molecules[i].atoms[j].y = molecules[a].atoms[j].y + cellL * (y-1);
-							molecules[i].atoms[j].z = molecules[a].atoms[j].z + cellL * (z-1);
-						}
-					}
-				}
-				offset += 4;
-			}
-	
-	//Shift center of box to the origin
-	for(int i = 0; i < enviro->numOfMolecules; i++){
-		for (int j = 0; j < molecules[i].numOfAtoms; j++){
-			molecules[i].atoms[j].x -= halfcellL;
-			molecules[i].atoms[j].y -= halfcellL;
-			molecules[i].atoms[j].z -= halfcellL;
-		}
-	}
-}
-
-double calcEnergyWrapper(Molecule *molecules, Environment *enviro){
+/**
+	A wrapper method which calculates the energy in the system at each step.
+	Calls various supporter methods which calculate the energies between individual atoms
+	@param molecules - pointer to the molecules in the simulation
+	@param enviro - pointer to the environment
+	@return - returns the totalEnergy in the system
+*/
+double LinearSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro){
     //Copy atoms out of molecules
     Atom *atoms = (Atom *) malloc(sizeof(Atom) * enviro->numOfAtoms);
     int atomIndex = 0;
@@ -232,7 +110,17 @@ double calcEnergyWrapper(Molecule *molecules, Environment *enviro){
     return totalEnergy;
 }
 
-double calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules){
+/**
+
+	Calculates the energy between each atom pair.
+	If the atoms are in the same molecule it applies a fudge factor
+	@param atoms - pointer to the atoms in the simulation
+	@param enviro - pointer to the environment
+	@param molecules - pointer to the molecules in the simulation
+	@return - returns the new sum of energy in the system
+	
+*/
+double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules){
     //setup storage
     double totalEnergy = 0.0;
     double *energySum_device;
@@ -243,35 +131,117 @@ double calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules){
 	double* energySum = (double*) malloc(energySumSize);
 
     //calulate all energies
-    calcEnergy(atoms, enviro, energySum);
-    
-    for(int i = 0; i < N; i++){
-        //apply fudge factor
-        if (molecules != NULL){ 
-            int atomXid = getXFromIndex(i);
-            int atomYid = getYFromIndex(atomXid, i);
-            energySum[i] = energySum[i] * getFValue(&(atoms[atomXid]), &(atoms[atomYid]), molecules, enviro); 
-        }
-
-        totalEnergy += energySum[i];
-    }
-
-    free(energySum);
-    return totalEnergy;
-}
-
-void calcEnergy(Atom *atoms, Environment *enviro, double *energySum){
+    //calcEnergy(atoms, enviro, energySum);
     double lj_energy,charge_energy, fValue, nonbonded_energy;
+	fValue = 1.0;
 
-    //determine number of calculations
-    int N =(int) ( pow( (float) enviro->numOfAtoms,2)-enviro->numOfAtoms)/2;
+	//for each molecule
+	for (int mol1_i = 0; mol1_i < enviro->numOfMolecules; mol1_i++){
+		//for every other molecule
+		for (int mol2_i = mol1_i; mol2_i < enviro->numOfMolecules; mol2_i++){
+			Atom atom1 = molecules[mol1_i].atoms[enviro->primaryAtomIndex];
+			Atom atom2 = molecules[mol2_i].atoms[enviro->primaryAtomIndex];
+			
+			//square cutoff value for easy comparison
+			double cutoffSQ = enviro->cutoff * enviro->cutoff;
+				
+			//calculate difference in coordinates
+			double deltaX = atom1.x - atom2.x;
+			double deltaY = atom1.y - atom2.y;
+			double deltaZ = atom1.z - atom2.z;
+		  
+			//calculate distance between atoms
+			deltaX = box->makePeriodic(deltaX, enviro->x);
+			deltaY = box->makePeriodic(deltaY, enviro->y);
+			deltaZ = box->makePeriodic(deltaZ, enviro->z);
+			
+			double r2 = (deltaX * deltaX) +
+						(deltaY * deltaY) + 
+						(deltaZ * deltaZ);
 
+			if (r2 < cutoffSQ){
+			
+				for (int atomIn1_i = 0; atomIn1_i < molecules[mol1_i].numOfAtoms; atomIn1_i++){
+				
+					atom1 = molecules[mol1_i].atoms[atomIn1_i];
+				
+					for (int atomIn2_i = 0; atomIn2_i < molecules[mol2_i].numOfAtoms; atomIn2_i++){
+				
+						atom2 = molecules[mol2_i].atoms[atomIn2_i];
+					
+						if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0){
+							continue;
+						}
+						
+						if(atom1.id > atom2.id)
+							continue;
+							
+
+						//store LJ constants locally and define terms in kcal/mol
+						const double e = 332.06;
+						double sigma = calcBlending(atom1.sigma, atom2.sigma);
+						double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+					
+						//calculate difference in coordinates
+						deltaX = atom1.x - atom2.x;
+						deltaY = atom1.y - atom2.y;
+						deltaZ = atom1.z - atom2.z;
+					  
+						//calculate distance between atoms
+						deltaX = box->makePeriodic(deltaX, enviro->x);
+						deltaY = box->makePeriodic(deltaY, enviro->y);
+						deltaZ = box->makePeriodic(deltaZ, enviro->z);
+						
+						r2 = (deltaX * deltaX) +
+							 (deltaY * deltaY) + 
+							 (deltaZ * deltaZ);
+										  
+						if (r2 == 0.0)
+							continue;
+					
+						//calculate LJ energies
+						double sig2OverR2 = (sigma * sigma) / r2;
+						double sig6OverR6 = sig2OverR2 * sig2OverR2 * sig2OverR2;
+						double sig12OverR12 = sig6OverR6 * sig6OverR6;
+						double lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+						
+						//calculate Coulombic energies
+						double r = sqrt(r2);
+						double charge_energy = (atom1.charge * atom2.charge * e) / r;
+						
+						//gets the fValue if in the same molecule
+						//cout << "before getF: "<<endl;
+						fValue = 1.0;
+						if(mol1_i == mol2_i){
+							//cout << "toggle: " << mol1_i % box->molecTypenum << endl;
+							int ** hopTab1 = box->tables[mol1_i % box->molecTypenum].hopTable;
+							//int atomNum = molecules[mol1_i].numOfAtoms;
+							//cout << " bob: " << atom1Count << " 2: "<< atom2Count <<endl;
+							fValue = box->getFValue(atomIn1_i,atomIn2_i,hopTab1);
+						}
+						
+						//cout << "after getF: "<<endl;
+						//return total nonbonded energy
+						double subtotal = (lj_energy + charge_energy) * fValue;//box->getFValue(&(molecules[mol1_i].atoms[atomIn1_i]), &(molecules[mol2_i].atoms[atomIn2_i]), molecules, enviro);
+						totalEnergy += subtotal;
+					}
+					
+				}
+				
+			}
+			else{
+				continue;
+			}
+		}
+	}
+	
+	/*
     //for each calculation
     for(int idx=0; idx<N; idx++){
         //calculate the x and y positions in the Atom array
         int xAtom_pos, yAtom_pos;
-        xAtom_pos = getXFromIndex(idx);
-        yAtom_pos = getYFromIndex(xAtom_pos, idx);
+        xAtom_pos = box->getXFromIndex(idx);
+        yAtom_pos = box->getYFromIndex(xAtom_pos, idx);
 
         Atom xAtom, yAtom;
         xAtom = atoms[xAtom_pos];
@@ -282,18 +252,75 @@ void calcEnergy(Atom *atoms, Environment *enviro, double *energySum){
             energySum[idx] = 0.0;
         }
         else{
-            //lj_energy = calc_lj(xAtom,yAtom,*enviro);
-            //charge_energy = calcCharge(xAtom, yAtom, enviro);
-            nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
+            lj_energy = calc_lj(xAtom,yAtom,*enviro);
+            charge_energy = calcCharge(xAtom, yAtom, enviro);
+            //nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
 
             //store the sum in array
-            //energySum[idx] = (lj_energy + charge_energy);
-            energySum[idx] = (nonbonded_energy);
+            energySum[idx] = (lj_energy + charge_energy);
+            //energySum[idx] = (nonbonded_energy);
+        }
+	}
+	 
+    for(int i = 0; i < N; i++){
+        //apply fudge factor
+        if (molecules != NULL){ 
+            int atomXid = box->getXFromIndex(i);
+            int atomYid = box->getYFromIndex(atomXid, i);
+            energySum[i] = energySum[i] * box->getFValue(&(atoms[atomXid]), &(atoms[atomYid]), molecules, enviro); 
+        }
+
+        totalEnergy += energySum[i];
+    }
+*/
+    free(energySum);
+    return totalEnergy;
+}
+
+/**
+	calculates energies based on charges and lenard jones values
+	@param atoms - pointer to the atoms in the simulation
+	@param enviro - pointer to the environment
+	@param energySum - pointer to the current sum of energy
+	
+*/
+void LinearSim::calcEnergy(Atom *atoms, Environment *enviro, double *energySum){
+    double lj_energy,charge_energy, fValue, nonbonded_energy;
+
+    //determine number of calculations
+    int N =(int) ( pow( (float) enviro->numOfAtoms,2)-enviro->numOfAtoms)/2;
+
+    //for each calculation
+    for(int idx=0; idx<N; idx++){
+        //calculate the x and y positions in the Atom array
+        int xAtom_pos, yAtom_pos;
+        xAtom_pos = box->getXFromIndex(idx);
+        yAtom_pos = box->getYFromIndex(xAtom_pos, idx);
+
+        Atom xAtom, yAtom;
+        xAtom = atoms[xAtom_pos];
+        yAtom = atoms[yAtom_pos];
+
+        //determine the lennard-jones and charge sum between the two atoms
+        if (xAtom.sigma < 0 || xAtom.epsilon < 0 || yAtom.sigma < 0 || yAtom.epsilon < 0){
+            energySum[idx] = 0.0;
+        }
+        else{
+            lj_energy = calc_lj(xAtom,yAtom,*enviro);
+            charge_energy = calcCharge(xAtom, yAtom, enviro);
+            //nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
+
+            //store the sum in array
+            energySum[idx] = (lj_energy + charge_energy);
+            //energySum[idx] = (nonbonded_energy);
         }
 	 }
 }
 
-double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
+/**
+	Calculates the charge relative from one atom to another
+*/
+double LinearSim::calcCharge(Atom atom1, Atom atom2, Environment *enviro){
     // conversion factor below for units in kcal/mol
     const double e = 332.06;
  
@@ -303,9 +330,9 @@ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
     double deltaZ = atom1.z - atom2.z;
 
     //calculate distance between atoms
-    deltaX = makePeriodic(deltaX, enviro->x);
-    deltaY = makePeriodic(deltaY, enviro->y);
-    deltaZ = makePeriodic(deltaZ, enviro->z);
+    deltaX = box->makePeriodic(deltaX, enviro->x);
+    deltaY = box->makePeriodic(deltaY, enviro->y);
+    deltaZ = box->makePeriodic(deltaZ, enviro->z);
 
     const double r2 = (deltaX * deltaX) +
                       (deltaY * deltaY) + 
@@ -336,7 +363,10 @@ double calcCharge(Atom atom1, Atom atom2, Environment *enviro){
 */
 }
 
-double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
+/**
+	Calculates the non bonded energies - depracated
+*/
+double LinearSim::calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
     //store LJ constants locally and define terms in kcal/mol
     const double e = 332.06;
     double sigma = calcBlending(atom1.sigma, atom2.sigma);
@@ -351,9 +381,9 @@ double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
     double deltaZ = atom1.z - atom2.z;
   
   	//calculate distance between atoms
-    deltaX = makePeriodic(deltaX, enviro->x);
-    deltaY = makePeriodic(deltaY, enviro->y);
-    deltaZ = makePeriodic(deltaZ, enviro->z);
+    deltaX = box->makePeriodic(deltaX, enviro->x);
+    deltaY = box->makePeriodic(deltaY, enviro->y);
+    deltaZ = box->makePeriodic(deltaZ, enviro->z);
     
     const double r2 = (deltaX * deltaX) +
                 	  (deltaY * deltaY) + 
@@ -383,7 +413,10 @@ double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
     }
 }
 
-double calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro){
+/**
+	Energy Wrapper used in non bonded energy calculations
+*/
+double LinearSim::calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro){
     //setup storage
     double totalEnergy = 0.0;
     //Copy atoms out of molecules
@@ -403,7 +436,10 @@ double calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro){
     return totalEnergy;
 }
 
-double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules){
+/**
+	Used in non bonded energy calculations
+*/
+double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules){
 	// Variables for linked-cell neighbor list	
 	int lc[3];            /* Number of cells in the x|y|z direction */
 	double rc[3];         /* Length of a cell in the x|y|z direction */
@@ -510,7 +546,7 @@ double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules){
         						}
         						else{
     								nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
-    								nonbonded_energy = nonbonded_energy * getFValue(&xAtom, &yAtom, molecules, enviro);
+    								//nonbonded_energy = nonbonded_energy * box->getFValue(&xAtom, &yAtom, molecules, enviro);
     							}
     						totalEnergy += nonbonded_energy;
 						} /* Endif i<j */
@@ -525,51 +561,11 @@ double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules){
 		return totalEnergy;
 }
 
-double calcBlending(double d1, double d2){
+double LinearSim::calcBlending(double d1, double d2){
     return sqrt(d1 * d2);
 }
 
-Molecule* getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro){
-    int atomId = a1->id;
-    int currentIndex = enviro->numOfMolecules - 1;
-    int molecId = molecules[currentIndex].id;
-    while(atomId < molecId && currentIndex > 0){
-        currentIndex -= 1;
-        molecId = molecules[currentIndex].id;
-    }
-
-    return &(molecules[currentIndex]);
-}
-
-double getFValue(Atom *atom1, Atom *atom2, Molecule *molecules, Environment *enviro){
-    Molecule *m1 = getMoleculeFromAtomID(atom1, molecules, enviro);
-    Molecule *m2 = getMoleculeFromAtomID(atom2, molecules, enviro);
-    
-    if(m1->id != m2->id)
-        return 1.0;
-    else{
-        int hops = hopGE3(atom1->id, atom2->id, m1);
-        if (hops == 3)
-            return 0.5;
-        else if (hops > 3)
-            return 1.0;
-        else
-            return 0.0;
-    }
-}
-
-int hopGE3(int atom1, int atom2, Molecule *molecule){
-    for(int x=0; x< molecule->numOfHops; x++){
-        Hop *myHop = &(molecule->hops[x]);
-        //compare atoms to each hop struct in molecule
-		if((myHop->atom1==atom1 && myHop->atom2==atom2) || (myHop->atom1==atom2 && myHop->atom2==atom1)){
-            return myHop->hop;
-        }
-	}
-	 return 0;
-}
-
-double Energy_LRC(Molecule *molec, Environment *enviro){
+double LinearSim::Energy_LRC(Molecule *molec, Environment *enviro){
 	double Ecut = 0.0;		/* Holds LJ long-range cutoff energy correction */
 	double NMOL = enviro->numOfMolecules;	/* Number of molecules in simulation */
 	// Need to update to accept more than 1 molecule from z-matrix
@@ -610,4 +606,63 @@ double Energy_LRC(Molecule *molec, Environment *enviro){
 			Ecut += (2*PI*NMOL*NMOL/(3.0*Vnew)) * (A12[i]*A12[j]*RC9/3.0 - A6[i]*A6[j]*RC3);
 	
 	return Ecut;
+}
+
+/**
+	Starts the linear simulation.
+*/
+void LinearSim::runLinear(int steps){
+    Molecule *molecules=box->getMolecules();
+ 	  Environment *enviro=box->getEnviro();
+ 	  
+    int numberOfAtoms = enviro->numOfAtoms;
+    double maxTranslation = enviro->maxTranslation;
+    double maxRotation = enviro->maxRotation;
+    double temperature = enviro->temperature;
+    double kT = kBoltz * temperature;
+
+    int atomTotal = 0;
+    int aIndex = 0;
+    int mIndex = 0;
+    double newEnergy;
+
+
+	 
+    for(int move = 0; move < steps; move++){
+        if (oldEnergy==0)
+            oldEnergy = calcEnergyWrapper(molecules, enviro);
+            
+        int changeno=box->ChangeMolecule();
+
+        newEnergy = calcEnergyWrapper(molecules, enviro);
+
+        bool accept = false;
+
+        if(newEnergy < oldEnergy){
+            accept = true;
+        }
+        else{
+            double x = exp(-(newEnergy - oldEnergy) / kT);
+
+            if(x >= randomFloat(0.0, 1.0)){
+                accept = true;
+            }
+            else{
+                accept = false;
+            }
+        }
+
+        if(accept){
+            accepted++;
+            oldEnergy=newEnergy;
+        }
+        else{
+            rejected++;
+            //restore previous configuration
+            box->Rollback(changeno);
+            //molecules[moleculeIndex] = oldToMove;
+            oldEnergy=oldEnergy;//meanless, just show we assigned the same energy values.
+        }
+      }
+      currentEnergy=oldEnergy;
 }

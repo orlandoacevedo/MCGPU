@@ -89,6 +89,10 @@ Configuration File:
 [24]    <nonbonded cutoff distance in angstroms>
 [25]    #line 25 is a comment and is ignored.
 [26]    <max rotation for a molecule in degrees>
+[27]    #line 27 is a comment and is ignored.
+[28]    <random number seed input as integer value>
+[29]    #line 29 is a comment and is ignored.
+[30]    <primary atom index to be used during cutoff as integer index of atom in molecule>
 
 There are some known issues and TODOs listed here:
 https://github.com/rlyspn/SeniorDesign_COMP4710/wiki/Known-Issues-and-TODOs

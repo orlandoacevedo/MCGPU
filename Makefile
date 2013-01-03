@@ -1,87 +1,68 @@
-NV=nvcc
+CC=gcc
+NVCC=nvcc
 
-SRC=src/
-TST=test/
-UTIL=Utilities/
-PARA=parallelMetropolis/
-LIN=LinearMetropolis/
+UTILSRC=Utilities/src/
+UTILTST=Utilities/test/
+LINSRC=LinearMetropolis/src/
+PARASRC=parallelMetropolis/src/
+PARATST=parallelMetropolis/test/
+CLASSSRC=src/
+TESTSRC=test/
 BIN=bin/
 
-FLAGS=-arch sm_20 -lcurand -g -c
-FLAGSALT=-arch sm_20 -lcurand -g
+CFLAGS=-g -pg -c
+FLAGSALT=-lstdc++ -pg -g
+
+CUFLAGS=-arch sm_20 -g -c
+
+TESTCLASS=linearSim
+PARASIM=parallelSim
 
 TSTEXE=parallelTest
 EXE=parallelExample
 LINEXE=linearExample
-UTILTESTEXE=utilTest
-COMMONUTILO=$(BIN)geometricUtil.o $(BIN)metroUtil.o
-SCANNERO=$(BIN)State_Scan.o $(BIN)Config_Scan.o $(BIN)Opls_Scan.o $(BIN)Zmatrix_Scan.o
+UTILTESTEXE=utilTests
 
-all: dir tests utilTests metroSim linearSim
+CommonUtilOBJ=$(UTILSRC)geometricUtil.o $(UTILSRC)metroUtil.o
 
-metroSim: cudaUtil metroUtil stateScan configScan zMatrix OPLSScan baseTest $(PARA)$(SRC)metropolisSimulationExample.cu
-	$(NV) $(FLAGS) $(PARA)$(SRC)metropolisSimulationExample.cu -o $(BIN)metropolisSimulationExample.o 
-	$(NV) $(FLAGSALT) $(COMMONUTILO) $(SCANNERO) $(BIN)metroCudaUtil.o $(BIN)metropolisSimulationExample.o $(BIN)baseTests.o -o $(BIN)$(EXE) 
+ScannerOBJ=$(UTILSRC)State_Scan.o $(UTILSRC)Config_Scan.o $(UTILSRC)Opls_Scan.o $(UTILSRC)Zmatrix_Scan.o
 
-linearSim: linearUtil metroUtil stateScan configScan zMatrix OPLSScan baseTest $(LIN)$(SRC)linearSimulationExample.cpp
-	$(NV) $(FLAGS) $(LIN)$(SRC)linearSimulationExample.cpp -o $(BIN)linearSimulationExample.o 
-	$(NV) $(FLAGSALT) $(COMMONUTILO) $(SCANNERO) $(BIN)metroLinearUtil.o $(BIN)linearSimulationExample.o $(BIN)baseTests.o -o $(BIN)$(LINEXE) 
+TESTCLASSOBJ=$(CommonUtilOBJ)	$(ScannerOBJ) $(LINSRC)SimBox.o	$(LINSRC)linearSim.o $(LINSRC)linearSimulationExample.o 
 
-tests: cudaUtil geoUtil metroUtil copyTest baseTest $(PARA)$(TST)parallelTest.cu $(PARA)$(TST)parallelTest.cuh
-	$(NV) $(FLAGSALT) $(COMMONUTILO) $(BIN)copyTests.o $(BIN)baseTests.o $(BIN)metroCudaUtil.o $(PARA)$(TST)parallelTest.cu -o $(BIN)$(TSTEXE)
+ParallelOBJS=$(CommonUtilOBJ)	$(ScannerOBJ) $(LINSRC)SimBox.o	$(PARASRC)parallelSim.o $(PARASRC)parallelSimulationExample.o $(PARASRC)GPUSimBox.o $(PARASRC)parallelUtil.o
+	 
+all: $(TESTCLASS) ${PARASIM}
 
-copyTest: $(PARA)$(TST)copyTests.cuh $(PARA)$(TST)copyTests.cu
-	$(NV) $(FLAGS) $(PARA)$(TST)copyTests.cu -o $(BIN)copyTests.o
+$(TESTCLASS):$(TESTCLASSOBJ)
+	$(CC) $(FLAGSALT) $(TESTCLASSOBJ) -o $(BIN)/$(TESTCLASS) 
+${PARASIM}:${ParallelOBJS}
+	$(NVCC) $(FLAGSALT) $(ParallelOBJS) -o $(BIN)/$(PARASIM)
 
-baseTest: $(PARA)$(TST)baseTests.h $(PARA)$(TST)baseTests.cpp
-	$(NV) $(FLAGS) $(PARA)$(TST)baseTests.cpp -o $(BIN)baseTests.o
+-include $(OBJS:.o=.d) 
+	
+%.d:%.cpp
+	@echo "Generate depend file for " $<;                      \
+	dirname $< >$@.p.$$$$;echo "\\" >>$@.p.$$$$;tr -d "\n" <$@.p.$$$$ >$@.$$$$;     \
+	$(NV) -M $(CPPFLAGS) $< >> $@.$$$$;                      \
+  sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;     \
+  rm -f $@.$$$$ $@.p.$$$$
+  
+%.d:%.cu
+	@echo "Generate depend file for " $<;                      \
+	dirname $< >$@.p.$$$$;echo "\\" >>$@.p.$$$$;tr -d "\n" <$@.p.$$$$ >$@.$$$$;     \
+	$(CC) -M $(CPPFLAGS) $< >> $@.$$$$;                      \
+  sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;     \
+  rm -f $@.$$$$ $@.p.$$$$
 
-cudaUtil: metroUtil baseTest $(PARA)$(SRC)metroCudaUtil.cuh $(PARA)$(SRC)metroCudaUtil.cu
-	$(NV) $(FLAGS) $(PARA)$(SRC)metroCudaUtil.cu -o $(BIN)metroCudaUtil.o
-
-linearUtil: metroUtil baseTest $(LIN)$(SRC)metroLinearUtil.h $(LIN)$(SRC)metroLinearUtil.cpp
-	$(NV) $(FLAGS) $(LIN)$(SRC)metroLinearUtil.cpp -o $(BIN)metroLinearUtil.o
-
-metroUtil: OPLSScan zMatrix geoUtil $(UTIL)$(SRC)metroUtil.h $(UTIL)$(SRC)metroUtil.cpp
-	$(NV) $(FLAGS) $(UTIL)$(SRC)metroUtil.cpp -o $(BIN)metroUtil.o
-
-utilTests: stateScan stateTest configTest metroUtil zMatrix OPLSScan geoTest zMatrixTest
-	$(NV) $(COMMONUTILO) $(SCANNERO) $(BIN)configurationTest.o $(BIN)stateTest.o $(BIN)geometricTest.o $(BIN)zMatrixTest.o Utilities/test/utilityTests.cpp -o $(BIN)$(UTILTESTEXE)
-
-zMatrix: geoUtil $(UTIL)$(SRC)Zmatrix_Scan.cpp $(UTIL)$(SRC)Zmatrix_Scan.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)Zmatrix_Scan.cpp -o $(BIN)Zmatrix_Scan.o
-
-OPLSScan: $(UTIL)$(SRC)Opls_Scan.cpp $(UTIL)$(SRC)Opls_Scan.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)Opls_Scan.cpp -o $(BIN)Opls_Scan.o
-
-geoUtil: $(UTIL)$(SRC)geometricUtil.cpp $(UTIL)$(SRC)geometricUtil.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)geometricUtil.cpp -o $(BIN)geometricUtil.o
-
-stateTest: metroUtil $(UTIL)$(TST)stateTest.cpp $(UTIL)$(TST)stateTest.h 
-	$(NV) $(FLAGS) $(UTIL)$(TST)stateTest.cpp -o $(BIN)stateTest.o
-
-configScan: $(UTIL)$(SRC)Config_Scan.cpp $(UTIL)$(SRC)Config_Scan.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)Config_Scan.cpp -o $(BIN)Config_Scan.o
-
-stateScan: $(UTIL)$(SRC)State_Scan.cpp $(UTIL)$(SRC)State_Scan.h
-	$(NV) $(FLAGS) $(UTIL)$(SRC)State_Scan.cpp -o $(BIN)State_Scan.o
-
-configTest: configScan $(UTIL)$(TST)configurationTest.h $(UTIL)$(TST)configurationTest.cpp
-	$(NV) $(FLAGS) $(UTIL)$(TST)configurationTest.cpp -o $(BIN)configurationTest.o
-
-geoTest: geoUtil $(UTIL)$(TST)geometricTest.cpp $(UTIL)$(TST)geometricTest.h
-	$(NV) $(FLAGS) $(UTIL)$(TST)geometricTest.cpp -o $(BIN)geometricTest.o
-
-zMatrixTest: metroUtil zMatrix OPLSScan $(UTIL)$(TST)zMatrixTest.cpp $(UTIL)$(TST)zMatrixTest.h 
-	$(NV) $(FLAGS) $(UTIL)$(TST)zMatrixTest.cpp -o $(BIN)zMatrixTest.o
-
-
+.cpp.o:
+	$(CC) $(CFLAGS) $< -o $@
+	
+%.o:%.cu
+	$(NVCC) $(CUFLAGS) $< -o $@
+	
 dir:
 	mkdir -p $(BIN)
 
 clean:
-	rm -f $(BIN)*.o
-	rm -f $(BIN)$(UTILTESTEXE)
-	rm -f $(BIN)$(EXE)
-	rm -f $(BIN)$(TSTEXE)
-	rm -f $(BIN)$(LINEXE)
+	rm -f $(PARASRC)*.o $(LINSRC)*.o $(TESTSRC)*.o 
+	rm -f $(BIN)/$(TESTCLASS) $(BIN)/$(PARASIM)
