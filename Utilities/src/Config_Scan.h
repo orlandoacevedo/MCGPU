@@ -66,13 +66,13 @@ class Config_Scan{
 
         /**
           Config file scanner instantiated with a path.
-          @param configPath - path to paramaters.cfg
+          @param configPath - path to parameters.cfg
         */
         Config_Scan(string configPath);
 
         /**
           Reads in the config file located at config path
-          given in teh constructor.
+          given in the constructor.
         */
         void readInConfig();
 

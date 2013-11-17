@@ -1,8 +1,8 @@
 /*!\file
-  \Class for simulation Box, including Enviroments and points to molocoles,only save all states
+  \Class for simulation Box, including Environments and points to molecules, only save all states
   \author David(Xiao Zhang).
  
-  This file contains implement of SimBox that are used to handle enviroments and common function
+  This file contains implement of SimBox that are used to handle environments and common function
   for box.
  */
  
@@ -368,6 +368,7 @@ int SimBox::ReadStateFile(char const* StateFile)
       inFile.getline(buf,sizeof(buf)); //ignore hops flag
       inFile.getline(buf,sizeof(buf));
       assert(strcmp(buf,"=Hops")==0);
+      // known BUG - if molecule has no hops (3 atoms or less) state file gives error crashing simulation
       for(int i=0;i<ptr->numOfHops;i++)
       {
       	inFile>>currentHop.atom1>>currentHop.atom2 >>currentHop.hop;
@@ -491,7 +492,15 @@ int SimBox::WriteStateFile(char const* StateFile)
 */
 int SimBox::writePDB(char const* pdbFile)
 {
-	printf("%s\n",pdbFile);
+// oa changes
+	ofstream outFile;
+	outFile.open(pdbFile);
+	//print a test below
+	outFile << "test" << endl;
+	outFile << endl; // blank line
+	outFile.close();
+// end oa
+	//printf("%s\n",pdbFile);
 	return 0;
 }
 

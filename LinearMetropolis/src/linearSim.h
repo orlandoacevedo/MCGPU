@@ -1,6 +1,6 @@
 /*!\file
   \Class for simulation caculate, change state of SimBox.
-  \author David(Xiao Zhang).
+  \author David(Xiao Zhang) and Orlando Acevedo.
  
   This file contains functions that are used to handle enviroments and common function
   for box.

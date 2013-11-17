@@ -90,6 +90,12 @@ int main(int argc, char ** argv){
 		ss << "Current Energy: " << initEnergy << endl;
 		cout << ss.str();
    	writeToLog(ss);
+   	
+   	// oa change - test LRC energy
+   	double LJ_LRC_Energy=sim.Energy_LRC(box.getMolecules(),box.getEnviro());
+   	ss << "LJ long range correction Energy: "<< LJ_LRC_Energy <<  endl;
+		cout << ss.str();
+   	writeToLog(ss);
     
     for(int i=0;i<simulationSteps;i+=100)
     {

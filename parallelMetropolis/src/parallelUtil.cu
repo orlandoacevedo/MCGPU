@@ -1,5 +1,5 @@
 /*!\file
-  \Utility functions  for parallel Simulation, including Energy calculate and points to molocoles,only save all states
+  \Utility functions  for parallel Simulation, including Energy calculate and points to molecules, only save all states
   \author David(Xiao Zhang).
  
   This file contains implement of functions running in GPU, but all allocation and free should be implemented outside

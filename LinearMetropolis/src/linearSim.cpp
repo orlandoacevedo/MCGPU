@@ -1,5 +1,5 @@
 /*!\file
-  \Class for simulation Box, including Enviroments and points to molocoles,only save all states
+  \Class for simulation Box, including Enviroments and points to molecules, only save all states
   \author David(Xiao Zhang).
  
   This file contains implement of SimBox that are used to handle enviroments and common function
@@ -29,8 +29,8 @@ LinearSim::LinearSim(SimBox *initbox,int initsteps)
 }
 
 /**
-	Calculates the Lendard Jones energies between atoms
-	@param atom1 - firt atom
+	Calculates the Lennard-Jones energies between atoms
+	@param atom1 - first atom
 	@param atom2 - second atom
 	@param enviro - the environment in the simulation
 */
@@ -210,20 +210,14 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 						double charge_energy = (atom1.charge * atom2.charge * e) / r;
 						
 						//gets the fValue if in the same molecule
-						//cout << "before getF: "<<endl;
 						fValue = 1.0;
 						if(mol1_i == mol2_i){
-							//cout << "toggle: " << mol1_i % box->molecTypenum << endl;
 							int ** hopTab1 = box->tables[mol1_i % box->molecTypenum].hopTable;
-							//int atomNum = molecules[mol1_i].numOfAtoms;
-							//cout << " bob: " << atom1Count << " 2: "<< atom2Count <<endl;
 							fValue = box->getFValue(atomIn1_i,atomIn2_i,hopTab1);
 						}
 						
-						//cout << "after getF: "<<endl;
 						//return total nonbonded energy
-						double subtotal = (lj_energy + charge_energy) * fValue;//box->getFValue(&(molecules[mol1_i].atoms[atomIn1_i]), &(molecules[mol2_i].atoms[atomIn2_i]), molecules, enviro);
-						totalEnergy += subtotal;
+						double subtotal = (lj_energy + charge_energy) * fValue;
 					}
 					
 				}
@@ -235,50 +229,12 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 		}
 	}
 	
-	/*
-    //for each calculation
-    for(int idx=0; idx<N; idx++){
-        //calculate the x and y positions in the Atom array
-        int xAtom_pos, yAtom_pos;
-        xAtom_pos = box->getXFromIndex(idx);
-        yAtom_pos = box->getYFromIndex(xAtom_pos, idx);
-
-        Atom xAtom, yAtom;
-        xAtom = atoms[xAtom_pos];
-        yAtom = atoms[yAtom_pos];
-
-        //determine the lennard-jones and charge sum between the two atoms
-        if (xAtom.sigma < 0 || xAtom.epsilon < 0 || yAtom.sigma < 0 || yAtom.epsilon < 0){
-            energySum[idx] = 0.0;
-        }
-        else{
-            lj_energy = calc_lj(xAtom,yAtom,*enviro);
-            charge_energy = calcCharge(xAtom, yAtom, enviro);
-            //nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
-
-            //store the sum in array
-            energySum[idx] = (lj_energy + charge_energy);
-            //energySum[idx] = (nonbonded_energy);
-        }
-	}
-	 
-    for(int i = 0; i < N; i++){
-        //apply fudge factor
-        if (molecules != NULL){ 
-            int atomXid = box->getXFromIndex(i);
-            int atomYid = box->getYFromIndex(atomXid, i);
-            energySum[i] = energySum[i] * box->getFValue(&(atoms[atomXid]), &(atoms[atomYid]), molecules, enviro); 
-        }
-
-        totalEnergy += energySum[i];
-    }
-*/
     free(energySum);
     return totalEnergy;
 }
 
 /**
-	calculates energies based on charges and lenard jones values
+	calculates energies based on charges and Lennard-Jones values
 	@param atoms - pointer to the atoms in the simulation
 	@param enviro - pointer to the environment
 	@param energySum - pointer to the current sum of energy

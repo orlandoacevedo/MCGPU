@@ -55,7 +55,7 @@ int GPUSimBox::initGPUSimBox(SimBox *hostbox)
 		Molecule *molecules=hostbox->getMolecules();
 		
 	  atomSize = enviro->numOfAtoms * sizeof(Atom);
-    dMolecSize = enviro->numOfMolecules *sizeof(struct DeviceMolecule) ;
+	  dMolecSize = enviro->numOfMolecules *sizeof(struct DeviceMolecule) ;
     
     //allocate memory on the device
     struct DeviceMolecule *dMole_h=(struct DeviceMolecule *)malloc(dMolecSize);
