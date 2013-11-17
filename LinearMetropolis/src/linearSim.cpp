@@ -1,6 +1,6 @@
 /*!\file
   \Class for simulation Box, including Enviroments and points to molecules, only save all states
-  \author David(Xiao Zhang).
+  \author David(Xiao Zhang) and Orlando Acevedo.
  
   This file contains implement of SimBox that are used to handle enviroments and common function
   for box.
@@ -65,23 +65,6 @@ double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro){
         return energy;
     }
 
-/*
-    //Hard code Rcutoff of 9 Ang (81 = Rcutoff^2) as a test
-    if (r2 == 0.0){
-        return 0.0;
-    }
-    else if (r2 < 81.0){
-    	//calculate terms
-    	const double sig2OverR2 = pow(sigma, 2) / r2;
-   		const double sig6OverR6 = pow(sig2OverR2, 3);
-    	const double sig12OverR12 = pow(sig6OverR6, 2);
-    	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-        return energy;
-    }
-    else{
-        return 0.0;
-    }
-*/
 }
 
 /**
@@ -131,7 +114,6 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 	double* energySum = (double*) malloc(energySumSize);
 
     //calulate all energies
-    //calcEnergy(atoms, enviro, energySum);
     double lj_energy,charge_energy, fValue, nonbonded_energy;
 	fValue = 1.0;
 
@@ -216,8 +198,8 @@ double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *
 							fValue = box->getFValue(atomIn1_i,atomIn2_i,hopTab1);
 						}
 						
-						//return total nonbonded energy
 						double subtotal = (lj_energy + charge_energy) * fValue;
+						totalEnergy += subtotal;
 					}
 					
 				}
@@ -303,24 +285,10 @@ double LinearSim::calcCharge(Atom atom1, Atom atom2, Environment *enviro){
         const double r = sqrt(r2);
         return (atom1.charge * atom2.charge * e) / r;
     }
-    
-/*
-    //Hard code Rcutoff of 9 Ang (81 = Rcutoff^2) as a test
-    if (r2 == 0.0){
-        return 0.0;
-    }
-    else if (r2 < 81.0){
-        const double r = sqrt(r2);
-        return (atom1.charge * atom2.charge * e) / r;
-    }
-    else{
-        return 0.0;
-    }
-*/
 }
 
 /**
-	Calculates the non bonded energies - depracated
+	Calculates the non bonded energies - deprecated
 */
 double LinearSim::calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro){
     //store LJ constants locally and define terms in kcal/mol
@@ -569,7 +537,7 @@ double LinearSim::Energy_LRC(Molecule *molec, Environment *enviro){
 */
 void LinearSim::runLinear(int steps){
     Molecule *molecules=box->getMolecules();
- 	  Environment *enviro=box->getEnviro();
+ 	Environment *enviro=box->getEnviro();
  	  
     int numberOfAtoms = enviro->numOfAtoms;
     double maxTranslation = enviro->maxTranslation;
@@ -616,8 +584,7 @@ void LinearSim::runLinear(int steps){
             rejected++;
             //restore previous configuration
             box->Rollback(changeno);
-            //molecules[moleculeIndex] = oldToMove;
-            oldEnergy=oldEnergy;//meanless, just show we assigned the same energy values.
+            oldEnergy=oldEnergy;//meaningless, just to show the same energy values assigned.
         }
       }
       currentEnergy=oldEnergy;

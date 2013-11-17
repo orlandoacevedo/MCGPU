@@ -82,18 +82,19 @@ int main(int argc, char ** argv){
     ss << "\tsteps: "<< simulationSteps << endl;
     cout << ss.str() <<endl;
     writeToLog(ss);
+    
+    // Print out the Lennard-Jones LRC correction energy
+   	double LJ_LRC_Energy=sim.Energy_LRC(box.getMolecules(),box.getEnviro());
+   	ss << "LJ long range correction Energy: "<< LJ_LRC_Energy <<  endl;
+		cout << ss.str();
+   	writeToLog(ss);
+   	
     //runLinear(molecules, &enviro, simulationSteps, configScan.getStateOutputPath(),
     configScan.getPdbOutputPath();
     
     double initEnergy=sim.calcEnergyWrapper(box.getMolecules(),box.getEnviro());
    	ss << "Step Number: "<< 0 <<  endl;
 		ss << "Current Energy: " << initEnergy << endl;
-		cout << ss.str();
-   	writeToLog(ss);
-   	
-   	// oa change - test LRC energy
-   	double LJ_LRC_Energy=sim.Energy_LRC(box.getMolecules(),box.getEnviro());
-   	ss << "LJ long range correction Energy: "<< LJ_LRC_Energy <<  endl;
 		cout << ss.str();
    	writeToLog(ss);
     
@@ -116,6 +117,7 @@ int main(int argc, char ** argv){
     ss << "Rejected Moves: " << sim.getrejected() << endl;
     ss << "Acceptance Rate: " << (int) ((float) sim.getaccepted()/ (float) simulationSteps*100) << "%" << endl;
 	  cout << ss.str();writeToLog(ss);
+	box.writePDB("plt.pdb");
          
     endTime = clock();
     double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;

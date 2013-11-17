@@ -1,6 +1,6 @@
 /*!\file
   \Class for simulation Box, including Environments and points to molecules, only save all states
-  \author David(Xiao Zhang).
+  \author David(Xiao Zhang) and Orlando Acevedo.
  
   This file contains implement of SimBox that are used to handle environments and common function
   for box.
@@ -149,7 +149,7 @@ SimBox::SimBox(Config_Scan configScan)
  	   memset(dihedralpool,0,sizeof(Dihedral)*molecDiv*count[3]);
  	   memset(hoppool,0,sizeof(Hop)*molecDiv*count[4]);
  	   
- 	   //arrange first part of molecoles
+ 	   //arrange first part of molecules
  	   memset(count,0,sizeof(count));
  	   for(int j = 0; j < molecVec.size(); j++){
  	      //Copy data from vector to molecule
@@ -253,7 +253,7 @@ SimBox::SimBox(Config_Scan configScan)
      } else {
         ss << "Assigning Molecule Positions..." << endl;
         writeToLog(ss);
-        generatePoints(molecules,enviro);//generate points random
+        generatefccBox(molecules,enviro);//generate fcc lattice box
         ss << "Finished Assigning Molecule Positions" << endl;
         writeToLog(ss);
      }
@@ -492,15 +492,41 @@ int SimBox::WriteStateFile(char const* StateFile)
 */
 int SimBox::writePDB(char const* pdbFile)
 {
-// oa changes
-	ofstream outFile;
-	outFile.open(pdbFile);
-	//print a test below
-	outFile << "test" << endl;
-	outFile << endl; // blank line
-	outFile.close();
-// end oa
-	//printf("%s\n",pdbFile);
+    ofstream outputFile;
+    outputFile.open(pdbFile);
+    int numOfMolecules=enviro->numOfMolecules;
+    outputFile << "REMARK Created by MCGPU" << endl;
+    //int atomIndex = 0;
+    for (int i = 0; i < numOfMolecules; i++){
+    	Molecule currentMol = molecules[i];    	
+        for (int j = 0; j < currentMol.numOfAtoms; j++){
+        	Atom currentAtom = currentMol.atoms[j];
+            outputFile.setf(ios_base::left,ios_base::adjustfield);
+            outputFile.width(6);
+            outputFile << "ATOM";
+            outputFile.setf(ios_base::right,ios_base::adjustfield);
+            outputFile.width(5);
+            outputFile << currentAtom.id + 1;
+            outputFile.width(3); // change from 5
+            outputFile << currentAtom.name;
+            outputFile.width(6); // change from 4
+            outputFile << "UNK";
+            outputFile.width(6);
+            outputFile << i + 1;
+            outputFile.setf(ios_base::fixed, ios_base::floatfield);
+            outputFile.precision(3);
+            outputFile.width(12);
+            outputFile << currentAtom.x;
+            outputFile.width(8);
+            outputFile << currentAtom.y;
+            outputFile.width(8);
+            outputFile << currentAtom.z << endl;
+        }
+        outputFile << "TER" << endl;
+    }
+    outputFile << "END" << endl;
+    outputFile.close();
+
 	return 0;
 }
 
