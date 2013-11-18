@@ -90,5 +90,5 @@ Configuration File:
 [29]    #line 29 is a comment and is ignored.
 [30]    <primary atom index to be used during cutoff as integer index of z-matrix atom in molecule>
 
-Contributing Authors:  Matt Campbell, Matthew Hardwick, Alexander Luchs, Riley Spahn, Kalan Stowe, 
-Ashley Tolbert, Seth Wooten, Xiao (David) Zhang, and Orlando Acevedo
+Contributing Authors:  Matt Campbell, Matthew Hardwick, Alexander Luchs, Riley Spahn, 
+Kalan Stowe, Ashley Tolbert, Seth Wooten, Xiao (David) Zhang, and Orlando Acevedo
