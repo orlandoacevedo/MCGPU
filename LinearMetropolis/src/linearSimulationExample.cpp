@@ -94,7 +94,13 @@ int main(int argc, char ** argv){
     
     double initEnergy=sim.calcEnergyWrapper(box.getMolecules(),box.getEnviro());
    	ss << "Step Number: "<< 0 <<  endl;
-		ss << "Current Energy: " << initEnergy << endl;
+		ss << "Current Energy (from original): " << initEnergy << endl;
+		cout << ss.str();
+   	writeToLog(ss);
+   	
+   	initEnergy=sim.calcEnergy_NLC(box.getMolecules(),box.getEnviro());
+   	ss << "Step Number: "<< 0 <<  endl;
+		ss << "Current Energy (from linked-cell neighbor list): " << initEnergy << endl;
 		cout << ss.str();
    	writeToLog(ss);
     
@@ -118,6 +124,12 @@ int main(int argc, char ** argv){
     ss << "Acceptance Rate: " << (int) ((float) sim.getaccepted()/ (float) simulationSteps*100) << "%" << endl;
 	  cout << ss.str();writeToLog(ss);
 	box.writePDB("plt.pdb");
+	
+	initEnergy=sim.calcEnergyWrapper(box.getMolecules(),box.getEnviro());
+   	ss << "Step Number: "<< 0 <<  endl;
+		ss << "Final Energy (from original): " << initEnergy << endl;
+		cout << ss.str();
+   	writeToLog(ss);
          
     endTime = clock();
     double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;

@@ -360,8 +360,32 @@ double LinearSim::calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro
     return totalEnergy;
 }
 
+double LinearSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro){
+    //Copy atoms out of molecules
+    Atom *atoms = (Atom *) malloc(sizeof(Atom) * enviro->numOfAtoms);
+    int atomIndex = 0;
+    for(int i = 0; i < enviro->numOfMolecules; i++){
+        Molecule currentMolecule = molecules[i];
+        for(int j = 0; j < currentMolecule.numOfAtoms; j++){
+            atoms[atomIndex] = currentMolecule.atoms[j];
+            atomIndex++;
+        }
+    }
+
+    //pass to original wrapper
+    double totalEnergy = calcEnergy_NLC(atoms, enviro, molecules);
+    // add the self-interaction nonbonded energy to totalEnergy below:
+    totalEnergy += calcIntramolEnergy_NLC(atoms, enviro, molecules);
+    free(atoms);
+
+    return totalEnergy;
+}
+
 /**
-	Used in non bonded energy calculations
+	Calculates the nonbonded energy for intermolecular molecule pairs using a linked-cell
+	neighbor list. The function then calls a separate function to the calculate the
+	intramolecular nonbonded interactions for every molecule and sums it to the total
+	energy.
 */
 double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules){
 	// Variables for linked-cell neighbor list	
@@ -377,7 +401,9 @@ double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *mol
 	double dr[3];		  /* Pair vector dr = atom[i]-atom[j] */
 	double rrCut = enviro->cutoff * enviro->cutoff;	/* Cutoff squared */
 	double rr;			  /* Distance between atoms */
-	double nonbonded_energy;	/* Holds current nonbonded energy */
+	double lj_energy;		/* Holds current Lennard-Jones energy */
+	double charge_energy;	/* Holds current coulombic charge energy */
+	double fValue = 1.0;		/* Holds 1,4-fudge factor value */
 	double totalEnergy = 0.0;	/* Total nonbonded energy x fudge factor */
 			
 	// Compute the # of cells for linked cell lists
@@ -394,11 +420,11 @@ double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *mol
 	for (int c = 0; c < lcxyz; c++) 
 		head[c] = EMPTY;
 
-	// Scan atoms to construct headers, head, & linked lists, lscl
-	for (int i = 0; i < enviro->numOfAtoms; i++) {
-		mc[0] = atoms[i].x / rc[0]; 
-		mc[1] = atoms[i].y / rc[1];
-		mc[2] = atoms[i].z / rc[2];
+	// Scan cutoff index atom in each molecule to construct headers, head, & linked lists, lscl
+	for (int i = 0; i < enviro->numOfMolecules; i++) {
+		mc[0] = molecules[i].atoms[enviro->primaryAtomIndex].x / rc[0]; 
+		mc[1] = molecules[i].atoms[enviro->primaryAtomIndex].y / rc[1];
+		mc[2] = molecules[i].atoms[enviro->primaryAtomIndex].z / rc[2];
 		
 		// Translate the vector cell index, mc, to a scalar cell index
 		int c = mc[0]*lcyz + mc[1]*lc[2] + mc[2];
@@ -425,7 +451,7 @@ double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *mol
 		// Scan the neighbor cells (including itself) of cell c
 		for (mc1[0] = mc[0]-1; mc1[0] <= mc[0]+1; (mc1[0])++)
 		for (mc1[1] = mc[1]-1; mc1[1] <= mc[1]+1; (mc1[1])++)
-		for (mc1[2] = mc[2]-1; mc1[2] <=mc [2]+1; (mc1[2])++) {
+		for (mc1[2] = mc[2]-1; mc1[2] <= mc [2]+1; (mc1[2])++) {
 			// Periodic boundary condition by shifting coordinates
 			for (int a = 0; a < 3; a++) {
 				if (mc1[a] < 0)
@@ -446,7 +472,7 @@ double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *mol
 			int i = head[c];
 			while (i != EMPTY) {
 
-				// Scan atom in cell c1
+				// Scan atom j in cell c1
 				int j = head[c1];
 				while (j != EMPTY) {
 
@@ -454,35 +480,150 @@ double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *mol
 					if (i < j) {
 						// Pair vector dr = atom[i]-atom[j]
 						rr = 0.0;
-						dr[0] = atoms[i].x - (atoms[j].x + rshift[0]);
-						dr[1] = atoms[i].y - (atoms[j].y + rshift[1]);
-						dr[2] = atoms[i].z - (atoms[j].z + rshift[2]);
-						rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);
-						}
+						dr[0] = molecules[i].atoms[enviro->primaryAtomIndex].x - (molecules[j].atoms[enviro->primaryAtomIndex].x + rshift[0]);
+						dr[1] = molecules[i].atoms[enviro->primaryAtomIndex].y - (molecules[j].atoms[enviro->primaryAtomIndex].y + rshift[1]);
+						dr[2] = molecules[i].atoms[enviro->primaryAtomIndex].z - (molecules[j].atoms[enviro->primaryAtomIndex].z + rshift[2]);
+						rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
 						
-						// Calculate energy if rij < Cutoff
+						// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 						if (rr < rrCut) {
 							Atom xAtom, yAtom;
-        					xAtom = atoms[i];
-        					yAtom = atoms[j];
-        						if (xAtom.sigma < 0 || xAtom.epsilon < 0 || yAtom.sigma < 0 || yAtom.epsilon < 0){
-            						nonbonded_energy = 0.0;
-        						}
-        						else{
-    								nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
-    								//nonbonded_energy = nonbonded_energy * box->getFValue(&xAtom, &yAtom, molecules, enviro);
-    							}
-    						totalEnergy += nonbonded_energy;
-						} /* Endif i<j */
+							
+        					for (int atomIn1_i = 0; atomIn1_i < molecules[i].numOfAtoms; atomIn1_i++){		
+								xAtom = molecules[i].atoms[atomIn1_i];
+				
+								for (int atomIn2_i = 0; atomIn2_i < molecules[j].numOfAtoms; atomIn2_i++){
+									yAtom = molecules[j].atoms[atomIn2_i];
+					
+									if (xAtom.sigma < 0 || xAtom.epsilon < 0 || yAtom.sigma < 0 || yAtom.epsilon < 0) continue;
+						
+									if(xAtom.id > yAtom.id) continue;										
+        												
+									//store LJ constants locally and define terms in kcal/mol
+									const double e = 332.06;
+									double sigma = calcBlending(xAtom.sigma, yAtom.sigma);
+									double epsilon = calcBlending(xAtom.epsilon, yAtom.epsilon);
+					
+									//calculate difference in coordinates
+									double deltaX = xAtom.x - yAtom.x;
+									double deltaY = xAtom.y - yAtom.y;
+									double deltaZ = xAtom.z - yAtom.z;
+								
+									//calculate distance between atoms
+									deltaX = box->makePeriodic(deltaX, enviro->x);
+									deltaY = box->makePeriodic(deltaY, enviro->y);
+									deltaZ = box->makePeriodic(deltaZ, enviro->z);
+						
+									double r2 = (deltaX * deltaX) +
+							 		 	 		(deltaY * deltaY) + 
+							 		 			(deltaZ * deltaZ);
+										  
+									if (r2 == 0.0) continue;								
 
-						j = lscl[j];
-					} /* Endwhile j not empty */
+									//calculate LJ energies
+									double sig2OverR2 = (sigma * sigma) / r2;
+									double sig6OverR6 = sig2OverR2 * sig2OverR2 * sig2OverR2;
+									double sig12OverR12 = sig6OverR6 * sig6OverR6;
+									lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
 
-					i = lscl[i];
-				} /* Endwhile i not empty */
-			} /* Endfor neighbor cells, c1 */
-		} /* Endfor central cell, c */
-		return totalEnergy;
+									//calculate Coulombic energies
+									double r = sqrt(r2);
+									charge_energy = (xAtom.charge * yAtom.charge * e) / r;
+						
+									double subtotal = (lj_energy + charge_energy) * fValue;
+									totalEnergy += subtotal;							
+								} /* Endfor atomIn2_i */
+							} /* Endfor atomIn_1 */
+						} /* Endif rr < rrCut */
+					} /* Endif i<j */
+					
+					j = lscl[j];
+				} /* Endwhile j not empty */
+
+				i = lscl[i];
+			} /* Endwhile i not empty */
+		} /* Endfor neighbor cells, c1 */
+	} /* Endfor central cell, c */
+	
+	return totalEnergy;
+}
+
+/**
+	Calculates the nonbonded energy for intramolecular nonbonded interactions for every 
+	solvent molecule and sums it to the total energy. Uses getFValue().
+*/
+double LinearSim::calcIntramolEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules){
+    //setup storage
+    double totalEnergy = 0.0;
+    double *energySum_device;
+    // Molecule to be computed. Currently code only handles single solvent type systems.
+    // will need to update to handle more than one solvent type (i.e., co-solvents)
+	int mol1_i = 0;
+
+    //determine number of energy calculations
+    int N =(int) ( pow( (float) molecules[mol1_i].numOfAtoms,2)-molecules[mol1_i].numOfAtoms)/2;	 
+    size_t energySumSize = N * sizeof(double);
+	double* energySum = (double*) malloc(energySumSize);
+
+    //calulate all energies
+    double lj_energy,charge_energy, fValue, nonbonded_energy;
+    Atom atom1, atom2;
+
+	for (int atomIn1_i = 0; atomIn1_i < molecules[mol1_i].numOfAtoms; atomIn1_i++){	
+		atom1 = molecules[mol1_i].atoms[atomIn1_i];
+					
+		for (int atomIn2_i = 0; atomIn2_i < molecules[mol1_i].numOfAtoms; atomIn2_i++){
+			atom2 = molecules[mol1_i].atoms[atomIn2_i];
+						
+				if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0) continue;
+
+				//store LJ constants locally and define terms in kcal/mol
+				const double e = 332.06;
+				double sigma = calcBlending(atom1.sigma, atom2.sigma);
+				double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+					
+				//calculate difference in coordinates
+				double deltaX = atom1.x - atom2.x;
+				double deltaY = atom1.y - atom2.y;
+				double deltaZ = atom1.z - atom2.z;
+					  
+				//calculate distance between atoms
+				deltaX = box->makePeriodic(deltaX, enviro->x);
+				deltaY = box->makePeriodic(deltaY, enviro->y);
+				deltaZ = box->makePeriodic(deltaZ, enviro->z);
+						
+				double r2 = (deltaX * deltaX) +
+					 		(deltaY * deltaY) + 
+							(deltaZ * deltaZ);
+										  
+				if (r2 == 0.0) continue;
+					
+				//calculate LJ energies
+				double sig2OverR2 = (sigma * sigma) / r2;
+				double sig6OverR6 = sig2OverR2 * sig2OverR2 * sig2OverR2;
+				double sig12OverR12 = sig6OverR6 * sig6OverR6;
+				double lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+						
+				//calculate Coulombic energies
+				double r = sqrt(r2);
+				double charge_energy = (atom1.charge * atom2.charge * e) / r;
+						
+				//gets the fValue in the same molecule
+				fValue = 1.0;
+				int ** hopTab1 = box->tables[mol1_i % box->molecTypenum].hopTable;
+				fValue = box->getFValue(atomIn1_i,atomIn2_i,hopTab1);
+						
+				double subtotal = (lj_energy + charge_energy) * fValue;
+				totalEnergy += subtotal;
+
+		} /* EndFor atomIn2_i */
+	} /* EndFor atomIn1_i */
+	
+	// Multiply single solvent molecule energy by number of solvent molecules in the system
+	totalEnergy *= enviro->numOfMolecules;
+	
+    free(energySum);
+    return totalEnergy;
 }
 
 double LinearSim::calcBlending(double d1, double d2){
@@ -548,17 +689,18 @@ void LinearSim::runLinear(int steps){
     int atomTotal = 0;
     int aIndex = 0;
     int mIndex = 0;
-    double newEnergy;
-
-
+    double newEnergy = 0.0;
+    double oldEnergy = 0.0;
 	 
     for(int move = 0; move < steps; move++){
         if (oldEnergy==0)
-            oldEnergy = calcEnergyWrapper(molecules, enviro);
+            oldEnergy = calcEnergy_NLC(molecules, enviro);
+            //oldEnergy = calcEnergyWrapper(molecules, enviro);
             
         int changeno=box->ChangeMolecule();
 
-        newEnergy = calcEnergyWrapper(molecules, enviro);
+        newEnergy = calcEnergy_NLC(molecules, enviro);
+        //newEnergy = calcEnergyWrapper(molecules, enviro);
 
         bool accept = false;
 

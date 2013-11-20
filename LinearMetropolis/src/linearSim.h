@@ -47,7 +47,9 @@ public:
 	double calcCharge(Atom atom1, Atom atom2, Environment *enviro);
 	double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro);
 	double calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro);
+	double calcEnergy_NLC(Molecule *molecules, Environment *enviro);
 	double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules);
+	double calcIntramolEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules);
 	double calcBlending(double d1, double d2);
 	double Energy_LRC(Molecule *molec, Environment *enviro);
 	void runLinear(int steps);
