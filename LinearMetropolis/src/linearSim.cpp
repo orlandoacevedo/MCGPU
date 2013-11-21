@@ -572,7 +572,7 @@ double LinearSim::calcIntramolEnergy_NLC(Atom *atoms, Environment *enviro, Molec
 	for (int atomIn1_i = 0; atomIn1_i < molecules[mol1_i].numOfAtoms; atomIn1_i++){	
 		atom1 = molecules[mol1_i].atoms[atomIn1_i];
 					
-		for (int atomIn2_i = 0; atomIn2_i < molecules[mol1_i].numOfAtoms; atomIn2_i++){
+		for (int atomIn2_i = atomIn1_i; atomIn2_i < molecules[mol1_i].numOfAtoms; atomIn2_i++){
 			atom2 = molecules[mol1_i].atoms[atomIn2_i];
 						
 				if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0) continue;
