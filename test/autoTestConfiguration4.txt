@@ -1,0 +1,30 @@
+#size of periodic box (x, y, z in angstroms)
+11.8
+11.8
+11.8
+#temperature in Kelvin
+298.15
+#max translation
+0.15
+#number of steps
+500
+#number of molecues
+32
+#path to opls.par file
+Utilities/bossFiles/oplsaa.par
+#path to z matrix file
+Utilities/bossFiles/t3p.z
+#path to state input
+
+#path to state output
+stateOutput
+#pdb output path
+pdbOutput.pdb
+#cutoff distance in angstroms
+11.8
+#max rotation
+0.15
+#Random Seed Input
+135405
+#Primary Atom Index
+1
