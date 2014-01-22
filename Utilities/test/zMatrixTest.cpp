@@ -346,7 +346,7 @@ void compareTestMolecules(Molecule molec1, Molecule molec2){
         assert(molec1.bonds[i].atom1 == molec2.bonds[i].atom1);
         assert(molec1.bonds[i].atom2 == molec2.bonds[i].atom2);
         assert(percentDifference(molec1.bonds[i].distance, molec2.bonds[i].distance));
-        assert(asserTwoBool( molec1.bonds[i].variable,molec2.bonds[i].variable));
+        assert( molec1.bonds[i].variable == molec2.bonds[i].variable );
     }
 
     //check angles
@@ -355,7 +355,7 @@ void compareTestMolecules(Molecule molec1, Molecule molec2){
         assert(molec1.angles[i].atom1 == molec2.angles[i].atom1);
         assert(molec1.angles[i].atom2 == molec2.angles[i].atom2);
         assert(percentDifference(molec1.angles[i].value,molec2.angles[i].value));
-        assert(asserTwoBool(molec1.angles[i].variable, molec2.angles[i].variable));
+        assert( molec1.angles[i].variable == molec2.angles[i].variable );
     }
 
     //check dihederals
@@ -364,7 +364,7 @@ void compareTestMolecules(Molecule molec1, Molecule molec2){
         assert(molec1.dihedrals[i].atom1 == molec2.dihedrals[i].atom1);
         assert(molec1.dihedrals[i].atom2 == molec2.dihedrals[i].atom2);
         assert(percentDifference(molec1.dihedrals[i].value,molec2.dihedrals[i].value));
-        assert(asserTwoBool(molec1.dihedrals[i].variable,molec2.dihedrals[i].variable));
+        assert( molec1.dihedrals[i].variable == molec2.dihedrals[i].variable );
     }
 
     //check hops

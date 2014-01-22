@@ -366,11 +366,13 @@ bool percentDifference(double d1, double d2){
     return percentDiff < 3;
 }
 
+/*
 bool asserTwoBool(bool b1, bool b2){
-    if(b1 && b2)
+   if(b1 && b2)
         return true;
     else if(!b1 && !b2)
         return true;
     else
         return false;
 }
+*/

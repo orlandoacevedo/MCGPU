@@ -479,7 +479,7 @@ bool percentDifference(double d1, double d2);
   @param b2 - the second boolean value
   @return - returns true if they are the same, else returns false
 */
-bool asserTwoBool(bool b1, bool b2);
+//bool asserTwoBool(bool b1, bool b2);
 
 
 #endif //METROUTIL_H

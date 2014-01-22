@@ -28,7 +28,7 @@ Build Instructions:
 To Run a Simulation on a local machine:
     >> cd /path/to/MCGPU/
     >> cd bin/
-    >> ./parallelSim demoConfiguration.txt
+    >> ./linearSim demoConfiguration.txt
 
 To Run a Simulation on the Alabama Supercomputer Center:
 
