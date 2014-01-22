@@ -26,7 +26,8 @@ The DeviceMolecule has a field that is the first index in the global array and a
 number of that element in the molecule.  This is used to index the correct elements
 in the global array.
 */
-struct DeviceMolecule{
+struct DeviceMolecule
+{
     /*!Number to uniquely identify this molecule.*/
     int id;
 
@@ -63,42 +64,42 @@ void cudaAssert(const cudaError err, const char *file, const int line);
 
 class GPUSimBox
 {
-private:
-   SimBox * innerbox;
-   DeviceMolecule *molec_d;
-   Bond *bonds_d;
-   Angle *angles_d;
-   Dihedral *dihedrals_d;
-   Hop *hops_d;
-   Atom *atoms_device;
-   Environment *enviro_device; 	
+    private:
+       SimBox * innerbox;
+       DeviceMolecule *molec_d;
+       Bond *bonds_d;
+       Angle *angles_d;
+       Dihedral *dihedrals_d;
+       Hop *hops_d;
+       Atom *atoms_device;
+       Environment *enviro_device; 	
+       
+       size_t atomSize;
+       size_t dMolecSize;	
+       size_t bondSize;
+       size_t angleSize;
+       size_t dihedralSize;
+       size_t hopSize;
+
+    public:
+     	GPUSimBox(Config_Scan configScan);
+     	~GPUSimBox();
+
+    SimBox *getSimBox() { return innerbox;};
+
+    DeviceMolecule *getdevDeviceMolecule() { return molec_d;};
+    Bond *getdevBond() { return  bonds_d;};
+    Angle *getdevAngle() {return angles_d;};
+    Dihedral * getdevDihedral() {return dihedrals_d;};
+    Hop * getdevHop() {return hops_d;};
+    Atom *getdevAtom() {return atoms_device;};
+    Environment *getdevEnvironment() {return enviro_device;};  
    
-   size_t atomSize;
-   size_t dMolecSize;	
-   size_t bondSize;
-   size_t angleSize;
-   size_t dihedralSize;
-   size_t hopSize;
-
-public:
- 	GPUSimBox(Config_Scan configScan);
- 	~GPUSimBox();
-
-  SimBox *getSimBox() { return innerbox;};
-
-   DeviceMolecule *getdevDeviceMolecule() { return molec_d;};
-   Bond *getdevBond() { return  bonds_d;};
-   Angle *getdevAngle() {return angles_d;};
-   Dihedral * getdevDihedral() {return dihedrals_d;};
-   Hop * getdevHop() {return hops_d;};
-   Atom *getdevAtom() {return atoms_device;};
-   Environment *getdevEnvironment() {return enviro_device;};  
-   
-   Atom *gethostAtom() {return innerbox->getAtom();};
-   Environment *gethostEnvironment() {return innerbox->getEnviro();};  
-   Molecule *gethostMolecules() {return innerbox->getMolecules();};  
+    Atom *gethostAtom() {return innerbox->getAtom();};
+    Environment *gethostEnvironment() {return innerbox->getEnviro();};  
+    Molecule *gethostMolecules() {return innerbox->getMolecules();};  
   
- 	 int initGPUSimBox(SimBox *hostbox);
+ 	int initGPUSimBox(SimBox *hostbox);
  	int CopyBoxtoHost(SimBox *hostbox);
  	int CopyBoxtoDevice(SimBox *hostbox);
 

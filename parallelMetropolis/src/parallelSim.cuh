@@ -25,37 +25,38 @@
 // boltzman constant in kcal mol-1 K-1
 const double kBoltz = 0.00198717;
 
-class ParallelSim {
-private:
- 	GPUSimBox *box;
- 	int steps;
- 	float currentEnergy;
-  float oldEnergy;
-  int accepted;
-  int rejected;
-  int N;  //number of need compute
-  int blocks; //number of per node
-  size_t energySumSize;
-  double *energySum_device;
-  double *energySum_host;
-  
-public:
- 	ParallelSim(GPUSimBox *initbox,int initsteps); 	
- 	~ParallelSim(); 	
-	float getcurrentEnergy(){return currentEnergy;}; 	
- 	int getaccepted() {return accepted;};
- 	int getrejected() {return rejected;};
-  GPUSimBox * getGPUSimBox() {return box;};
-  GPUSimBox * getdevGPUSimBox() {return box;};
- 	double *getdevEnergySum() { return energySum_device;};
- 	double *gethostEnergySum() { return energySum_host;};
- 	double calcEnergyWrapper(Molecule *molecules, Environment *enviro);
- 	double calcEnergyWrapper(GPUSimBox *box);
- 	double calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules);
-	void runParallel(int steps);
+class ParallelSim
+{
+    private:
+        GPUSimBox *box;
+        int steps;
+        float currentEnergy;
+        float oldEnergy;
+        int accepted;
+        int rejected;
+        int N;  //number of need compute
+        int blocks; //number of per node
+        size_t energySumSize;
+        double *energySum_device;
+        double *energySum_host;
 
-public:
-  double wrapBox(double x, double box);
+    public:
+        ParallelSim(GPUSimBox *initbox,int initsteps); 	
+        ~ParallelSim(); 	
+        float getcurrentEnergy(){return currentEnergy;}; 	
+        int getaccepted() {return accepted;};
+        int getrejected() {return rejected;};
+        GPUSimBox * getGPUSimBox() {return box;};
+        GPUSimBox * getdevGPUSimBox() {return box;};
+        double *getdevEnergySum() { return energySum_device;};
+        double *gethostEnergySum() { return energySum_host;};
+        double calcEnergyWrapper(Molecule *molecules, Environment *enviro);
+        double calcEnergyWrapper(GPUSimBox *box);
+        double calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules);
+        void runParallel(int steps);
+
+    public:
+        double wrapBox(double x, double box);
 /*	__device__ int getXFromIndex(int idx);
 	__device__ int getYFromIndex(int x, int idx);
 	__device__ double makePeriodic(double x, double box);
@@ -68,7 +69,7 @@ public:
 	*/
 	Molecule* getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Environment enviro);
  	int hopGE3Host(int atom1, int atom2, Molecule molecule);
-  double getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Environment *enviro);
+    double getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Environment *enviro);
  	
 };
  	

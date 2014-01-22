@@ -1,6 +1,7 @@
 #include "parallelTest.cuh"
 
-void testKeepMoleculeInBox(){
+void testKeepMoleculeInBox()
+{
     double X = 10.0;
     double Y = 10.0;
     double Z = 10.0;
@@ -37,7 +38,8 @@ void testKeepMoleculeInBox(){
     keepMoleculeInBox(&molec, &enviro);
     
     double precision = .0001;
-    for(int i = 0; i < numOfAtoms; i++){
+    for(int i = 0; i < numOfAtoms; i++)
+    {
         double expectedX = answers[i][0];
         double actualX = molec.atoms[i].x;
         
@@ -57,7 +59,8 @@ void testKeepMoleculeInBox(){
     printAtoms(molec.atoms, 3);
 }
 
-void setupGetIndexTest(){
+void setupGetIndexTest()
+{
     int numberOfBlocks = 3;
     int threadsPerBlock = 2;
     int totalTests = numberOfBlocks * threadsPerBlock;
@@ -108,14 +111,20 @@ void setupGetIndexTest(){
     free(xValues);
 }
 
-bool compareDouble(double a, double b, double limit){
+bool compareDouble(double a, double b, double limit)
+{
     if((a - b) / b < limit)
+    {
         return true;
+    }
     else
+    {
         return false;
+    }
 }
 
-void setupMakePeriodic(){
+void setupMakePeriodic()
+{
     srand(time(NULL));
     int numberOfTests = 128;
     double *box;;
@@ -134,7 +143,8 @@ void setupMakePeriodic(){
     cudaMalloc((void **) &dev_box, sizeof(double));
     
     //generate random numbers
-    for(int i = 0; i < numberOfTests; i++){
+    for(int i = 0; i < numberOfTests; i++)
+    {
         inputs_host[i] = ((double) (rand() % 100));
     }
 
@@ -143,16 +153,15 @@ void setupMakePeriodic(){
     cudaMemcpy(dev_box, box, sizeof(double), cudaMemcpyHostToDevice);
     
     int threadsPerBlock = numberOfTests / 2;
-    int blocks = numberOfTests / threadsPerBlock +
-        (numberOfTests % threadsPerBlock == 0 ? 0 : 1);
+    int blocks = numberOfTests / threadsPerBlock + (numberOfTests % threadsPerBlock == 0 ? 0 : 1);
 
-    testMakePeriodicKernel <<< blocks, threadsPerBlock >>> (inputs_device,
-            dev_box, numberOfTests);
+    testMakePeriodicKernel <<< blocks, threadsPerBlock >>> (inputs_device, dev_box, numberOfTests);
 
     cudaMemcpy(outputs_host, inputs_device, inputSize, cudaMemcpyDeviceToHost);
 
     //check that values are the same as known correct function
-    for(int i = 0; i < numberOfTests; i++){
+    for(int i = 0; i < numberOfTests; i++)
+    {
         double test_output = make_periodic(inputs_host[i], *box);
         assert(outputs_host[i] == test_output);
     }
@@ -165,8 +174,9 @@ void setupMakePeriodic(){
 }
 
 
-void testWrapBox(){
- srand(time(NULL));
+void testWrapBox()
+{
+    srand(time(NULL));
     int numberOfTests = 128;
     double box;
     
@@ -177,12 +187,14 @@ void testWrapBox(){
     testDoubles = (double *) malloc(inputSize);
     
     //generate random numbers
-    for(int i = 0; i < numberOfTests; i++){
+    for(int i = 0; i < numberOfTests; i++)
+    {
         testDoubles[i] = (double) rand() / (double) RAND_MAX;
     }
 
-     //check that values are the same as known correct function
-    for(int i = 0; i < numberOfTests; i++){
+    //check that values are the same as known correct function
+    for(int i = 0; i < numberOfTests; i++)
+    {
         double test_output = wrap_into_box(testDoubles[i], box);
         assert(wrapBox(testDoubles[i], box) == test_output);
     }
@@ -192,7 +204,8 @@ void testWrapBox(){
     free(testDoubles);
 }
 
-void setupCalc_lj(){
+void setupCalc_lj()
+{
     double kryptonSigma = 3.624;
     double kryptonEpsilon = 0.317;
     int numberOfAtoms = 2;
@@ -208,8 +221,7 @@ void setupCalc_lj(){
     cudaMalloc((void **) &enviro_device, sizeof(Environment));
     cudaMalloc((void **) &energy_device, sizeof(double));
 
-    Environment stableEnviro = createEnvironment(10, 10, 10, .5,
-            298.15, numberOfAtoms, 9.0, 15.0);
+    Environment stableEnviro = createEnvironment(10, 10, 10, .5, 298.15, numberOfAtoms, 9.0, 15.0);
 
     Environment *enviro = &stableEnviro;
     generatePoints(atoms, enviro);
@@ -237,12 +249,14 @@ void setupCalc_lj(){
 }
 
 
-void testGeneratePoints(){
+void testGeneratePoints()
+{
     //init atoms, environment
     int numberOfAtoms = 1000;
     Atom *atoms = (Atom *) malloc(numberOfAtoms * sizeof(Atom));
 
-    for (int i = 0; i < numberOfAtoms; i++){
+    for (int i = 0; i < numberOfAtoms; i++)
+    {
         atoms[i] = createAtom(i, 0, 0, 0);
     }
     Environment enviro = createEnvironment(10.0, 20.0, 35.0, 1.0, 298.15, numberOfAtoms, 9.0, 15.0);
@@ -250,7 +264,8 @@ void testGeneratePoints(){
     generatePoints(atoms, &enviro);
 
     //assert that all atoms positions are in range of the box
-    for (int i = 0; i < numberOfAtoms; i++){
+    for (int i = 0; i < numberOfAtoms; i++)
+    {
         double dim_x = atoms[i].x;
         double dim_y = atoms[i].y;
         double dim_z = atoms[i].z;
@@ -262,20 +277,23 @@ void testGeneratePoints(){
 
     printf("testGeneratePoints (atoms) successful.\n");
 
-    for (int i = 0; i < numberOfAtoms; i++){
+    for (int i = 0; i < numberOfAtoms; i++)
+    {
         atoms[i] = createAtom(i, i % 2, i % 3, i % 4);
     }
 
     int numberOfMolecules = 250;
 
     Molecule *molecules = (Molecule *)malloc(sizeof(Molecule)*numberOfMolecules);
-    for (int i = 0; i < numberOfMolecules; i++){
+    for (int i = 0; i < numberOfMolecules; i++)
+    {
         Bond *blankBonds = NULL;
         Angle *blankAngles = NULL;
         Dihedral *blankDihedrals = NULL;
         int atomCount = numberOfAtoms / numberOfMolecules;
         Atom *molAtoms = (Atom *) malloc(sizeof(Atom)*atomCount);
-        for (int j = 0; j < atomCount; j++){
+        for (int j = 0; j < atomCount; j++)
+        {
             molAtoms[j] = atoms[i*atomCount + j];
         }
         molecules[i] = createMolecule(-1, molAtoms, blankAngles, blankBonds, blankDihedrals, atomCount, 0, 0, 0);
@@ -283,8 +301,10 @@ void testGeneratePoints(){
     
     generatePoints(molecules, &enviro);
 
-    for (int i = 0; i < numberOfMolecules; i++){
-        for (int j = 0; j < molecules[i].numOfAtoms; j++){
+    for (int i = 0; i < numberOfMolecules; i++)
+    {
+        for (int j = 0; j < molecules[i].numOfAtoms; j++)
+        {
             double dim_x = molecules[i].atoms[j].x;
             double dim_y = molecules[i].atoms[j].y;
             double dim_z = molecules[i].atoms[j].z;
@@ -301,7 +321,8 @@ void testGeneratePoints(){
     free(molecules);
 }
 
-void testCalcEnergy(){
+void testCalcEnergy()
+{
     // the sigma value of nitrogen
     double nSigma = 3.250;
     // the epsilon value of nitrogen
@@ -319,7 +340,8 @@ void testCalcEnergy(){
     Environment *enviro = &stableEnviro;
 
     Atom *atoms = new Atom[numberOfAtoms];
-    for (int i = 0; i < numberOfAtoms; i++){
+    for (int i = 0; i < numberOfAtoms; i++)
+    {
         atoms[i] = createAtom(i, 0.0, 0.0, 0.0, nSigma, nEpsilon);
         atoms[i].charge = nCharge;
     }
@@ -355,7 +377,8 @@ void testCalcEnergy(){
     
 }
 
-void testCalcEnergyWithMolecules(){
+void testCalcEnergyWithMolecules()
+{
     // the sigma value of nitrogen
     double nSigma = 3.250;
     // the epsilon value of nitrogen
@@ -379,12 +402,15 @@ void testCalcEnergyWithMolecules(){
     Environment *enviro = &stableEnviro;
 
     Atom *atoms = new Atom[numberOfAtoms];
-    for (int i = 0; i < numberOfAtoms; i++){
-        if ((i % 5) < 3){
+    for (int i = 0; i < numberOfAtoms; i++)
+    {
+        if ((i % 5) < 3)
+        {
             atoms[i] = createAtom(i, 0.0, 0.0, 0.0, kryptonSigma, kryptonEpsilon);
             atoms[i].charge = kryptonCharge;
         }
-        else{
+        else
+        {
             atoms[i] = createAtom(i, 0.0, 0.0, 0.0, nSigma, nEpsilon);
             atoms[i].charge = nCharge;
         }
@@ -395,7 +421,8 @@ void testCalcEnergyWithMolecules(){
     molecules = (Molecule *)malloc(sizeof(Molecule) * numberOfAtoms);
 
     int atomCount = 0;
-    for(int i = 0; i < enviro->numOfMolecules; i++){
+    for(int i = 0; i < enviro->numOfMolecules; i++)
+    {
         molecules[i].numOfAtoms = 5;
         molecules[i].atoms = (Atom *)malloc(sizeof(Atom) * 5);
         molecules[i].id = atomCount;
@@ -405,7 +432,8 @@ void testCalcEnergyWithMolecules(){
         molecules[i].hops = hops;
         molecules[i].numOfHops = 2;
 
-        for (int j = 0; j < molecules[i].numOfAtoms; j++){
+        for (int j = 0; j < molecules[i].numOfAtoms; j++)
+        {
             molecules[i].atoms[j] = atoms[atomCount];
             atomCount++;
         }
@@ -413,8 +441,10 @@ void testCalcEnergyWithMolecules(){
 
     generatePoints(molecules, enviro);
 
-    for (int i = 0; i < enviro->numOfMolecules; i++){
-        for (int j = 0; j < molecules[i].numOfAtoms; j++){
+    for (int i = 0; i < enviro->numOfMolecules; i++)
+    {
+        for (int j = 0; j < molecules[i].numOfAtoms; j++)
+        {
             atoms[i * 5 + j] = molecules[i].atoms[j];
         }
     }
@@ -445,7 +475,8 @@ void testCalcEnergyWithMolecules(){
     printf("testCalcEnergyWithMolecules successful.\n");
 }
 
-void testGetMoleculeFromIDWrapper(){
+void testGetMoleculeFromIDWrapper()
+{
     int numberOfAtoms = 11;
     int numberOfMolecules = 3;
     
@@ -472,7 +503,8 @@ void testGetMoleculeFromIDWrapper(){
     enviro.numOfAtoms = numberOfAtoms;
     enviro.numOfMolecules = numberOfMolecules;
     
-    for(int i = 0; i < numberOfAtoms; i++){
+    for(int i = 0; i < numberOfAtoms; i++)
+    {
         atoms[i].id = i;
     }
     molecules[0].id = 0;
@@ -484,8 +516,7 @@ void testGetMoleculeFromIDWrapper(){
 
     int numberOfBlocks = 1;
     int threadsPerBlock = 128;
-    testGetMoleculeFromID<<<numberOfBlocks,threadsPerBlock>>>(atoms_device,
-            molecules_device, enviro, numberOfAtoms, answers_device);
+    testGetMoleculeFromID<<<numberOfBlocks,threadsPerBlock>>>(atoms_device, molecules_device, enviro, numberOfAtoms, answers_device);
    
     cudaMemcpy(answers, answers_device, sizeof(int) * numberOfAtoms, cudaMemcpyDeviceToHost);
 
@@ -513,7 +544,8 @@ void testGetMoleculeFromIDWrapper(){
 }
 
 
-void testCalcBlendingWrapper(){
+void testCalcBlendingWrapper()
+{
     double *d1, *d2, *d1_device, *d2_device, *answers, *answers_device;
     int numberOfTests = 5;
     size_t doubleSize = sizeof(double) * numberOfTests;
@@ -551,7 +583,8 @@ void testCalcBlendingWrapper(){
 
     cudaMemcpy(answers, answers_device, doubleSize, cudaMemcpyDeviceToHost);
 
-    for(int i = 0 ; i < numberOfTests; i++){
+    for(int i = 0 ; i < numberOfTests; i++)
+    {
         double expected = sqrt(d1[i] * d2[i]);
         assert(answers[i] / sqrt(d1[i] * d2[i]) < 0.01 || answers[i] == expected);
     }
@@ -566,7 +599,8 @@ void testCalcBlendingWrapper(){
     cudaFree(answers_device);
 }
 
-void testGetFValueWrapper(){
+void testGetFValueWrapper()
+{
     Environment *enviro, *dev_enviro;
     DeviceMolecule *molecules, *dev_molecules;
     Atom *mol1_atoms, *mol2_atoms, *atom1List, *atom2List, *dev_atom1List, *dev_atom2List;
@@ -584,10 +618,12 @@ void testGetFValueWrapper(){
 
     fvalues = (double *)malloc(sizeof(double)*4);
     
-    for (int i = 0; i < 5; i++){
+    for (int i = 0; i < 5; i++)
+    {
         mol1_atoms[i] = createAtom(i,1.0,1.0,1.0);
     }
-    for (int i = 0; i < 5; i++){
+    for (int i = 0; i < 5; i++)
+    {
         atom1List[i] = mol1_atoms[0];
         if (i < 4)
             atom2List[i] = mol1_atoms[i+1];
@@ -630,7 +666,8 @@ void testGetFValueWrapper(){
     expected[2] = 0.5;
     expected[3] = 1.0;
     expected[4] = 1.0;
-    for(int i = 0 ; i < numberOfTests; i++){
+    for(int i = 0 ; i < numberOfTests; i++)
+    {
         assert(expected[i] == fvalues[i]);
     }
 
@@ -667,7 +704,8 @@ Atom findMaxRotation(Atom pivot, Atom toRotate, double rotation){
     return toRotate;
 }
 
-void testRotateMolecule(){
+void testRotateMolecule()
+{
     srand(time(NULL));
     
     //Testing on a molecule that is not totaly unlike water
@@ -712,7 +750,8 @@ void testRotateMolecule(){
     
     printf("Testing rotateMolecule\n");
 
-    for(int i = 0 ; i < testNumber; i++){
+    for(int i = 0 ; i < testNumber; i++)
+    {
         //pick atom to rotate about.  Cycle through all of them
         Atom toRotate = atoms[1];
         
@@ -749,7 +788,8 @@ void testRotateMolecule(){
     printf("rotateMolecule passed tests.\n");
 }
 
-void testCalcChargeWrapper(){
+void testCalcChargeWrapper()
+{
     printf("Testing calcCharge()\n");
     
     int numberOfTests = 10;
@@ -789,7 +829,8 @@ void testCalcChargeWrapper(){
 
     //generate atoms for test
     srand(time(NULL));
-    for(int i = 0; i < numberOfTests; i++){
+    for(int i = 0; i < numberOfTests; i++)
+    {
         atoms1_h[i].x = (double) rand() / (double) RAND_MAX * xSize;
         atoms2_h[i].x = (double) rand() / (double) RAND_MAX * xSize;
         
@@ -823,7 +864,8 @@ void testCalcChargeWrapper(){
     cudaMemcpy(answers_h, answers_d, answerSize, cudaMemcpyDeviceToHost);
 
     //TEST ANSWERS
-    for(int i = 0; i < numberOfTests; i++){
+    for(int i = 0; i < numberOfTests; i++)
+    {
         double expected = calc_charge(atoms1_h[i], atoms2_h[i], *enviro_h);
         assert((expected - answers_h[i]) / expected < .01);
     }
@@ -841,7 +883,8 @@ void testCalcChargeWrapper(){
     cudaFree(answers_d);
 }
 
-int main(){
+int main()
+{
     testCopyMolecules();
     testKeepMoleculeInBox();
     testRotateMolecule();

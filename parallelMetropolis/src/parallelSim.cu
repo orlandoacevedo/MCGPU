@@ -18,19 +18,19 @@ __global__ void calcEnergy(Atom *atoms, Environment *enviro, double *energySum, 
 ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 {
 	box=initbox;
-  steps=initsteps;
+    steps=initsteps;
  	currentEnergy=0;
-  oldEnergy=0;
-  accepted=0;
-  rejected=0;
+    oldEnergy=0;
+    accepted=0;
+    rejected=0;
   
-  Environment *enviro_host=box->getSimBox()->getEnviro();
+    Environment *enviro_host=box->getSimBox()->getEnviro();
 
     //calculate CUDA thread mgmt
-  N =(int) ( pow( (float) enviro_host->numOfAtoms,2)-enviro_host->numOfAtoms)/2;
-  blocks = N / THREADS_PER_BLOCK + (N % THREADS_PER_BLOCK == 0 ? 0 : 1); 
+    N =(int) ( pow( (float) enviro_host->numOfAtoms,2)-enviro_host->numOfAtoms)/2;
+    blocks = N / THREADS_PER_BLOCK + (N % THREADS_PER_BLOCK == 0 ? 0 : 1); 
   
-  size_t energySumSize = N * sizeof(double);
+    size_t energySumSize = N * sizeof(double);
     
    //allocate memory on the device
    energySum_host = (double *) malloc(energySumSize);
@@ -39,24 +39,27 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 }
 ParallelSim::~ParallelSim()
 {
-  if (energySum_host!=NULL)
-  {
-      free(energySum_host);
-      energySum_host=NULL;
-  }
+    if (energySum_host!=NULL)
+    {
+        free(energySum_host);
+        energySum_host=NULL;
+    }
   
-  if (energySum_device!=NULL)
-  {
-      cudaFree(energySum_device);
-      energySum_device=NULL;
-   }
+    if (energySum_device!=NULL)
+    {
+        cudaFree(energySum_device);
+        energySum_device=NULL;
+    }
 }
 
-double ParallelSim::wrapBox(double x, double box){
-    while(x >  box){
+double ParallelSim::wrapBox(double x, double box)
+{
+    while(x >  box)
+    {
         x -= box;
     }
-    while(x < 0){
+    while(x < 0)
+    {
         x += box;
     }
 
@@ -64,15 +67,18 @@ double ParallelSim::wrapBox(double x, double box){
 }
 
 
-double ParallelSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro){
+double ParallelSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro)
+{
     
     Atom *atoms = (Atom *) malloc(sizeof(Atom) * enviro->numOfAtoms);
     int atomIndex = 0;
     double energy=0;
     
-    for(int i = 0; i < enviro->numOfMolecules; i++){
+    for(int i = 0; i < enviro->numOfMolecules; i++)
+    {
         Molecule currentMolecule = molecules[i];
-        for(int j = 0; j < currentMolecule.numOfAtoms; j++){
+        for(int j = 0; j < currentMolecule.numOfAtoms; j++)
+        {
             atoms[atomIndex] = currentMolecule.atoms[j];
             atomIndex++;
         }
@@ -85,7 +91,8 @@ double ParallelSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro){
 }
 
 //double ParallelSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules){
-double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
+double ParallelSim::calcEnergyWrapper(GPUSimBox *box)
+{
     SimBox *innerbox=box->getSimBox();
     Atom *atoms=innerbox->getAtom();
     Environment *enviro=innerbox->getEnviro();
@@ -114,14 +121,15 @@ double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
 
     energySum_device =getdevEnergySum();
     //energySum_host=gethostEnergySum();
-     energySum_host = (double *) malloc(energySumSize);
-     memset(energySum_host,0,energySumSize);
+    energySum_host = (double *) malloc(energySumSize);
+    memset(energySum_host,0,energySumSize);
 
     calcEnergy <<<blocks, THREADS_PER_BLOCK>>>(atoms_device, enviro_device, energySum_device, molec_d, hops_d);
     
     cudaErrorCheck(cudaMemcpy(energySum_host, energySum_device, energySumSize, cudaMemcpyDeviceToHost));
 
-    for(int i = 0; i < N; i++){
+    for(int i = 0; i < N; i++)
+    {
 
         //get atom IDs for each calculation
         int c = -2 * i;
@@ -132,7 +140,8 @@ double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
         int atomYid =  i - (atomXid * atomXid - atomXid) / 2;
         
         //check for stray calculations that returned invalid results
-        if (isnan(energySum_host[i]) != 0 || isinf(energySum_host[i]) != 0){
+        if (isnan(energySum_host[i]) != 0 || isinf(energySum_host[i]) != 0)
+        {
             energySum_host[i] = calcEnergyOnHost(atoms[atomXid], atoms[atomYid], enviro, molecules);
         }
            
@@ -143,7 +152,8 @@ double ParallelSim::calcEnergyWrapper(GPUSimBox *box){
     return totalEnergy;
 }
 
-double ParallelSim::calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules){
+double ParallelSim::calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules)
+{
     //define terms in kcal/mol
     const double e = 332.06;
     double sigma = sqrt(atom1.sigma * atom2.sigma);
@@ -163,12 +173,14 @@ double ParallelSim::calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro
                       (deltaZ * deltaZ);
 
     //check if atoms overlap
-    if (r2 == 0.0){
+    if (r2 == 0.0)
+    {
         //lj_energy = 0.0;
         //charge_energy = 0.0;
         return 0.0;
     }
-    else{
+    else
+    {
     	//calculate LJ energies
     	double sig2OverR2 = pow(sigma, 2) / r2;
         double sig6OverR6 = pow(sig2OverR2, 3);
@@ -182,52 +194,71 @@ double ParallelSim::calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro
     	// Check for 1,3-nonbonded interaction
     	double fValue = 1.0;
 		if (molecules != NULL)
+        {
         	fValue = getFValueHost(atom1, atom2, molecules, enviro);
+        }
 
     	return fValue * (lj_energy + charge_energy);
 	}
 }
 
-double ParallelSim::getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Environment *enviro){
+double ParallelSim::getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Environment *enviro)
+{
     Molecule *m1 = getMoleculeFromAtomIDHost(atom1, molecules, *enviro);
     Molecule *m2 = getMoleculeFromAtomIDHost(atom2, molecules, *enviro);
     Molecule molec = molecules[0];
-    for(int i = 0; i < enviro->numOfMolecules; i++){
-        if(molecules[i].id == m1->id){
+    for(int i = 0; i < enviro->numOfMolecules; i++)
+    {
+        if(molecules[i].id == m1->id)
+        {
             molec = molecules[i];
             break;
         }
     }
 
     if(m1->id != m2->id)
+    {
         return 1.0;
-	else{
+    }
+	else
+    {
         int hops = hopGE3Host(atom1.id, atom2.id, *m1);
         if (hops == 3)
+        {
             return 0.5;
+        }
         else if (hops > 3)
+        {
             return 1.0;
+        }
         else
+        {
             return 0.0;
-     }
+        }
+    }
 }
 
-int ParallelSim::hopGE3Host(int atom1, int atom2, Molecule molecule){
-    for(int x=0; x< molecule.numOfHops; x++){
-		      Hop myHop = molecule.hops[x];
-				if((myHop.atom1==atom1 && myHop.atom2==atom2) ||
-                        (myHop.atom1 == atom2 && myHop.atom2 == atom1) )
-				    return myHop.hop;
+int ParallelSim::hopGE3Host(int atom1, int atom2, Molecule molecule)
+{
+    for(int x=0; x< molecule.numOfHops; x++)
+    {
+		Hop myHop = molecule.hops[x];
+		if((myHop.atom1==atom1 && myHop.atom2==atom2) || (myHop.atom1 == atom2 && myHop.atom2 == atom1) )
+        {
+			return myHop.hop;
+        }
 	 }
 	 return 0;
 }
 
-Molecule* ParallelSim::getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Environment enviro){
+Molecule* ParallelSim::getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Environment enviro)
+{
     int atomId = a1.id;
     int currentIndex = enviro.numOfMolecules - 1;
     Molecule molec = molecules[currentIndex];
 	int molecId = molec.atoms[0].id;
-    while(atomId < molecId && currentIndex > 0){
+    while(atomId < molecId && currentIndex > 0)
+    {
         currentIndex -= 1;
 		molec = molecules[currentIndex];
 		molecId = molec.atoms[0].id;
@@ -236,10 +267,11 @@ Molecule* ParallelSim::getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, E
 
 }
 
-void ParallelSim::runParallel(int steps){
-	  SimBox   *innerbox=box->getSimBox();
+void ParallelSim::runParallel(int steps)
+{
+	SimBox   *innerbox=box->getSimBox();
     Molecule *molecules=innerbox->getMolecules();
- 	  Environment *enviro=innerbox->getEnviro();
+ 	Environment *enviro=innerbox->getEnviro();
  	  
     //int numberOfAtoms = enviro->numOfAtoms;
     //double maxTranslation = enviro->maxTranslation;
@@ -252,33 +284,41 @@ void ParallelSim::runParallel(int steps){
     //int mIndex = 0;
     double newEnergy;
 	 
-    for(int move = 0; move < steps; move++){
+    for(int move = 0; move < steps; move++)
+    {
         if (oldEnergy==0)
+        {
             oldEnergy = calcEnergyWrapper(molecules, enviro);
+        }
 
         int changeno=innerbox->ChangeMolecule();
-				//box->CopyBoxtoDevice(innerbox);
+		//box->CopyBoxtoDevice(innerbox);
 				
         newEnergy = calcEnergyWrapper(this->getGPUSimBox());
 
         bool accept = false;
 
-        if(newEnergy < oldEnergy){
+        if(newEnergy < oldEnergy)
+        {
             accept = true;            
         }
-        else{
+        else
+        {
             double x = exp(-(newEnergy - oldEnergy) / kT);
             
 
-            if(x >= randomFloat(0.0, 1.0)){
+            if(x >= randomFloat(0.0, 1.0))
+            {
                 accept = true;
             }
-            else{
+            else
+            {
                 accept = false;
             }
         }
 
-        if(accept){
+        if(accept)
+        {
             accepted++;
             oldEnergy=newEnergy;
             
@@ -290,7 +330,7 @@ void ParallelSim::runParallel(int steps){
             innerbox->Rollback(changeno);
             oldEnergy=oldEnergy;//meanless, just show we assigned the same energy values.
         }
-      }
-      currentEnergy=oldEnergy;
+    }
+    currentEnergy=oldEnergy;
 }
 
