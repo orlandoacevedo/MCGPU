@@ -25,34 +25,35 @@
 // boltzman constant in kcal mol-1 K-1
 const double kBoltz = 0.00198717;
 
-class LinearSim {
-private:
- 	SimBox *box;
- 	int steps;
- 	float currentEnergy;
-  float oldEnergy;
-  int accepted;
-  int rejected;
-  
-public:
-	float getcurrentEnergy(){return currentEnergy;}; 	
- 	int getaccepted() {return accepted;};
- 	int getrejected() {return rejected;};
-public:
- 	LinearSim(SimBox *initbox,int initsteps);
- 	double calc_lj(Atom atom1, Atom atom2, Environment enviro);
- 	double calcEnergyWrapper(Molecule *molecules, Environment *enviro);
-	double calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules);
-	void calcEnergy(Atom *atoms, Environment *enviro, double *energySum);
-	double calcCharge(Atom atom1, Atom atom2, Environment *enviro);
-	double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro);
-	double calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro);
-	double calcEnergy_NLC(Molecule *molecules, Environment *enviro);
-	double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules);
-	double calcIntramolEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules);
-	double calcBlending(double d1, double d2);
-	double Energy_LRC(Molecule *molec, Environment *enviro);
-	void runLinear(int steps);
+class LinearSim
+{
+	private:
+	 	SimBox *box;
+	 	int steps;
+	 	float currentEnergy;
+	  float oldEnergy;
+	  int accepted;
+	  int rejected;
+	  
+	public:
+		float getcurrentEnergy(){return currentEnergy;}; 	
+	 	int getaccepted() {return accepted;};
+	 	int getrejected() {return rejected;};
+	public:
+	 	LinearSim(SimBox *initbox,int initsteps);
+	 	double calc_lj(Atom atom1, Atom atom2, Environment enviro);
+	 	double calcEnergyWrapper(Molecule *molecules, Environment *enviro);
+		double calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules);
+		void calcEnergy(Atom *atoms, Environment *enviro, double *energySum);
+		double calcCharge(Atom atom1, Atom atom2, Environment *enviro);
+		double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro);
+		double calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro);
+		double calcEnergy_NLC(Molecule *molecules, Environment *enviro);
+		double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules);
+		double calcIntramolEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules);
+		double calcBlending(double d1, double d2);
+		double Energy_LRC(Molecule *molec, Environment *enviro);
+		void runLinear(int steps);
  	
 };
  	

@@ -61,7 +61,8 @@ SimBox::SimBox(Config_Scan configScan)
   ss << "Reading Z-Matrix File \nPath: " << configScan.getZmatrixPath() << endl;
   cout<<ss.str()<<endl; writeToLog(ss);
   Zmatrix_Scan zMatrixScan (configScan.getZmatrixPath(), &oplsScan);
-  if (zMatrixScan.scanInZmatrix() == -1){
+  if (zMatrixScan.scanInZmatrix() == -1)
+  {
   	ss << "Error, Could not open: " << configScan.getZmatrixPath() << endl;
   	cerr << ss.str()<< endl;
   	writeToLog(ss);
@@ -77,7 +78,8 @@ SimBox::SimBox(Config_Scan configScan)
 
    vector<Molecule> molecVec = zMatrixScan.buildMolecule(atomCount);
    int molecMod = enviro->numOfMolecules % molecVec.size();
-   if (molecMod != 0){
+   if (molecMod != 0)
+   {
        enviro->numOfMolecules += molecVec.size() - molecMod;
        cout << "Number of molecules not divisible by specified z-matrix. Changing number of molecules to: " << enviro->numOfMolecules << endl;
     }
@@ -95,30 +97,34 @@ SimBox::SimBox(Config_Scan configScan)
     memset(count,0,sizeof(count));
 	int currentAtomCount = 0;
 	
-    for(int j = 0; j < molecVec.size(); j++){
-		Molecule molec1 = molecVec[j];   
-       //Copy data from vector to molecule
-		count[0]+=molec1.numOfAtoms;
-		count[1]+=molec1.numOfBonds;
-		count[2]+=molec1.numOfAngles;
-		count[3]+=molec1.numOfDihedrals;
-		count[4]+=molec1.numOfHops;
-		
-		cout << "before table building. Number of atom "<< molec1.numOfAtoms<<endl;
-		
-		Hop *myHop = molec1.hops;
-		int **table;
-		table = new int*[molec1.numOfAtoms];
-		for(int k = 0; k< molec1.numOfAtoms;k++)
-			table[k] = new int[molec1.numOfAtoms];
-		//int table[molec1.numOfAtoms][molec1.numOfAtoms];
-		for(int test = 0; test< molec1.numOfAtoms;test++){
-			for(int test1 = 0; test1 < molec1.numOfAtoms; test1++){
-				table[test][test1] = 0;
-			}
+    for(int j = 0; j < molecVec.size(); j++)
+    {
+  		Molecule molec1 = molecVec[j];   
+         //Copy data from vector to molecule
+  		count[0]+=molec1.numOfAtoms;
+  		count[1]+=molec1.numOfBonds;
+  		count[2]+=molec1.numOfAngles;
+  		count[3]+=molec1.numOfDihedrals;
+  		count[4]+=molec1.numOfHops;
+  		
+  		cout << "before table building. Number of atom "<< molec1.numOfAtoms<<endl;
+  		
+  		Hop *myHop = molec1.hops;
+  		int **table;
+  		table = new int*[molec1.numOfAtoms];
+  		for(int k = 0; k< molec1.numOfAtoms;k++)
+  			table[k] = new int[molec1.numOfAtoms];
+  		//int table[molec1.numOfAtoms][molec1.numOfAtoms];
+  		for(int test = 0; test< molec1.numOfAtoms;test++)
+        {
+  			for(int test1 = 0; test1 < molec1.numOfAtoms; test1++)
+            {
+  				table[test][test1] = 0;
+  			}
 		}
 		
-		for(int k2 = 0; k2<molec1.numOfHops;k2++){
+		for(int k2 = 0; k2<molec1.numOfHops;k2++)
+        {
 			int atom1 = myHop->atom1;
 			cout << "atom1: "<< atom1-currentAtomCount <<endl;
 			int atom2 = myHop->atom2;
@@ -127,7 +133,7 @@ SimBox::SimBox(Config_Scan configScan)
 			table[atom1-currentAtomCount][atom2-currentAtomCount] = myHop->hop;
 			table[atom2-currentAtomCount][atom1-currentAtomCount] = myHop->hop;
 			myHop++;
-			}
+		}
 	  
 	   cout << "after table building"<<endl;
 	   //memset(table,0,sizeof(table));
@@ -136,75 +142,83 @@ SimBox::SimBox(Config_Scan configScan)
 	   tables[j] = *createTable(table);
 	   currentAtomCount += molec1.numOfAtoms;
 	   cout << "after table creation. Current atom cout: "<< currentAtomCount<<endl;
-     }
+    }
      
- 	   atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]);
- 	   bondpool     =(Bond *)malloc(sizeof(Bond)*molecDiv*count[1]);
- 	   anglepool    =(Angle *)malloc(sizeof(Angle)*molecDiv*count[2]);
- 	   dihedralpool =(Dihedral *)malloc(sizeof(Dihedral)*molecDiv*count[3]);
- 	   hoppool      =(Hop *)malloc(sizeof(Hop)*molecDiv*count[4]);  
- 	   memset(atompool,0,sizeof(Atom)*molecDiv*count[0]);
- 	   memset(bondpool,0,sizeof(Bond)*molecDiv*count[1]);
- 	   memset(anglepool,0,sizeof(Angle)*molecDiv*count[2]);
- 	   memset(dihedralpool,0,sizeof(Dihedral)*molecDiv*count[3]);
- 	   memset(hoppool,0,sizeof(Hop)*molecDiv*count[4]);
- 	   
- 	   //arrange first part of molecules
- 	   memset(count,0,sizeof(count));
- 	   for(int j = 0; j < molecVec.size(); j++){
+    atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]);
+    bondpool     =(Bond *)malloc(sizeof(Bond)*molecDiv*count[1]);
+    anglepool    =(Angle *)malloc(sizeof(Angle)*molecDiv*count[2]);
+    dihedralpool =(Dihedral *)malloc(sizeof(Dihedral)*molecDiv*count[3]);
+    hoppool      =(Hop *)malloc(sizeof(Hop)*molecDiv*count[4]);  
+    memset(atompool,0,sizeof(Atom)*molecDiv*count[0]);
+    memset(bondpool,0,sizeof(Bond)*molecDiv*count[1]);
+    memset(anglepool,0,sizeof(Angle)*molecDiv*count[2]);
+    memset(dihedralpool,0,sizeof(Dihedral)*molecDiv*count[3]);
+    memset(hoppool,0,sizeof(Hop)*molecDiv*count[4]);
+
+    //arrange first part of molecules
+    memset(count,0,sizeof(count));
+ 	for(int j = 0; j < molecVec.size(); j++)
+    {
  	      //Copy data from vector to molecule
         Molecule molec1 = molecVec[j];   
 
-         molecules[j].atoms = (Atom *)(atompool+count[0]);
-         molecules[j].bonds = (Bond *)(bondpool+count[1]);
-         molecules[j].angles = (Angle *)(anglepool+count[2]);
-         molecules[j].dihedrals = (Dihedral *)(dihedralpool+count[3]);
-         molecules[j].hops = (Hop *)(hoppool+count[4]);
+        molecules[j].atoms = (Atom *)(atompool+count[0]);
+        molecules[j].bonds = (Bond *)(bondpool+count[1]);
+        molecules[j].angles = (Angle *)(anglepool+count[2]);
+        molecules[j].dihedrals = (Dihedral *)(dihedralpool+count[3]);
+        molecules[j].hops = (Hop *)(hoppool+count[4]);
 
-         molecules[j].id = molec1.id;
-         molecules[j].numOfAtoms = molec1.numOfAtoms;
-         molecules[j].numOfBonds = molec1.numOfBonds;
-         molecules[j].numOfDihedrals = molec1.numOfDihedrals;
-         molecules[j].numOfAngles = molec1.numOfAngles;
-         molecules[j].numOfHops = molec1.numOfHops;
+        molecules[j].id = molec1.id;
+        molecules[j].numOfAtoms = molec1.numOfAtoms;
+        molecules[j].numOfBonds = molec1.numOfBonds;
+        molecules[j].numOfDihedrals = molec1.numOfDihedrals;
+        molecules[j].numOfAngles = molec1.numOfAngles;
+        molecules[j].numOfHops = molec1.numOfHops;
 
-         count[0]+=molec1.numOfAtoms;
-         count[1]+=molec1.numOfBonds;
-         count[2]+=molec1.numOfAngles;
-         count[3]+=molec1.numOfDihedrals;
-         count[4]+=molec1.numOfHops;
+        count[0]+=molec1.numOfAtoms;
+        count[1]+=molec1.numOfBonds;
+        count[2]+=molec1.numOfAngles;
+        count[3]+=molec1.numOfDihedrals;
+        count[4]+=molec1.numOfHops;
 
-         //get the atoms from the vector molecule
-         for(int k = 0; k < molec1.numOfAtoms; k++){
-             molecules[j].atoms[k] = molec1.atoms[k];
-         }               
-               
-         //assign bonds
-         for(int k = 0; k < molec1.numOfBonds; k++){
-             molecules[j].bonds[k] = molec1.bonds[k];
-         }
+        //get the atoms from the vector molecule
+        for(int k = 0; k < molec1.numOfAtoms; k++)
+        {
+            molecules[j].atoms[k] = molec1.atoms[k];
+        }               
+           
+        //assign bonds
+        for(int k = 0; k < molec1.numOfBonds; k++)
+        {
+            molecules[j].bonds[k] = molec1.bonds[k];
+        }
 
-         //assign angles
-         for(int k = 0; k < molec1.numOfAngles; k++){
-             molecules[j].angles[k] = molec1.angles[k];
-         }
+        //assign angles
+        for(int k = 0; k < molec1.numOfAngles; k++)
+        {
+            molecules[j].angles[k] = molec1.angles[k];
+        }
 
-         //assign dihedrals
-         for(int k = 0; k < molec1.numOfDihedrals; k++){
-             molecules[j].dihedrals[k] = molec1.dihedrals[k];
-         }
-         
-         //assign hops zx add
-         for(int k = 0; k < molec1.numOfHops; k++){
-             molecules[j].hops[k] = molec1.hops[k];
-         }
-      }
+        //assign dihedrals
+        for(int k = 0; k < molec1.numOfDihedrals; k++)
+        {
+            molecules[j].dihedrals[k] = molec1.dihedrals[k];
+        }
+
+        //assign hops zx add
+        for(int k = 0; k < molec1.numOfHops; k++)
+        {
+            molecules[j].hops[k] = molec1.hops[k];
+        }
+    }
    
- 	   for(int m = 1; m < molecDiv; m++){
- 	      int offset=m*molecTypenum;
- 	   		memcpy(&molecules[offset],molecules,sizeof(Molecule)*molecTypenum);
- 	   		for(int n=0;n<molecTypenum;n++) {
- 	   		    molecules[offset+n].id=offset+n;
+    for(int m = 1; m < molecDiv; m++)
+    {
+        int offset=m*molecTypenum;
+    	memcpy(&molecules[offset],molecules,sizeof(Molecule)*molecTypenum);
+    	for(int n=0;n<molecTypenum;n++)
+        {
+    		molecules[offset+n].id=offset+n;
             molecules[offset+n].atoms = molecules[n].atoms+count[0]*m;
             molecules[offset+n].bonds =  molecules[n].bonds+count[1]*m;
             molecules[offset+n].angles =  molecules[n].angles+count[2]*m;
@@ -219,44 +233,53 @@ SimBox::SimBox(Config_Scan configScan)
         memcpy(&hoppool[offset*count[4]],hoppool,sizeof(Hop)*count[4]);
         
         for(int k=0;k<count[0];k++)
-          atompool[offset*count[0]+k].id=offset*count[0]+k;
-        
-        for(int k=0;k<count[1];k++){
-          bondpool[offset*count[1]+k].atom1+=m*count[0];
-          bondpool[offset*count[1]+k].atom2+=m*count[0];
+        {
+            atompool[offset*count[0]+k].id=offset*count[0]+k;
         }
         
-        for(int k=0;k<count[2];k++) {
-          anglepool[offset*count[2]+k].atom1+=m*count[0];
-          anglepool[offset*count[2]+k].atom2+=m*count[0];
+        for(int k=0;k<count[1];k++)
+        {
+            bondpool[offset*count[1]+k].atom1+=m*count[0];
+            bondpool[offset*count[1]+k].atom2+=m*count[0];
         }
         
-        for(int k=0;k<count[3];k++) {
-          dihedralpool[offset*count[3]+k].atom1+=m*count[0];
-          dihedralpool[offset*count[3]+k].atom2+=m*count[0];
+        for(int k=0;k<count[2];k++)
+        {
+            anglepool[offset*count[2]+k].atom1+=m*count[0];
+            anglepool[offset*count[2]+k].atom2+=m*count[0];
         }
         
-        for(int k=0;k<count[4];k++) {
-          hoppool[offset*count[4]+k].atom1+=m*count[0];
-          hoppool[offset*count[4]+k].atom2+=m*count[0];
+        for(int k=0;k<count[3];k++)
+        {
+            dihedralpool[offset*count[3]+k].atom1+=m*count[0];
+            dihedralpool[offset*count[3]+k].atom2+=m*count[0];
         }
-     }
+        
+        for(int k=0;k<count[4];k++)
+        {
+            hoppool[offset*count[4]+k].atom1+=m*count[0];
+            hoppool[offset*count[4]+k].atom2+=m*count[0];
+        }
+    }
      
-     enviro->numOfAtoms = count[0]*molecDiv;
-		 ss << "Molecules Created into an Array" << endl;
-     writeToLog(ss);
+    enviro->numOfAtoms = count[0]*molecDiv;
+	ss << "Molecules Created into an Array" << endl;
+    writeToLog(ss);
      
-     if (!configScan.getStatePath().empty()){
-			  ss << "Reading State File \nPath: " << configScan.getStatePath() << endl;
+    if (!configScan.getStatePath().empty())
+    {
+		ss << "Reading State File \nPath: " << configScan.getStatePath() << endl;
         cout<<ss.str()<<endl; writeToLog(ss);
-     	  ReadStateFile(configScan.getStatePath().c_str());
-     } else {
+     	ReadStateFile(configScan.getStatePath().c_str());
+    }
+    else
+    {
         ss << "Assigning Molecule Positions..." << endl;
         writeToLog(ss);
         generatefccBox(molecules,enviro);//generate fcc lattice box
         ss << "Finished Assigning Molecule Positions" << endl;
         writeToLog(ss);
-     }
+    }
 }
 
 /**
@@ -299,7 +322,8 @@ int SimBox::ReadStateFile(char const* StateFile)
     inFile.open(StateFile);
     
     //read and check the environment
-    if (inFile.is_open()) {
+    if (inFile.is_open())
+    {
       inFile>>tmpenv.x>>tmpenv.y>>tmpenv.z>>tmpenv.maxTranslation>>tmpenv.numOfAtoms>>tmpenv.temperature>>tmpenv.cutoff;
     }
     
@@ -323,80 +347,81 @@ int SimBox::ReadStateFile(char const* StateFile)
     int no;
     Atom currentAtom;
    	Bond  currentBond;
- 	  Angle currentAngle;
- 	  Dihedral currentDi;
- 	  Hop      currentHop;
- 	  Molecule *ptr=molecules;;
+ 	Angle currentAngle;
+    Dihedral currentDi;
+ 	Hop      currentHop;
+ 	Molecule *ptr=molecules;;
 
-    while(inFile.good()&&molecno<enviro->numOfMolecules){
-      inFile>>no	;
-      assert(ptr->id==no);
-      inFile.getline(buf,sizeof(buf)); //bypass atom flag
-      inFile.getline(buf,sizeof(buf));
-      assert(strcmp(buf,"= Atoms")==0);
-      
-      for(int i=0;i<ptr->numOfAtoms;i++)
-      {
-      	inFile>>currentAtom.id >> currentAtom.x >> currentAtom.y >> currentAtom.z>> currentAtom.sigma >> currentAtom.epsilon >> currentAtom.charge;
-      	assert(currentAtom.id==ptr->atoms[i].id);
-      	//printf("id:%d,x:%f,y:%f\n",currentAtom.id,currentAtom.x,currentAtom.y);
-      	memcpy(&ptr->atoms[i],&currentAtom,sizeof(Atom));
-      }
+    while(inFile.good()&&molecno<enviro->numOfMolecules)
+    {
+        inFile>>no;
+        assert(ptr->id==no);
+        inFile.getline(buf,sizeof(buf)); //bypass atom flag
+        inFile.getline(buf,sizeof(buf));
+        assert(strcmp(buf,"= Atoms")==0);
 
-      inFile.getline(buf,sizeof(buf)); //ignore bonds flag
-      inFile.getline(buf,sizeof(buf));
-      assert(strcmp(buf,"= Bonds")==0);
-      for(int i=0;i<ptr->numOfBonds;i++)
-      {
-      	inFile>>currentBond.atom1 >>currentBond.atom2 >> currentBond.distance >> currentBond.variable;
-      	assert(currentBond.atom1==ptr->bonds[i].atom1);
-				assert(currentBond.atom2==ptr->bonds[i].atom2);      	
-      	memcpy(&ptr->bonds[i],&currentBond,sizeof(Bond));
-      }
+        for(int i=0;i<ptr->numOfAtoms;i++)
+        {
+        	inFile>>currentAtom.id >> currentAtom.x >> currentAtom.y >> currentAtom.z>> currentAtom.sigma >> currentAtom.epsilon >> currentAtom.charge;
+        	assert(currentAtom.id==ptr->atoms[i].id);
+        	//printf("id:%d,x:%f,y:%f\n",currentAtom.id,currentAtom.x,currentAtom.y);
+        	memcpy(&ptr->atoms[i],&currentAtom,sizeof(Atom));
+        }
 
-      inFile.getline(buf,sizeof(buf)); //ignore Dihedrals flag
-      inFile.getline(buf,sizeof(buf));
-      assert(strcmp(buf,"= Dihedrals")==0);
-      for(int i=0;i<ptr->numOfDihedrals;i++)
-      {
-      	inFile>>currentDi.atom1>>currentDi.atom2>>currentDi.value>>currentDi.variable;
-      	assert(currentDi.atom1==ptr->dihedrals[i].atom1);
-				assert(currentDi.atom2==ptr->dihedrals[i].atom2);      	
-      	memcpy(&ptr->dihedrals[i],&currentDi,sizeof(Dihedral));
-      }
+        inFile.getline(buf,sizeof(buf)); //ignore bonds flag
+        inFile.getline(buf,sizeof(buf));
+        assert(strcmp(buf,"= Bonds")==0);
+        for(int i=0;i<ptr->numOfBonds;i++)
+        {
+        	inFile>>currentBond.atom1 >>currentBond.atom2 >> currentBond.distance >> currentBond.variable;
+        	assert(currentBond.atom1==ptr->bonds[i].atom1);
+        	assert(currentBond.atom2==ptr->bonds[i].atom2);      	
+        	memcpy(&ptr->bonds[i],&currentBond,sizeof(Bond));
+        }
 
-      inFile.getline(buf,sizeof(buf)); //ignore hops flag
-      inFile.getline(buf,sizeof(buf));
-      assert(strcmp(buf,"=Hops")==0);
-      // known BUG - if molecule has no hops (3 atoms or less) state file gives error crashing simulation
-      for(int i=0;i<ptr->numOfHops;i++)
-      {
-      	inFile>>currentHop.atom1>>currentHop.atom2 >>currentHop.hop;
-      	assert(currentHop.atom1==ptr->hops[i].atom1);
-				assert(currentHop.atom2==ptr->hops[i].atom2);      	
-      	memcpy(&ptr->hops[i],&currentHop,sizeof(Hop));
-      }
+        inFile.getline(buf,sizeof(buf)); //ignore Dihedrals flag
+        inFile.getline(buf,sizeof(buf));
+        assert(strcmp(buf,"= Dihedrals")==0);
+        for(int i=0;i<ptr->numOfDihedrals;i++)
+        {
+        	inFile>>currentDi.atom1>>currentDi.atom2>>currentDi.value>>currentDi.variable;
+        	assert(currentDi.atom1==ptr->dihedrals[i].atom1);
+        	assert(currentDi.atom2==ptr->dihedrals[i].atom2);      	
+        	memcpy(&ptr->dihedrals[i],&currentDi,sizeof(Dihedral));
+        }
 
-      inFile.getline(buf,sizeof(buf)); //ignore angles flag
-      inFile.getline(buf,sizeof(buf));
-      assert(strcmp(buf,"= Angles")==0);
-      for(int i=0;i<ptr->numOfAngles;i++)
-      {
-      	inFile>>currentAngle.atom1 >> currentAngle.atom2 >>currentAngle.value >>currentAngle.variable;
-      	assert(currentAngle.atom1==ptr->angles[i].atom1);
-				assert(currentAngle.atom2==ptr->angles[i].atom2);      	
-      	memcpy(&ptr->angles[i],&currentAngle,sizeof(Angle));
-      }       
-      
-      inFile.getline(buf,sizeof(buf)); //bypass == flag
-      inFile.getline(buf,sizeof(buf));
-      assert(strcmp(buf,"==")==0);   
-      
-      ptr++;                    
-      molecno++;
+        inFile.getline(buf,sizeof(buf)); //ignore hops flag
+        inFile.getline(buf,sizeof(buf));
+        assert(strcmp(buf,"=Hops")==0);
+        // known BUG - if molecule has no hops (3 atoms or less) state file gives error crashing simulation
+        for(int i=0;i<ptr->numOfHops;i++)
+        {
+        	inFile>>currentHop.atom1>>currentHop.atom2 >>currentHop.hop;
+        	assert(currentHop.atom1==ptr->hops[i].atom1);
+        	assert(currentHop.atom2==ptr->hops[i].atom2);      	
+        	memcpy(&ptr->hops[i],&currentHop,sizeof(Hop));
+        }
+
+        inFile.getline(buf,sizeof(buf)); //ignore angles flag
+        inFile.getline(buf,sizeof(buf));
+        assert(strcmp(buf,"= Angles")==0);
+        for(int i=0;i<ptr->numOfAngles;i++)
+        {
+        	inFile>>currentAngle.atom1 >> currentAngle.atom2 >>currentAngle.value >>currentAngle.variable;
+        	assert(currentAngle.atom1==ptr->angles[i].atom1);
+        	assert(currentAngle.atom2==ptr->angles[i].atom2);      	
+        	memcpy(&ptr->angles[i],&currentAngle,sizeof(Angle));
+        }       
+
+        inFile.getline(buf,sizeof(buf)); //bypass == flag
+        inFile.getline(buf,sizeof(buf));
+        assert(strcmp(buf,"==")==0);   
+
+        ptr++;                    
+        molecno++;
     }
-  inFile.close();
-  WriteStateFile("Confirm.state");
+    inFile.close();
+    WriteStateFile("Confirm.state");
 
 	return 0;
 }
@@ -417,13 +442,15 @@ int SimBox::WriteStateFile(char const* StateFile)
         << " " << enviro->temperature << " " << enviro->cutoff <<endl;
     outFile << endl; // blank line
     
-    for(int i = 0; i < numOfMolecules; i++){
+    for(int i = 0; i < numOfMolecules; i++)
+    {
         Molecule currentMol = molecules[i];
         outFile << currentMol.id << endl;
         outFile << "= Atoms" << endl; // delimiter
     
         //write atoms
-        for(int j = 0; j < currentMol.numOfAtoms; j++){
+        for(int j = 0; j < currentMol.numOfAtoms; j++)
+        {
             Atom currentAtom = currentMol.atoms[j];
             outFile << currentAtom.id << " "
                 << currentAtom.x << " " << currentAtom.y << " " << currentAtom.z
@@ -433,7 +460,8 @@ int SimBox::WriteStateFile(char const* StateFile)
         outFile << "= Bonds" << endl; // delimiter
         
         //write bonds
-        for(int j = 0; j < currentMol.numOfBonds; j++){
+        for(int j = 0; j < currentMol.numOfBonds; j++)
+        {
             Bond currentBond = currentMol.bonds[j];
             outFile << currentBond.atom1 << " " << currentBond.atom2 << " "
                 << currentBond.distance << " ";
@@ -444,19 +472,25 @@ int SimBox::WriteStateFile(char const* StateFile)
 
         }
         outFile << "= Dihedrals" << endl; // delimiter
-        for(int j = 0; j < currentMol.numOfDihedrals; j++){
+        for(int j = 0; j < currentMol.numOfDihedrals; j++)
+        {
             Dihedral currentDi = currentMol.dihedrals[j];
             outFile << currentDi.atom1 << " " << currentDi.atom2 << " "
                 << currentDi.value << " ";
             if(currentDi.variable)
+            {
                 outFile << "1" << endl;
+            }
             else
+            {
                 outFile << "0" << endl;
+            }
         }
 
         outFile << "=Hops" << endl;
 
-        for(int j = 0; j < currentMol.numOfHops; j++){
+        for(int j = 0; j < currentMol.numOfHops; j++)
+        {
             Hop currentHop = currentMol.hops[j];
 
             outFile << currentHop.atom1 << " " << currentHop.atom2 << " "
@@ -467,15 +501,20 @@ int SimBox::WriteStateFile(char const* StateFile)
         outFile << "= Angles" << endl; // delimiter
 
         //print angless
-        for(int j = 0; j < currentMol.numOfAngles; j++){
+        for(int j = 0; j < currentMol.numOfAngles; j++)
+        {
             Angle currentAngle = currentMol.angles[j];
 
             outFile << currentAngle.atom1 << " " << currentAngle.atom2 << " "
                 << currentAngle.value << " ";
             if(currentAngle.variable)
+            {
                 outFile << "1" << endl;
+            }
             else
+            {
                 outFile << "0" << endl;
+            }
         }
 
 
@@ -497,9 +536,11 @@ int SimBox::writePDB(char const* pdbFile)
     int numOfMolecules=enviro->numOfMolecules;
     outputFile << "REMARK Created by MCGPU" << endl;
     //int atomIndex = 0;
-    for (int i = 0; i < numOfMolecules; i++){
+    for (int i = 0; i < numOfMolecules; i++)
+    {
     	Molecule currentMol = molecules[i];    	
-        for (int j = 0; j < currentMol.numOfAtoms; j++){
+        for (int j = 0; j < currentMol.numOfAtoms; j++)
+        {
         	Atom currentAtom = currentMol.atoms[j];
             outputFile.setf(ios_base::left,ios_base::adjustfield);
             outputFile.width(6);
@@ -533,34 +574,40 @@ int SimBox::writePDB(char const* pdbFile)
 /**
 	Assigns atom position based on an X Y Z position
 */
-void SimBox::assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Molecule *molec, Environment *enviro){
+void SimBox::assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Molecule *molec, Environment *enviro)
+{
     //Translates each Molecule a random X,Y,and Z direction
 	 //By translating every atom in that molecule by that translation
 
     //for each Molecule...
-	 for(int i=0; i<enviro->numOfMolecules; i++){
-	     for(int a=0; a<molec[i].numOfAtoms;a++){
-		      Atom myAtom  =  molec[i].atoms[a];
-		      myAtom.x =  dev_doublesX[i] * enviro->x + myAtom.x;
-				myAtom.y =  dev_doublesY[i] * enviro->y + myAtom.y;
-				myAtom.z =  dev_doublesZ[i] * enviro->z + myAtom.z;
-		  }
-		   keepMoleculeInBox(&molec[i],enviro);
+	for(int i=0; i<enviro->numOfMolecules; i++)
+    {
+        for(int a=0; a<molec[i].numOfAtoms;a++)
+        {
+            Atom myAtom  =  molec[i].atoms[a];
+            myAtom.x =  dev_doublesX[i] * enviro->x + myAtom.x;
+            myAtom.y =  dev_doublesY[i] * enviro->y + myAtom.y;
+            myAtom.z =  dev_doublesZ[i] * enviro->z + myAtom.z;
+        }
+		keepMoleculeInBox(&molec[i],enviro);
     }
 }
 
 /**
 	
 */
-void SimBox::generatePoints(Molecule *molecules, Environment *enviro){
+void SimBox::generatePoints(Molecule *molecules, Environment *enviro)
+{
 
     //zx mod for global seed used srand((unsigned int) time(NULL));
 	 //for each Molecule assign a new XYZ
-    for (int i = 0; i < enviro->numOfMolecules; i++){
+    for (int i = 0; i < enviro->numOfMolecules; i++)
+    {
         double baseX = ( (double) rand() / RAND_MAX) * enviro->x;
         double baseY = ( (double) rand() / RAND_MAX) * enviro->y;
         double baseZ = ( (double) rand() / RAND_MAX) * enviro->z;
-        for (int j = 0; j < molecules[i].numOfAtoms; j++){
+        for (int j = 0; j < molecules[i].numOfAtoms; j++)
+        {
             molecules[i].atoms[j].x += baseX;
             molecules[i].atoms[j].y += baseY;
             molecules[i].atoms[j].z += baseZ;
@@ -570,7 +617,8 @@ void SimBox::generatePoints(Molecule *molecules, Environment *enviro){
     }
 }
 
-void SimBox::generatefccBox(Molecule *molecules, Environment *enviro){
+void SimBox::generatefccBox(Molecule *molecules, Environment *enviro)
+{
 	
 	double cells, dcells, cellL, halfcellL;
 	
@@ -581,43 +629,51 @@ void SimBox::generatefccBox(Molecule *molecules, Environment *enviro){
 	//Check if numOfMolecules is a non-fcc number of molecules
 	//and increase the number of cells if necessary
 	while((4 * cells * cells * cells) < enviro->numOfMolecules)
-			cells++;
+    {
+		cells++;
+    }
 			
 	//Determine length of unit cell
 	cellL = enviro->x/ (double) cells;
 	halfcellL = 0.5 * cellL;
 	
 	//Construct the unit cell
-	for (int j = 0; j < molecules[0].numOfAtoms; j++){
-	molecules[0].atoms[j].x += 0.0;
-    molecules[0].atoms[j].y += 0.0;
-    molecules[0].atoms[j].z += 0.0;
+	for (int j = 0; j < molecules[0].numOfAtoms; j++)
+    {
+    	molecules[0].atoms[j].x += 0.0;
+        molecules[0].atoms[j].y += 0.0;
+        molecules[0].atoms[j].z += 0.0;
 	}
 	
-	for (int j = 0; j < molecules[1].numOfAtoms; j++){
-	molecules[1].atoms[j].x += halfcellL;
-    molecules[1].atoms[j].y += halfcellL;
-    molecules[1].atoms[j].z += 0.0;
+	for (int j = 0; j < molecules[1].numOfAtoms; j++)
+    {
+    	molecules[1].atoms[j].x += halfcellL;
+        molecules[1].atoms[j].y += halfcellL;
+        molecules[1].atoms[j].z += 0.0;
     }
     
-    for (int j = 0; j < molecules[2].numOfAtoms; j++){	
-	molecules[2].atoms[j].x += 0.0;
-    molecules[2].atoms[j].y += halfcellL;
-    molecules[2].atoms[j].z += halfcellL;
+    for (int j = 0; j < molecules[2].numOfAtoms; j++)
+    {	
+        molecules[2].atoms[j].x += 0.0;
+        molecules[2].atoms[j].y += halfcellL;
+        molecules[2].atoms[j].z += halfcellL;
     }
     
-    for (int j = 0; j < molecules[3].numOfAtoms; j++){
-    molecules[3].atoms[j].x += halfcellL;
-    molecules[3].atoms[j].y += 0.0;
-    molecules[3].atoms[j].z += halfcellL;
+    for (int j = 0; j < molecules[3].numOfAtoms; j++)
+    {
+        molecules[3].atoms[j].x += halfcellL;
+        molecules[3].atoms[j].y += 0.0;
+        molecules[3].atoms[j].z += halfcellL;
     }
     
 	//Init all other molecules to initial coordinates
 	//Build the lattice from the unit cell by repeatedly translating
 	//the four vectors of the unit cell through a distance cellL in
 	//the x, y, and z directions
-	for(int i = 4; i < enviro->numOfMolecules; i++){
-		for (int j = 0; j < molecules[i].numOfAtoms; j++){
+	for(int i = 4; i < enviro->numOfMolecules; i++)
+    {
+		for (int j = 0; j < molecules[i].numOfAtoms; j++)
+        {
 			molecules[i].atoms[j].x += 0.0;
     		molecules[i].atoms[j].y += 0.0;
    	 		molecules[i].atoms[j].z += 0.0;
@@ -627,11 +683,15 @@ void SimBox::generatefccBox(Molecule *molecules, Environment *enviro){
 	int offset = 0;
 	for(int z = 1; z <= cells; z++)
 		for(int y = 1; y <= cells; y++)
-			for(int x = 1; x <= cells; x++){
-				for(int a = 0; a < 4; a++){
+			for(int x = 1; x <= cells; x++)
+            {
+				for(int a = 0; a < 4; a++)
+                {
 					int i = a + offset;
-					if(i < enviro->numOfMolecules){								
-						for (int j = 0; j < molecules[i].numOfAtoms; j++){
+					if(i < enviro->numOfMolecules)
+                    {								
+						for (int j = 0; j < molecules[i].numOfAtoms; j++)
+                        {
 							molecules[i].atoms[j].x = molecules[a].atoms[j].x + cellL * (x-1);
 							molecules[i].atoms[j].y = molecules[a].atoms[j].y + cellL * (y-1);
 							molecules[i].atoms[j].z = molecules[a].atoms[j].z + cellL * (z-1);
@@ -642,8 +702,10 @@ void SimBox::generatefccBox(Molecule *molecules, Environment *enviro){
 			}
 	
 	//Shift center of box to the origin
-	for(int i = 0; i < enviro->numOfMolecules; i++){
-		for (int j = 0; j < molecules[i].numOfAtoms; j++){
+	for(int i = 0; i < enviro->numOfMolecules; i++)
+    {
+		for (int j = 0; j < molecules[i].numOfAtoms; j++)
+        {
 			molecules[i].atoms[j].x -= halfcellL;
 			molecules[i].atoms[j].y -= halfcellL;
 			molecules[i].atoms[j].z -= halfcellL;
@@ -651,24 +713,29 @@ void SimBox::generatefccBox(Molecule *molecules, Environment *enviro){
 	}
 }
 
-int SimBox::getXFromIndex(int idx){
+int SimBox::getXFromIndex(int idx)
+{
     int c = -2 * idx;
     int discriminant = 1 - 4 * c;
     int qv = (-1 + sqrtf(discriminant)) / 2;
     return qv + 1;
 }
 
-int SimBox::getYFromIndex(int x, int idx){
+int SimBox::getYFromIndex(int x, int idx)
+{
     return idx - (x * x - x) / 2;
 }
 
-double SimBox::makePeriodic(double x, double box){
+double SimBox::makePeriodic(double x, double box)
+{
     
-    while(x < -0.5 * box){
+    while(x < -0.5 * box)
+    {
         x += box;
     }
 
-    while(x > 0.5 * box){
+    while(x > 0.5 * box)
+    {
         x -= box;
     }
 
@@ -676,12 +743,15 @@ double SimBox::makePeriodic(double x, double box){
 
 }
 
-double SimBox::wrapBox(double x, double box){
+double SimBox::wrapBox(double x, double box)
+{
 
-    while(x > box){
+    while(x > box)
+    {
         x -= box;
     }
-    while(x < 0){
+    while(x < 0)
+    {
         x += box;
     }
 
@@ -689,12 +759,13 @@ double SimBox::wrapBox(double x, double box){
 }
 
 void SimBox::keepMoleculeInBox(Molecule *molecule, Environment *enviro){		
-		for (int j = 0; j < molecule->numOfAtoms; j++){
-		//X axis
+		for (int j = 0; j < molecule->numOfAtoms; j++)
+        {
+		    //X axis
 			wrapBox(molecule->atoms[j].x, enviro->x);
-		//Y axis
+            //Y axis
 			wrapBox(molecule->atoms[j].y, enviro->y);
-		//Z axis
+            //Z axis
 			wrapBox(molecule->atoms[j].z, enviro->z);
 		}
 }
@@ -706,7 +777,8 @@ void SimBox::keepMoleculeInBox(Molecule *molecule, Environment *enviro){
 	@param enviro - Pointer to the environment
 	@return - pointer to the atom that matches the atom ID
 */
-Molecule* SimBox::getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro){
+Molecule* SimBox::getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro)
+{
     int atomId = a1->id;
     int currentIndex = enviro->numOfMolecules - 1;
     Molecule molec = molecules[currentIndex];
@@ -728,7 +800,8 @@ Molecule* SimBox::getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environme
 	@param table1 - the look table for the respective molecule type
 	@return - returns the appropriate fudge factor based on the hop value between two atoms
 */
-double SimBox::getFValue(int atom1, int atom2, int **table1){
+double SimBox::getFValue(int atom1, int atom2, int **table1)
+{
     //Molecule *m1 = getMoleculeFromAtomID(atom1, molecules, enviro);
     //Molecule *m2 = getMoleculeFromAtomID(atom2, molecules, enviro);
     
@@ -749,7 +822,8 @@ double SimBox::getFValue(int atom1, int atom2, int **table1){
     //}
 }
 
-int SimBox::buildTable(int * tab){
+int SimBox::buildTable(int * tab)
+{
 
 	return 0;
 }
@@ -760,16 +834,19 @@ int SimBox::buildTable(int * tab){
 	@param atom2 - id of second atom
 	@param molecules - pointer to the molecule
 */
-int SimBox::hopGE3(int atom1, int atom2, Molecule *molecule){
+int SimBox::hopGE3(int atom1, int atom2, Molecule *molecule)
+{
     Hop *myHop = molecule->hops;
-    for(int x=0; x< molecule->numOfHops; x++){        
+    for(int x=0; x< molecule->numOfHops; x++)
+    {        
         //compare atoms to each hop struct in molecule
-		if((myHop->atom1==atom1 && myHop->atom2==atom2) || (myHop->atom1==atom2 && myHop->atom2==atom1)){
+		if((myHop->atom1==atom1 && myHop->atom2==atom2) || (myHop->atom1==atom2 && myHop->atom2==atom1))
+        {
             return myHop->hop;
         }
     myHop++;
 	}
-	 return 0;
+	return 0;
 }
 
 int SimBox::ChangeMolecule()
@@ -804,7 +881,7 @@ int SimBox::ChangeMolecule()
 
 int SimBox::Rollback(int moleno)
 {
-	 return copyMolecule(&molecules[moleno],&changedmole);
+	return copyMolecule(&molecules[moleno],&changedmole);
 }
 
 int SimBox::saveChangedMole(int moleno)
@@ -840,25 +917,30 @@ int SimBox::copyMolecule(Molecule *mole_dst, Molecule *mole_src)
     mole_dst->numOfHops =  mole_src->numOfHops;
     mole_dst->id = mole_src->id;
     
-  for(int i = 0; i < mole_src->numOfAtoms; i++){
+    for(int i = 0; i < mole_src->numOfAtoms; i++)
+    {
         mole_dst->atoms[i] = mole_src->atoms[i];
-  }
+    }
 
-  for(int i = 0; i < mole_src->numOfBonds; i++){
+    for(int i = 0; i < mole_src->numOfBonds; i++)
+    {
         mole_dst->bonds[i] = mole_src->bonds[i];
-  }
-  
-  for(int i = 0; i < mole_src->numOfAngles; i++){
+    }
+
+    for(int i = 0; i < mole_src->numOfAngles; i++)
+    {
         mole_dst->angles[i] = mole_src->angles[i];
-  }
-  
-  for(int i = 0; i < mole_src->numOfDihedrals; i++){
+    }
+
+    for(int i = 0; i < mole_src->numOfDihedrals; i++)
+    {
         mole_dst->dihedrals[i] = mole_src->dihedrals[i];
-  }
+    }
 	
-	for(int i = 0; i < mole_src->numOfHops; i++){
+    for(int i = 0; i < mole_src->numOfHops; i++)
+    {
         mole_dst->hops[i] = mole_src->hops[i];
-  }
+    }
   
-  return 0;  	
+    return 0;  	
 }
