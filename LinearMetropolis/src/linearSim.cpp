@@ -69,45 +69,15 @@ double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro)
 }
 
 /**
-	A wrapper method which calculates the energy in the system at each step.
-	Calls various supporter methods which calculate the energies between individual atoms
-	@param molecules - pointer to the molecules in the simulation
-	@param enviro - pointer to the environment
-	@return - returns the totalEnergy in the system
-*/
-double LinearSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro)
-{
-    //Copy atoms out of molecules
-    Atom *atoms = (Atom *) malloc(sizeof(Atom) * enviro->numOfAtoms);
-    int atomIndex = 0;
-    for(int i = 0; i < enviro->numOfMolecules; i++)
-    {
-        Molecule currentMolecule = molecules[i];
-        for(int j = 0; j < currentMolecule.numOfAtoms; j++)
-        {
-            atoms[atomIndex] = currentMolecule.atoms[j];
-            atomIndex++;
-        }
-    }
-
-    //pass to original wrapper
-    double totalEnergy = calcEnergyWrapper(atoms, enviro, molecules);
-    free(atoms);
-
-    return totalEnergy;
-}
-
-/**
 
 	Calculates the energy between each atom pair.
 	If the atoms are in the same molecule it applies a fudge factor
-	@param atoms - pointer to the atoms in the simulation
 	@param enviro - pointer to the environment
 	@param molecules - pointer to the molecules in the simulation
 	@return - returns the new sum of energy in the system
 	
 */
-double LinearSim::calcEnergyWrapper(Atom *atoms, Environment *enviro, Molecule *molecules)
+double LinearSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro)
 {
     //setup storage
     double totalEnergy = 0.0;
@@ -362,62 +332,12 @@ double LinearSim::calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro)
 }
 
 /**
-	Energy Wrapper used in non bonded energy calculations
-*/
-double LinearSim::calcEnergyWrapper_NLC(Molecule *molecules, Environment *enviro)
-{
-    //setup storage
-    double totalEnergy = 0.0;
-    //Copy atoms out of molecules
-    Atom *atoms = (Atom *) malloc(sizeof(Atom) * enviro->numOfAtoms);
-    int atomIndex = 0;
-    for(int i = 0; i < enviro->numOfMolecules; i++)
-    {
-        Molecule currentMolecule = molecules[i];
-        for(int j = 0; j < currentMolecule.numOfAtoms; j++)
-        {
-            atoms[atomIndex] = currentMolecule.atoms[j];
-            atomIndex++;
-        }
-    }
-
-    totalEnergy = calcEnergy_NLC(atoms, enviro, molecules);
-    free(atoms);
-
-    return totalEnergy;
-}
-
-double LinearSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
-{
-    //Copy atoms out of molecules
-    Atom *atoms = (Atom *) malloc(sizeof(Atom) * enviro->numOfAtoms);
-    int atomIndex = 0;
-    for(int i = 0; i < enviro->numOfMolecules; i++)
-    {
-        Molecule currentMolecule = molecules[i];
-        for(int j = 0; j < currentMolecule.numOfAtoms; j++)
-        {
-            atoms[atomIndex] = currentMolecule.atoms[j];
-            atomIndex++;
-        }
-    }
-
-    //pass to original wrapper
-    double totalEnergy = calcEnergy_NLC(atoms, enviro, molecules);
-    // add the self-interaction nonbonded energy to totalEnergy below:
-    totalEnergy += calcIntramolEnergy_NLC(atoms, enviro, molecules);
-    free(atoms);
-
-    return totalEnergy;
-}
-
-/**
 	Calculates the nonbonded energy for intermolecular molecule pairs using a linked-cell
 	neighbor list. The function then calls a separate function to the calculate the
 	intramolecular nonbonded interactions for every molecule and sums it to the total
 	energy.
 */
-double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules)
+double LinearSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 {
 	// Variables for linked-cell neighbor list	
 	int lc[3];            /* Number of cells in the x|y|z direction */
@@ -587,14 +507,14 @@ double LinearSim::calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *mol
 						} /* Endfor neighbor cells, c1 */
 			} /* Endfor central cell, c */
 	
-	return totalEnergy;
+	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
 }
 
 /**
 	Calculates the nonbonded energy for intramolecular nonbonded interactions for every 
 	solvent molecule and sums it to the total energy. Uses getFValue().
 */
-double LinearSim::calcIntramolEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules)
+double LinearSim::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules)
 {
     //setup storage
     double totalEnergy = 0.0;
