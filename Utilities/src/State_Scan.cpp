@@ -5,20 +5,23 @@
  */
 #include "State_Scan.h"
 
-void printState(Environment *enviro, Molecule *molecules, int numOfMolecules, string filename){
+void printState(Environment *enviro, Molecule *molecules, int numOfMolecules, string filename)
+{
     ofstream outFile;
     outFile.open(filename.c_str());
     //print the environment
     outFile << enviro->x << " " << enviro->y << " " << enviro->z << " " << enviro->numOfAtoms
         << " " << enviro->temperature << " " << enviro->cutoff <<endl;
     outFile << endl; // blank line
-    for(int i = 0; i < numOfMolecules; i++){
+    for(int i = 0; i < numOfMolecules; i++)
+    {
         Molecule currentMol = molecules[i];
         outFile << currentMol.id << endl;
         outFile << "= Atoms" << endl; // delimiter
     
         //write atoms
-        for(int j = 0; j < currentMol.numOfAtoms; j++){
+        for(int j = 0; j < currentMol.numOfAtoms; j++)
+        {
             Atom currentAtom = currentMol.atoms[j];
             outFile << currentAtom.id << " "
                 << currentAtom.x << " " << currentAtom.y << " " << currentAtom.z
@@ -28,30 +31,41 @@ void printState(Environment *enviro, Molecule *molecules, int numOfMolecules, st
         outFile << "= Bonds" << endl; // delimiter
         
         //write bonds
-        for(int j = 0; j < currentMol.numOfBonds; j++){
+        for(int j = 0; j < currentMol.numOfBonds; j++)
+        {
             Bond currentBond = currentMol.bonds[j];
             outFile << currentBond.atom1 << " " << currentBond.atom2 << " "
                 << currentBond.distance << " ";
             if(currentBond.variable)
+            {
                 outFile << "1" << endl;
+            }
             else
+            {
                 outFile << "0" << endl;
+            }
 
         }
         outFile << "= Dihedrals" << endl; // delimiter
-        for(int j = 0; j < currentMol.numOfDihedrals; j++){
+        for(int j = 0; j < currentMol.numOfDihedrals; j++)
+        {
             Dihedral currentDi = currentMol.dihedrals[j];
             outFile << currentDi.atom1 << " " << currentDi.atom2 << " "
                 << currentDi.value << " ";
             if(currentDi.variable)
+            {
                 outFile << "1" << endl;
+            }
             else
+            {
                 outFile << "0" << endl;
+            }
         }
 
         outFile << "= Hops" << endl;
 
-        for(int j = 0; j < currentMol.numOfHops; j++){
+        for(int j = 0; j < currentMol.numOfHops; j++)
+        {
             Hop currentHop = currentMol.hops[j];
 
             outFile << currentHop.atom1 << " " << currentHop.atom2 << " "
@@ -62,15 +76,20 @@ void printState(Environment *enviro, Molecule *molecules, int numOfMolecules, st
         outFile << "= Angles" << endl; // delimiter
 
         //print angless
-        for(int j = 0; j < currentMol.numOfAngles; j++){
+        for(int j = 0; j < currentMol.numOfAngles; j++)
+        {
             Angle currentAngle = currentMol.angles[j];
 
             outFile << currentAngle.atom1 << " " << currentAngle.atom2 << " "
                 << currentAngle.value << " ";
             if(currentAngle.variable)
+            {
                 outFile << "1" << endl;
+            }
             else
+            {
                 outFile << "0" << endl;
+            }
         }
 
 
@@ -80,7 +99,8 @@ void printState(Environment *enviro, Molecule *molecules, int numOfMolecules, st
     outFile.close();
 }
 
-Environment getEnvironmentFromLine(string line){
+Environment getEnvironmentFromLine(string line)
+{
     Environment enviro;
     //tokenize input line
     char *tokens; 
@@ -91,8 +111,10 @@ Environment getEnvironmentFromLine(string line){
     int tokenNumber = 0;
     double x, y, z, cutoff;
     int numOfAtoms;
-    while(tokens != NULL){
-        switch(tokenNumber){
+    while(tokens != NULL)
+    {
+        switch(tokenNumber)
+        {
             case 0:
                 enviro.x = atof(tokens);
                 break;
@@ -119,7 +141,8 @@ Environment getEnvironmentFromLine(string line){
     return enviro;
 }
 
-Atom getAtomFromLine(string line){
+Atom getAtomFromLine(string line)
+{
     Atom returnAtom = createAtom(-1, -1, -1, -1, -1, -1);
     char *tokens;
     char *charLine = (char *)malloc(sizeof(char) * line.size());
@@ -130,8 +153,10 @@ Atom getAtomFromLine(string line){
     
     //read in atoms
     int tokenNumber = 0;
-    while(tokens != NULL){
-        switch(tokenNumber){
+    while(tokens != NULL)
+    {
+        switch(tokenNumber)
+        {
             case 0: // id
                 returnAtom.id = atoi(tokens);
                 break;
@@ -161,7 +186,8 @@ Atom getAtomFromLine(string line){
     return returnAtom;
 }
 
-Bond getBondFromLine(string line){
+Bond getBondFromLine(string line)
+{
     Bond bond = createBond( -1, -1, -1, false);
 
     char *tokens;
@@ -171,8 +197,10 @@ Bond getBondFromLine(string line){
     strcpy(charLine, line.c_str());
 
     int tokenNumber = 0;
-    while(tokens != NULL){
-        switch(tokenNumber){
+    while(tokens != NULL)
+    {
+        switch(tokenNumber)
+        {
             case 0: // atom 1
                 bond.atom1 = atoi(tokens);
                 break;
@@ -195,7 +223,8 @@ Bond getBondFromLine(string line){
     return bond;
 }
 
-Angle getAngleFromLine(string line){
+Angle getAngleFromLine(string line)
+{
     Angle angle = createAngle(-1, -1, -1, false);
 
     char *tokens;
@@ -205,8 +234,10 @@ Angle getAngleFromLine(string line){
     strcpy(charLine, line.c_str());
     
     int tokenNumber = 0;
-    while(tokens != NULL){
-       switch(tokenNumber){
+    while(tokens != NULL)
+    {
+       switch(tokenNumber)
+       {
            case 0:
                angle.atom1 = atoi(tokens);
                break;
@@ -228,7 +259,8 @@ Angle getAngleFromLine(string line){
     return angle;
 }
 
-Dihedral getDihedralFromLine(string line){
+Dihedral getDihedralFromLine(string line)
+{
     Dihedral dihedral = createDihedral(-1, -1, -1, false);
 
     char *tokens;
@@ -236,8 +268,10 @@ Dihedral getDihedralFromLine(string line){
     strcpy(charLine, line.c_str());
     tokens = strtok(charLine, " ");
     int tokenNumber = 0;
-    while(tokens != NULL){
-        switch(tokenNumber){
+    while(tokens != NULL)
+    {
+        switch(tokenNumber)
+        {
             case 0:
                 dihedral.atom1 = atoi(tokens);
                 break;
@@ -261,7 +295,8 @@ Dihedral getDihedralFromLine(string line){
 }
 
 //returns a hop based on the information on the line
-Hop getHopFromLine(string line){
+Hop getHopFromLine(string line)
+{
     Hop hop = createHop(-1, -1, -1);
 
     char *tokens;
@@ -270,8 +305,10 @@ Hop getHopFromLine(string line){
     strcpy(charLine, line.c_str());
     tokens = strtok(charLine, " ");
     int tokenNumber = 0;
-    while(tokens != NULL){
-        switch(tokenNumber){
+    while(tokens != NULL)
+    {
+        switch(tokenNumber)
+        {
             case 0:
                 hop.atom1 = atoi(tokens);
                 break;
@@ -288,29 +325,35 @@ Hop getHopFromLine(string line){
     return hop;
 }
 
-Environment readInEnvironment(string filename){
+Environment readInEnvironment(string filename)
+{
     ifstream inFile (filename.c_str());
     string line;
     Environment enviro;
 
-    if(inFile.is_open()){
+    if(inFile.is_open())
+    {
         getline(inFile, line);
         enviro = getEnvironmentFromLine(line);    
     }
     else
+    {
         return enviro;
+    }
 
     return enviro;
         
 }
 
 
-vector<Molecule> readInMolecules(string filename){
+vector<Molecule> readInMolecules(string filename)
+{
     vector<Molecule> molecules;
     ifstream inFile(filename.c_str());
     string line;
     
-    if(inFile.is_open()){
+    if(inFile.is_open())
+    {
         vector<Bond> bonds;
         vector<Angle> angles;
         vector<Atom> atoms;
@@ -323,49 +366,67 @@ vector<Molecule> readInMolecules(string filename){
         
         Molecule currentMolec;
         int section = 0; // 0 = id, 1 = atom, 2 = bond, 3 = dihedral, 4 = hop, 5 = angle
-        while(inFile.good()){
+        while(inFile.good())
+        {
             //printf("bonds: %d\nangles: %d\natoms: %d\ndihedrals: %d\n\n",
               //      bonds.size(), angles.size(), atoms.size(), dihedrals.size());
             getline(inFile, line);
 			string hold = line.substr(0, 2);
-            switch(section){
+            switch(section)
+            {
                 case 0: // id
                     if(hold.compare("= ") == 0)
+                    {
                         section++;
-                    else{
+                    }
+                    else
+                    {
                         currentMolec.id = atoi(line.c_str());
                     }
                     break;
                 case 1: // atom
                     if(hold.compare("= ") == 0)
+                    {
                         section++;
-                    else{
+                    }
+                    else
+                    {
                        atoms.push_back(getAtomFromLine(line)); 
                     }
                     break;
                 case 2: // bond
                     if(hold.compare("= ") == 0)
+                    {
                         section++;
-                    else{
+                    }
+                    else
+                    {
                        bonds.push_back(getBondFromLine(line)); 
                     }
                     break;
                 case 3: // dihedral
                     if(hold.compare("= ") == 0)
+                    {
                         section++;
-                    else{
+                    }
+                    else
+                    {
                        dihedrals.push_back(getDihedralFromLine(line)); 
                     }
                     break;
                 case 4: // hop
                     if(hold.compare("= ") == 0)
+                    {
                         section++;
-                    else{
+                    }
+                    else
+                    {
                         hops.push_back(getHopFromLine(line));
                     }
 					break;
                 case 5: // angle
-                    if(hold.compare("==") == 0){
+                    if(hold.compare("==") == 0)
+                    {
                         section = 0;
                         
                         //convert all vectors to arrays
@@ -376,15 +437,25 @@ vector<Molecule> readInMolecules(string filename){
                         Hop *hopArray = (Hop *) malloc(sizeof(Hop) * hops.size());
 
                         for(int i = 0; i < bonds.size(); i++)
+                        {
                             bondArray[i] = bonds[i];
+                        }
                         for(int i = 0; i < angles.size(); i++)
+                        {
                             angleArray[i] = angles[i];
+                        }
                         for(int i = 0; i < atoms.size(); i++)
+                        {
                             atomArray[i] = atoms[i];
+                        }
                         for(int i = 0; i < dihedrals.size(); i++)
+                        {
                             dihedralArray[i] = dihedrals[i];
+                        }
                         for(int i = 0; i < hops.size(); i++)
+                        {
                             hopArray[i] = hops[i];
+                        }
                        
                         //assign arrays to molecule
                         currentMolec.atoms = atomArray;
@@ -415,14 +486,16 @@ vector<Molecule> readInMolecules(string filename){
                         hops.clear();
 
                     }
-                    else{
+                    else
+                    {
                        angles.push_back(getAngleFromLine(line)); 
                     }
                     break;
             }
         }
     }
-    else{
+    else
+    {
         return molecules;
     }
     

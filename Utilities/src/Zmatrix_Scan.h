@@ -22,7 +22,8 @@
 using namespace std;
 
 
-class Zmatrix_Scan{
+class Zmatrix_Scan
+{
    private:
       /**
          The path to the Z-matrix file

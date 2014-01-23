@@ -13,20 +13,25 @@ Config_Scan::Config_Scan(string configPath){
     numOfSteps=0;
 }
 
-void Config_Scan::readInConfig(){
+void Config_Scan::readInConfig()
+{
     ifstream configscanner(configpath.c_str());
-    if (! configscanner.is_open()){
+    if (! configscanner.is_open())
+    {
         throwScanError("Configuration file failed to open.");
         return;
     }
-    else {
+    else
+    {
         string line;
         int currentLine = 1;
-        while (configscanner.good()){
+        while (configscanner.good())
+        {
             getline(configscanner,line);
 			
             //assigns attributes based on line number
-            switch(currentLine){
+            switch(currentLine)
+            {
                 case 2:
 					if(line.length() > 0)
 					{
@@ -198,41 +203,50 @@ void Config_Scan::readInConfig(){
     }
 }
 
-void Config_Scan::throwScanError(string message){
+void Config_Scan::throwScanError(string message)
+{
 
 	cerr << endl << message << endl << "	Error Number: " << errno << endl <<endl;
 
 	return;
 }
 
-Environment *Config_Scan::getEnviro(){
+Environment *Config_Scan::getEnviro()
+{
     return &enviro;
 }
 
-string Config_Scan::getConfigPath(){
+string Config_Scan::getConfigPath()
+{
     return configpath;
 }
 
-long Config_Scan::getSteps(){
+long Config_Scan::getSteps()
+{
     return numOfSteps;
 }
     
-string Config_Scan::getOplsusaparPath(){
+string Config_Scan::getOplsusaparPath()
+{
     return oplsuaparPath;
 }
 
-string Config_Scan::getZmatrixPath(){
+string Config_Scan::getZmatrixPath()
+{
     return zmatrixPath;
 }
 
-string Config_Scan::getStatePath(){
+string Config_Scan::getStatePath()
+{
     return statePath;
 }
 
-string Config_Scan::getStateOutputPath(){
+string Config_Scan::getStateOutputPath()
+{
     return stateOutputPath;
 }
 
-string Config_Scan::getPdbOutputPath(){
+string Config_Scan::getPdbOutputPath()
+{
     return pdbOutputPath;
 }

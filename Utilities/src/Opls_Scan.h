@@ -26,7 +26,8 @@ struct Fourier
 /**
   Class used to read and write Opls files.
 */
-class Opls_Scan{
+class Opls_Scan
+{
    private:
    /**
      HashTable that holds all opls references

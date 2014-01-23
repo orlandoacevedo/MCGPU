@@ -1,6 +1,7 @@
 #include "stateTest.h"
 
-void testGetHopFromLine(){
+void testGetHopFromLine()
+{
     cout << "Testing getHopFromLine" << endl;
     string line = "3 4 2";
     string line2 = "6 3 6";
@@ -20,7 +21,8 @@ void testGetHopFromLine(){
 
 }
 
-void testGetDihedralFromLine(){
+void testGetDihedralFromLine()
+{
     cout << "Testing getDihedralFromLine" << endl;
     string line = "3 5 3.456 0";
     string line2 = "89 21 45.21 1";
@@ -41,7 +43,8 @@ void testGetDihedralFromLine(){
     cout << "Testing getDihedralFromLine Complete\n" << endl;
 }
 
-void testGetAtomFromLine(){
+void testGetAtomFromLine()
+{
     cout << "Testing getAtomFromLine" << endl;
     
     //id x y z sigma epsilon charg
@@ -70,7 +73,8 @@ void testGetAtomFromLine(){
     cout << "Testing getAtomFromLine Complete\n" << endl;
 }
 
-void testGetBondFromLine(){
+void testGetBondFromLine()
+{
     cout << "Testing getBondFromLine" << endl;
     string line = "3 5 3.456 0";
     string line2 = "89 21 45.21 1";
@@ -91,7 +95,8 @@ void testGetBondFromLine(){
     cout << "Testing getBondFromLine Complete\n" << endl;
 }
 
-void testGetAngleFromLine(){
+void testGetAngleFromLine()
+{
     cout << "Testing getAngleFromLine" << endl;
     string line = "3 5 3.456 0";
     string line2 = "89 21 45.21 1";
@@ -112,7 +117,8 @@ void testGetAngleFromLine(){
     cout << "Testing getAngleFromLine Complete\n" << endl;
 }
 
-void testGetEnvironmentFromLine(){
+void testGetEnvironmentFromLine()
+{
     cout << "Testing getEnvironmentFromLine" << endl;
     string line1 = "10.0 11.2 32.34 90 150.4";
     string line2 = "11.4 34.1 12.54 45 160.9";
@@ -135,7 +141,8 @@ void testGetEnvironmentFromLine(){
     cout << "Testing getEnvironmentFromLine Complete\n" << endl;
 }
 
-void testWriteOutReadInState(){
+void testWriteOutReadInState()
+{
     cout << "Testing readInEnvironment" << endl;
     Atom atom1 = createAtom(0, 1.23f, 2.3f, 4.3f, 5.6f, 4.34f);
     Atom atom2 = createAtom(1, 3.22f, 4.2f, 6.5f, 8.6f, 6.36f);
@@ -185,11 +192,13 @@ void testWriteOutReadInState(){
     vector<Molecule> molecVector = readInMolecules(filename); 
 
     
-    for(int j = 0; j < molecVector.size(); j++){ 
+    for(int j = 0; j < molecVector.size(); j++)
+    { 
         double floatThreshold = .00001;
         //print atom
         Molecule molec = molecVector[j];
-        for(int i = 0; i < molec.numOfAtoms; i++){
+        for(int i = 0; i < molec.numOfAtoms; i++)
+        {
             Atom a = molec.atoms[i];
             assert( fabs(a.z - atomArray[i].z) < floatThreshold);
             assert( fabs(a.x - atomArray[i].x) < floatThreshold);
@@ -199,14 +208,16 @@ void testWriteOutReadInState(){
             assert(a.id == atomArray[i].id);
         }
         //print dihedrals
-        for(int i = 0; i < molec.numOfDihedrals; i++){
+        for(int i = 0; i < molec.numOfDihedrals; i++)
+        {
             Dihedral d = molec.dihedrals[i];
             assert(d.atom1 == dihedralArray[i].atom1);
             assert(d.atom2 == dihedralArray[i].atom2);
             assert(fabs(d.value - dihedralArray[i].value) < floatThreshold);
         }
         //print bonds
-        for(int i = 0; i < molec.numOfBonds; i++){
+        for(int i = 0; i < molec.numOfBonds; i++)
+        {
             
             Bond d = molec.bonds[i];
             assert(d.atom1 == bondArray[i].atom1);
@@ -215,7 +226,8 @@ void testWriteOutReadInState(){
 
         }
         // test angles 
-        for(int i = 0; i < molec.numOfAngles; i++){
+        for(int i = 0; i < molec.numOfAngles; i++)
+        {
             
             Angle d = molec.angles[i];
             assert(d.atom1 == angleArray[i].atom1);
@@ -223,7 +235,8 @@ void testWriteOutReadInState(){
             assert(fabs(d.value - angleArray[i].value) < floatThreshold);
         }
         //test hops
-        for(int i = 0; i < molec.numOfHops; i++){
+        for(int i = 0; i < molec.numOfHops; i++)
+        {
             Hop h = molec.hops[i];
             assert(h.atom1 == hopArray[i].atom1);
             assert(h.atom2 == hopArray[i].atom2);
@@ -236,7 +249,8 @@ void testWriteOutReadInState(){
 
 
 
-void runStateTests(){
+void runStateTests()
+{
     testGetHopFromLine();
     testGetDihedralFromLine();
     testGetAtomFromLine();

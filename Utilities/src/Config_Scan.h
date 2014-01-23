@@ -21,7 +21,8 @@ using namespace std;
 
 
 */
-class Config_Scan{
+class Config_Scan
+{
     private:
         /**
           The environment used in the simulation.

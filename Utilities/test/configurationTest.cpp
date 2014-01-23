@@ -1,7 +1,8 @@
 #include "configurationTest.h"
 
-void testConfigScan(){
-     cout << "Configuration completed" << endl;
+void testConfigScan()
+{
+    cout << "Configuration completed" << endl;
     string configPath = "bin/configurationTest.txt"; 
     string oplsPath = "path/to/opls/file";
     string zMatrixPath = "path/to/zMatrix/file";

@@ -25,25 +25,26 @@ using namespace std;
 /*!
 Structure that represents an atom in the simulation.
 */
-struct Atom{
+struct Atom
+{
     /*!x coordinate of the atom*/
     double x;
     /*!y coordinate of the atom*/
     double y;
     /*!z coordinate of the atom*/
     double z;
-    
+
     /*!unique id of the atom*/
     unsigned long id; 
-	
+
     /*!sigma value for the atom for the LJ calculations.*/
     double sigma;
     /*!  epsilon value for the atom for the LJ calculation*/
     double epsilon;
     /*!epsilon value for the atom for the LJ calculation*/
     double charge;
-    	/*!name for atom in z-matrix.*/
-	char name;
+    /*!name for atom in z-matrix.*/
+    char name;
 
 };
 
@@ -83,7 +84,8 @@ Atom createAtom(unsigned long id, double x, double y, double z);
 /*!
   Structure representing the simulation's environment.
 */
-struct Environment{
+struct Environment
+{
     /*!
     length of the box in the x direction
     */
@@ -168,7 +170,8 @@ void writeOutAtoms(Atom *atoms, Environment *enviro, string filename, int accept
 /*!
   Structure to respresent bonds between atoms in a molecule.
 */
-struct Bond{
+struct Bond
+{
     /*!
        The first atom in the bond.
     */
@@ -203,7 +206,8 @@ Bond createBond(int atom1, int atom2, double distance, bool variable);
   points are listed here.  It is up to the programmer to find the third
   atom in the angle.
 */
-struct Angle{
+struct Angle
+{
     /*!
     the first atom in the angle
     */
@@ -239,7 +243,8 @@ Angle createAngle(int atom1, int atom2, double value, bool variable);
   by two planes.  The structure is defined using two atoms.  It is up to the programmer
   to find the other two atoms needed to define two planes.
 */
-struct Dihedral{
+struct Dihedral
+{
     /**
     the first atom in the dihedral
     */
@@ -274,7 +279,8 @@ Dihedral createDihedral(int atom1, int atom2, double value, bool variable);
   Atom pairs and their node distance(hops) away from each other
   used in the fudge factor, for total energy calculations
 */
-struct Hop{
+struct Hop
+{
     /**
     the starting atom
     */
@@ -301,9 +307,10 @@ Hop createHop(int atom1, int atom2, int hops);
 	Used in box consturction. The tables are used to look up hop values between
 	two atom pairs. A table is created for each different type of molecule in the simulation
 */
-struct Table{
+struct Table
+{
 
-int **hopTable;
+    int **hopTable;
 
 };
 
@@ -317,7 +324,8 @@ Table * createTable(int **table);
 /**
   Structure to represent a molecule in the simulation.
 */
-struct Molecule{
+struct Molecule
+{
     /**
     the name of the molecule
     */

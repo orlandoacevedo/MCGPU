@@ -31,7 +31,8 @@ double atom3Charge = .640;
 double atom3Sigma = 2.250;
 double atom3Epsilon = 0.05;
 
-void testGetAtom(Opls_Scan scan){
+void testGetAtom(Opls_Scan scan)
+{
     cout << "Testing Opls_Scan.getAtom" << endl;
     Atom atom1 = scan.getAtom(atomNumber1);
     Atom atom2 = scan.getAtom(atomNumber2);
@@ -51,7 +52,8 @@ void testGetAtom(Opls_Scan scan){
     cout << "Testing Opls_Scan.getAtom Completed\n" << endl;
 }
 
-void testGetSigma(Opls_Scan scan){
+void testGetSigma(Opls_Scan scan)
+{
     cout << "Testing Opls_Scan.getSigma" << endl;
     assert(scan.getSigma(atomNumber1) == atom1Sigma); 
     assert(scan.getSigma(atomNumber2) == atom2Sigma); 
@@ -59,7 +61,8 @@ void testGetSigma(Opls_Scan scan){
     cout << "Testing Opls_Scan.getSigma Completed\n" << endl;
 }
 
-void testGetEpsilon(Opls_Scan scan){
+void testGetEpsilon(Opls_Scan scan)
+{
     cout << "Testing Opls_Scan.getEpsilon" << endl;
     assert(scan.getEpsilon(atomNumber1) == atom1Epsilon);
     assert(scan.getEpsilon(atomNumber2) == atom2Epsilon);
@@ -67,7 +70,8 @@ void testGetEpsilon(Opls_Scan scan){
     cout << "Testing Opls_Scan.getEpsilon Completed\n" << endl;
 }
 
-void testGetCharge(Opls_Scan scan){
+void testGetCharge(Opls_Scan scan)
+{
     cout << "Testing Opls_Scan.getCharge" << endl;
     assert(scan.getCharge(atomNumber1) == atom1Charge);
     assert(scan.getCharge(atomNumber2) == atom2Charge);
@@ -84,28 +88,33 @@ double atom5Fourier[4] = { 1.363, 0.343, -0.436, -1.121};
 string atomNumber6 ="073";
 double atom6Fourier[4] = { 0.0, -4.0396, 1.2261, 3.5637 };
 
-void testGetFourier(Opls_Scan scan){
+void testGetFourier(Opls_Scan scan)
+{
     cout << "Testing Opls_Scan.getVvalues" << endl;
     Fourier f = scan.getFourier(atomNumber4);
     
-    for(int i=0; i<4; i++){
+    for(int i=0; i<4; i++)
+    {
         assert(f.vValues[i]==atom4Fourier[i]);	 
     }
 
     f = scan.getFourier(atomNumber5);
-    for(int i=0; i<4; i++){
+    for(int i=0; i<4; i++)
+    {
         assert(f.vValues[i]==atom5Fourier[i]);	 
     }
 
     f = scan.getFourier(atomNumber6);
-    for(int i=0; i<4; i++){
+    for(int i=0; i<4; i++)
+    {
         assert(f.vValues[i]==atom6Fourier[i]);	 
     }
 
     cout << "Testing Opls_Scan.getVvalues Completed\n" << endl;
 }
 
-void testPDBoutput(){
+void testPDBoutput()
+{
     cout << "Testing PDBoutput" << endl;
     Atom* pdbAtoms;
     Environment pdbEnviro;
@@ -113,7 +122,8 @@ void testPDBoutput(){
     pdbAtoms = (Atom *) malloc(sizeof(Atom)*2);
     pdbEnviro.numOfAtoms = 2;
 
-    for (int i = 0; i < 2; i++){
+    for (int i = 0; i < 2; i++)
+    {
         pdbAtoms[i].x = 1.1 * (i + 1);
         pdbAtoms[i].y = 2.2 * (i + 1);
         pdbAtoms[i].z = 3.3 * (i + 1);
@@ -129,7 +139,8 @@ void testPDBoutput(){
     ifstream readPDB;
     readPDB.open(fileName.c_str());
 
-    for (int i = 0; i < 2; i++){
+    for (int i = 0; i < 2; i++)
+    {
         stringstream ss;
         string tokens[9];
 
@@ -151,47 +162,49 @@ void testPDBoutput(){
     free(pdbAtoms);
 }
 
-void testLogOutput(){
+void testLogOutput()
+{
     cout << "Testing OutputLog writer... \n--May Take some time due to system call" <<endl;
     //clear and remove it
-	 system("find ../ -name OutputLog | xargs rm");
+    system("find ../ -name OutputLog | xargs rm");
     string line1 = "This is line1 text";
-	 string line2 = "This is line2 text";
-	 string line3 = "This is line3 text";
-	 
-	 //write lines to OutputLog
-	 writeToLog(line1);
-	 writeToLog(line2,Z_MATRIX);
-	 writeToLog(line3,OPLS);
+    string line2 = "This is line2 text";
+    string line3 = "This is line3 text";
+
+    //write lines to OutputLog
+    writeToLog(line1);
+    writeToLog(line2,Z_MATRIX);
+    writeToLog(line3,OPLS);
 
     //check if written lines and tag exist in file
     string outPutFile= "OutputLog";
-	 ifstream fileReader;
-	 fileReader.open(outPutFile.c_str());
-	 assert( fileReader.good());
-	 
-	 string readInLine;
-	 getline(fileReader,readInLine);
-	 assert(readInLine.compare(line1)==0);
-	 
-	 getline(fileReader,readInLine);
-	 string temp= "--Z_Matrix: ";
-	 temp+=line2;
-	 assert(readInLine.compare(temp)==0);
-	 //getline(fileReader,readInLine);
-	 //assert(readInLine.compare(line2)==0);
-	 
-	 getline(fileReader,readInLine);
-	 temp= "--OPLS: ";
-	 temp+=line3;
-	 assert(readInLine.compare(temp)==0);
-	 //getline(fileReader,readInLine);
-	 //assert(readInLine.compare(line3)==0);
-	 
-	 cout << "Testing OutputLog writer Completed\n" <<endl;	 
+    ifstream fileReader;
+    fileReader.open(outPutFile.c_str());
+    assert( fileReader.good());
+
+    string readInLine;
+    getline(fileReader,readInLine);
+    assert(readInLine.compare(line1)==0);
+
+    getline(fileReader,readInLine);
+    string temp= "--Z_Matrix: ";
+    temp+=line2;
+    assert(readInLine.compare(temp)==0);
+    //getline(fileReader,readInLine);
+    //assert(readInLine.compare(line2)==0);
+
+    getline(fileReader,readInLine);
+    temp= "--OPLS: ";
+    temp+=line3;
+    assert(readInLine.compare(temp)==0);
+    //getline(fileReader,readInLine);
+    //assert(readInLine.compare(line3)==0);
+
+    cout << "Testing OutputLog writer Completed\n" <<endl;	 
 }
 
-int main(){
+int main()
+{
     cout<< "----- Starting Utility Test ----\n" << endl;
     runStateTests();
     testConfigScan();    
@@ -199,7 +212,8 @@ int main(){
     Opls_Scan scanner(oplsPath);
     int returnInt = scanner.scanInOpls(oplsPath);
     cout << "--Attempting to open " << oplsPath << endl;
-    if(returnInt == -1){
+    if(returnInt == -1)
+    {
         cout << "Failed to open Opls file." << endl;
         exit(0);
     }
