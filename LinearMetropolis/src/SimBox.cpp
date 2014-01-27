@@ -822,27 +822,6 @@ double SimBox::getFValue(int atom1, int atom2, int **table1)
     //}
 }
 
-/**
-	Deprecated - inefficient. Used in the old getFValue calculation
-	@param atom1 - id or first atom
-	@param atom2 - id of second atom
-	@param molecules - pointer to the molecule
-*/
-int SimBox::hopGE3(int atom1, int atom2, Molecule *molecule)
-{
-    Hop *myHop = molecule->hops;
-    for(int x=0; x< molecule->numOfHops; x++)
-    {        
-        //compare atoms to each hop struct in molecule
-		if((myHop->atom1==atom1 && myHop->atom2==atom2) || (myHop->atom1==atom2 && myHop->atom2==atom1))
-        {
-            return myHop->hop;
-        }
-    myHop++;
-	}
-	return 0;
-}
-
 int SimBox::ChangeMolecule()
 {
     double maxTranslation = enviro->maxTranslation;

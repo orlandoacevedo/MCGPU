@@ -170,16 +170,6 @@ double calcEnergy_NLC(Atom *atoms, Environment *enviro, Molecule *molecules);
 double getFValue(Atom *atom1, Atom *atom2, Molecule *molecules, Environment *enviro);
 
 /**
-  Return if the two atom ids are have a hop value >=3
-  returns 1 if true and 0 if false
-  @param atom1 - the id of the starting atom
-  @param atom2 - the id of the ending atom
-  @param molecule - the molecule that contains atom1 and atom 2
-  @return - 1 if true and 0 otherwise.
-*/
-int hopGE3(int atom1, int atom2, Molecule *molecule);
-
-/**
   Returns sqrt(d1 * d2)
   @param d1 - the first double in the calculation
   @param d2 - the second double in the calculation
