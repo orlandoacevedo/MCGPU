@@ -822,12 +822,6 @@ double SimBox::getFValue(int atom1, int atom2, int **table1)
     //}
 }
 
-int SimBox::buildTable(int * tab)
-{
-
-	return 0;
-}
-
 /**
 	Deprecated - inefficient. Used in the old getFValue calculation
 	@param atom1 - id or first atom
