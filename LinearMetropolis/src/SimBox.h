@@ -36,7 +36,6 @@ class SimBox
 	 	Molecule *getMolecules(){return molecules;};
 	 	Atom *getAtoms(){return atompool;};
 	 	Environment *getEnviro(){return enviro;};
-	 	Atom *getAtom() {return atompool;};
 	 	int ReadStateFile(char const* StateFile);
 	 	int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());};
 	 	int WriteStateFile(char const* StateFile); 	
@@ -50,9 +49,6 @@ class SimBox
 		//int * molecTables[];
 		Table * tables;
 		int molecTypenum;
-		int buildTable(int * tab);
-	 	int hopGE3(int atom1, int atom2, Molecule *molecule);
-	 	Molecule* getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro);
 	 	double getFValue(int atom1, int atom2, int **table1);//Atom *atom1, Atom *atom2, Molecule *molecules, Environment *enviro);
 	 	void generatefccBox(Molecule *molecules, Environment *enviro);
 	 	void generatePoints(Molecule *molecules, Environment *enviro);

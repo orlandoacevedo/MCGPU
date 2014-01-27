@@ -771,28 +771,6 @@ void SimBox::keepMoleculeInBox(Molecule *molecule, Environment *enviro){
 }
 
 /**
-	Deprecated - highly inefficient.
-	@param a1 - a pointer to the atom you are searching for
-	@param molecules - a pointer ot the molecules in the simulation
-	@param enviro - Pointer to the environment
-	@return - pointer to the atom that matches the atom ID
-*/
-Molecule* SimBox::getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro)
-{
-    int atomId = a1->id;
-    int currentIndex = enviro->numOfMolecules - 1;
-    Molecule molec = molecules[currentIndex];
-	int molecId = molec.atoms[0].id;
-    while(atomId < molecId && currentIndex > 0){
-        currentIndex -= 1;
-		molec = molecules[currentIndex];
-		molecId = molec.atoms[0].id;
-    }
-
-    return &(molecules[currentIndex]);
-}
-
-/**
 	takes two atoms and does a table look up to find the fudge value based on hop values
 	
 	@param atom1 - the id of the first atom
@@ -802,14 +780,7 @@ Molecule* SimBox::getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environme
 */
 double SimBox::getFValue(int atom1, int atom2, int **table1)
 {
-    //Molecule *m1 = getMoleculeFromAtomID(atom1, molecules, enviro);
-    //Molecule *m2 = getMoleculeFromAtomID(atom2, molecules, enviro);
-    
-    //if(atom1->id / 3 != atom2->id/ 3) //(m1->id != m2->id)
-        //return 1.0;
-    //else{
-        //int hops = hopGE3(atom1->id, atom2->id, m1);
-	//cout << "before "<<endl;
+
 	int hops = table1[atom1][atom2];
 	//if(hops != 0)
         //cout << "the Hop is: " << hops << ". atom1: "<<atom1<< ". atom2: "<<atom2 <<endl;
@@ -820,33 +791,6 @@ double SimBox::getFValue(int atom1, int atom2, int **table1)
     else
         return 0.0;
     //}
-}
-
-int SimBox::buildTable(int * tab)
-{
-
-	return 0;
-}
-
-/**
-	Deprecated - inefficient. Used in the old getFValue calculation
-	@param atom1 - id or first atom
-	@param atom2 - id of second atom
-	@param molecules - pointer to the molecule
-*/
-int SimBox::hopGE3(int atom1, int atom2, Molecule *molecule)
-{
-    Hop *myHop = molecule->hops;
-    for(int x=0; x< molecule->numOfHops; x++)
-    {        
-        //compare atoms to each hop struct in molecule
-		if((myHop->atom1==atom1 && myHop->atom2==atom2) || (myHop->atom1==atom2 && myHop->atom2==atom1))
-        {
-            return myHop->hop;
-        }
-    myHop++;
-	}
-	return 0;
 }
 
 int SimBox::ChangeMolecule()

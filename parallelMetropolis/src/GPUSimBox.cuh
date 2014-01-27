@@ -95,7 +95,7 @@ class GPUSimBox
     Atom *getdevAtom() {return atoms_device;};
     Environment *getdevEnvironment() {return enviro_device;};  
    
-    Atom *gethostAtom() {return innerbox->getAtom();};
+    Atom *gethostAtom() {return innerbox->getAtoms();};
     Environment *gethostEnvironment() {return innerbox->getEnviro();};  
     Molecule *gethostMolecules() {return innerbox->getMolecules();};  
   

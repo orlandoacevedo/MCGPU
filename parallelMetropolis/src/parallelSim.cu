@@ -94,7 +94,7 @@ double ParallelSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro)
 double ParallelSim::calcEnergyWrapper(GPUSimBox *box)
 {
     SimBox *innerbox=box->getSimBox();
-    Atom *atoms=innerbox->getAtom();
+    Atom *atoms=innerbox->getAtoms();
     Environment *enviro=innerbox->getEnviro();
     Molecule *molecules=innerbox->getMolecules();
     
