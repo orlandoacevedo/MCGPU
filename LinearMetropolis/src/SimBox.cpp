@@ -771,28 +771,6 @@ void SimBox::keepMoleculeInBox(Molecule *molecule, Environment *enviro){
 }
 
 /**
-	Deprecated - highly inefficient.
-	@param a1 - a pointer to the atom you are searching for
-	@param molecules - a pointer ot the molecules in the simulation
-	@param enviro - Pointer to the environment
-	@return - pointer to the atom that matches the atom ID
-*/
-Molecule* SimBox::getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro)
-{
-    int atomId = a1->id;
-    int currentIndex = enviro->numOfMolecules - 1;
-    Molecule molec = molecules[currentIndex];
-	int molecId = molec.atoms[0].id;
-    while(atomId < molecId && currentIndex > 0){
-        currentIndex -= 1;
-		molec = molecules[currentIndex];
-		molecId = molec.atoms[0].id;
-    }
-
-    return &(molecules[currentIndex]);
-}
-
-/**
 	takes two atoms and does a table look up to find the fudge value based on hop values
 	
 	@param atom1 - the id of the first atom

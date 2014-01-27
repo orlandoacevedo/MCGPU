@@ -49,7 +49,6 @@ class SimBox
 		//int * molecTables[];
 		Table * tables;
 		int molecTypenum;
-	 	Molecule* getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro);
 	 	double getFValue(int atom1, int atom2, int **table1);//Atom *atom1, Atom *atom2, Molecule *molecules, Environment *enviro);
 	 	void generatefccBox(Molecule *molecules, Environment *enviro);
 	 	void generatePoints(Molecule *molecules, Environment *enviro);

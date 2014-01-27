@@ -22,18 +22,6 @@ double make_periodic(double x, double box);
 double wrap_into_box(double x, double box);
 
 /**
-  DEPRECATED
-  Original calculate energy function
-  @param coords - 2D environment array
-  @param n_atoms - number of atoms
-  @param box_size - box dimensions (cube)
-  @param sigma - sigma value for atoms in simulation
-  @param epsilon - epsilon value for atoms in simulation
-  @return - total energy
-*/
-double calculate_energy(double **coords, int n_atoms, double *box_size, double sigma, double epsilon);
-
-/**
   Calculates the energy assuming that all atoms are the same element.
   @param atoms - array of atoms that will be used to calculate energy
   @param enviro - simulation environment pointer

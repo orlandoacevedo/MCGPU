@@ -278,60 +278,6 @@ double LinearSim::calcCharge(Atom atom1, Atom atom2, Environment *enviro)
 }
 
 /**
-	Calculates the non bonded energies - deprecated
-*/
-double LinearSim::calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro)
-{
-    //store LJ constants locally and define terms in kcal/mol
-    const double e = 332.06;
-    double sigma = calcBlending(atom1.sigma, atom2.sigma);
-    double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
-    
-    //square cutoff value for easy comparison
-    double cutoffSQ = enviro->cutoff * enviro->cutoff;
-        
-    //calculate difference in coordinates
-    double deltaX = atom1.x - atom2.x;
-    double deltaY = atom1.y - atom2.y;
-    double deltaZ = atom1.z - atom2.z;
-  
-  	//calculate distance between atoms
-    deltaX = box->makePeriodic(deltaX, enviro->x);
-    deltaY = box->makePeriodic(deltaY, enviro->y);
-    deltaZ = box->makePeriodic(deltaZ, enviro->z);
-    
-    const double r2 = (deltaX * deltaX) +
-                	  (deltaY * deltaY) + 
-                	  (deltaZ * deltaZ);
-
-    //check if atoms overlap
-    if (r2 == 0.0)
-    {
-        return 0.0;
-    }
-    else if (r2 < cutoffSQ)
-    {
-    	//calculate LJ energies
-    	const double sig2OverR2 = (sigma * sigma) / r2;
-        const double sig6OverR6 = sig2OverR2 * sig2OverR2 * sig2OverR2;
-    	const double sig12OverR12 = sig6OverR6 * sig6OverR6;
-    	const double lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-    	
-    	//calculate Coulombic energies
-    	const double r = sqrt(r2);
-    	double charge_energy = (atom1.charge * atom2.charge * e) / r;
-    	
-    	//return total nonbonded energy
-    	return (lj_energy + charge_energy);
-    	
-	}
-	else
-	{
-        return 0.0;
-    }
-}
-
-/**
 	Calculates the nonbonded energy for intermolecular molecule pairs using a linked-cell
 	neighbor list. The function then calls a separate function to the calculate the
 	intramolecular nonbonded interactions for every molecule and sums it to the total
