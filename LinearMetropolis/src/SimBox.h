@@ -36,7 +36,6 @@ class SimBox
 	 	Molecule *getMolecules(){return molecules;};
 	 	Atom *getAtoms(){return atompool;};
 	 	Environment *getEnviro(){return enviro;};
-	 	Atom *getAtom() {return atompool;};
 	 	int ReadStateFile(char const* StateFile);
 	 	int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());};
 	 	int WriteStateFile(char const* StateFile); 	
