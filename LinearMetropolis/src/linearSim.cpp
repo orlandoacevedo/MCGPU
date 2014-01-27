@@ -233,7 +233,6 @@ void LinearSim::calcEnergy(Atom *atoms, Environment *enviro, double *energySum)
         {
             lj_energy = calc_lj(xAtom,yAtom,*enviro);
             charge_energy = calcCharge(xAtom, yAtom, enviro);
-            //nonbonded_energy = calcNonBondEnergy(xAtom, yAtom, enviro);
 
             //store the sum in array
             energySum[idx] = (lj_energy + charge_energy);

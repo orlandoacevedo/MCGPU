@@ -780,14 +780,7 @@ void SimBox::keepMoleculeInBox(Molecule *molecule, Environment *enviro){
 */
 double SimBox::getFValue(int atom1, int atom2, int **table1)
 {
-    //Molecule *m1 = getMoleculeFromAtomID(atom1, molecules, enviro);
-    //Molecule *m2 = getMoleculeFromAtomID(atom2, molecules, enviro);
-    
-    //if(atom1->id / 3 != atom2->id/ 3) //(m1->id != m2->id)
-        //return 1.0;
-    //else{
-        //int hops = hopGE3(atom1->id, atom2->id, m1);
-	//cout << "before "<<endl;
+
 	int hops = table1[atom1][atom2];
 	//if(hops != 0)
         //cout << "the Hop is: " << hops << ". atom1: "<<atom1<< ". atom2: "<<atom2 <<endl;

@@ -132,15 +132,6 @@ void calcEnergy(Atom *atoms, Environment *enviro, double *energySum);
 double calcCharge(Atom atom1, Atom atom2, Environment *enviro);
 
 /**
-  Calculates the nonbonded energy portion of the force field energy calculation between two atoms.
-  @param atom1 - the first atom in the calculation
-  @param atom2 - the second atom in the calculation
-  @param enviro - simulation environment pointer
-  @return - the nonbonded energy portion of the force field.
-*/
-double calcNonBondEnergy(Atom atom1, Atom atom2, Environment *enviro);
-
-/**
   Wrapper function for the calcEnergy_NLC kernel.
   @param molecules - array of molecules in the system
   @param enviro - the environment of the system.
@@ -176,14 +167,6 @@ double getFValue(Atom *atom1, Atom *atom2, Molecule *molecules, Environment *env
   @return - sqrt(d1 * d2)
 */
 double calcBlending(double d1, double d2);
-
-/**
-  Returns the molecule id from the atomid
-  @param atom - the atom from which to find the molecule
-  @param molecules - the list of molecules to be searched
-  @return - returns a pointer to the molecule
-*/
-Molecule* getMoleculeFromAtomID(Atom *a1, Molecule *molecules, Environment *enviro);
 
 /**
   Returns the Lennard-Jones long-range correction for the cutoff in the
