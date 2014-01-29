@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#define N 50000
-#define BLOCK_SIZE 512
 
 //Given two indices in an array (representing atoms),
 //calculate their product (potential energy),
@@ -34,15 +32,16 @@ void calcEnergySerial(int *atoms, int numAtoms, int *energies, int numEnergies)
 		{
 			if (j > i)
 			{
-				k = N * i + j - (i + 1) * (i + 2) / 2;
+				k = numAtoms * i + j - (i + 1) * (i + 2) / 2;
 				energies[k] = atoms[i] * atoms[j];
 			}
 		}
 	}
 }
 
-int main()
+void run(int N, int BLOCK_SIZE)
 {
+	printf("Called with %u and %u\n", N, BLOCK_SIZE);
 	clock_t S_TIME, P_TIME;
 	int *atomsHost, *atomsDevice, *energiesHost, *energiesDevice, gridYDim = 1, blockXDim = N;
 	unsigned long int totalEnergy, atomsSize, energiesSize;
@@ -66,7 +65,7 @@ int main()
 	
 	//Serial Run
 	S_TIME = clock();
-	calcEnergySerial(atomsHost, N,energiesHost, energiesSize / sizeof(int));
+	calcEnergySerial(atomsHost, N, energiesHost, energiesSize / sizeof(int));
 
 	totalEnergy = 0;
 	for (i = 0; i < energiesSize / sizeof(int); i++)
@@ -115,6 +114,45 @@ int main()
 	P_TIME = clock() - P_TIME;
 
 	printf("The parallel code runs %fx as fast as the serial version.\n", (float) S_TIME / (float) P_TIME);
+
+	free(atomsHost);
+	free(energiesHost);
+	cudaFree(atomsDevice);
+	cudaFree(energiesDevice);
+	
+	FILE *log = fopen("RunLog.log", "a");
+	fprintf(log, "%u\t\t%u\t\t%.2f\t\t%.2f\t\t%.2f\n", N, BLOCK_SIZE, (float) S_TIME / CLOCKS_PER_SEC, (float) P_TIME / CLOCKS_PER_SEC, (float) S_TIME / (float) P_TIME);
+	fclose(log);
+}
+
+int main(int argc, char *argv[])
+{
+	int BLOCK_SIZE = 128, N = 100;
+
+	if (argc > 1 && atoi(argv[1]) != -1)
+	{
+		N = atoi(argv[1]);
+		if (argc > 2)
+		{
+			BLOCK_SIZE = atoi(argv[2]);
+		}
+		run(N, BLOCK_SIZE);
+	}
+	else if (atoi(argv[1]) == -1)
+	{
+		for (N = 10000; N <= 40000; N += 10000)
+		{
+			for (BLOCK_SIZE = 64; BLOCK_SIZE <= 1024; BLOCK_SIZE <<= 1)
+			{
+				run(N, BLOCK_SIZE);
+			}
+		}
+	}
+	if (N <= 0 || BLOCK_SIZE <= 0)
+	{
+		printf("Invalid Parameters for Number of Atoms and GPU Block Size (#threads).\n");
+		return 1;
+	}
 	
 	return 0;
 }
