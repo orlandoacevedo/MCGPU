@@ -1,3 +1,16 @@
+/*
+This script is a mockup of the fuctionality to be parallelized in the Monte Carlo
+Simulation. It calculates "energy" among pairs of "atoms" in a system, and compares
+serial and parallel performance.
+
+The command line arguments are as follows:
+first argument (optional) - integer representing number of atoms
+						  - defaults to 100
+						  - input -1 as only argument to run benchmarking suite (10000 <= N <= 40000, 64 <= BS <= 1024)
+second argument (optional) - integer <= 1024 representing thread block size
+
+Each simulation adds a line into RunLog.log with data about the run.
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -70,7 +83,7 @@ void run(int N, int BLOCK_SIZE)
 	totalEnergy = 0;
 	for (i = 0; i < energiesSize / sizeof(int); i++)
 	{
-		//totalEnergy += energiesHost[i];
+		totalEnergy += energiesHost[i];
 	}
 	
 	printf("Serial: Total Energy for %u atoms is %u Pseudo-Joules.\n", N, totalEnergy);
@@ -106,8 +119,7 @@ void run(int N, int BLOCK_SIZE)
 	totalEnergy = 0;
 	for (i = 0; i < energiesSize / sizeof(int); i++)
 	{
-		//printf("%u: %u\n", i, energiesHost[i]);
-		//totalEnergy += energiesHost[i];
+		totalEnergy += energiesHost[i];
 	}
 	
 	printf("Parallel: Total Energy for %u atoms is %u Pseudo-Joules.\n", N, totalEnergy);
