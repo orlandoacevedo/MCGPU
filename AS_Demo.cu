@@ -6,8 +6,15 @@ serial and parallel performance.
 The command line arguments are as follows:
 first argument (optional) - integer representing number of atoms
 						  - defaults to 100
-						  - input -1 as only argument to run benchmarking suite (10000 <= N <= 40000, 64 <= BS <= 1024)
+						  - input -1 to run benchmarking suite for
+						    10000 <= N <= 40000 and specified thread
+						    block size
 second argument (optional) - integer <= 1024 representing thread block size
+			   - input -1 to run benchmarking suite for
+			     64 <= BS <= 1024 and specified N value
+For example, -1 512 will run all N with block size = 512
+		-1 or -1 -1 will run all N for all block sizes
+		20000 -1 will run N = 20000 for all block sizes
 
 Each simulation adds a line into RunLog.log with data about the run.
 */
@@ -144,21 +151,39 @@ int main(int argc, char *argv[])
 	if (argc > 1 && atoi(argv[1]) != -1)
 	{
 		N = atoi(argv[1]);
-		if (argc > 2)
-		{
-			BLOCK_SIZE = atoi(argv[2]);
-		}
-		run(N, BLOCK_SIZE);
-	}
-	else if (atoi(argv[1]) == -1)
-	{
-		for (N = 10000; N <= 40000; N += 10000)
+		if (argc == 3 && atoi(argv[2]) == -1)
 		{
 			for (BLOCK_SIZE = 64; BLOCK_SIZE <= 1024; BLOCK_SIZE <<= 1)
 			{
 				run(N, BLOCK_SIZE);
 			}
 		}
+		else if (argc == 3)
+		{
+			BLOCK_SIZE = atoi(argv[2]);
+			run(N, BLOCK_SIZE);
+		}
+	}
+	else if (argc > 1 && atoi(argv[1]) == -1)
+	{
+		for (N = 10000; N <= 40000; N += 10000)
+		{
+			if (argc == 2 && atoi(argv[2]) > 0)
+			{
+				run (N, atoi(argv[2]));
+			}
+			else
+			{
+				for (BLOCK_SIZE = 64; BLOCK_SIZE <= 1024; BLOCK_SIZE <<= 1)
+				{
+					run(N, BLOCK_SIZE);
+				}
+			}
+		}
+	}
+	else
+	{
+		run(N, BLOCK_SIZE);
 	}
 	if (N <= 0 || BLOCK_SIZE <= 0)
 	{
