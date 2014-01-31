@@ -6,3 +6,5 @@ bin/linearSim
 *.o
 
 bin/OutputLog
+
+*.o
