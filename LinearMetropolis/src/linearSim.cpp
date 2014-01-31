@@ -199,49 +199,6 @@ double LinearSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro)
 }
 
 /**
-	calculates energies based on charges and Lennard-Jones values
-	@param atoms - pointer to the atoms in the simulation
-	@param enviro - pointer to the environment
-	@param energySum - pointer to the current sum of energy
-	
-*/
-void LinearSim::calcEnergy(Atom *atoms, Environment *enviro, double *energySum)
-{
-    double lj_energy,charge_energy, fValue, nonbonded_energy;
-
-    //determine number of calculations
-    int N =(int) ( pow( (float) enviro->numOfAtoms,2)-enviro->numOfAtoms)/2;
-
-    //for each calculation
-    for(int idx=0; idx<N; idx++)
-    {
-        //calculate the x and y positions in the Atom array
-        int xAtom_pos, yAtom_pos;
-        xAtom_pos = box->getXFromIndex(idx);
-        yAtom_pos = box->getYFromIndex(xAtom_pos, idx);
-
-        Atom xAtom, yAtom;
-        xAtom = atoms[xAtom_pos];
-        yAtom = atoms[yAtom_pos];
-
-        //determine the lennard-jones and charge sum between the two atoms
-        if (xAtom.sigma < 0 || xAtom.epsilon < 0 || yAtom.sigma < 0 || yAtom.epsilon < 0)
-        {
-            energySum[idx] = 0.0;
-        }
-        else
-        {
-            lj_energy = calc_lj(xAtom,yAtom,*enviro);
-            charge_energy = calcCharge(xAtom, yAtom, enviro);
-
-            //store the sum in array
-            energySum[idx] = (lj_energy + charge_energy);
-            //energySum[idx] = (nonbonded_energy);
-        }
-	 }
-}
-
-/**
 	Calculates the charge relative from one atom to another
 */
 double LinearSim::calcCharge(Atom atom1, Atom atom2, Environment *enviro)
