@@ -11,7 +11,7 @@
 #include <float.h>
 #include <cstdlib>
 #include <math.h>
-#include "../../Utilities/src/metroUtil.h"
+#include "Utilities/metroUtil.h"
 #include <curand.h>
 #define THREADS_PER_BLOCK 128
 #define PI 3.14159265

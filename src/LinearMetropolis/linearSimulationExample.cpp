@@ -4,11 +4,11 @@
 #include <time.h>
 #include <vector>
 #include <sstream>
-#include "../../Utilities/src/Opls_Scan.h"
-#include "../../Utilities/src/Config_Scan.h"
-#include "../../Utilities/src/metroUtil.h"
-#include "../../Utilities/src/Zmatrix_Scan.h"
-#include "../../Utilities/src/State_Scan.h"
+#include "Utilities/Opls_Scan.h"
+#include "Utilities/Config_Scan.h"
+#include "Utilities/metroUtil.h"
+#include "Utilities/Zmatrix_Scan.h"
+#include "Utilities/State_Scan.h"
 #include "linearSim.h"
 #include "SimBox.h"
    

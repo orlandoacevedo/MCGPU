@@ -1,10 +1,4 @@
-
-*.o
-
-bin/linearSim
-
-*.o
-
-bin/OutputLog
-
+bin/
+obj/
+*.P
 *.o
