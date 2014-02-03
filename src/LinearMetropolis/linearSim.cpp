@@ -604,19 +604,18 @@ void LinearSim::runLinear(int steps)
     int mIndex = 0;
     double newEnergy = 0.0;
     double oldEnergy = 0.0;
+
+    if (oldEnergy==0)
+    {
+        oldEnergy = calcEnergy_NLC(molecules, enviro);
+    }
 	 
     for(int move = 0; move < steps; move++)
     {
-        if (oldEnergy==0)
-        {
-            oldEnergy = calcEnergy_NLC(molecules, enviro);
-            //oldEnergy = calcEnergyWrapper(molecules, enviro);
-        }
             
         int changeno=box->ChangeMolecule();
 
         newEnergy = calcEnergy_NLC(molecules, enviro);
-        //newEnergy = calcEnergyWrapper(molecules, enviro);
 
         bool accept = false;
 
