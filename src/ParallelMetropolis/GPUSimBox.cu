@@ -253,3 +253,34 @@ Molecule* GPUSimBox::getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Env
     return &molecules[currentIndex];
 
 }
+
+
+int GPUSimBox::getXFromIndex(int idx)
+{
+    int c = -2 * idx;
+    int discriminant = 1 - 4 * c;
+    int qv = (-1 + sqrtf(discriminant)) / 2;
+    return qv + 1;
+}
+
+int GPUSimBox::getYFromIndex(int x, int idx)
+{
+    return idx - (x * x - x) / 2;
+}
+
+double GPUSimBox::makePeriodic(double x, double box)
+{
+    
+    while(x < -0.5 * box)
+    {
+        x += box;
+    }
+
+    while(x > 0.5 * box)
+    {
+        x -= box;
+    }
+
+    return x;
+
+}
