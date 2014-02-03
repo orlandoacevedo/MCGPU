@@ -139,7 +139,7 @@ SimBox::SimBox(Config_Scan configScan)
 	   //memset(table,0,sizeof(table));
 	   //int table[molec1.numOfAtoms][molec1.numOfAtoms];
 	   //cout << " this is " << j <<endl;
-	   tables[j] = *createTable(table);
+	   tables[j] = *createTable(table); //createTable is in metroUtil
 	   currentAtomCount += molec1.numOfAtoms;
 	   cout << "after table creation. Current atom cout: "<< currentAtomCount<<endl;
     }

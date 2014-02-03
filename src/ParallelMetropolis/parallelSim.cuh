@@ -43,7 +43,6 @@ class ParallelSim
     public:
         ParallelSim(GPUSimBox *initbox,int initsteps); 	
         ~ParallelSim(); 	
-        Atom *getAtoms(){return atompool;};
         float getcurrentEnergy(){return currentEnergy;}; 	
         int getaccepted() {return accepted;};
         int getrejected() {return rejected;};

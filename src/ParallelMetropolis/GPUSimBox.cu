@@ -284,3 +284,200 @@ double GPUSimBox::makePeriodic(double x, double box)
     return x;
 
 }
+
+void GPUSimBox::generatePoints(Molecule *molecules, Environment *enviro)
+{
+
+    //zx mod for global seed used srand((unsigned int) time(NULL));
+	 //for each Molecule assign a new XYZ
+    for (int i = 0; i < enviro->numOfMolecules; i++)
+    {
+        double baseX = ( (double) rand() / RAND_MAX) * enviro->x;
+        double baseY = ( (double) rand() / RAND_MAX) * enviro->y;
+        double baseZ = ( (double) rand() / RAND_MAX) * enviro->z;
+        for (int j = 0; j < molecules[i].numOfAtoms; j++)
+        {
+            molecules[i].atoms[j].x += baseX;
+            molecules[i].atoms[j].y += baseY;
+            molecules[i].atoms[j].z += baseZ;
+        }
+
+        keepMoleculeInBox(&(molecules[i]), enviro);
+    }
+}
+
+
+/*
+--Makes sure that a molecule stays within the confines -- AKA the boundaries -- of the box, based on the
+-- defined dimensions of the box itself, checking along each of the axes X, Y, and Z one at a time using wrapBox().
+
+@param molecule: the molecule in question that may have traveled beyond the allowed bounds. Values will be changed inside of this!
+@param enviro: the environment in which the molecule can be found. Contains the boundaries, accessed with reference/pointer.
+
+@return: no return necessary.
+[end comment]
+*/
+void GPUSimBox::keepMoleculeInBox(Molecule *molecule, Environment *enviro){		
+		for (int j = 0; j < molecule->numOfAtoms; j++)
+        {
+		    //X axis
+			wrapBox(molecule->atoms[j].x, enviro->x);
+            //Y axis
+			wrapBox(molecule->atoms[j].y, enviro->y);
+            //Z axis
+			wrapBox(molecule->atoms[j].z, enviro->z);
+		}
+}
+
+void GPUSimBox::generatefccBox(Molecule *molecules, Environment *enviro)
+{
+	
+	double cells, dcells, cellL, halfcellL;
+	
+	//Determine the number of unit cells in each coordinate direction
+	dcells = pow(0.25 * (double) enviro->numOfMolecules, 1.0/3.0);
+	cells = (int)(dcells + 0.5);
+		
+	//Check if numOfMolecules is a non-fcc number of molecules
+	//and increase the number of cells if necessary
+	while((4 * cells * cells * cells) < enviro->numOfMolecules)
+    {
+		cells++;
+    }
+			
+	//Determine length of unit cell
+	cellL = enviro->x/ (double) cells;
+	halfcellL = 0.5 * cellL;
+	
+	//Construct the unit cell
+	for (int j = 0; j < molecules[0].numOfAtoms; j++)
+    {
+    	molecules[0].atoms[j].x += 0.0;
+        molecules[0].atoms[j].y += 0.0;
+        molecules[0].atoms[j].z += 0.0;
+	}
+	
+	for (int j = 0; j < molecules[1].numOfAtoms; j++)
+    {
+    	molecules[1].atoms[j].x += halfcellL;
+        molecules[1].atoms[j].y += halfcellL;
+        molecules[1].atoms[j].z += 0.0;
+    }
+    
+    for (int j = 0; j < molecules[2].numOfAtoms; j++)
+    {	
+        molecules[2].atoms[j].x += 0.0;
+        molecules[2].atoms[j].y += halfcellL;
+        molecules[2].atoms[j].z += halfcellL;
+    }
+    
+    for (int j = 0; j < molecules[3].numOfAtoms; j++)
+    {
+        molecules[3].atoms[j].x += halfcellL;
+        molecules[3].atoms[j].y += 0.0;
+        molecules[3].atoms[j].z += halfcellL;
+    }
+    
+	//Init all other molecules to initial coordinates
+	//Build the lattice from the unit cell by repeatedly translating
+	//the four vectors of the unit cell through a distance cellL in
+	//the x, y, and z directions
+	for(int i = 4; i < enviro->numOfMolecules; i++)
+    {
+		for (int j = 0; j < molecules[i].numOfAtoms; j++)
+        {
+			molecules[i].atoms[j].x += 0.0;
+    		molecules[i].atoms[j].y += 0.0;
+   	 		molecules[i].atoms[j].z += 0.0;
+   	 	}		
+	}
+	
+	int offset = 0;
+	for(int z = 1; z <= cells; z++)
+		for(int y = 1; y <= cells; y++)
+			for(int x = 1; x <= cells; x++)
+            {
+				for(int a = 0; a < 4; a++)
+                {
+					int i = a + offset;
+					if(i < enviro->numOfMolecules)
+                    {								
+						for (int j = 0; j < molecules[i].numOfAtoms; j++)
+                        {
+							molecules[i].atoms[j].x = molecules[a].atoms[j].x + cellL * (x-1);
+							molecules[i].atoms[j].y = molecules[a].atoms[j].y + cellL * (y-1);
+							molecules[i].atoms[j].z = molecules[a].atoms[j].z + cellL * (z-1);
+						}
+					}
+				}
+				offset += 4;
+			}
+	
+	//Shift center of box to the origin
+	for(int i = 0; i < enviro->numOfMolecules; i++)
+    {
+		for (int j = 0; j < molecules[i].numOfAtoms; j++)
+        {
+			molecules[i].atoms[j].x -= halfcellL;
+			molecules[i].atoms[j].y -= halfcellL;
+			molecules[i].atoms[j].z -= halfcellL;
+		}
+	}
+}
+
+int GPUSimBox::ChangeMolecule()
+{
+    double maxTranslation = enviro->maxTranslation;
+    double maxRotation = enviro->maxRotation;
+
+    //Pick a molecule to move
+    int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
+        
+    saveChangedMole(moleculeIndex);
+        
+   //Pick an atom in the molecule about which to rotate
+   int atomIndex = randomFloat(0, molecules[moleculeIndex].numOfAtoms);
+   Atom vertex = molecules[moleculeIndex].atoms[atomIndex];
+
+   const double deltaX = randomFloat(-maxTranslation, maxTranslation);
+   const double deltaY = randomFloat(-maxTranslation, maxTranslation);
+   const double deltaZ = randomFloat(-maxTranslation, maxTranslation);
+
+   const double degreesX = randomFloat(-maxRotation, maxRotation);
+   const double degreesY = randomFloat(-maxRotation, maxRotation);
+   const double degreesZ = randomFloat(-maxRotation, maxRotation); 
+
+   moveMolecule(molecules[moleculeIndex], vertex, deltaX, deltaY, deltaZ,
+        degreesX, degreesY, degreesZ);
+
+   keepMoleculeInBox(&molecules[moleculeIndex], enviro);
+
+   return moleculeIndex;
+}
+
+int GPUSimBox::Rollback(int moleno)
+{
+	return copyMolecule(&molecules[moleno],&changedmole);
+}
+
+/**
+	Assigns atom position based on an X Y Z position
+*/
+void GPUSimBox::assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Molecule *molec, Environment *enviro)
+{
+    //Translates each Molecule a random X,Y,and Z direction
+	 //By translating every atom in that molecule by that translation
+
+    //for each Molecule...
+	for(int i=0; i<enviro->numOfMolecules; i++)
+    {
+        for(int a=0; a<molec[i].numOfAtoms;a++)
+        {
+            Atom myAtom  =  molec[i].atoms[a];
+            myAtom.x =  dev_doublesX[i] * enviro->x + myAtom.x;
+            myAtom.y =  dev_doublesY[i] * enviro->y + myAtom.y;
+            myAtom.z =  dev_doublesZ[i] * enviro->z + myAtom.z;
+        }
+		keepMoleculeInBox(&molec[i],enviro);
+    }
+}
