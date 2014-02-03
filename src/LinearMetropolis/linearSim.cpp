@@ -54,10 +54,12 @@ double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro)
                       (deltaZ * deltaZ);
 
 	// Original code
-    if (r2 == 0.0){
+    if (r2 == 0.0)
+    {
         return 0.0;
     }
-    else{
+    else
+    {
     	//calculate terms
     	const double sig2OverR2 = pow(sigma, 2) / r2;
    		const double sig6OverR6 = pow(sig2OverR2, 3);
@@ -137,7 +139,9 @@ double LinearSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro)
 						}
 						
 						if(atom1.id > atom2.id)
+						{
 							continue;
+						}
 							
 
 						//store LJ constants locally and define terms in kcal/mol
@@ -160,7 +164,9 @@ double LinearSim::calcEnergyWrapper(Molecule *molecules, Environment *enviro)
 							 (deltaZ * deltaZ);
 										  
 						if (r2 == 0.0)
+						{
 							continue;
+						}
 					
 						//calculate LJ energies
 						double sig2OverR2 = (sigma * sigma) / r2;
@@ -272,7 +278,9 @@ double LinearSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 		
 	// Reset the headers, head
 	for (int c = 0; c < lcxyz; c++) 
+	{
 		head[c] = EMPTY;
+	}
 
 	// Scan cutoff index atom in each molecule to construct headers, head, & linked lists, lscl
 	for (int i = 0; i < enviro->numOfMolecules; i++)
@@ -295,7 +303,9 @@ double LinearSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 		
 	// Scan inner cells
 	for (mc[0] = 0; mc[0] < lc[0]; (mc[0])++)
+	{
 		for (mc[1] = 0; mc[1] < lc[1]; (mc[1])++)
+		{
 			for (mc[2] = 0; mc[2] < lc[2]; (mc[2])++)
 			{
 
@@ -313,18 +323,27 @@ double LinearSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 							for (int a = 0; a < 3; a++)
 							{
 								if (mc1[a] < 0)
+								{
 									rshift[a] = -Region[a];
+								}
 								else if (mc1[a] >= lc[a])
+								{
 									rshift[a] = Region[a];
+								}
 								else
+								{
 									rshift[a] = 0.0;
+								}
 							}
 							// Calculate the scalar cell index of the neighbor cell
 							c1 = ((mc1[0] + lc[0]) % lc[0]) * lcyz
 							    +((mc1[1] + lc[1]) % lc[1]) * lc[2]
 							    +((mc1[2] + lc[2]) % lc[2]);
 							// Skip this neighbor cell if empty
-							if (head[c1] == EMPTY) continue;
+							if (head[c1] == EMPTY)
+							{
+								continue;
+							}
 
 							// Scan atom i in cell c
 							int i = head[c];
@@ -359,9 +378,15 @@ double LinearSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 												{
 													yAtom = molecules[j].atoms[atomIn2_i];
 									
-													if (xAtom.sigma < 0 || xAtom.epsilon < 0 || yAtom.sigma < 0 || yAtom.epsilon < 0) continue;
+													if (xAtom.sigma < 0 || xAtom.epsilon < 0 || yAtom.sigma < 0 || yAtom.epsilon < 0)
+													{
+														continue;
+													}
 										
-													if(xAtom.id > yAtom.id) continue;										
+													if(xAtom.id > yAtom.id)
+													{
+														continue;
+													}
 				        												
 													//store LJ constants locally and define terms in kcal/mol
 													const double e = 332.06;
@@ -382,7 +407,10 @@ double LinearSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 											 		 	 		(deltaY * deltaY) + 
 											 		 			(deltaZ * deltaZ);
 														  
-													if (r2 == 0.0) continue;								
+													if (r2 == 0.0)
+													{
+														continue;
+													}							
 
 													//calculate LJ energies
 													double sig2OverR2 = (sigma * sigma) / r2;
@@ -408,7 +436,8 @@ double LinearSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 							} /* Endwhile i not empty */
 						} /* Endfor neighbor cells, c1 */
 			} /* Endfor central cell, c */
-	
+		}
+	}
 	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
 }
 
@@ -442,7 +471,10 @@ double LinearSim::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecule
 		{
 			atom2 = molecules[mol1_i].atoms[atomIn2_i];
 						
-				if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0) continue;
+				if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0)
+				{
+					continue;
+				}
 
 				//store LJ constants locally and define terms in kcal/mol
 				const double e = 332.06;
@@ -463,7 +495,10 @@ double LinearSim::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecule
 					 		(deltaY * deltaY) + 
 							(deltaZ * deltaZ);
 										  
-				if (r2 == 0.0) continue;
+				if (r2 == 0.0)
+				{
+					continue;
+				}
 					
 				//calculate LJ energies
 				double sig2OverR2 = (sigma * sigma) / r2;
@@ -540,8 +575,12 @@ double LinearSim::Energy_LRC(Molecule *molec, Environment *enviro)
 	double RC9 = pow(RC3, 3);		/* 1 / cutoff^9 */
 	// Loop over all atoms in a pair
 	for(int i = 0; i < NATM; i++)
+	{
 		for(int j = 0; j < NATM; j++)
+		{
 			Ecut += (2*PI*NMOL*NMOL/(3.0*Vnew)) * (A12[i]*A12[j]*RC9/3.0 - A6[i]*A6[j]*RC3);
+		}
+	}
 	
 	return Ecut;
 }
@@ -566,10 +605,13 @@ void LinearSim::runLinear(int steps)
     double newEnergy = 0.0;
     double oldEnergy = 0.0;
 	 
-    for(int move = 0; move < steps; move++){
+    for(int move = 0; move < steps; move++)
+    {
         if (oldEnergy==0)
+        {
             oldEnergy = calcEnergy_NLC(molecules, enviro);
             //oldEnergy = calcEnergyWrapper(molecules, enviro);
+        }
             
         int changeno=box->ChangeMolecule();
 
@@ -578,30 +620,36 @@ void LinearSim::runLinear(int steps)
 
         bool accept = false;
 
-        if(newEnergy < oldEnergy){
+        if(newEnergy < oldEnergy)
+        {
             accept = true;
         }
-        else{
+        else
+        {
             double x = exp(-(newEnergy - oldEnergy) / kT);
 
-            if(x >= randomFloat(0.0, 1.0)){
+            if(x >= randomFloat(0.0, 1.0))
+            {
                 accept = true;
             }
-            else{
+            else
+            {
                 accept = false;
             }
         }
 
-        if(accept){
+        if(accept)
+        {
             accepted++;
             oldEnergy=newEnergy;
         }
-        else{
+        else
+        {
             rejected++;
             //restore previous configuration
             box->Rollback(changeno);
             oldEnergy=oldEnergy;//meaningless, just to show the same energy values assigned.
         }
-      }
-      currentEnergy=oldEnergy;
+    }
+    currentEnergy=oldEnergy;
 }
