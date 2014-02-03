@@ -605,10 +605,7 @@ void LinearSim::runLinear(int steps)
     double newEnergy = 0.0;
     double oldEnergy = 0.0;
 
-    if (oldEnergy==0)
-    {
-        oldEnergy = calcEnergy_NLC(molecules, enviro);
-    }
+    oldEnergy = calcEnergy_NLC(molecules, enviro);
 	 
     for(int move = 0; move < steps; move++)
     {
