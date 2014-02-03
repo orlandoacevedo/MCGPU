@@ -11,9 +11,9 @@
 #number of molecues
 108
 #path to opls.par file
-../Utilities/bossFiles/oplsaa.par
+../src/Utilities/bossFiles/oplsaa.par
 #path to z matrix file
-../Utilities/bossFiles/mesh.z
+../src/Utilities/bossFiles/mesh.z
 #path to state input
 
 #path to state output
