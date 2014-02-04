@@ -101,6 +101,22 @@ UnitTestDir := $(TestDir)/unittests
 # code and libraries for the Google Test framework.
 GTestDir := $(TestDir)/gtest-1.7.0
 
+# All Google Test headers.  Usually you shouldn't change this
+# definition.
+GTestHeaders = $(GTestDir)/include/gtest/*.h \
+               $(GTestDir)/include/gtest/internal/*.h
+
+# Flags passed to the preprocessor.
+# Set Google Test's header directory as a system directory, such that
+# the compiler doesn't generate warnings in Google Test headers.
+GTestFlags := -isystem $(GTestDir)/include $(Include)
+GTestFlags += -g -pthread #-Wall -Wextra
+
+# Builds gtest.a and gtest_main.a.
+# Usually you shouldn't tweak such internal variables, indicated by a
+# trailing _.
+GTEST_SRCS_ = $(GTestDir)/src/*.cc $(GTestDir)/src/*.h $(GTestHeaders)
+
 ######################
 # Internal Variables #
 ######################
@@ -119,6 +135,13 @@ ObjFolders := $(addprefix $(ObjDir)/,$(SourceModules))
 # to the proper output directory.
 Sources := $(filter $(FileTypes),$(wildcard $(addsuffix /*,$(SourceModules))))
 Objects := $(patsubst %,$(ObjDir)/%.o,$(basename $(Sources)))
+
+# The unit testing objects are all gathered seperately because they are 
+# included all at once from the testing directory and are compiled into the
+# output program alongside the source objects.
+UnitTestingSources := $(filter $(FileTypes),$(wildcard $(UnitTestDir)/*))
+UnitTestingObjects := $(patsubst %,$(ObjDir)/%.o,\
+		      $(basename $(UnitTestingSources)))
 
 # Contains the list of directories to be added into the include search
 # path used to located included header files.
@@ -201,6 +224,25 @@ remove :
 $(eval $(call program-template,$(LinearSim),$(LinearSimModules), $(CC)))
 
 $(eval $(call program-template,$(ParallelSim),$(ParallelSimModules), $(NVCC)))
+
+
+# For simplicity and to avoid depending on Google Test's
+# implementation details, the dependencies specified below are
+# conservative and not optimized.  This is fine as Google Test
+# compiles fast and for ordinary users its source rarely changes.
+$(ObjDir)/gtest-all.o : $(GTEST_SRCS_)
+	$(CC) $(GTestFlags) -I$(GTestDir) -c \
+            $(GTestDir)/src/gtest-all.cc -o $@
+
+$(ObjDir)/gtest_main.o : $(GTEST_SRCS_)
+	$(CC) $(GTestFlags) -I$(GTestDir) -c \
+	  $(GTestDir)/src/gtest_main.cc -o $@
+
+$(ObjDir)/gtest.a : $(ObjDir)/gtest-all.o
+	$(AR) $(ARFLAGS) $@ $^
+
+$(ObjDir)/gtest_main.a : $(ObjDir)/gtest-all.o $(ObjDir)/gtest_main.o
+	$(AR) $(ARFLAGS) $@ $^
 
 
 # Here are the Rules that determine how to compile a CUDA and a C++ source 
