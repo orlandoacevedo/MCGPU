@@ -54,6 +54,7 @@ class ParallelSim
         double calcEnergyWrapper(GPUSimBox *box);
         double calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules);
         void runParallel(int steps);
+        //double calcEnergy_NLC(Molecule *molecules, Environment *enviro);
 
     public:
         double wrapBox(double x, double box);

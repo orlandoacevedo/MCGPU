@@ -273,6 +273,7 @@ void ParallelSim::runParallel(int steps)
 	intramolecular nonbonded interactions for every molecule and sums it to the total
 	energy.
 */
+/*
 double ParallelSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 {
 	// Variables for linked-cell neighbor list	
@@ -445,3 +446,4 @@ double ParallelSim::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 	
 	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
 }
+*/
