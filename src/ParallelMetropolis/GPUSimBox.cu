@@ -209,7 +209,7 @@ double GPUSimBox::getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Env
     }
 	else
     {
-        int hops = hopGE3Host(atom1.id, atom2.id, *m1);
+        int hops = hopGE3Host(atom1.id, atom2.id, m1);
         if (hops == 3)
         {
             return 0.5;
@@ -425,6 +425,7 @@ void GPUSimBox::generatefccBox(Molecule *molecules, Environment *enviro)
 	}
 }
 
+/*
 int GPUSimBox::ChangeMolecule()
 {
     double maxTranslation = enviro->maxTranslation;
@@ -454,6 +455,7 @@ int GPUSimBox::ChangeMolecule()
 
    return moleculeIndex;
 }
+*/
 
 int GPUSimBox::Rollback(int moleno)
 {
