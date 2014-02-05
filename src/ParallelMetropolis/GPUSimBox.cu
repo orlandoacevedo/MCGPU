@@ -209,7 +209,7 @@ double GPUSimBox::getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Env
     }
 	else
     {
-        int hops = hopGE3Host(atom1.id, atom2.id, m1);
+        int hops = hopGE3Host(atom1.id, atom2.id, *m1);
         if (hops == 3)
         {
             return 0.5;
@@ -456,11 +456,12 @@ int GPUSimBox::ChangeMolecule()
    return moleculeIndex;
 }
 */
-
+/*
 int GPUSimBox::Rollback(int moleno)
 {
 	return copyMolecule(&molecules[moleno],&changedmole);
 }
+*/
 
 /**
 	Assigns atom position based on an X Y Z position
