@@ -95,7 +95,7 @@ int main(int argc, char ** argv)
 	//runLinear(molecules, &enviro, simulationSteps, configScan.getStateOutputPath(),
 	configScan.getPdbOutputPath();
 
-	double initEnergy=sim.calcEnergyWrapper(box.getMolecules(),box.getEnviro());
+	double initEnergy=sim.calcSystemEnergy(box.getMolecules(),box.getEnviro());
 	ss << "Step Number: "<< 0 <<  endl;
 	ss << "Current Energy (from original): " << initEnergy << endl;
 	cout << ss.str();
@@ -128,7 +128,7 @@ int main(int argc, char ** argv)
 	cout << ss.str();writeToLog(ss);
 	box.writePDB("plt.pdb");
 
-	initEnergy=sim.calcEnergyWrapper(box.getMolecules(),box.getEnviro());
+	initEnergy=sim.calcSystemEnergy(box.getMolecules(),box.getEnviro());
 	ss << "Step Number: "<< 0 <<  endl;
 	ss << "Final Energy (from original): " << initEnergy << endl;
 	cout << ss.str();

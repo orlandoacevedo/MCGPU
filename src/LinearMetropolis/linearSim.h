@@ -42,7 +42,9 @@ class LinearSim
 	public:
 	 	LinearSim(SimBox *initbox,int initsteps);
 	 	double calc_lj(Atom atom1, Atom atom2, Environment enviro);
-		double calcEnergyWrapper(Molecule *molecules, Environment *enviro);
+		double calcSystemEnergy(Molecule *molecules, Environment *enviro);
+		double calcMolecularEnergyContribution(Molecule *molecules, Environment *enviro, int currentMol, int startIdx);
+		double calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro);
 		double calcCharge(Atom atom1, Atom atom2, Environment *enviro);
 		double calcEnergy_NLC(Molecule *molecules, Environment *enviro);
 		double calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules);
