@@ -136,12 +136,12 @@ ObjFolders := $(addprefix $(ObjDir)/,$(SourceModules))
 Sources := $(filter $(FileTypes),$(wildcard $(addsuffix /*,$(SourceModules))))
 Objects := $(patsubst %,$(ObjDir)/%.o,$(basename $(Sources)))
 
-# The unit testing objects are all gathered seperately because they are 
-# included all at once from the testing directory and are compiled into the
-# output program alongside the source objects.
-UnitTestingSources := $(filter $(FileTypes),$(wildcard $(UnitTestDir)/*))
-UnitTestingObjects := $(patsubst %,$(ObjDir)/%.o,\
-		      $(basename $(UnitTestingSources)))
+## The unit testing objects are all gathered seperately because they are 
+## included all at once from the testing directory and are compiled into the
+## output program alongside the source objects.
+#UnitTestingSources := $(filter $(FileTypes),$(wildcard $(UnitTestDir)/*))
+#UnitTestingObjects := $(patsubst %,$(ObjDir)/%.o,\
+#		      $(basename $(UnitTestingSources)))
 
 # Contains the list of directories to be added into the include search
 # path used to located included header files.

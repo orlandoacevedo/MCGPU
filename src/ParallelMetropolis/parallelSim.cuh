@@ -68,6 +68,7 @@ class ParallelSim
 	__device__ double getFValue(Atom atom1, Atom atom2, DeviceMolecule *dev_molecules, Environment *enviro, Hop *hops);
 	__device__ int hopGE3(int atom1, int atom2, DeviceMolecule dev_molecule, Hop *molecule_hops);
 	*/
+    
 	Molecule* getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Environment enviro);
  	int hopGE3Host(int atom1, int atom2, Molecule molecule);
     double getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Environment *enviro);

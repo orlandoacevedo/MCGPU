@@ -109,7 +109,6 @@ class GPUSimBox
  	double wrapBox(double x, double box);
  	void keepMoleculeInBox(Molecule *molecule, Environment *enviro);
  	int hopGE3Host(int atom1, int atom2, Molecule molecule);
- 	Molecule* getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Environment enviro);
  	double getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Environment *enviro);
  	void generatefccBox(Molecule *molecules, Environment *enviro);
  	void generatePoints(Molecule *molecules, Environment *enviro);
