@@ -793,19 +793,21 @@ double SimBox::getFValue(int atom1, int atom2, int **table1)
     //}
 }
 
-int SimBox::ChangeMolecule()
+int SimBox::chooseMolecule()
+{
+	return (int) randomFloat(0, enviro->numOfMolecules);
+}
+
+int SimBox::changeMolecule(int molIdx)
 {
     double maxTranslation = enviro->maxTranslation;
     double maxRotation = enviro->maxRotation;
-
-    //Pick a molecule to move
-    int moleculeIndex = randomFloat(0, enviro->numOfMolecules);
         
-    saveChangedMole(moleculeIndex);
+    saveChangedMole(molIdx);
         
    //Pick an atom in the molecule about which to rotate
-   int atomIndex = randomFloat(0, molecules[moleculeIndex].numOfAtoms);
-   Atom vertex = molecules[moleculeIndex].atoms[atomIndex];
+   int atomIndex = randomFloat(0, molecules[molIdx].numOfAtoms);
+   Atom vertex = molecules[molIdx].atoms[atomIndex];
 
    const double deltaX = randomFloat(-maxTranslation, maxTranslation);
    const double deltaY = randomFloat(-maxTranslation, maxTranslation);
@@ -815,12 +817,12 @@ int SimBox::ChangeMolecule()
    const double degreesY = randomFloat(-maxRotation, maxRotation);
    const double degreesZ = randomFloat(-maxRotation, maxRotation); 
 
-   moveMolecule(molecules[moleculeIndex], vertex, deltaX, deltaY, deltaZ,
+   moveMolecule(molecules[molIdx], vertex, deltaX, deltaY, deltaZ,
         degreesX, degreesY, degreesZ);
 
-   keepMoleculeInBox(&molecules[moleculeIndex], enviro);
+   keepMoleculeInBox(&molecules[molIdx], enviro);
 
-   return moleculeIndex;
+   return molIdx;
 }
 
 int SimBox::Rollback(int moleno)

@@ -592,27 +592,31 @@ void LinearSim::runLinear(int steps)
     int atomTotal = 0;
     int aIndex = 0;
     int mIndex = 0;
-    double newEnergy = 0.0;
-    double oldEnergy = 0.0;
+    double newEnergyCont, oldEnergyCont;
 
     oldEnergy = calcEnergy_NLC(molecules, enviro);
+    //oldEnergy = calcSystemEnergy(molecules, enviro);
 	 
     for(int move = 0; move < steps; move++)
     {
             
-        int changeno=box->ChangeMolecule();
+        int changeIdx = box->chooseMolecule();
 
-        newEnergy = calcEnergy_NLC(molecules, enviro);
+	oldEnergyCont = calcMolecularEnergyContribution(molecules, enviro, changeIdx);
+	
+	box->changeMolecule(changeIdx);
+	
+	newEnergyCont = calcMolecularEnergyContribution(molecules, enviro, changeIdx);
 
         bool accept = false;
 
-        if(newEnergy < oldEnergy)
+        if(newEnergyCont < oldEnergyCont)
         {
             accept = true;
         }
         else
         {
-            double x = exp(-(newEnergy - oldEnergy) / kT);
+            double x = exp(-(newEnergyCont - oldEnergyCont) / kT);
 
             if(x >= randomFloat(0.0, 1.0))
             {
@@ -627,14 +631,13 @@ void LinearSim::runLinear(int steps)
         if(accept)
         {
             accepted++;
-            oldEnergy=newEnergy;
+            oldEnergy += newEnergyCont - oldEnergyCont;
         }
         else
         {
             rejected++;
             //restore previous configuration
-            box->Rollback(changeno);
-            oldEnergy=oldEnergy;//meaningless, just to show the same energy values assigned.
+            box->Rollback(changeIdx);
         }
     }
     currentEnergy=oldEnergy;

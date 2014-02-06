@@ -53,7 +53,8 @@ class SimBox
 	 	void generatefccBox(Molecule *molecules, Environment *enviro);
 	 	void generatePoints(Molecule *molecules, Environment *enviro);
 	 	void assignAtomPositions(double *dev_doublesX, double *dev_doublesY, double *dev_doublesZ, Molecule *molec, Environment *enviro);
-	 	int ChangeMolecule();
+	 	int chooseMolecule();
+		int changeMolecule(int molIdx);
 	  	int Rollback(int moleno);
 	private:
 		int copyMolecule(Molecule *mole_dst, Molecule *mole_src);
