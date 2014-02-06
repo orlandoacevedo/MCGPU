@@ -63,12 +63,10 @@ Include := $(addprefix -I,$(IncPaths))
 # Compiler specific flags for the C++ compiler when generating .o files
 # and when generating .d files for dependency information
 CxxFlags := -c -g -pg
-CxxDepFlags := -MM
 
 # Compiler specific flags for the CUDA compiler when generating .o files
 # and when generating .d files for dependency information
 CuFlags := -c -g -arch sm_20
-CuDepFlags := -M
 
 # Linker specific flags when the compiler is linking the executable
 LFlags := -g
@@ -124,7 +122,7 @@ GTestHeaders = $(GTestDir)/include/gtest/*.h \
 # Set Google Test's header directory as a system directory, such that
 # the compiler doesn't generate warnings in Google Test headers.
 GTestFlags := -isystem $(GTestDir)/include $(Include)
-GTestFlags += -g -pthread #-Wall -Wextra
+GTestFlags += -pthread #-Wall -Wextra
 
 # Builds gtest.a and gtest_main.a.
 # Usually you shouldn't tweak such internal variables, indicated by a
@@ -145,6 +143,7 @@ TestingFilter := $(addsuffix %,$(TestingInclusions))
 # Creates a list of folders inside the object output directory that need
 # to be created for the compiled files.
 ObjFolders := $(addprefix $(ObjDir)/,$(SourceModules))
+ObjFolders += $(ObjDir)/$(UnitTestDir)
 
 # Searches through the specified Modules list for all of the valid
 # files that it can find and compile. Once all of the files are 
@@ -250,7 +249,7 @@ $(eval $(call program-template,$(ParallelSim),$(ParallelSimModules), $(NVCC)))
 $(UnitTestProg) : build $(BinDir)/$(UnitTestProg)
 
 $(BinDir)/$(UnitTestProg) : $(UnitTestingObjects) $(ObjDir)/gtest_main.a
-	$(CC) $(GTestFlags) $(INCLUDES) -lpthread $^ -o $@
+	$(CC) $(GTestFlags) -lpthread $^ -o $@
 
 
 # For simplicity and to avoid depending on Google Test's
@@ -286,6 +285,9 @@ $(ObjDir)/%.o : %.cu
 	    -e '/^$$/ d' -e 's/$$/ :/' < $(DF).d >> $(DF).P
 	@rm -f $(DF).d
 	$(NVCC) $(CuFlags) $(Include) $< -o $@
+
+$(ObjDir)/$(UnitTestDir)/%.o : $(UnitTestDir)/%.cpp $(GTestHeaders)
+	g++ $(GTestFlags) -c $< -o $@
 
 $(ObjDir)/%.o : %.cpp
 	$(CC) $(CxxFlags) $(Include) -MMD $< -o $@
@@ -333,5 +335,3 @@ endif
 # for each mode (Debug and Release) for each executable output file. See
 # the eval() and call() functions for more detail on dynamic generation
 # of Makefile rules.
-#
-# - (Tavis Maclellan) : 2014-02-01
