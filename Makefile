@@ -37,7 +37,7 @@ BinDir := bin
 # valid file types for the Makefile to handle will automatically be
 # compiled into object files in the object directory. Make sure to add
 # any new modules to this list, or else they will not be compiled.
-Modules := LinearMetropolis ParallelMetropolis Utilities
+Modules := LinearMetropolis ParallelMetropolis Utilities Applications
 
 ##############################
 # Compiler Specific Settings #
@@ -56,6 +56,9 @@ FileTypes := %.cpp %.cu
 
 # Relative search paths for Include Files
 IncPaths := $(SourceDir) $(TestDir) .
+
+# Automatically generate the compiler flags for included search paths.
+Include := $(addprefix -I,$(IncPaths))
 
 # Compiler specific flags for the C++ compiler when generating .o files
 # and when generating .d files for dependency information
@@ -83,9 +86,12 @@ ParallelSim := parallelSim
 # source files in that folder. If the program only needs a specific object
 # file from the module, then specify the specific source file needed with
 # a .o extension added to the end of the source file name.
-LinearSimModules := LinearMetropolis Utilities
-ParallelSimModules := 	ParallelMetropolis Utilities \
-			LinearMetropolis/SimBox.o
+LinearSimModules := LinearMetropolis Utilities \
+			Applications/linearSimulationExample.o
+
+ParallelSimModules := 	ParallelMetropolis Utilities	\
+			LinearMetropolis/SimBox.o 					\
+			Applications/parallelSimulationExample.o
 
 #############################
 # Automated Testing Details #
@@ -96,6 +102,14 @@ UnitTestProg := unittests
 
 # The relative path to the testing module containing the unit test source.
 UnitTestDir := $(TestDir)/unittests
+
+# The modules that should be included in the unit testing program. Note: This
+# is only be used because right now there isn't an easy way to run CUDA
+# code using Google Test, and attempting to compile the two together can
+# lead to a lot of headaches. Right now we are only testing the linear
+# code and the utility code. We need to integrate in the parallel code once
+# it is ready and a method is found to do so.
+TestingModules := LinearMetropolis Utilities
 
 # The relative path to the Google Test module that contains the source
 # code and libraries for the Google Test framework.
@@ -124,6 +138,10 @@ GTEST_SRCS_ = $(GTestDir)/src/*.cc $(GTestDir)/src/*.h $(GTestHeaders)
 # Derives the paths to each of the source modules.
 SourceModules := $(addprefix $(SourceDir)/,$(Modules))
 
+# Derives which source files to include in the testing framework.
+TestingInclusions := $(patsubst %,$(ObjDir)/$(SourceDir)/%,$(TestingModules))
+TestingFilter := $(addsuffix %,$(TestingInclusions))
+
 # Creates a list of folders inside the object output directory that need
 # to be created for the compiled files.
 ObjFolders := $(addprefix $(ObjDir)/,$(SourceModules))
@@ -136,16 +154,13 @@ ObjFolders := $(addprefix $(ObjDir)/,$(SourceModules))
 Sources := $(filter $(FileTypes),$(wildcard $(addsuffix /*,$(SourceModules))))
 Objects := $(patsubst %,$(ObjDir)/%.o,$(basename $(Sources)))
 
-## The unit testing objects are all gathered seperately because they are 
-## included all at once from the testing directory and are compiled into the
-## output program alongside the source objects.
-#UnitTestingSources := $(filter $(FileTypes),$(wildcard $(UnitTestDir)/*))
-#UnitTestingObjects := $(patsubst %,$(ObjDir)/%.o,\
-#		      $(basename $(UnitTestingSources)))
-
-# Contains the list of directories to be added into the include search
-# path used to located included header files.
-Include := $(addprefix -I,$(IncPaths))
+# The unit testing objects are all gathered seperately because they are 
+# included all at once from the testing directory and are compiled into the
+# output program alongside the source objects.
+UnitTestingSources := $(filter $(FileTypes),$(wildcard $(UnitTestDir)/*))
+UnitTestingObjects := $(patsubst %,$(ObjDir)/%.o,\
+		      $(basename $(UnitTestingSources)))
+UnitTestingObjects += $(filter $(TestingFilter),$(Objects))
 
 # This is the directory and matching criteria that the dependency files use
 # to figure out if files have been updated or not.
@@ -155,6 +170,11 @@ DF = $(DepDir)/$*
 #################
 # Template Code #
 #################
+
+# NOTE: This template code is only being used because we have two programs to 
+# output, and it is easier to keep them built with the template rather than
+# manual changes. Once we merge linear and parallel into a single applcation,
+# we can remove the template information.
 
 # Name: find-objects
 # Description: Search through all of the object files that are to be compiled,
@@ -224,6 +244,13 @@ remove :
 $(eval $(call program-template,$(LinearSim),$(LinearSimModules), $(CC)))
 
 $(eval $(call program-template,$(ParallelSim),$(ParallelSimModules), $(NVCC)))
+
+# The unit testing program
+
+$(UnitTestProg) : build $(BinDir)/$(UnitTestProg)
+
+$(BinDir)/$(UnitTestProg) : $(UnitTestingObjects) $(ObjDir)/gtest_main.a
+	$(CC) $(GTestFlags) $(INCLUDES) -lpthread $^ -o $@
 
 
 # For simplicity and to avoid depending on Google Test's

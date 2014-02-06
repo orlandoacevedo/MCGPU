@@ -9,8 +9,8 @@
 #include "Utilities/metroUtil.h"
 #include "Utilities/Zmatrix_Scan.h"
 #include "Utilities/State_Scan.h"
-#include "linearSim.h"
-#include "SimBox.h"
+#include "LinearMetropolis/linearSim.h"
+#include "LinearMetropolis/SimBox.h"
    
 using namespace std;
 

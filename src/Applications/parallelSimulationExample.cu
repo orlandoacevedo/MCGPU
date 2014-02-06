@@ -10,8 +10,8 @@
 #include "Utilities/Zmatrix_Scan.h"
 #include "Utilities/State_Scan.h"
 #include "Utilities/geometricUtil.h"
-#include "GPUSimBox.cuh"
-#include "parallelSim.cuh"
+#include "ParallelMetropolis/GPUSimBox.cuh"
+#include "ParallelMetropolis/parallelSim.cuh"
 
 /**
 Will run simulations of any system consisting of a single molecule type.  Can run from either z matrix
