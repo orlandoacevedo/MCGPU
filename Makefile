@@ -69,7 +69,7 @@ CxxFlags := -c -g -pg
 CuFlags := -c -g -arch sm_20
 
 # Linker specific flags when the compiler is linking the executable
-LFlags := -g
+LFlags := -g -pg
 
 ###################
 # Program Outputs #
