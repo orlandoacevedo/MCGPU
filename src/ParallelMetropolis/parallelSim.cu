@@ -289,7 +289,8 @@ void ParallelSim::runParallel(int steps)
             oldEnergy = calcEnergyWrapper(molecules, enviro);
         }
 
-        int changeno=innerbox->ChangeMolecule();
+        int changeno = innerbox->chooseMolecule();
+        innerbox->changeMolecule(changeno);
 		//box->CopyBoxtoDevice(innerbox);
 				
         newEnergy = calcEnergyWrapper(this->getGPUSimBox());
