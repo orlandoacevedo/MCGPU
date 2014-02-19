@@ -41,11 +41,11 @@ class LinearSim
 	 	int getrejected() {return rejected;};
 	public:
 	 	LinearSim(SimBox *initbox,int initsteps);
-	 	double calc_lj(Atom atom1, Atom atom2, Environment enviro);
 		double calcSystemEnergy(Molecule *molecules, Environment *enviro);
 		double calcMolecularEnergyContribution(Molecule *molecules, Environment *enviro, int currentMol, int startIdx);
 		double calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro);
-		double calcCharge(Atom atom1, Atom atom2, Environment *enviro);
+	 	double calc_lj(Atom atom1, Atom atom2, double r2);
+		double calcCharge(double charge1, double charge2, double r);
 		double calcEnergy_NLC(Molecule *molecules, Environment *enviro);
 		double calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules);
 		double calcBlending(double d1, double d2);
