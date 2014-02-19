@@ -7,10 +7,10 @@
 
 using namespace std;
 
+extern double randomFloat(const double start, const double end){}
 
 //Constructor & Destructor
 SimBox::SimBox(Config_Scan configScan){}
-
 SimBox::~SimBox(){}
 
 //Utility

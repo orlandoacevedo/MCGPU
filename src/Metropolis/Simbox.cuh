@@ -1,5 +1,5 @@
 /*
-	New version of SimBox, including linear and parallel functions
+	New version of SimBox
 	Minimized to include only Atoms and Molecules
 
 	Author: Nathan Coleman
@@ -14,13 +14,12 @@
 #include "Utilities/metroUtil.h"
 #include "Utilities/Zmatrix_Scan.h"
 #include "Utilities/State_Scan.h"
-//#include "Utilities/IOUtilities.cuh"
+#include "IOUtilities.cuh"
 
 extern double randomFloat(const double start, const double end);
 
 class SimBox
 {
-	//Linear
 	private:
 		Atom *atomPool;
 		Environment *environment;
@@ -37,6 +36,7 @@ class SimBox
 
 		//Constructor & Destructor
 		SimBox(Config_Scan configScan);
+		int initGPUSimBox();
 		~SimBox();
 
 		//Getters
