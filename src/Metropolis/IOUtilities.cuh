@@ -10,12 +10,13 @@
 
 #include <iostream>
 #include <fstream>
-#include "metroUtil.h"
+#include "../src/Utilities/metroUtil.h"
 #include <cstdlib>
 
 using namespace std;
 
 // this should supplant the need for all the getters in Config_Scan.cpp and .h -Albert
+// [we made this decision knowing that it's unsafe; if someone modified these variables willy-nilly, it will be a problem]
 Struct UtilitiesInfo
 {
 	Environment currentEnvironment; //The current working environment for the 
@@ -33,9 +34,9 @@ class IOUtilities
 {	
 	public:
 		Config_Scan(string configPath);
-		void readInConfig();
+		void readInConfig(); //this should ideally be merged into the constructor
 		int ReadStateFile(char const* StateFile);
-	 	//int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());};
+	 	//int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());}; //preference: do not use this
 	 	int WriteStateFile(char const* StateFile); 	
 	 	//int WriteStateFile(string StateFile) { return WriteStateFile(StateFile.c_str());};
 	 	int writePDB(char const* pdbFile);
