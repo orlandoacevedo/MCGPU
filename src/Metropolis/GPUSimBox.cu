@@ -1,3 +1,11 @@
+/*
+	New version of GPUSimBox
+	Serves as a wrapper for SimBox
+
+	Author: Nathan Coleman
+	Last Changed: February 19, 2014
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

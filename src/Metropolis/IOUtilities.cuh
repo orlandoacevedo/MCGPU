@@ -10,7 +10,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "../src/Utilities/metroUtil.h"
+#include "../Utilities/metroUtil.h"
 #include <cstdlib>
 
 using namespace std;
@@ -43,6 +43,6 @@ class IOUtilities
 	 	
 	 private:
 		void throwScanError(string message);
-}
+};
 #endif
 

@@ -1,3 +1,10 @@
+/*
+	New version of SimBox
+
+	Author: Nathan Coleman
+	Last Changed: February 19, 2014
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -7,7 +14,7 @@
 
 using namespace std;
 
-extern double randomFloat(const double start, const double end){}
+double randomFloat(const double start, const double end){}
 
 //Constructor & Destructor
 SimBox::SimBox(Config_Scan configScan){}
@@ -24,7 +31,7 @@ void generateFCCBox(Molecule *molecules, Environment *environment){}
 
 void generatePoints(Molecule *molecules, Environment *environment){}
 
-double getFValue(Atom *atom1, Atom *atom2, Molecule *moelecules, Environemnt *environment){}
+double getFValue(Atom *atom1, Atom *atom2, Molecule *moelecules, Environment *environment){}
 
 int getXFromIndex(int index){}
 

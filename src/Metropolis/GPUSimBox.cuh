@@ -9,12 +9,12 @@
 #ifndef GPUSIMBOX_H
 #define GPUSIMBOX_H
 
-#include "Utilities/Opls_Scan.h"
-#include "Utilities/Config_Scan.h"
-#include "Utilities/metroUtil.h"
-#include "Utilities/Zmatrix_Scan.h"
-#include "Utilities/State_Scan.h"
-#include "SimBox.h"
+#include "../Utilities/Opls_Scan.h"
+#include "../Utilities/Config_Scan.h"
+#include "../Utilities/metroUtil.h"
+#include "../Utilities/Zmatrix_Scan.h"
+#include "../Utilities/State_Scan.h"
+#include "SimBox.cuh"
 
 //DeviceMolecule struct needs to be moved to same location as other structs
 
