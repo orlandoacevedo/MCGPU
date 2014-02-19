@@ -1,0 +1,20 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+#include <assert.h>
+#include "GPUSimBox.cuh"
+
+using namespace std;
+
+//Constructor & Destructor
+GPUSimBox::GPUSimBox(Config_Scan configScan) : SimBox(configScan){}
+GPUSimBox::~GPUSimBox(){}
+
+//Utility
+int initGPUSimBox(SimBox *hostBox){}
+int copyBoxToHost(SimBox *hostBox){}
+int copyBoxToDevice(SimBox *hostBox){}
+
+//Cuda necessities
+void cudaAssert(const cudaError err, const char *file, const int line){}

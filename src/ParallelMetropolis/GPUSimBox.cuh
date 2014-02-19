@@ -19,7 +19,7 @@
 /*!
 Representation of a molecule on the device. It is difficult to use the original
 molecule structure because it contains a pointer to an array.  On the device we have
-glolbal arrays of:
+global arrays of:
 DeviceAtoms, Atoms, Bonds, Angles, Dihedrals and Hops
 Each of these arrays contains all of the atoms, dihedrals, etc. in the simulation.
 The DeviceMolecule has a field that is the first index in the global array and a 

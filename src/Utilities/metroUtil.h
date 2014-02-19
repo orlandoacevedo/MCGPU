@@ -22,11 +22,34 @@
 
 using namespace std;
 
+//potentially to be used for an atom, to avoid passing x y and z separately. Supports doubles, for current implementation.
+struct Vector3
+{
+    /*!x coordinate of the atom*/
+    double x;
+    /*!y coordinate of the atom*/
+    double y;
+    /*!z coordinate of the atom*/
+    double z;
+};
+
+//potentially to be used for an atom, to avoid passing x y and z separately. Supports floats, for current implementation.
+struct Vector3f
+{
+    /*!x coordinate of the atom*/
+    float x;
+    /*!y coordinate of the atom*/
+    float y;
+    /*!z coordinate of the atom*/
+    float z;
+};
+
 /*!
 Structure that represents an atom in the simulation.
 */
 struct Atom
 {
+	//the following coordinates can be modified to use the newly created structs above
     /*!x coordinate of the atom*/
     double x;
     /*!y coordinate of the atom*/
@@ -47,6 +70,8 @@ struct Atom
     char name;
 
 };
+
+
 
 /*!
   @param id - the id of the atom to be created.
