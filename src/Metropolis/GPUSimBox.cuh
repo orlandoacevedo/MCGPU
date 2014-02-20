@@ -21,24 +21,14 @@
 class GPUSimBox : SimBox
 {
 	private:
-		Atom *deviceAtoms;
-			size_t atomSize;
-		DeviceMolecule *deviceMolecule;
-			size_t moleculeSize;
-		Environment *deviceEnvironment;
-			size_t environmentSize;
-		SimBox *innerBox;
+		size_t atomSize;
+		size_t moleculeSize;
+		size_t environmentSize;
 
 	public:
 		//Constructor & Destructor
 		GPUSimBox(Config_Scan configScan);
 		~GPUSimBox();
-
-		//Getters
-		Atom *getDeviceAtom(){return deviceAtoms;};
-		Environment *getDeviceEnvironment(){return deviceEnvironment;};
-		DeviceMolecule *getDeviceMolecule(){return deviceMolecule;};
-		SimBox *getSimBox(){return innerBox;};
 
 		//Utility
 		int initGPUSimBox(SimBox *hostBox);

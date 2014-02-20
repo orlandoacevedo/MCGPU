@@ -14,7 +14,7 @@
 #include "../Utilities/metroUtil.h"
 #include "../Utilities/Zmatrix_Scan.h"
 #include "../Utilities/State_Scan.h"
-#include "IOUtilities.cuh"
+#include "Utilities/IOUtilities.cuh"
 
 class SimBox
 {
@@ -30,7 +30,6 @@ class SimBox
 
 	public:
 		int moleculeType;
-		Table *table;
 
 		//Constructor & Destructor
 		SimBox(Config_Scan configScan);
