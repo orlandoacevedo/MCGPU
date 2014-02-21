@@ -2,7 +2,7 @@
 	New version of SimBox
 
 	Author: Nathan Coleman
-	Last Changed: February 19, 2014
+	Last Changed: February 21, 2014
 */
 
 #include <stdio.h>

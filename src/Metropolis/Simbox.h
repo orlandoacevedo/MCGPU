@@ -3,7 +3,7 @@
 	Minimized to include only Atoms and Molecules
 
 	Author: Nathan Coleman
-	Last Changed: February 19, 2014
+	Last Changed: February 21, 2014
 */
 
 #ifndef SIMBOX_H
