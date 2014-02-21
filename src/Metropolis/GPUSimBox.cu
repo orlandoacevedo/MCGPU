@@ -20,7 +20,6 @@ GPUSimBox::GPUSimBox(Config_Scan configScan) : SimBox(configScan){}
 GPUSimBox::~GPUSimBox(){}
 
 //Utility
-int initGPUSimBox(SimBox *hostBox){return 0;}
 int copyBoxToHost(SimBox *hostBox){return 0;}
 int copyBoxToDevice(SimBox *hostBox){return 0;}
 

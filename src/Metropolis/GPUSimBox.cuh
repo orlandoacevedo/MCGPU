@@ -31,9 +31,8 @@ class GPUSimBox : SimBox
 		~GPUSimBox();
 
 		//Utility
-		int initGPUSimBox(SimBox *hostBox);
-		int copyBoxToHost(SimBox *hostBox);
-		int copyBoxToDevice(SimBox *hostBox);
+		int copyBoxToHost();
+		int copyBoxToDevice();
 };
 
 //Cuda Necessities
