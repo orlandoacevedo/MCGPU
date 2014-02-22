@@ -47,6 +47,7 @@ class Simulation
 		//Utility
 		double calcBlending(double d1, double d2);
 		double calcCharge(double charge1, double charge2m double r);
+		double calcInteratomicEnergy(Molecule *molecules,int molecule1, int molecule2, Environment *environment);
 		double calcIntermolecularEnergy(Molecule *molecules, int molecule1, int molecule2, Environment *environment);
 		double calcIntramolecularEnergyNLC(Molecule *molecules, Environment *environment);
 		double calcLennardJones(Atom atom1, Atom atom2, double r2);

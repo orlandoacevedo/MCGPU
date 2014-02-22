@@ -13,21 +13,18 @@
 //Forward declaration so that each can be used in methods below
 struct Atom
 {
-	char name;
-	unsigned long id;
 	double x, y, z, sigma, epsilon, charge;
 };
 
 struct Environment
 {
-	double x, y, z, maxTranslation, maxRotation, temp, cutoff;
-	int primaryAtomIndex, numAtoms, numMolecules;
-	unsigned int randomSeed;
+	double x, y, z, cutoff;
+	int primaryAtomIndex;
 };
 
 struct Molecule
 {
-	int id, numAtoms;
+	int numAtoms;
 	Atom *atoms;
 };
 
