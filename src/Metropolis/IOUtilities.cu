@@ -9,18 +9,23 @@
  
  
 
-#include "IOUtilities.h"
+#include "IOUtilities.cuh"
 #include "errno.h"
 
 IOUtilities::IOUtilities(string configPath){
-    configpath = configPath;
-    memset(&enviro,0,sizeof(Environment)); //the Environment is a struct, so this is apparently the best way to instantiate the struct
-    numOfSteps=0;
-}
 
-void IOUtilities::readInConfig()
-{
-    ifstream configscanner(configpath.c_str());
+
+	//UtilitiesInfo filePathsEtc; //all the variables used for this class are stuck in this struct for easy, yet unsafe, access
+					//there were apparently getters and setters to access them all, so if necessary, we can have one getter later for the entire struct
+	
+	//note to people/myself: //enviro = currentEnvironment
+	
+    filePathsEtc.configPath = configPath;
+    //memset(&enviro,0,sizeof(Environment)); //the Environment is a struct, and this is apparently the best way to instantiate the struct
+    			//except that may not be required?
+    filePathsEtc.numOfSteps=0;
+    
+    ifstream configscanner(configPath.c_str());
     if (! configscanner.is_open())
     {
         throwScanError("Configuration file failed to open.");
@@ -40,7 +45,7 @@ void IOUtilities::readInConfig()
                 case 2:
 					if(line.length() > 0)
 					{
-						enviro.x = atof(line.c_str());
+						filePathsEtc.currentEnvironment.x = atof(line.c_str());
                     }
 					else
 					{
@@ -51,7 +56,7 @@ void IOUtilities::readInConfig()
                 case 3:
 					if(line.length() > 0)
 					{
-						enviro.y = atof(line.c_str());
+						filePathsEtc.currentEnvironment.y = atof(line.c_str());
                     }
 					else
 					{
@@ -62,7 +67,7 @@ void IOUtilities::readInConfig()
                 case 4:
 					if(line.length() > 0)
 					{
-						enviro.z = atof(line.c_str());
+						filePathsEtc.currentEnvironment.z = atof(line.c_str());
                     }
 					else
 					{
@@ -73,7 +78,7 @@ void IOUtilities::readInConfig()
                 case 6:
 					if(line.length() > 0)
 					{
-						enviro.temperature = atof(line.c_str());
+						filePathsEtc.currentEnvironment.temperature = atof(line.c_str());
                     }
 					else
 					{
@@ -84,7 +89,7 @@ void IOUtilities::readInConfig()
                 case 8:
 					if(line.length() > 0)
 					{
-						enviro.maxTranslation = atof(line.c_str());
+						filePathsEtc.currentEnvironment.maxTranslation = atof(line.c_str());
                     }
 					else
 					{
@@ -95,7 +100,7 @@ void IOUtilities::readInConfig()
                 case 10:
 					if(line.length() > 0)
 					{
-						numOfSteps = atoi(line.c_str());
+						filePathsEtc.numOfSteps = atoi(line.c_str());
                     }
 					else
 					{
@@ -106,7 +111,7 @@ void IOUtilities::readInConfig()
                 case 12:
 					if(line.length() > 0)
 					{
-						enviro.numOfMolecules = atoi(line.c_str());
+						filePathsEtc.currentEnvironment.numOfMolecules = atoi(line.c_str());
 						//printf("number is %d",enviro.numOfMolecules);
                     }
 					else
@@ -118,7 +123,7 @@ void IOUtilities::readInConfig()
                 case 14:
 					if(line.length() > 0)
 					{
-						oplsuaparPath = line;
+						filePathsEtc.oplsuaparPath = line;
                     }
 					else
 					{
@@ -129,7 +134,7 @@ void IOUtilities::readInConfig()
                 case 16:
 					if(line.length() > 0)
 					{
-						zmatrixPath = line;
+						filePathsEtc.zmatrixPath = line;
 					}
 					else
 					{
@@ -140,12 +145,17 @@ void IOUtilities::readInConfig()
                 case 18:
                     if(line.length() > 0)
 					{
-                        statePath = line;
+                        filePathsEtc.statePath = line;
                     }
+                    else
+					{
+						throwScanError("Configuration file not well formed. Missing state file output path value.");
+						return;
+					}
                     break;
                 case 20:
                     if(line.length() > 0){
-                        stateOutputPath = line;
+                        filePathsEtc.stateOutputPath = line;
                     }
 					else
 					{
@@ -155,7 +165,7 @@ void IOUtilities::readInConfig()
                     break;
                 case 22:
                     if(line.length() > 0){
-                        pdbOutputPath = line;
+                        filePathsEtc.pdbOutputPath = line;
                     }
 					else
 					{
@@ -166,7 +176,7 @@ void IOUtilities::readInConfig()
                 case 24:
 					if(line.length() > 0)
 					{
-						enviro.cutoff = atof(line.c_str());
+						filePathsEtc.currentEnvironment.cutoff = atof(line.c_str());
                     }
 					else
 					{
@@ -177,7 +187,7 @@ void IOUtilities::readInConfig()
                 case 26:
 					if(line.length() > 0)
 					{
-						enviro.maxRotation = atof(line.c_str());
+						filePathsEtc.currentEnvironment.maxRotation = atof(line.c_str());
                     }
 					else
 					{
@@ -187,13 +197,13 @@ void IOUtilities::readInConfig()
                     break;
                 case 28:
                     if(line.length() > 0){
-						enviro.randomseed=atoi(line.c_str());
+						filePathsEtc.currentEnvironment.randomseed=atoi(line.c_str());
                     }
                 	break;
                 case 30:
                     if(line.length() > 0){
 						// Convert to a zero-based index
-						enviro.primaryAtomIndex=atoi(line.c_str()) - 1;
+						filePathsEtc.currentEnvironment.primaryAtomIndex=atoi(line.c_str()) - 1;
                     }
 					else
 					{
@@ -206,6 +216,224 @@ void IOUtilities::readInConfig()
 			currentLine++;
         }
     }
+    
+    readInConfigAlreadyDone = true;
+}
+
+/*
+struct UtilitiesInfo
+{
+	Environment currentEnvironment; //The current working environment for the 
+    string configPath; //The path to the main configuration file read in for the simulation
+    unsigned int numOfSteps; //The number of steps to run the simulation
+    string oplsuaparPath; //The path to the opls files containing additional geometry data, to be used (eventually) during simulation
+    string zmatrixPath; //The path to the Z-matrix files to be used during simulation
+    string statePath; //The path to the state information file to be used in the simulation
+    string stateOutputPath; //The path where we write the state output files after simulation
+    string pdbOutputPath; //The path where we write the pdb output files after simulation
+    unsigned int cutoff; //The nonbonded cutoff distance.
+};  */
+  
+void IOUtilities::readInConfig()
+{
+	if (readInConfigAlreadyDone)
+	{
+		//it's already been done during construction; do nothing
+		}
+	else
+	{
+		ifstream configscanner(filePathsEtc.configPath.c_str());
+		if (! configscanner.is_open())
+		{
+			throwScanError("Configuration file failed to open.");
+			return;
+		}
+		else
+		{
+			string line;
+			int currentLine = 1;
+			while (configscanner.good())
+			{
+				getline(configscanner,line);
+			
+				//assigns attributes based on line number
+				switch(currentLine)
+				{
+					case 2:
+						if(line.length() > 0)
+						{
+							filePathsEtc.currentEnvironment.x = atof(line.c_str());
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing environment x value.");
+							return;
+						}
+						break;
+					case 3:
+						if(line.length() > 0)
+						{
+							filePathsEtc.currentEnvironment.y = atof(line.c_str());
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing environment y value.");
+							return;
+						}
+						break;
+					case 4:
+						if(line.length() > 0)
+						{
+							filePathsEtc.currentEnvironment.z = atof(line.c_str());
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing environment z value.");
+							return;
+						}
+						break;
+					case 6:
+						if(line.length() > 0)
+						{
+							filePathsEtc.currentEnvironment.temperature = atof(line.c_str());
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing environment temperature value.");
+							return;
+						}
+						break;
+					case 8:
+						if(line.length() > 0)
+						{
+							filePathsEtc.currentEnvironment.maxTranslation = atof(line.c_str());
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing environment max translation value.");
+							return;
+						}
+						break;
+					case 10:
+						if(line.length() > 0)
+						{
+							filePathsEtc.numOfSteps = atoi(line.c_str());
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing number of steps value.");
+							return;
+						}
+						break;
+					case 12:
+						if(line.length() > 0)
+						{
+							filePathsEtc.currentEnvironment.numOfMolecules = atoi(line.c_str());
+							//printf("number is %d",enviro.numOfMolecules);
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing number of molecules value.");
+							return;
+						}
+						break;
+					case 14:
+						if(line.length() > 0)
+						{
+							filePathsEtc.oplsuaparPath = line;
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing oplsuapar path value.");
+							return;
+						}
+						break;
+					case 16:
+						if(line.length() > 0)
+						{
+							filePathsEtc.zmatrixPath = line;
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing z-matrix path value.");
+							return;
+						}
+						break;
+					case 18:
+						if(line.length() > 0)
+						{
+							filePathsEtc.statePath = line;
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing state file output path value.");
+							return;
+						}
+						break;
+					case 20:
+						if(line.length() > 0){
+							filePathsEtc.stateOutputPath = line;
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing state file output path value.");
+							return;
+						}
+						break;
+					case 22:
+						if(line.length() > 0){
+							filePathsEtc.pdbOutputPath = line;
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing PDB output path value.");
+							return;
+						}
+						break;
+					case 24:
+						if(line.length() > 0)
+						{
+							filePathsEtc.currentEnvironment.cutoff = atof(line.c_str());
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing environment cutoff value.");
+							return;
+						}
+						break;
+					case 26:
+						if(line.length() > 0)
+						{
+							filePathsEtc.currentEnvironment.maxRotation = atof(line.c_str());
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing environment max rotation value.");
+							return;
+						}
+						break;
+					case 28:
+						if(line.length() > 0){
+							filePathsEtc.currentEnvironment.randomseed=atoi(line.c_str());
+						}
+						break;
+					case 30:
+						if(line.length() > 0){
+							// Convert to a zero-based index
+							filePathsEtc.currentEnvironment.primaryAtomIndex=atoi(line.c_str()) - 1;
+						}
+						else
+						{
+							throwScanError("Configuration file not well formed. Missing environment primary atom index value.");
+							return;
+						}
+						break;
+				}
+			
+				currentLine++;
+			}
+		}
+	}
 }
 
 void IOUtilities::throwScanError(string message)
@@ -219,9 +447,11 @@ void IOUtilities::throwScanError(string message)
 
 /**
 	This method is used to read in from a state file.
+	//copied over from...SimBox, so retooling is necessary (variable references point to SimBox locations)
 	
 	@param StateFile - takes the location of the state file to be read in
 */
+/*
 int IOUtilities::ReadStateFile(char const* StateFile)
 {
     ifstream inFile;
@@ -339,11 +569,17 @@ int IOUtilities::ReadStateFile(char const* StateFile)
 
 	return 0;
 }
+*/
+
+
 
 /**
 	Used to write to a state file.
+	//copied over from...Simbox. Retooling needed. (Variable references point to SimBox locations)
+	
 	@param StateFile - writes to a state file at the location given
 */
+/*
 int IOUtilities::WriteStateFile(char const* StateFile)
 {
     ofstream outFile;
@@ -438,12 +674,19 @@ int IOUtilities::WriteStateFile(char const* StateFile)
     outFile.close();
 	return 0;
 }
+*/
+
+
+
 
 /**
 	writes to a PDB file for visualizing the box
+	//this method copied over from...Simbox. Retooling needed. (Variable references point to SimBox locations)
+	
 	@param pdbFile - Location of the pdbFile to be written to
 */
-int SimBox::writePDB(char const* pdbFile)
+/*
+int IOUtilities::writePDB(char const* pdbFile)
 {
     ofstream outputFile;
     outputFile.open(pdbFile);
@@ -484,3 +727,4 @@ int SimBox::writePDB(char const* pdbFile)
 
 	return 0;
 }
+*/

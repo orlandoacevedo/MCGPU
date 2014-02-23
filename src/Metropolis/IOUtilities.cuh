@@ -4,20 +4,22 @@
 *Created 19 February 2014. N. Coleman, A. Wallace
 */
 
+//Sun, 1530PM to 1558PM, 1611 to 
+
 #ifndef IOUTILITIES_H
 #define IOUTILITIES_H
 
 
 #include <iostream>
 #include <fstream>
-#include "../src/Utilities/metroUtil.h"
+#include "../Utilities/metroUtil.h"
 #include <cstdlib>
 
 using namespace std;
 
 // this should supplant the need for all the getters in Config_Scan.cpp and .h -Albert
 // [we made this decision knowing that it's unsafe; if someone modified these variables willy-nilly, it will be a problem]
-Struct UtilitiesInfo
+struct UtilitiesInfo
 {
 	Environment currentEnvironment; //The current working environment for the 
     string configPath; //The path to the main configuration file read in for the simulation
@@ -33,16 +35,18 @@ Struct UtilitiesInfo
 class IOUtilities
 {	
 	public:
-		Config_Scan(string configPath);
+		IOUtilities(string configPath); //this should be the initializer
 		void readInConfig(); //this should ideally be merged into the constructor
 		int ReadStateFile(char const* StateFile);
 	 	//int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());}; //preference: do not use this
 	 	int WriteStateFile(char const* StateFile); 	
-	 	//int WriteStateFile(string StateFile) { return WriteStateFile(StateFile.c_str());};
+	 	//int WriteStateFile(string StateFile) { return WriteStateFile(StateFile.c_str());}; //preference: do not use this
 	 	int writePDB(char const* pdbFile);
+	 	UtilitiesInfo filePathsEtc;
 	 	
 	 private:
 		void throwScanError(string message);
-}
+		bool readInConfigAlreadyDone;
+};
 #endif
 
