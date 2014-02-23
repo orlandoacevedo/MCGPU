@@ -1,26 +1,23 @@
 /*
-	New version of SimBox, including linear and parallel functions
+	New version of SimBox
 	Minimized to include only Atoms and Molecules
 
 	Author: Nathan Coleman
-	Last Changed: February 19, 2014
+	Last Changed: February 21, 2014
 */
 
 #ifndef SIMBOX_H
 #define SIMBOX_H
 
-#include "Utilities/Opls_Scan.h"
-#include "Utilities/Config_Scan.h"
-#include "Utilities/metroUtil.h"
-#include "Utilities/Zmatrix_Scan.h"
-#include "Utilities/State_Scan.h"
-//#include "Utilities/IOUtilities.cuh"
-
-extern double randomFloat(const double start, const double end);
+#include "../Utilities/Opls_Scan.h"
+#include "../Utilities/Config_Scan.h"
+#include "../Utilities/metroUtil.h"
+#include "../Utilities/Zmatrix_Scan.h"
+#include "../Utilities/State_Scan.h"
+#include "Utilities/IOUtilities.cuh"
 
 class SimBox
 {
-	//Linear
 	private:
 		Atom *atomPool;
 		Environment *environment;
@@ -33,15 +30,15 @@ class SimBox
 
 	public:
 		int moleculeType;
-		Table *table;
 
 		//Constructor & Destructor
 		SimBox(Config_Scan configScan);
+		int initGPUSimBox();
 		~SimBox();
 
 		//Getters
 		Atom *getAtoms(){return atomPool;};
-		Environment *getEnvironment(){return environment};
+		Environment *getEnvironment(){return environment;};
 		Molecule *getMolecules(){return molecules;};
 
 		//Utility
@@ -50,7 +47,7 @@ class SimBox
 		int chooseMolecule();
 		void generateFCCBox(Molecule *molecules, Environment *environment);
 		void generatePoints(Molecule *molecules, Environment *environment);
-		double getFValue(Atom *atom1, Atom *atom2, Molecule *moelecules, Environemnt *environment);
+		double getFValue(Atom *atom1, Atom *atom2, Molecule *moelecules, Environment *environment);
 		int getXFromIndex(int index);
 		int getYFromIndex(int index);
 		void keepMoleculeInBox(Molecule *molecule, Environment *environment);
@@ -61,5 +58,7 @@ class SimBox
 		//IO functions
 		//Being moved to Utilities directory
 };
+
+double randomFloat(const double start, const double end);
 
 #endif

@@ -34,26 +34,12 @@ LinearSim::LinearSim(SimBox *initbox,int initsteps)
 	@param atom2 - second atom
 	@param enviro - the environment in the simulation
 */
-double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro)
+double LinearSim::calc_lj(Atom atom1, Atom atom2, double r2)
 {
     //store LJ constants locally
     double sigma = calcBlending(atom1.sigma, atom2.sigma);
     double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
     
-    //calculate difference in coordinates
-    double deltaX = atom1.x - atom2.x;
-    double deltaY = atom1.y - atom2.y;
-    double deltaZ = atom1.z - atom2.z;
-
-    //calculate distance between atoms
-    deltaX = box->makePeriodic(deltaX, enviro.x);
-    deltaY = box->makePeriodic(deltaY, enviro.y);
-    deltaZ = box->makePeriodic(deltaZ, enviro.z);
-    const double r2 = (deltaX * deltaX) +
-                      (deltaY * deltaY) + 
-                      (deltaZ * deltaZ);
-
-	// Original code
     if (r2 == 0.0)
     {
         return 0.0;
@@ -62,7 +48,7 @@ double LinearSim::calc_lj(Atom atom1, Atom atom2, Environment enviro)
     {
     	//calculate terms
     	const double sig2OverR2 = pow(sigma, 2) / r2;
-   		const double sig6OverR6 = pow(sig2OverR2, 3);
+   	const double sig6OverR6 = pow(sig2OverR2, 3);
     	const double sig12OverR12 = pow(sig6OverR6, 2);
     	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
@@ -147,11 +133,6 @@ double LinearSim::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 		
 			if (atom1.id <= atom2.id && atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
 			{
-				//store LJ constants locally and define terms in kcal/mol
-				const double e = 332.06;
-				double sigma = calcBlending(atom1.sigma, atom2.sigma);
-				double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
-			
 				//calculate difference in coordinates
 				double deltaX = atom1.x - atom2.x;
 				double deltaY = atom1.y - atom2.y;
@@ -165,28 +146,17 @@ double LinearSim::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 				double r2 = (deltaX * deltaX) +
 					 (deltaY * deltaY) + 
 					 (deltaZ * deltaZ);
-								  
-				if (r2 != 0.0)
+					
+				//gets the fValue if in the same molecule
+				double fValue = 1.0;
+				if(mol1 == mol2)
 				{
-					//calculate LJ energies
-					double sig2OverR2 = (sigma * sigma) / r2;
-					double sig6OverR6 = sig2OverR2 * sig2OverR2 * sig2OverR2;
-					double sig12OverR12 = sig6OverR6 * sig6OverR6;
-					double lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-					
-					//calculate Coulombic energies
-					double charge_energy = (atom1.charge * atom2.charge * e) / sqrt(r2);
-					
-					//gets the fValue if in the same molecule
-					double fValue = 1.0;
-					if(mol1 == mol2)
-					{
-						int ** hopTab1 = box->tables[mol1 % box->molecTypenum].hopTable;
-						fValue = box->getFValue(i, j, hopTab1);
-					}
-					
-					totalEnergy += (lj_energy + charge_energy) * fValue;
+					int ** hopTab1 = box->tables[mol1 % box->molecTypenum].hopTable;
+					fValue = box->getFValue(i, j, hopTab1);
 				}
+				
+				totalEnergy += calc_lj(atom1, atom2, r2) * fvalue;
+				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2)) * fValue;
 			}
 		}
 		
@@ -195,37 +165,47 @@ double LinearSim::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 }
 
 /**
-	Calculates the charge relative from one atom to another
+	Calculates the Lennard-Jones energies between atoms
+	@param atom1 - first atom
+	@param atom2 - second atom
+	@param enviro - the environment in the simulation
 */
-double LinearSim::calcCharge(Atom atom1, Atom atom2, Environment *enviro)
+double LinearSim::calc_lj(Atom atom1, Atom atom2, double r2)
 {
-    // conversion factor below for units in kcal/mol
-    const double e = 332.06;
- 
-    //calculate difference in coordinates
-    double deltaX = atom1.x - atom2.x;
-    double deltaY = atom1.y - atom2.y;
-    double deltaZ = atom1.z - atom2.z;
-
-    //calculate distance between atoms
-    deltaX = box->makePeriodic(deltaX, enviro->x);
-    deltaY = box->makePeriodic(deltaY, enviro->y);
-    deltaZ = box->makePeriodic(deltaZ, enviro->z);
-
-    const double r2 = (deltaX * deltaX) +
-                      (deltaY * deltaY) + 
-                      (deltaZ * deltaZ);
-
- 
-	// Original Code   
+    //store LJ constants locally
+    double sigma = calcBlending(atom1.sigma, atom2.sigma);
+    double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+    
     if (r2 == 0.0)
     {
         return 0.0;
     }
     else
     {
-        const double r = sqrt(r2);
-        return (atom1.charge * atom2.charge * e) / r;
+    	//calculate terms
+    	const double sig2OverR2 = pow(sigma, 2) / r2;
+   	const double sig6OverR6 = pow(sig2OverR2, 3);
+    	const double sig12OverR12 = pow(sig6OverR6, 2);
+    	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+        return energy;
+    }
+
+}
+
+/**
+	Calculates the charge relative from one atom to another
+*/
+double LinearSim::calcCharge(double charge1, double charge2, double r)
+{  
+    if (r == 0.0)
+    {
+        return 0.0;
+    }
+    else
+    {
+    	// conversion factor below for units in kcal/mol
+    	const double e = 332.06;
+        return (charge1 * charge2 * e) / r;
     }
 }
 
