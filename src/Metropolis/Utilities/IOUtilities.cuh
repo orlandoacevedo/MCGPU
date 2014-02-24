@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include "../../Utilities/metroUtil.h"
+//#include "StructLibrary.cuh" //this is our goal for inclusion, but for now...
 #include <cstdlib>
 
 using namespace std;
@@ -37,9 +38,9 @@ class IOUtilities
 	public:
 		IOUtilities(string configPath); //this should be the initializer
 		void readInConfig(); //this should ideally be merged into the constructor
-		int ReadStateFile(char const* StateFile);
+		int ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection);
 	 	//int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());}; //preference: do not use this
-	 	int WriteStateFile(char const* StateFile); 	
+	 	int WriteStateFile(char const* StateFile, Environment * sourceEnvironment, Molecule * sourceMoleculeCollection); 	
 	 	//int WriteStateFile(string StateFile) { return WriteStateFile(StateFile.c_str());}; //preference: do not use this
 	 	int writePDB(char const* pdbFile); //this is the old version from SimBox, probably not useful or usable
 	 	int writePDB(char const* pdbFile, Environment sourceEnvironment, Molecule * sourceMoleculeCollection); //this is a new version, possibly required for this implementation with IOUtilities

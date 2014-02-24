@@ -14,7 +14,7 @@
  */
  
  
-
+#include <assert.h>
 #include "IOUtilities.cuh"
 #include "errno.h"
 
@@ -457,8 +457,8 @@ void IOUtilities::throwScanError(string message)
 	
 	@param StateFile - takes the location of the state file to be read in
 */
-/*
-int IOUtilities::ReadStateFile(char const* StateFile)
+
+int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection)
 {
     ifstream inFile;
     Environment tmpenv;
@@ -467,7 +467,7 @@ int IOUtilities::ReadStateFile(char const* StateFile)
     
     cout<<"read state file "<<StateFile<<endl;
     //save current Enviroment to tmpenv at first
-    memcpy(&tmpenv,enviro,sizeof(Environment));
+    memcpy(&tmpenv,destinationEnvironment,sizeof(Environment));
     
     inFile.open(StateFile);
     
@@ -477,15 +477,15 @@ int IOUtilities::ReadStateFile(char const* StateFile)
       inFile>>tmpenv.x>>tmpenv.y>>tmpenv.z>>tmpenv.maxTranslation>>tmpenv.numOfAtoms>>tmpenv.temperature>>tmpenv.cutoff;
     }
     
-    if (memcmp(&tmpenv,enviro,sizeof(Environment))!=0)
+    if (memcmp(&tmpenv,destinationEnvironment,sizeof(Environment))!=0)
     {
        ss<<"Wrong state files,does not match other configfiles"<<endl;
-       ss<<"x "<<tmpenv.x<<" "<<enviro->x<<endl;
-       ss<<"y "<<tmpenv.y<<" "<<enviro->y<<endl;
-       ss<<"z "<<tmpenv.z<<" "<<enviro->z<<endl;
-       ss<<"numOfAtoms "<<tmpenv.numOfAtoms<<" "<<enviro->numOfAtoms<<endl;
-       ss<<"temperature "<<tmpenv.temperature<<" "<<enviro->temperature<<endl;
-       ss<<"cutoff "<<tmpenv.cutoff<<" "<<enviro->cutoff<<endl;
+       ss<<"x "<<tmpenv.x<<" "<<destinationEnvironment->x<<endl;
+       ss<<"y "<<tmpenv.y<<" "<<destinationEnvironment->y<<endl;
+       ss<<"z "<<tmpenv.z<<" "<<destinationEnvironment->z<<endl;
+       ss<<"numOfAtoms "<<tmpenv.numOfAtoms<<" "<<destinationEnvironment->numOfAtoms<<endl;
+       ss<<"temperature "<<tmpenv.temperature<<" "<<destinationEnvironment->temperature<<endl;
+       ss<<"cutoff "<<tmpenv.cutoff<<" "<<destinationEnvironment->cutoff<<endl;
        ss<<ss.str()<<endl; writeToLog(ss);      
     } 
     inFile.getline(buf,sizeof(buf)); //ignore blank line
@@ -500,9 +500,9 @@ int IOUtilities::ReadStateFile(char const* StateFile)
  	Angle currentAngle;
     Dihedral currentDi;
  	Hop      currentHop;
- 	Molecule *ptr=molecules;;
+ 	Molecule *ptr=destinationMoleculeCollection;
 
-    while(inFile.good()&&molecno<enviro->numOfMolecules)
+    while(inFile.good()&&molecno<destinationEnvironment->numOfMolecules)
     {
         inFile>>no;
         assert(ptr->id==no);
@@ -571,11 +571,11 @@ int IOUtilities::ReadStateFile(char const* StateFile)
         molecno++;
     }
     inFile.close();
-    WriteStateFile("Confirm.state");
+    WriteStateFile("Confirm.state", destinationEnvironment, ptr);
 
 	return 0;
 }
-*/
+
 
 
 
@@ -586,21 +586,21 @@ int IOUtilities::ReadStateFile(char const* StateFile)
 	@param StateFile - writes to a state file at the location given
 */
 /*
-int IOUtilities::WriteStateFile(char const* StateFile)
+int IOUtilities::WriteStateFile(char const* StateFile, Environment * sourceEnvironment, Molecule * sourceMoleculeCollection)
 {
     ofstream outFile;
-    int numOfMolecules=enviro->numOfMolecules;
+    int numOfMolecules=sourceEnvironment->numOfMolecules;
     
     outFile.open(StateFile);
     
     //print the environment
-    outFile << enviro->x << " " << enviro->y << " " << enviro->z << " " << enviro->maxTranslation<<" " << enviro->numOfAtoms
-        << " " << enviro->temperature << " " << enviro->cutoff <<endl;
+    outFile << sourceEnvironment->x << " " << sourceEnvironment->y << " " << sourceEnvironment->z << " " << sourceEnvironment->maxTranslation<<" " << sourceEnvironment->numOfAtoms
+        << " " << sourceEnvironment->temperature << " " << sourceEnvironment->cutoff <<endl;
     outFile << endl; // blank line
     
     for(int i = 0; i < numOfMolecules; i++)
     {
-        Molecule currentMol = molecules[i];
+        Molecule currentMol = sourceMoleculeCollections[i];
         outFile << currentMol.id << endl;
         outFile << "= Atoms" << endl; // delimiter
     
