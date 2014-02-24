@@ -1,0 +1,6 @@
+#ifndef PARALLELCALCS_CUH
+#define PARALLELCALCS_CUH
+
+
+
+#endif

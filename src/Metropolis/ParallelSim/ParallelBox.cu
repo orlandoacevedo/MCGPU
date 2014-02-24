@@ -11,7 +11,7 @@
 #include <time.h>
 #include <math.h>
 #include <assert.h>
-#include "GPUSimBox.cuh"
+#include "ParallelBox.cuh"
 
 using namespace std;
 
