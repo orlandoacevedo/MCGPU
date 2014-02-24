@@ -29,34 +29,6 @@ LinearSim::LinearSim(SimBox *initbox,int initsteps)
 }
 
 /**
-	Calculates the Lennard-Jones energies between atoms
-	@param atom1 - first atom
-	@param atom2 - second atom
-	@param enviro - the environment in the simulation
-*/
-double LinearSim::calc_lj(Atom atom1, Atom atom2, double r2)
-{
-    //store LJ constants locally
-    double sigma = calcBlending(atom1.sigma, atom2.sigma);
-    double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
-    
-    if (r2 == 0.0)
-    {
-        return 0.0;
-    }
-    else
-    {
-    	//calculate terms
-    	const double sig2OverR2 = pow(sigma, 2) / r2;
-   	const double sig6OverR6 = pow(sig2OverR2, 3);
-    	const double sig12OverR12 = pow(sig6OverR6, 2);
-    	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-        return energy;
-    }
-
-}
-
-/**
 
 	Calculates the energy between each atom pair.
 	If the atoms are in the same molecule it applies a fudge factor
@@ -184,7 +156,7 @@ double LinearSim::calc_lj(Atom atom1, Atom atom2, double r2)
     {
     	//calculate terms
     	const double sig2OverR2 = pow(sigma, 2) / r2;
-   	const double sig6OverR6 = pow(sig2OverR2, 3);
+		const double sig6OverR6 = pow(sig2OverR2, 3);
     	const double sig12OverR12 = pow(sig6OverR6, 2);
     	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
