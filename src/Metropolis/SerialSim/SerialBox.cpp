@@ -10,7 +10,7 @@
 #include <time.h>
 #include <math.h>
 #include <assert.h>
-#include "SimBox.cuh"
+#include "SerialBox.cuh"
 
 using namespace std;
 
