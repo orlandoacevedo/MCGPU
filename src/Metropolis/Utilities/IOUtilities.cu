@@ -4,7 +4,7 @@
 *Created 19 February 2014. N. Coleman, A. Wallace
 */
 //Changes on:
-//	Sun, 23 Feb 2014. 1530PM to 1558PM, 1611 to 1655PM, 1757PM to 1915PM
+//	Sun, 23 Feb 2014. 1530PM to 1558PM, 1611 to 1655PM, 1757PM to 2031PM
 
 
 /*!\file
@@ -229,7 +229,7 @@ IOUtilities::IOUtilities(string configPath){
 /*
 struct UtilitiesInfo
 {
-	Environment currentEnvironment; //The current working environment for the 
+	Environment currentEnvironment; //The current working environment for the simulation
     string configPath; //The path to the main configuration file read in for the simulation
     unsigned int numOfSteps; //The number of steps to run the simulation
     string oplsuaparPath; //The path to the opls files containing additional geometry data, to be used (eventually) during simulation
