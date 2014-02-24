@@ -1,4 +1,4 @@
-#include "StructLibrary.cuh"
+#include "StructLibrary.h"
 
 using namespace std;
 

@@ -1,6 +1,8 @@
 #ifndef PARALLELCALCS_H
 #define PARALLELCALCS_H
 
-#include "ParallelCalcs.cuh"
+#include "Metropolis/Utilities/StructLibrary.h"
+
+void calcCont(Molecule *mol);
 
 #endif
