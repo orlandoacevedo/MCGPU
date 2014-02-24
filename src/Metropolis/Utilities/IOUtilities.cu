@@ -792,3 +792,72 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
 
 	return 0;
 }
+
+
+//this comes from metroUtil...
+//this supports writing to the log with relative ease.
+//said string contains almost all of the text you wish to be written to the file.
+//opening and closing of the file will be done on the fly, and should be guaranteed once this method reaches its end.
+//If stringstream is needed, you may call the overloaded version below, which will still call this version of the method
+void writeToLog(string text,int stamp){
+    string filename = "OutputLog";
+	 ofstream logFile;
+	 logFile.open(filename.c_str(),ios::out|ios::app);
+	 
+	 string hash ="";
+	 time_t current_time;
+    struct tm * time_info;
+    char timeString[9];  // space for "HH:MM:SS\0"
+	 
+	 switch(stamp){
+	     case START:
+		      //The start of a new simulation
+		      logFile << "\n\n\n\n\n\n" << endl;
+				logFile << "======================================================================"<<endl;
+				logFile << "                       Starting Simulation: ";				
+            time(&current_time);
+            time_info = localtime(&current_time);
+            strftime(timeString, sizeof(timeString), "%H:%M:%S", time_info);
+				logFile << timeString << endl;
+				logFile << "----------------------------------------------------------------------"<<endl;
+				break;
+			case END: 
+			   //The end of a running simulation
+				logFile << "----------------------------------------------------------------------"<<endl;
+				logFile << "                       Ending Simulation: ";
+            time(&current_time);
+            time_info = localtime(&current_time);
+            strftime(timeString, sizeof(timeString), "%H:%M:%S", time_info);
+				logFile << timeString << endl;
+				logFile << "======================================================================"<<endl;
+				break;		
+	     case OPLS:
+		      //OPLS error
+	         logFile << "--OPLS: ";
+		      break;
+	     case Z_MATRIX:
+		      //Zmatrix error
+	         logFile << "--Z_Matrix: ";
+		      break;
+		  case GEOM:
+		      //GEOM error Geometric
+				logFile << "--GEOM: ";
+				break;
+	     default:
+	         logFile << "";
+		      break;		
+	 }
+	 logFile << text << endl;
+	 logFile.close();	 
+}
+
+
+//this method allows for writing to a given log file, with some measure of automation
+//this overloaded version allows for a stringstream, instead of a normal string, to be input.
+//said string contains almost all of the text you wish to be written to the file.
+//opening and closing of the file will be done on the fly, and should be guaranteed once this method reaches its end.
+void writeToLog(stringstream& ss, int stamp ){
+    writeToLog(ss.str(),stamp);
+	 ss.str(""); // clears the string steam...
+	 ss.clear();
+}
