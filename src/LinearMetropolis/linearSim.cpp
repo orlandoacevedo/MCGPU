@@ -120,7 +120,7 @@ double LinearSim::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 					 (deltaZ * deltaZ);
 					
 				//gets the fValue if in the same molecule
-				double fValue = 1.0;
+				double fvalue = 1.0;
 				if(mol1 == mol2)
 				{
 					int ** hopTab1 = box->tables[mol1 % box->molecTypenum].hopTable;
