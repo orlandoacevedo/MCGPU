@@ -124,11 +124,11 @@ double LinearSim::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 				if(mol1 == mol2)
 				{
 					int ** hopTab1 = box->tables[mol1 % box->molecTypenum].hopTable;
-					fValue = box->getFValue(i, j, hopTab1);
+					fvalue = box->getFValue(i, j, hopTab1);
 				}
 				
 				totalEnergy += calc_lj(atom1, atom2, r2) * fvalue;
-				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2)) * fValue;
+				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2)) * fvalue;
 			}
 		}
 		
