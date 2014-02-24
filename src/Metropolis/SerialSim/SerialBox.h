@@ -42,20 +42,6 @@ class SimBox
 		Environment *getEnvironment(){return environment;};
 		Molecule *getMolecules(){return molecules;};
 
-		//Utility
-		void assignAtomPositions(double x, double y, double z, Molecule *molecule, Environment *environment);
-		int changeMolecule(int moleculeIndex);
-		int chooseMolecule();
-		void generateFCCBox(Molecule *molecules, Environment *environment);
-		void generatePoints(Molecule *molecules, Environment *environment);
-		double getFValue(Atom *atom1, Atom *atom2, Molecule *moelecules, Environment *environment);
-		int getXFromIndex(int index);
-		int getYFromIndex(int index);
-		void keepMoleculeInBox(Molecule *molecule, Environment *environment);
-		double makePeriodic(double x, double box);
-		int rollBack(int moleculeIndex);
-		double wrapBox(double x, double box);
-
 		//IO functions
 		//Being moved to Utilities directory
 };

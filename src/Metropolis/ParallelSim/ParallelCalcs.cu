@@ -1,46 +1,48 @@
+/*
+	Contains calculations for ParallelBox
+	Same functions as SerialCalcs with function qualifiers and CUDA code
+
+	Author: Nathan Coleman
+*/
+
+#include <stdio.h>
+#include <math.h>
 #include "ParallelCalcs.h"
 #include "ParallelCalcs.cuh"
-#include <stdio.h>
 
 using namespace std;
 
 void calcCont(Molecule *mol){}
 
-int main()
-{
-	printf("hello\n");
-	return 0;
-}
-
-__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *enviro, double *energies, int segmentSize)
+__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *environment, double *energies, int segmentSize)
 {
 	int otherMol = blockIdx.x * blockDim.x + threadIdx.x;
 	
 	if (otherMol < numM && otherMol != currentMol)
 	{
-		Atom atom1 = molecules[currentMol].atoms[enviro->primaryAtomIndex];
-		Atom atom2 = molecules[otherMol].atoms[enviro->primaryAtomIndex];
+		Atom atom1 = molecules[currentMol].atoms[environment->primaryAtomIndex];
+		Atom atom2 = molecules[otherMol].atoms[environment->primaryAtomIndex];
 			
 		//calculate distance between atoms
-		double deltaX = makePeriodic(atom1.x - atom2.x, enviro->x);
-		double deltaY = makePeriodic(atom1.y - atom2.y, enviro->y);
-		double deltaZ = makePeriodic(atom1.z - atom2.z, enviro->z);
+		double deltaX = makePeriodic(atom1.x - atom2.x, environment->x);
+		double deltaY = makePeriodic(atom1.y - atom2.y, environment->y);
+		double deltaZ = makePeriodic(atom1.z - atom2.z, environment->z);
 		
 		double r2 = (deltaX * deltaX) +
 					(deltaY * deltaY) + 
 					(deltaZ * deltaZ);
 
-		if (r2 < enviro->cutoff * enviro->cutoff)
+		if (r2 < environment->cutoff * environment->cutoff)
 		{
 			//calculate intermolecular energies
 			calcInterAtomicEnergy
 			<<<molecules[currentMol].numAtoms, molecules[otherMol].numAtoms>>>
-			(molecules, currentMol, otherMol, enviro, energies, segmentSize);
+			(molecules, currentMol, otherMol, environment, energies, segmentSize);
 		}
 	}
 }
 
-__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *enviro, double *energies, int segmentSize)
+__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *environment, double *energies, int segmentSize)
 {
 	Atom atom1 = molecules[currentMol].atoms[blockIdx.x],
 		 atom2 = molecules[otherMol].atoms[threadIdx.x];
@@ -57,9 +59,9 @@ __global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int o
 		double deltaZ = atom1.z - atom2.z;
 	  
 		//calculate distance between atoms
-		deltaX = makePeriodic(deltaX, enviro->x);
-		deltaY = makePeriodic(deltaY, enviro->y);
-		deltaZ = makePeriodic(deltaZ, enviro->z);
+		deltaX = makePeriodic(deltaX, environment->x);
+		deltaY = makePeriodic(deltaY, environment->y);
+		deltaZ = makePeriodic(deltaZ, environment->z);
 		
 		double r2 = (deltaX * deltaX) +
 			 (deltaY * deltaY) + 
@@ -75,7 +77,7 @@ __global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int o
 	}
 }
 
-__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *enviro, double *energies, int segmentSize)
+__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *environment, double *energies, int segmentSize)
 {
 	Molecule cMol = molecules[currentMol];
 	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x,
@@ -94,9 +96,9 @@ __global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, in
 		double deltaZ = atom1.z - atom2.z;
 	  
 		//calculate distance between atoms
-		deltaX = makePeriodic(deltaX, enviro->x);
-		deltaY = makePeriodic(deltaY, enviro->y);
-		deltaZ = makePeriodic(deltaZ, enviro->z);
+		deltaX = makePeriodic(deltaX, environment->x);
+		deltaY = makePeriodic(deltaY, environment->y);
+		deltaZ = makePeriodic(deltaZ, environment->z);
 		
 		double r2 = (deltaX * deltaX) +
 			 (deltaY * deltaY) + 
@@ -125,9 +127,9 @@ __device__ double calc_lj(Atom atom1, Atom atom2, double r2)
     else
     {
     	//calculate terms
-    	const double sig2OverR2 = pow(sigma, 2) / r2;
-		const double sig6OverR6 = pow(sig2OverR2, 3);
-    	const double sig12OverR12 = pow(sig6OverR6, 2);
+    	const double sig2OverR2 = (sigma*sigma) / r2;
+		const double sig6OverR6 = (sig2OverR2*sig2OverR2*sig2OverR2);
+    	const double sig12OverR12 = (sig6OverR6*sig6OverR6);
     	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
     }
