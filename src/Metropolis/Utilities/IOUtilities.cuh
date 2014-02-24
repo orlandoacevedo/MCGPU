@@ -3,8 +3,8 @@
 *
 *Created 19 February 2014. N. Coleman, A. Wallace
 */
-
-//Sun, 1530PM to 1558PM, 1611 to 
+//Changes on:
+//	Sun, 23 Feb 2014. 1530PM to 1558PM, 1611 to 1655PM, 1757 to 1915PM
 
 #ifndef IOUTILITIES_H
 #define IOUTILITIES_H
@@ -41,7 +41,8 @@ class IOUtilities
 	 	//int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());}; //preference: do not use this
 	 	int WriteStateFile(char const* StateFile); 	
 	 	//int WriteStateFile(string StateFile) { return WriteStateFile(StateFile.c_str());}; //preference: do not use this
-	 	int writePDB(char const* pdbFile);
+	 	int writePDB(char const* pdbFile); //this is the old version from SimBox, probably not useful or usable
+	 	int writePDB(char const* pdbFile, Environment sourceEnvironment, Molecule * sourceMoleculeCollection); //this is a new version, possibly required for this implementation with IOUtilities
 	 	UtilitiesInfo filePathsEtc;
 	 	
 	 private:

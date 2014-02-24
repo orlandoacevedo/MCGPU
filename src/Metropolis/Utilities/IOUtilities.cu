@@ -1,4 +1,10 @@
-//This file/class will, ideally, replace Config_Scan.cpp. -Albert
+/*Intended goal: support read, parse, and extract operations on configuration files to properly initialize 
+*  a simulation environment.
+* //This file/class will, ideally, replace Config_Scan.cpp & will augment MetroUtil.cpp
+*Created 19 February 2014. N. Coleman, A. Wallace
+*/
+//Changes on:
+//	Sun, 23 Feb 2014. 1530PM to 1558PM, 1611 to 1655PM, 1757PM to 1915PM
 
 
 /*!\file
@@ -683,6 +689,16 @@ int IOUtilities::WriteStateFile(char const* StateFile)
 	writes to a PDB file for visualizing the box
 	//this method copied over from...Simbox. Retooling needed. (Variable references point to SimBox locations)
 	
+	//other versions found in metroUtil were not used; it relied only on SimBox
+	
+	//to do this, the main simulation controller--linearSimulationExample in the old data structure--will have to manage the data in the
+	// PDB, by directly modifying it in the instance of the IOUtilities class we will have to make,
+	// rather than SimBox managing it.
+	
+	// the downside is that this implementation, when done for parallel,
+	//  will likely require writing back to the host, rather than storing the info on the GPU until the very end...
+	//  as the SimBox holds all the current information being accessed by this method.
+	
 	@param pdbFile - Location of the pdbFile to be written to
 */
 /*
@@ -728,3 +744,51 @@ int IOUtilities::writePDB(char const* pdbFile)
 	return 0;
 }
 */
+
+//potential overloading of the above function
+
+//@param: sourceMoleculeCollection: Is an array of molecules, dynamically allocated & created elsewhere [such as in the SimBox]
+
+int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Molecule * sourceMoleculeCollection)
+{
+	//molecules = (Molecule *)malloc(sizeof(Molecule) * enviro->numOfMolecules);
+	
+    ofstream outputFile;
+    outputFile.open(pdbFile);
+    int numOfMolecules=sourceEnvironment.numOfMolecules;
+    outputFile << "REMARK Created by MCGPU" << endl;
+    //int atomIndex = 0;
+    for (int i = 0; i < numOfMolecules; i++)
+    {
+    	Molecule currentMol = sourceMoleculeCollection[i];    	
+        for (int j = 0; j < currentMol.numOfAtoms; j++)
+        {
+        	Atom currentAtom = currentMol.atoms[j];
+            outputFile.setf(ios_base::left,ios_base::adjustfield);
+            outputFile.width(6);
+            outputFile << "ATOM";
+            outputFile.setf(ios_base::right,ios_base::adjustfield);
+            outputFile.width(5);
+            outputFile << currentAtom.id + 1;
+            outputFile.width(3); // change from 5
+            outputFile << currentAtom.name;
+            outputFile.width(6); // change from 4
+            outputFile << "UNK";
+            outputFile.width(6);
+            outputFile << i + 1;
+            outputFile.setf(ios_base::fixed, ios_base::floatfield);
+            outputFile.precision(3);
+            outputFile.width(12);
+            outputFile << currentAtom.x;
+            outputFile.width(8);
+            outputFile << currentAtom.y;
+            outputFile.width(8);
+            outputFile << currentAtom.z << endl;
+        }
+        outputFile << "TER" << endl;
+    }
+    outputFile << "END" << endl;
+    outputFile.close();
+
+	return 0;
+}
