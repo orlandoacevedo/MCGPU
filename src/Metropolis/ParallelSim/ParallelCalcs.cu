@@ -12,7 +12,7 @@
 
 using namespace std;
 
-double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx = 0)
+double calcMolecularEnergyContribution(int molIdx, int startIdx = 0)
 {
 	double totalEnergy = 0;
 	

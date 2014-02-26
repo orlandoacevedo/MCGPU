@@ -20,8 +20,5 @@ GPUSimBox::GPUSimBox(Config_Scan configScan) : SimBox(configScan){}
 GPUSimBox::~GPUSimBox(){}
 
 //Utility
-int copyBoxToHost(SimBox *hostBox){return 0;}
-int copyBoxToDevice(SimBox *hostBox){return 0;}
-
-//Cuda necessities
-void cudaAssert(const cudaError err, const char *file, const int line){}
+int copyBoxToHost(){return 0;}
+int copyBoxToDevice(){return 0;}

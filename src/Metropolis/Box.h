@@ -5,17 +5,17 @@
 
 class Box
 {
-	Atom *atomPool;
+	Atom *atoms;
 	Environment *environment;
-	Molecule changedMolecule;
 	Molecule *molecules;
-	int moleculeType;
+	double *energies;
+	int atomCount, moleculeCount, energyCount, maxMolSize;
 
 	//Utility
 	int copyMolecule(Molecule *destination, Molecule *source);
 	int saveMolecule(int moleculeIndex);
 
-	Atom *getAtoms(){return atomPool;};
+	Atom *getAtoms(){return atoms;};
 	Environment *getEnvironment(){return environment;};
 	Molecule *getMolecules(){return molecules;};
 };
