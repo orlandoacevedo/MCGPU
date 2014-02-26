@@ -25,20 +25,26 @@
 // boltzman constant in kcal mol-1 K-1
 const double kBoltz = 0.00198717;
 
+struct SimPointers
+{
+	SimBox *innerbox;
+    Environment *envH, *envD;
+    Atom *atomsH, *atomsD;
+    Molecule *moleculesH, *moleculesD, *molTrans;
+	int numA, numM, numEnergies, maxMolSize;
+	double *energiesH, *energiesD;
+};
+
 class ParallelSim
 {
     private:
         GPUSimBox *box;
+		SimPointers *ptrs;
         int steps;
         float currentEnergy;
         float oldEnergy;
         int accepted;
         int rejected;
-        int N;  //number of need compute
-        int blocks; //number of per node
-        size_t energySumSize;
-        double *energySum_device;
-        double *energySum_host;
 
     public:
         ParallelSim(GPUSimBox *initbox,int initsteps); 	
@@ -48,26 +54,22 @@ class ParallelSim
         int getrejected() {return rejected;};
         GPUSimBox * getGPUSimBox() {return box;};
         GPUSimBox * getdevGPUSimBox() {return box;};
-        double *getdevEnergySum() { return energySum_device;};
-        double *gethostEnergySum() { return energySum_host;};
-        double calcEnergyWrapper(Molecule *molecules, Environment *enviro);
-        double calcEnergyWrapper(GPUSimBox *box);
-        double calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules);
+		void writeChangeToDevice(int changeIdx);
+		__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *enviro, double *energies, int segmentSize);
+		__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *enviro, double *energies, int segmentSize);
+		__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *enviro, double *energies, int segmentSize);
+		__device__ double calc_lj(Atom atom1, Atom atom2, double r2);
+		__device__ double calcCharge(double charge1, double charge2, double r);
+		__device__ double makePeriodic(double x, double box);
+		__device__ double calcBlending(double d1, double d2);
+		__device__ int getXFromIndex(int idx);
+		__device__ int getYFromIndex(int x, int idx);
         void runParallel(int steps);
-        //double calcEnergy_NLC(Molecule *molecules, Environment *enviro);
+        /*double calcEnergyWrapper(GPUSimBox *box);
+        double calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules);*/
 
     public:
         double wrapBox(double x, double box);
-/*	__device__ int getXFromIndex(int idx);
-	__device__ int getYFromIndex(int x, int idx);
-	__device__ double makePeriodic(double x, double box);
-	__device__ double calc_lj(Atom atom1, Atom atom2, Environment enviro);
-	__device__ double calcCharge(Atom atom1, Atom atom2, Environment *enviro);
-	__device__ double calcBlending(double d1, double d2);
-	__device__ int getMoleculeFromAtomID(Atom a1, DeviceMolecule *dev_molecules, Environment enviro);
-	__device__ double getFValue(Atom atom1, Atom atom2, DeviceMolecule *dev_molecules, Environment *enviro, Hop *hops);
-	__device__ int hopGE3(int atom1, int atom2, DeviceMolecule dev_molecule, Hop *molecule_hops);
-	*/
     
 	Molecule* getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Environment enviro);
  	int hopGE3Host(int atom1, int atom2, Molecule molecule);

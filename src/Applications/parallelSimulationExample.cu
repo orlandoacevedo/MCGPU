@@ -102,7 +102,8 @@ int main(int argc, char ** argv)
     //runLinear(molecules, &enviro, simulationSteps, configScan.getStateOutputPath(),
     configScan.getPdbOutputPath();
     
-    double initEnergy=sim.calcEnergyWrapper(sim.getGPUSimBox());
+    //double initEnergy=sim.calcEnergyWrapper(sim.getGPUSimBox());
+	double initEnergy = sim.calcSystemEnergy();
    	ss << "Step Number: "<< 0 <<  endl;
 	ss << "Current Energy: " << initEnergy << endl;
 	cout << ss.str();
