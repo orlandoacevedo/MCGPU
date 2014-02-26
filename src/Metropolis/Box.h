@@ -3,21 +3,28 @@
 
 #include "Metropolis/Utilities/StructLibrary.h"
 
+#define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
+
 class Box
 {
-	Atom *atoms;
-	Environment *environment;
-	Molecule *molecules;
-	double *energies;
-	int atomCount, moleculeCount, energyCount, maxMolSize;
+	private:
+		Atom *atoms;
+		Environment *environment;
+		Molecule *molecules;
+		double *energies;
+		int atomCount, moleculeCount, energyCount, maxMolSize;
 
-	//Utility
-	int copyMolecule(Molecule *destination, Molecule *source);
-	int saveMolecule(int moleculeIndex);
-
-	Atom *getAtoms(){return atoms;};
-	Environment *getEnvironment(){return environment;};
-	Molecule *getMolecules(){return molecules;};
+	public:
+		Box(){atoms=NULL;environment=NULL;molecules=NULL;energies=NULL;};
+		~Box(){FREE(atoms);FREE(environment);FREE(molecules);FREE(energies);};
+		Atom *getAtoms(){return atoms;};
+		Environment *getEnvironment(){return environment;};
+		Molecule *getMolecules(){return molecules;};
+		double *getEnergies(){return energies;};
+		int *getAtomCount(){return atomCount;};
+		int *getMoleculeCount(){return moleculeCount;};
+		int *getEnergyCount(){return energyCount;};
+		int *getMaxMolSize(){return maxMolSize;};
 };
 
 #endif
