@@ -17,26 +17,26 @@
 
 ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 {
-	box=initbox;
-    steps=initsteps;
- 	currentEnergy=0;
-    oldEnergy=0;
-    accepted=0;
-    rejected=0;
+	box = initbox;
+    steps = initsteps;
+ 	currentEnergy = 0;
+    oldEnergy = 0;
+    accepted = 0;
+    rejected = 0;
 	
 	ptrs = (*SimPointers) malloc(sizeof(SimPointers));
 	
 	ptrs->innerbox = box->getSimBox();
-	ptrs->envH = innerbox->getEnviro();
+	ptrs->envH = ptrs->innerbox->getEnviro();
 	
-	ptrs->atomsH = innerbox->getAtoms();
-	ptrs->moleculesH = innerbox->getMolecules();
+	ptrs->atomsH = ptrs->innerbox->getAtoms();
+	ptrs->moleculesH = ptrs->innerbox->getMolecules();
 	
-	ptrs->numA = envH->numOfAtoms;
-	ptrs->numM = envH->numOfMolecules;
-	ptrs->numEnergies = numA * numA;//This is an upper bound. May be able to be tightened.
+	ptrs->numA = ptrs->envH->numOfAtoms;
+	ptrs->numM = ptrs->envH->numOfMolecules;
+	ptrs->numEnergies = ptrs->numA * ptrs->numA;//This is an upper bound. May be able to be tightened.
 	
-	ptrs->molTrans = (*Molecule) malloc(numM * sizeof(Molecule));
+	ptrs->molTrans = (*Molecule) malloc(ptrs->numM * sizeof(Molecule));
 	ptrs->energiesH = (*double) malloc(ptrs->numEnergies * sizeof(double));
 	
 	cudaMalloc(&(ptrs->envD), sizeof(Environment));
@@ -47,7 +47,7 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 	int i;
 	
 	//initialize energies
-	for (i = 0; i < numEnergies; i++)
+	for (i = 0; i < ptrs->numEnergies; i++)
 	{
 		ptrs->energiesH[i] = 0;
 	}
@@ -57,7 +57,7 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 	Atom *a = ptrs->atomsD;
 	//upper bound on number of atoms in any molecule
 	ptrs->maxMolSize = 0;
-	for (i = 0; i < numM; i++)
+	for (i = 0; i < ptrs->numM; i++)
 	{
 		ptrs->molTrans[i].atoms = a;
 		ptrs->molTrans[i].numOfAtoms = ptrs->moleculesH[i].numOfAtoms;
@@ -76,7 +76,7 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 	cudaMemcpy(ptrs->energiesD, ptrs->energiesH, ptrs->numEnergies * sizeof(double), cudaMemcpyHostToDevice);
 }
 
-ParallelSim::~ParallelSim()
+/*ParallelSim::~ParallelSim()
 {
     if (energySum_host!=NULL)
     {
@@ -89,9 +89,9 @@ ParallelSim::~ParallelSim()
         cudaFree(energySum_device);
         energySum_device=NULL;
     }
-}
+}*/
 
-void writeChangeToDevice(int changeIdx)
+void ParallelSim::writeChangeToDevice(int changeIdx)
 {
 	//create temp Molecule
 	Molecule *changedMol = (*Molecule) malloc(sizeof(Molecule));
@@ -103,11 +103,11 @@ void writeChangeToDevice(int changeIdx)
 	//get device pointer to device Atoms from device Molecule, and store in temp Molecule
 	//temp Molecule.atoms will now contain a pointer to Atoms on device
 	//this pointer never meant to be followed from host
-	cudeMemcpy(&(changedMol->atoms), &((ptrs->moleculesD + changeIdx).atoms), sizeof(Atom*), CudaMemcpyDevicetoHost);
+	cudaMemcpy(&(changedMol->atoms), &((ptrs->moleculesD + changeIdx).atoms), sizeof(Atom*), cudaMemcpyDevicetoHost);
 	//copy changed molecule to device
-	cudeMemcpy(ptrs->moleculesD + changeIdx, changedMol, sizeof(Molecule), CudaMemcpyHostToDevice);
+	cudaMemcpy(ptrs->moleculesD + changeIdx, changedMol, sizeof(Molecule), cudaMemcpyHostToDevice);
 	//copy changed atoms to device
-	cudeMemcpy(ptrs->moleculesD[changeIdx].atoms, changedMol->atoms, changedMol->numOfAtoms * sizeof(Atom), CudaMemcpyHostToDevice);
+	cudaMemcpy(ptrs->moleculesD[changeIdx].atoms, changedMol->atoms, changedMol->numOfAtoms * sizeof(Atom), cudaMemcpyHostToDevice);
 }
 
 double ParallelSim::calcSystemEnergy()
@@ -123,12 +123,12 @@ double ParallelSim::calcSystemEnergy()
     return totalEnergy;
 }
 
-double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx = 0)
+double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx)
 {
 	double totalEnergy = 0;
 	
 	//initialize energies to 0
-	for (int i = 0; i < numEnergies; i++)
+	for (int i = 0; i < ptrs->numEnergies; i++)
 	{
 		ptrs->energiesH[i] = 0;
 	}

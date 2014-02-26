@@ -48,7 +48,7 @@ class ParallelSim
 
     public:
         ParallelSim(GPUSimBox *initbox,int initsteps); 	
-        ~ParallelSim(); 	
+        //~ParallelSim(); 	
         float getcurrentEnergy(){return currentEnergy;}; 	
         int getaccepted() {return accepted;};
         int getrejected() {return rejected;};
@@ -57,7 +57,7 @@ class ParallelSim
 		void writeChangeToDevice(int changeIdx);
 		double calcSystemEnergy();
 		double calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
-		__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *enviro, double *energies, int segmentSize);
+		__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, int startIdx, Environment *enviro, double *energies, int segmentSize);
 		__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *enviro, double *energies, int segmentSize);
 		__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *enviro, double *energies, int segmentSize);
 		__device__ double calc_lj(Atom atom1, Atom atom2, double r2);
