@@ -17,5 +17,17 @@ using namespace std;
 double randomFloat(const double start, const double end){return 0.0;}
 
 //Constructor & Destructor
-SimBox::SimBox(Config_Scan configScan){}
-SimBox::~SimBox(){}
+SimBox::SimBox(Config_Scan configScan)
+{
+	molecules = NULL;
+	environment = NULL;
+
+}
+
+SimBox::~SimBox()
+{
+	FREE(molecules);
+	FREE(environment);
+	FREE(atomPool);
+	FREE(changedMolecule);
+}

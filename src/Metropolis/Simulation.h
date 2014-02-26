@@ -26,34 +26,9 @@ const double kBoltz = 0.00198717;
 
 class Simulation
 {
-	private:
-		int steps;
-		float currentEnergy;
-		float oldEnergy;
-		int accepted;
-		int rejected;
-	
-	public:
-		//Constructor & Destructor
-		//Take in bool for parallel or serial and filepath for config file
-		Simulation(bool useGPU, char const* configPath,int interval);
-		~Simulation();
-
-		//Getters
-		int getAccepted(){return accepted;};
-		float getCurrentEnergy(){return currentEnergy;};
-		int getRejected(){return rejected;};
-
-		//Utility
-		double calcBlending(double d1, double d2);
-		double calcCharge(double charge1, double charge2m double r);
-		double calcInteratomicEnergy(Molecule *molecules,int molecule1, int molecule2, Environment *environment);
-		double calcIntermolecularEnergy(Molecule *molecules, int molecule1, int molecule2, Environment *environment);
-		double calcIntramolecularEnergyNLC(Molecule *molecules, Environment *environment);
-		double calcLennardJones(Atom atom1, Atom atom2, double r2);
-		double calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMolecule, int startIndex);
-		double calcSystemEnergy(Molecule *molecules, Environment *environment);
-		void run();
+	Simulation();
+	~Simulation();
+	void run();
 };
 
 #endif
