@@ -13,7 +13,8 @@
 #include "Utilities/metroUtil.h"
 #include "Utilities/Zmatrix_Scan.h"
 #include "Utilities/State_Scan.h"
-#include "Applications/CommandArgs.h"
+#include "Metropolis/SimulationArgs.h"
+#include "Metropolis/Box.h"
 #include "Metropolis/SerialSim/SerialBox.h"
 #include "Metropolis/ParallelSim/ParallelBox.cuh"
 
@@ -28,7 +29,7 @@ const double kBoltz = 0.00198717;
 
 class Simulation
 {
-	Simulation(CommandArguments args);
+	Simulation(SimulationArguments args);
 	~Simulation();
 	void run();
 };

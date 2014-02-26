@@ -10,7 +10,7 @@
 using namespace std;
 
 //Constructor & Destructor
-Simulation::Simulation(){}
+Simulation::Simulation(SimulationArguments args){}
 Simulation::~Simulation(){}
 
 //Utility
