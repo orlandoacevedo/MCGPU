@@ -9,15 +9,34 @@
 #include "Metropolis/SimulationArgs.h"
 #include "Box.h"
 #include "Metropolis/SerialSim/SerialBox.h"
-#include "Metropolis/SerialSim/SerialCalcs.h"
-#include "Metropolis/ParallelSim/ParallelBox.cuh"
-#include "Metropolis/ParallelSim/ParallelCalcs.h"
+//#include "Metropolis/SerialSim/SerialCalcs.h"
+//#include "Metropolis/ParallelSim/ParallelBox.cuh"
+//#include "Metropolis/ParallelSim/ParallelCalcs.h"
 
 using namespace std;
 
 //Constructor & Destructor
-Simulation::Simulation(SimulationArguments args){}
-Simulation::~Simulation(){}
+Simulation::Simulation(SimulationArguments args)
+{
+	Config_Scan configScan(args.configPath);
+	configScan.readInConfig();
+	box = new SerialBox(configScan);
+}
+
+Simulation::~Simulation()
+{
+	if( box == NULL )
+	{
+		delete box;
+		box = NULL;
+	}
+}
 
 //Utility
-void Simulation::run(){}
+void Simulation::run()
+{
+	Environment *boxEnviro = box.getEnvironment();
+	printf("X: %f\n",boxEnviro.x);
+	printf("Y: %f\n",boxEnviro.y);
+	printf("Z: %f\n",boxEnviro.z);
+}

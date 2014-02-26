@@ -5,29 +5,36 @@
 	Last Changed: February 21, 2014
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-#include <assert.h>
-#include "SerialBox.cuh"
+//#include "Utilities/Opls_Scan.h"
+//#include "Utilities/Zmatrix_Scan.h"
+#include "Metropolis/Box.h"
+#include "SerialBox.h"
 
 using namespace std;
 
 double randomFloat(const double start, const double end){return 0.0;}
 
 //Constructor & Destructor
-SimBox::SimBox(Config_Scan configScan)
+SerialBox::SerialBox(Config_Scan configScan):Box()
 {
-	molecules = NULL;
-	environment = NULL;
+	environment = (Environment*)malloc(sizeof(Environment));
+	memcpy(environment, configScan.getEnviro(), sizeof(Environment));
+	// string oplsPath = configScan.getOplsusaparPath();
+	// Opls_Scan oplsScan (oplsPath);
+	// oplsScan.scanInOpls(oplsPath);
+	// Zmatrix_Scan zMatrixScan (configScan.getZmatrixPath(), &oplsScan);
+	// if (zMatrixScan.scanInZmatrix() == -1)
+	// {
+	// 	fprintf(stderr,"Could not open %s\n", configScan.getZmatrixPath());
+	// 	exit(1);
+	// }
 
 }
 
-SimBox::~SimBox()
+SerialBox::~SerialBox()
 {
-	FREE(molecules);
+	FREE(atoms);
 	FREE(environment);
-	FREE(atomPool);
-	FREE(changedMolecule);
+	FREE(molecules);
+	FREE(energies);
 }
