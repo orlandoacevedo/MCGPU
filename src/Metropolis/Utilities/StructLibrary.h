@@ -19,8 +19,8 @@ struct Atom
 
 struct Environment
 {
-	double x, y, z, cutoff;
-	int numOfMolecules;
+	double x, y, z, cutoff, temp, maxTranslation, maxRotation;
+	int numAtoms;
 	int primaryAtomIndex;
 };
 
@@ -38,7 +38,7 @@ void printAtoms(Atom *atoms, int count);
 void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, int accepts, int rejects, double totalEnergy);
 
 //Environment
-Environment createEnvironment(double x, double y, double z, double maxTrans, double temp, int numAtoms, double cutoff, double maxRot);
+Environment createEnvironment(double x, double y, double z, double maxTranslation, double temp, int numAtoms, double cutoff, double maxRotation);
 
 //Molecule
 Molecule createMolecule(int id, Atom *atoms, int atomCount);
