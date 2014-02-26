@@ -2,7 +2,8 @@
 	Contains all structs and methods for simulation objects (atom,molecule,etc.)
 
 	Author: Nathan Coleman
-	Last Changed: February 19, 2014
+	Last Changed: February 26, 2014 by Albert Wallace
+	Previously Changed: February 19, 2014
 */
 
 #ifndef STRUCTLIBRARY_H
@@ -13,14 +14,17 @@
 //Forward declaration so that each can be used in methods below
 struct Atom
 {
+	std::string name; //this line was added in by albert to make IOUtilities compile
 	double x, y, z, sigma, epsilon, charge;
 	unsigned long id;
+	
 };
 
 struct Environment
 {
 	double x, y, z, cutoff, temp, maxTranslation, maxRotation;
 	int numAtoms;
+	int numOfMolecules; //this line was added in by Albert to make IOUtilities compile
 	int primaryAtomIndex;
 };
 

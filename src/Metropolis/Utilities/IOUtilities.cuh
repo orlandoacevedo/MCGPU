@@ -1,10 +1,10 @@
 /*Intended goal: support read, parse, and extract operations on configuration files to properly initialize 
 *  a simulation environment.
 *
-*Created 19 February 2014. N. Coleman, A. Wallace
+*Created 19 February 2014. Nathan Coleman, Albert Wallace
 */
 //Changes on:
-//	Sun, 23 Feb 2014. 1530PM to 1558PM, 1611 to 1655PM, 1757 to 2031PM
+//	Sun, 23 Feb 2014 (Albert), Wed, 26 Feb (Albert)
 
 #ifndef IOUTILITIES_H
 #define IOUTILITIES_H
@@ -13,7 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-//#include "../../Utilities/metroUtil.h"
+//#include "../../Utilities/metroUtil.h" //we should no longer have to rely on this!
 #include "StructLibrary.h" //this is our goal for inclusion, but for now...
 
 #include <cstdlib>

@@ -1,10 +1,10 @@
 /*Intended goal: support read, parse, and extract operations on configuration files to properly initialize 
 *  a simulation environment.
 * //This file/class will, ideally, replace Config_Scan.cpp & will augment MetroUtil.cpp
-*Created 19 February 2014. N. Coleman, A. Wallace
+*Created 19 February 2014. Nathan Coleman, Albert Wallace
 */
-//Changes on:
-//	Sun, 23 Feb 2014. 1530PM to 1558PM, 1611 to 1655PM, 1757PM to 2031PM
+//Changes made on:
+//	Sun, 23 Feb 2014 (Albert), Wed, 26 Feb (Albert)
 
 
 /*!\file
@@ -17,6 +17,14 @@
 #include <assert.h>
 #include "IOUtilities.cuh"
 #include "errno.h"
+
+
+#define DEFAULT 0
+#define START 1
+#define END 2
+#define OPLS 3
+#define Z_MATRIX 4
+#define GEOM 5
 
 IOUtilities::IOUtilities(string configPath){
 
@@ -271,7 +279,7 @@ void IOUtilities::throwScanError(string message)
 	
 	@param StateFile - takes the location of the state file to be read in
 */
-
+/*
 int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection)
 {
     ifstream inFile;
@@ -388,7 +396,7 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
 	return 0;
 }
 
-
+*/
 
 
 /**
@@ -573,7 +581,7 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
     for (int i = 0; i < numOfMolecules; i++)
     {
     	Molecule currentMol = sourceMoleculeCollection[i];    	
-        for (int j = 0; j < currentMol.numOfAtoms; j++)
+        for (int j = 0; j < currentMol.numAtoms; j++)
         {
         	Atom currentAtom = currentMol.atoms[j];
             outputFile.setf(ios_base::left,ios_base::adjustfield);
