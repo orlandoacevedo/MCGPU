@@ -43,11 +43,10 @@ namespace metrosim
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":c:i:spfdh";
+		const char* short_options = ":i:spfdh";
 
 		// The long options recognized by the program
 		struct option long_options[] = {
-			{"config", 				required_argument, 	0, 	'c'},
 			{"status_interval", 	required_argument, 	0, 	'i'},
 			{"serial", 				no_argument, 		0, 	's'},
 			{"parallel", 			no_argument, 		0, 	'p'},
@@ -66,11 +65,6 @@ namespace metrosim
 					if (long_options[long_index].flag != 0)
 						break;
 					/* Handle long options that are not automatically handled */
-					break;
-				case 'c':	/* config filepath */
-					params->configFlag = true;
-					if (!parseConfigPath(&(params->configPath), optarg))
-						return false;
 					break;
 				case 'i':	/* status interval */
 					params->statusFlag = true;
@@ -125,14 +119,9 @@ namespace metrosim
 			}
 		}
 
-		// All of the non-option arguments have been moved to the back of the
-		// arguments array by the getopt function. We currently do not want
-		// any additional arguments, so raise an error if any are found.
-		if (optind < argc)
-		{
-			fprintf(stderr, "%s: Too many arguments. Not expecting '%s'\n", APP_NAME, argv[optind]);
-			return false;
-		}
+		// Get the count and list of non-option arguments specified by the user.
+		params->argCount = argc - optind;
+		params->argList = &(argv[optind]);
 
 		return true;
 	}
@@ -145,9 +134,21 @@ namespace metrosim
 			return false;
 		}
 
-		if (!(params->configFlag))	/* config argument was not given */
+		if (params->argCount < 1)
 		{
-			fprintf(stderr, "%s: config file must be specified.\n", APP_NAME);
+			fprintf(stderr, "%s: input config file not specified.\n", APP_NAME);
+			return false;
+		}
+		
+		if (params->argCount > 1)
+		{
+			fprintf(stderr, "%s: too many input files specified.\n", APP_NAME);
+			return false;
+		}
+
+		if (params->argList == NULL)
+		{
+			fprintf(stderr, "%s: must specify a valid config file path.\n", APP_NAME);
 			return false;
 		}
 
@@ -184,7 +185,11 @@ namespace metrosim
 			args->precisionMode = PrecisionMode::Double;
 		}
 
-		args->configPath = params->configPath;
+		if (!parseConfigPath(&(args->configPath), params->argList[0]))
+		{
+			return false;
+		}
+
 		args->statusInterval = params->statusInterval;
 
 		return true;
@@ -210,12 +215,19 @@ namespace metrosim
 			return false;
 		}
 
-		// Parse the string to an integer value
-		int interval = strtol(arg, NULL, 10);
+		char* temp;
 
-		if (interval < 0)	/* less than or equal to zero */
+		// Parse the string to an integer value
+		int interval = strtol(arg, &temp, 10);
+
+		if (temp == arg || *temp != '\0') /* could not parse argument */
 		{
 			fprintf(stderr, "%s: status interval must be a valid non-negative integer.\n", APP_NAME);
+			return false;
+		}
+		else if (interval < 0)	/* less than zero */
+		{
+			fprintf(stderr, "%s: status interval must be greater than or equal to zero.\n", APP_NAME);
 			return false;
 		}
 		else if (errno)			/* integer out of range */
