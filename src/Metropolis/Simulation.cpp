@@ -16,11 +16,11 @@
 using namespace std;
 
 //Constructor & Destructor
-Simulation::Simulation(SimulationArguments args)
+Simulation::Simulation(SimulationArgs args)
 {
 	Config_Scan configScan(args.configPath);
 	configScan.readInConfig();
-	box = new SerialBox(configScan);
+	box = (Box*) (new SerialBox(configScan));
 }
 
 Simulation::~Simulation()
@@ -35,8 +35,8 @@ Simulation::~Simulation()
 //Utility
 void Simulation::run()
 {
-	Environment *boxEnviro = box.getEnvironment();
-	printf("X: %f\n",boxEnviro.x);
-	printf("Y: %f\n",boxEnviro.y);
-	printf("Z: %f\n",boxEnviro.z);
+	Environment *boxEnviro = box->getEnvironment();
+	printf("X: %f\n",boxEnviro->x);
+	printf("Y: %f\n",boxEnviro->y);
+	printf("Z: %f\n",boxEnviro->z);
 }

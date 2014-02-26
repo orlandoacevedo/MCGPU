@@ -26,6 +26,7 @@ struct Environment
 	int numAtoms;
 	int numOfMolecules; //this line was added in by Albert to make IOUtilities compile
 	int primaryAtomIndex;
+	int randomseed;
 };
 
 struct Molecule

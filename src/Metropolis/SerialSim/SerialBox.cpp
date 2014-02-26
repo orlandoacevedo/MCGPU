@@ -9,6 +9,8 @@
 //#include "Utilities/Zmatrix_Scan.h"
 #include "Metropolis/Box.h"
 #include "SerialBox.h"
+#include <string.h>
+#include <stdlib.h>
 
 using namespace std;
 
