@@ -11,7 +11,7 @@
 #define METROSIM_COMMAND_PARSING_H
 
 #include <stdlib.h>
-#include "CommandArgs.h"
+#include "Metropolis/SimulationArgs.h"
 
 #ifndef APP_NAME
 #define APP_NAME "metrosim"		///< The executable name of the application.
@@ -79,7 +79,7 @@ namespace metrosim
 	///     values for the simulation to use.
 	/// @returns True if the simulation should be executed; false if the
 	///     simulation should not be executed.
-	bool getCommands(int argc, char** argv, CommandArguments* args);
+	bool getCommands(int argc, char** argv, SimulationArgs* args);
 
 	/// Analyzes the syntax of the command line arguments and fills a parameter
 	/// list with flags and raw values.
@@ -104,7 +104,7 @@ namespace metrosim
 	///     the command line input to the program, the simulation will not
 	///     execute, and instead usage information will be printed to the user
 	///     and the program will terminate. This complies with GNU conventions.
-	bool parseCommandLine(CommandParameters* params, CommandArguments* args);
+	bool parseCommandLine(CommandParameters* params, SimulationArgs* args);
 
 	/// Attempts to parse a config filepath from a command line argument.
 	///
