@@ -55,6 +55,8 @@ class ParallelSim
         GPUSimBox * getGPUSimBox() {return box;};
         GPUSimBox * getdevGPUSimBox() {return box;};
 		void writeChangeToDevice(int changeIdx);
+		double calcSystemEnergy();
+		double calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
 		__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *enviro, double *energies, int segmentSize);
 		__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *enviro, double *energies, int segmentSize);
 		__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *enviro, double *energies, int segmentSize);

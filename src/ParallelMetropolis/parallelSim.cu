@@ -123,7 +123,7 @@ double ParallelSim::calcSystemEnergy()
     return totalEnergy;
 }
 
-double ParallelSim::calcMolecularEnergyContribution(int changeIdx, int startIdx = 0)
+double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx = 0)
 {
 	double totalEnergy = 0;
 	
@@ -139,13 +139,13 @@ double ParallelSim::calcMolecularEnergyContribution(int changeIdx, int startIdx 
 	//using startIdx this way has the potential to waste a significant
 	//amount of GPU resources, look into other methods later.
 	calcInterMolecularEnergy<<<ptrs->numM / BLOCK_SIZE + 1, BLOCK_SIZE>>>
-	(ptrs->moleculesD, changeIdx, ptrs->numM, startIdx, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
+	(ptrs->moleculesD, molIdx, ptrs->numM, startIdx, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
 	
 	//calculate intramolecular energies for changed molecule
-	int numAinM = ptrs->moleculesD[changeIdx].numOfAtoms;
+	int numAinM = ptrs->moleculesD[molIdx].numOfAtoms;
 	int numIntraEnergies = numAinM * (numAinM - 1) / 2;
 	calcIntraMolecularEnergy<<<numIntraEnergies / BLOCK_SIZE + 1, BLOCK_SIZE>>>
-	(ptrs->moleculesD, changeIdx, numIntraEnergies, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
+	(ptrs->moleculesD, molIdx, numIntraEnergies, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
 						
 	cudaMemcpy(ptrs->energiesH, ptrs->energiesD, ptrs->numEnergies * sizeof(double), cudaMemcpyDeviceToHost);
 	

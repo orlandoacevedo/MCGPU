@@ -66,10 +66,10 @@ CxxFlags := -c -g -pg
 
 # Compiler specific flags for the CUDA compiler when generating .o files
 # and when generating .d files for dependency information
-CuFlags := -c -g -arch sm_20
+CuFlags := -c -g -arch sm_35 -rdc true
 
 # Linker specific flags when the compiler is linking the executable
-LFlags := -g -pg
+LFlags := -g -pg -lcudadevrt
 
 ###################
 # Program Outputs #
