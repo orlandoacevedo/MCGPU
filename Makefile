@@ -69,7 +69,10 @@ CxxFlags := -c -g -pg
 CuFlags := -c -g -arch sm_35 -rdc true
 
 # Linker specific flags when the compiler is linking the executable
-LFlags := -g -pg -lcudadevrt
+LFlags := -g -pg
+
+# Linker specific flags for the CUDA compiler
+LCuFlags := -g -pf -lcudadevrt
 
 ###################
 # Program Outputs #
@@ -205,7 +208,7 @@ $(1)_OBJS := $$(filter %.o,$$($(1)_LIST))
 $(1)_OBJS += $$(foreach folder,$$($(1)_MODULE_LIST),$(find-objects))
 
 $(1): $$(sort $$($(1)_OBJS))
-	$(3) $(LFlags) $$^ -o $(BinDir)/$$@
+	$(3) $(4) $$^ -o $(BinDir)/$$@
 	
 endef
 
@@ -240,9 +243,9 @@ remove :
 # by a function that takes the program name, the program modules list, and
 # the linker as arguments.
 
-$(eval $(call program-template,$(LinearSim),$(LinearSimModules), $(CC)))
+$(eval $(call program-template,$(LinearSim),$(LinearSimModules), $(CC), $(LFlags)))
 
-$(eval $(call program-template,$(ParallelSim),$(ParallelSimModules), $(NVCC)))
+$(eval $(call program-template,$(ParallelSim),$(ParallelSimModules), $(NVCC), $(LCuFlags)))
 
 # The unit testing program
 
