@@ -6,37 +6,30 @@
 	Last Changed: February 21, 2014
 */
 
-#ifndef GPUSIMBOX_H
-#define GPUSIMBOX_H
+#ifndef PARALLELBOX_H
+#define PARALLELBOX_H
 
-#include "Utilities/Opls_Scan.h"
 #include "Utilities/Config_Scan.h"
-#include "Utilities/metroUtil.h"
-#include "Utilities/Zmatrix_Scan.h"
-#include "Utilities/State_Scan.h"
-#include "Metropolis/SerialSim/SerialBox.h"
+#include "Metropolis/Box.h"
 
 //DeviceMolecule struct needs to be moved to same location as other structs
-class GPUSimBox : SimBox
+class ParallelBox : Box
 {
 	private:
-		size_t atomSize;
-		size_t moleculeSize;
-		size_t environmentSize;
+		Atom *atomsD;
+		Environment *environmentD;
+		Molecules *moleculesD, *transferMoleculesD;
+		double *energiesD;
+
 
 	public:
 		//Constructor & Destructor
-		GPUSimBox(Config_Scan configScan);
-		~GPUSimBox();
+		ParallelBox(Config_Scan configScan);
+		~ParallelBox();
 
 		//Utility
 		int copyBoxToHost();
-		int copyBoxToDevice();		
+		int copyBoxToDevice();	
 };
-
-//Cuda Necessities
-void cudaAssert(const cudaError err, const char *file, const int line);
-#define cudaErrorCheck(call) { cudaAssert(call,__FILE__,__LINE__); }
-#define cudaFREE(ptr) if(ptr!=NULL) { cudaFree(ptr);ptr=NULL;}
 
 #endif

@@ -1,10 +1,10 @@
 /*Intended goal: support read, parse, and extract operations on configuration files to properly initialize 
 *  a simulation environment.
 *
-*Created 19 February 2014. N. Coleman, A. Wallace
+*Created 19 February 2014. Nathan Coleman, Albert Wallace
 */
 //Changes on:
-//	Sun, 23 Feb 2014. 1530PM to 1558PM, 1611 to 1655PM, 1757 to 2031PM
+//	Sun, 23 Feb 2014 (Albert), Wed, 26 Feb (Albert)
 
 #ifndef IOUTILITIES_H
 #define IOUTILITIES_H
@@ -12,8 +12,9 @@
 
 #include <iostream>
 #include <fstream>
-#include "../../Utilities/metroUtil.h"
-//#include "StructLibrary.cuh" //this is our goal for inclusion, but for now...
+#include <sstream>
+//#include "../../Utilities/metroUtil.h" //we should no longer have to rely on this!
+#include "StructLibrary.h" //this is our goal for inclusion, but for now...
 
 #include <cstdlib>
 
@@ -42,8 +43,8 @@ struct UtilitiesInfo
 class IOUtilities
 {	
 	public:
-		IOUtilities(string configPath); //this should be the initializer
-		void readInConfig(); //this should ideally be merged into the constructor
+		IOUtilities(string configPath); //this should be the constructor, which does very little on its own
+		void readInConfig(); //this should ideally be merged into the constructor, but run separately, everything is okay
 		int ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection);
 	 	//int ReadStateFile(string StateFile) { return ReadStateFile(StateFile.c_str());}; //preference: do not use this
 	 	int WriteStateFile(char const* StateFile, Environment * sourceEnvironment, Molecule * sourceMoleculeCollection); 	
@@ -52,7 +53,7 @@ class IOUtilities
 	 	int writePDB(char const* pdbFile, Environment sourceEnvironment, Molecule * sourceMoleculeCollection); //this is a new version, possibly required for this implementation with IOUtilities
 	 	UtilitiesInfo filePathsEtc;
 	 	
-	 	unsigned int getrandomseed() {return filePathsEtc.currentEnvironment.randomseed;}; //this random seed isn't so random; it's found within the configuration file.
+	 	//unsigned int getrandomseed() {return filePathsEtc.currentEnvironment.randomseed;}; //this random seed isn't so random; it's found within the configuration file.
 	 			//as you can guess, the constructor for this class stores that very info in the Environment struct. For sake of safety, we'll leave it there.
 	 	
 	 private:

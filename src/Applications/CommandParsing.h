@@ -27,9 +27,6 @@ namespace metrosim
 	/// are added.
 	struct CommandParameters
 	{
-		/// The filepath that points to the configuration file to execute.
-		char* configPath;
-
 		/// The number of simulation steps between status updates.
 		/// @note This interval must be a non-negative number, and specifying
 		///     an interval of 0 means status updates will occur only
@@ -39,8 +36,11 @@ namespace metrosim
 		/// Declares whether the help option was specified.
 		bool helpFlag;
 
-		/// Declares whether the configuration option was specified.
-		bool configFlag;
+		/// The number of non-option arguments given by the user.
+		int argCount;
+
+		/// The list of non-option arguments given by the user.
+		char** argList;
 
 		/// Declares whether the status option was specified.
 		bool statusFlag;
@@ -58,10 +58,10 @@ namespace metrosim
 		bool doubleFlag;
 
 		/// Default constructor
-		CommandParameters() :	configPath(NULL), 
-								statusInterval(0),
+		CommandParameters() :	statusInterval(0),
+								argCount(0),
+								argList(NULL),
 								helpFlag(false),
-								configFlag(false), 
 								statusFlag(false), 
 								serialFlag(false),
 								parallelFlag(false), 

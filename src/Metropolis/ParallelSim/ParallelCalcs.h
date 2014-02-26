@@ -7,8 +7,8 @@
 #ifndef PARALLELCALCS_H
 #define PARALLELCALCS_H
 
-#include "Metropolis/Utilities/StructLibrary.h"
+#include "Metropolis/Box.h"
 
-double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
+double calcMolecularEnergyContribution(Box *box, int molIdx, int startIdx = 0);
 
 #endif
