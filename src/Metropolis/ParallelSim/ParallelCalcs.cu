@@ -12,7 +12,39 @@
 
 using namespace std;
 
-void calcCont(Molecule *mol){}
+double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx = 0)
+{
+	double totalEnergy = 0;
+	
+	//initialize energies to 0
+	for (int i = 0; i < numEnergies; i++)
+	{
+		ptrs->energiesH[i] = 0;
+	}
+	
+	cudaMemcpy(ptrs->energiesD, ptrs->energiesH, ptrs->numEnergies * sizeof(double), cudaMemcpyHostToDevice);
+	
+	//calculate intermolecular energies (cutoff check for each molecule)
+	//using startIdx this way has the potential to waste a significant
+	//amount of GPU resources, look into other methods later.
+	calcInterMolecularEnergy<<<ptrs->numM / BLOCK_SIZE + 1, BLOCK_SIZE>>>
+	(ptrs->moleculesD, molIdx, ptrs->numM, startIdx, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
+	
+	//calculate intramolecular energies for changed molecule
+	int numAinM = ptrs->moleculesD[molIdx].numOfAtoms;
+	int numIntraEnergies = numAinM * (numAinM - 1) / 2;
+	calcIntraMolecularEnergy<<<numIntraEnergies / BLOCK_SIZE + 1, BLOCK_SIZE>>>
+	(ptrs->moleculesD, molIdx, numIntraEnergies, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
+						
+	cudaMemcpy(ptrs->energiesH, ptrs->energiesD, ptrs->numEnergies * sizeof(double), cudaMemcpyDeviceToHost);
+	
+	for (i = 0; i < numEnergies; i++)
+	{
+		totalEnergy += energiesH[i];
+	}
+	
+	return totalEnergy;
+}
 
 __global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *environment, double *energies, int segmentSize)
 {

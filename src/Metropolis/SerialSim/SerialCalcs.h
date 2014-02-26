@@ -9,16 +9,13 @@
 
 #include "Metropolis/Utilities/StructLibrary.h"
 
-void calcContribution(Molecule *mol);
-
-void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *environment, double *energies, int segmentSize);
-void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *environment, double *energies, int segmentSize);
-void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *environment, double *energies, int segmentSize);
-double calcLJ(Atom atom1, Atom atom2, double r2);
-double calcCharge(double charge1, double charge2, double r);
-double makePeriodic(double x, double box);
 double calcBlending(double d1, double d2);
-int getXFromIndex(int index);
-int getYFromIndex(int x, int index);
+double calcCharge(double charge1, double charge2, double r);
+double calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *environment);
+double calc_lj(Atom atom1, Atom atom2, double r2);
+double calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx = 0);
+double calcSystemEnergy(Molecule *molecules, Environment *environment);
+double getFValue(int atom1, int atom2, int **table1);
+double makePeriodic(double x, double box);
 
 #endif

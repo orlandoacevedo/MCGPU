@@ -14,11 +14,13 @@
 struct Atom
 {
 	double x, y, z, sigma, epsilon, charge;
+	unsigned long id;
 };
 
 struct Environment
 {
 	double x, y, z, cutoff;
+	int numOfMolecules;
 	int primaryAtomIndex;
 };
 

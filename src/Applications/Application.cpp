@@ -10,12 +10,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "Application.h"
-#include "CommandArgs.h"
+#include "Metropolis/SimulationArgs.h"
 #include "CommandParsing.h"
 
 int metrosim::run(int argc, char** argv)
 {
-	CommandArguments args;
+	SimulationArgs args;
 	if (!getCommands(argc, argv, &args))
 	{
 		exit(EXIT_FAILURE);

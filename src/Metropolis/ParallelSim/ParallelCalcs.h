@@ -9,6 +9,6 @@
 
 #include "Metropolis/Utilities/StructLibrary.h"
 
-void calcCont(Molecule *mol);
+double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
 
 #endif

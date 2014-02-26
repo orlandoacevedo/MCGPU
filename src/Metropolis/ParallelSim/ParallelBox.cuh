@@ -15,7 +15,6 @@
 #include "Utilities/Zmatrix_Scan.h"
 #include "Utilities/State_Scan.h"
 #include "Metropolis/SerialSim/SerialBox.h"
-#include "Metropolis/Utilities/ParallelUtil.cuh"
 
 //DeviceMolecule struct needs to be moved to same location as other structs
 class GPUSimBox : SimBox

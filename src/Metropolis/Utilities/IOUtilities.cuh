@@ -32,6 +32,11 @@ struct UtilitiesInfo
     string stateOutputPath; //The path where we write the state output files after simulation
     string pdbOutputPath; //The path where we write the pdb output files after simulation
     unsigned int cutoff; //The nonbonded cutoff distance.
+    
+    UtilitiesInfo() //constructor for the structure
+    {
+    memset(&currentEnvironment,0,sizeof(Environment)); //just to be safe, zero out this area. (done in original code)
+    }
 };    
 
 class IOUtilities

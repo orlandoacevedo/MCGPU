@@ -13,12 +13,12 @@
 #include <getopt.h>
 #include <errno.h>
 #include "CommandParsing.h"
-#include "CommandArgs.h"
+#include "Metropolis/SimulationArgs.h"
 
 namespace metrosim
 {
 
-	bool getCommands(int argc, char** argv, CommandArguments* args)
+	bool getCommands(int argc, char** argv, SimulationArgs* args)
 	{
 		CommandParameters params;
 		if (!readCommandLine(argc, argv, &params))
@@ -137,7 +137,7 @@ namespace metrosim
 		return true;
 	}
 
-	bool parseCommandLine(CommandParameters* params, CommandArguments* args)
+	bool parseCommandLine(CommandParameters* params, SimulationArgs* args)
 	{
 		if (params->helpFlag)		/* print help screen and exit */
 		{
