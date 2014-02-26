@@ -13,7 +13,9 @@
 #include "Utilities/metroUtil.h"
 #include "Utilities/Zmatrix_Scan.h"
 #include "Utilities/State_Scan.h"
-#include "SimBox.h"
+#include "Applications/CommandArgs.h"
+#include "Metropolis/SerialSim/SerialBox.h"
+#include "Metropolis/ParallelSim/ParallelBox.cuh"
 
 #define THREADS_PER_BLOCK 128
 #define PI 3.14159265
@@ -26,7 +28,7 @@ const double kBoltz = 0.00198717;
 
 class Simulation
 {
-	Simulation();
+	Simulation(CommandArguments args);
 	~Simulation();
 	void run();
 };

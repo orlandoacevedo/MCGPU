@@ -5,7 +5,7 @@
 	Last Changed: February 21, 2014
 */
 
-#include "Simulation.cuh"
+#include "Simulation.h"
 
 using namespace std;
 

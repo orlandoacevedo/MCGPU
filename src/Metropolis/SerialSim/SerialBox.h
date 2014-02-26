@@ -15,7 +15,6 @@
 #include "Utilities/Zmatrix_Scan.h"
 #include "Utilities/State_Scan.h"
 #include "Metropolis/Utilities/IOUtilities.cuh"
-#include "Metropolis/Utilities/SerialUtil.h"
 
 class SimBox
 {
