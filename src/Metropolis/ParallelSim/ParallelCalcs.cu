@@ -12,7 +12,7 @@
 
 using namespace std;
 
-double calcMolecularEnergyContribution(int molIdx, int startIdx = 0)
+double calcMolecularEnergyContribution(int molIdx, int startIdx)
 {
 	double totalEnergy = 0;
 	
