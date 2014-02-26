@@ -111,7 +111,7 @@ void IOUtilities::readInConfig()
 					case 6:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.temperature = atof(line.c_str());
+							filePathsEtc.currentEnvironment.temp = atof(line.c_str());
 						}
 						else
 						{
@@ -288,7 +288,7 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
     //read and check the environment
     if (inFile.is_open())
     {
-      inFile>>tmpenv.x>>tmpenv.y>>tmpenv.z>>tmpenv.maxTranslation>>tmpenv.numOfAtoms>>tmpenv.temperature>>tmpenv.cutoff;
+      inFile>>tmpenv.x>>tmpenv.y>>tmpenv.z>>tmpenv.maxTranslation>>tmpenv.numOfAtoms>>tmpenv.temp>>tmpenv.cutoff;
     }
     
     if (memcmp(&tmpenv,destinationEnvironment,sizeof(Environment))!=0)
@@ -298,7 +298,7 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
        ss<<"y "<<tmpenv.y<<" "<<destinationEnvironment->y<<endl;
        ss<<"z "<<tmpenv.z<<" "<<destinationEnvironment->z<<endl;
        ss<<"numOfAtoms "<<tmpenv.numOfAtoms<<" "<<destinationEnvironment->numOfAtoms<<endl;
-       ss<<"temperature "<<tmpenv.temperature<<" "<<destinationEnvironment->temperature<<endl;
+       ss<<"temperature "<<tmpenv.temp<<" "<<destinationEnvironment->temp<<endl;
        ss<<"cutoff "<<tmpenv.cutoff<<" "<<destinationEnvironment->cutoff<<endl;
        ss<<ss.str()<<endl; writeToLog(ss);      
     } 
