@@ -20,7 +20,7 @@ namespace metrosim
 
 	bool getCommands(int argc, char** argv, SimulationArgs* args)
 	{
-		CommandParameters params;
+		CommandParameters params = CommandParameters();
 		if (!readCommandLine(argc, argv, &params))
 		{
 			return false;	/* Incorrect syntax for command line input */
@@ -242,7 +242,7 @@ namespace metrosim
 
 	void printHelpScreen()
 	{
-		const char* usage = "Usage  : %s -c config_file [-i stat_interval] [-sp] [-fd] [-h]\n";
+		const char* usage = "Usage  : <config_file> [-i interval] [-sp] [-fd] [-h]\n";
 		fprintf(stdout, usage, APP_NAME);
 	}
 }
