@@ -2,12 +2,13 @@
 #define BOX_H
 
 #include "Metropolis/Utilities/StructLibrary.h"
+#include <stdlib.h>
 
 #define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
 
 class Box
 {
-	private:
+	protected:
 		Atom *atoms;
 		Environment *environment;
 		Molecule *molecules;
@@ -21,10 +22,10 @@ class Box
 		Environment *getEnvironment(){return environment;};
 		Molecule *getMolecules(){return molecules;};
 		double *getEnergies(){return energies;};
-		int *getAtomCount(){return atomCount;};
-		int *getMoleculeCount(){return moleculeCount;};
-		int *getEnergyCount(){return energyCount;};
-		int *getMaxMolSize(){return maxMolSize;};
+		int getAtomCount(){return atomCount;};
+		int getMoleculeCount(){return moleculeCount;};
+		int getEnergyCount(){return energyCount;};
+		int getMaxMolSize(){return maxMolSize;};
 };
 
 #endif

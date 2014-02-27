@@ -9,10 +9,10 @@
 #ifndef SERIALBOX_H
 #define SERIALBOX_H
 
-#include "Utilities/Config_Scan.h"
+#include "Metropolis/Utilities/ConfigScanTemp.h"
 #include "Metropolis/Box.h"
 
-class SimBox : Box
+class SerialBox : Box
 {
 	public:
 		//Constructor & Destructor

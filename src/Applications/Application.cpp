@@ -12,17 +12,21 @@
 #include "Application.h"
 #include "Metropolis/SimulationArgs.h"
 #include "CommandParsing.h"
+#include "Metropolis/Simulation.h"
 
 int metrosim::run(int argc, char** argv)
 {
-	SimulationArgs args;
+	SimulationArgs args = SimulationArgs();
 	if (!getCommands(argc, argv, &args))
 	{
 		exit(EXIT_FAILURE);
 	}
 
-	/* execute the application and run the simulation */
-	fprintf(stdout, "Running simulation...\n");
+	fprintf(stdout, "Running simulation...\n\n");
+
+	Simulation* sim = new Simulation(args);
+	sim->run();
+	delete sim;
 
 	exit(EXIT_SUCCESS);
 }
