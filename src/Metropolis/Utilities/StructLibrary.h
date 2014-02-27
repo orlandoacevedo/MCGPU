@@ -28,6 +28,21 @@ struct Environment
 	int primaryAtomIndex;
 
 	int randomseed; //--Albert
+	
+	Environment() //constructor/initialize all values to 0 or some other default, where applicable
+	{
+		x = 0.0;
+		y = 0.0;
+		z = 0.0;
+		cutoff = 0.0;
+		temp = 0.0;
+		maxTranslation = 0.0;
+		maxRotation = 0.0;
+		numAtoms = 0;
+		numOfMolecules = 0;
+		primaryAtomIndex = 0;
+		randomseed = 0;
+	}
 
 };
 
