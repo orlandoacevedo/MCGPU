@@ -49,7 +49,7 @@ namespace metrosim
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:spfdh";
+		const char* short_options = ":i:spfdhq";
 
 		// The long options recognized by the program
 		struct option long_options[] = {
@@ -59,6 +59,7 @@ namespace metrosim
 			{"single_precision",  	no_argument, 		0, 	'f'},
 			{"double_precision", 	no_argument, 		0, 	'd'},
 			{"help", 				no_argument, 		0, 	'h'},
+			{"query_devices",		no_argument,		0,	'q'},
 			{0, 0, 0, 0} };
 
 		// Iterate over all command-line arguments and match any option entries.
@@ -91,6 +92,9 @@ namespace metrosim
 					break;
 				case 'h':	/* print help */
 					params->helpFlag = true;
+					break;
+				case 'q':	/* print device information */
+					params->queryFlag = true;
 					break;
 				case ':':	/* missing argument */
 					if (sizeof(argv[optind-1]) > 2 && argv[optind-1][0] == '-' && argv[optind-1][1] == '-')
@@ -138,6 +142,13 @@ namespace metrosim
 		if (params->helpFlag)		/* print help screen and exit */
 		{
 			printHelpScreen();
+			return false;
+		}
+
+		if (params->queryFlag)		/* query device information and print */
+		{
+			// TODO: insert query print code here.
+			fprintf(stdout, "%s: application does not support querying at this time.\n", APP_NAME);
 			return false;
 		}
 

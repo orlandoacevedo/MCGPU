@@ -17,7 +17,7 @@ double calcMolecularEnergyContribution(int molIdx, int startIdx)
 	double totalEnergy = 0;
 	
 	//initialize energies to 0
-	for (int i = 0; i < numEnergies; i++)
+	for (int i = 0; i < ptrs->numEnergies; i++)
 	{
 		ptrs->energiesH[i] = 0;
 	}
@@ -46,11 +46,24 @@ double calcMolecularEnergyContribution(int molIdx, int startIdx)
 	return totalEnergy;
 }
 
-__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *environment, double *energies, int segmentSize)
+double ParallelSim::calcSystemEnergy()
+{
+	double totalEnergy = 0;
+
+	//for each molecule
+	for (int mol = 0; mol < ptrs->numM; mol++)
+	{
+		totalEnergy += calcMolecularEnergyContribution(mol, mol);
+	}
+	
+    return totalEnergy;
+}
+
+__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, int startIdx, Environment *environment, double *energies, int segmentSize)
 {
 	int otherMol = blockIdx.x * blockDim.x + threadIdx.x;
 	
-	if (otherMol < numM && otherMol != currentMol)
+	if (otherMol >= startIdx && otherMol < numM && otherMol != currentMol)
 	{
 		Atom atom1 = molecules[currentMol].atoms[environment->primaryAtomIndex];
 		Atom atom2 = molecules[otherMol].atoms[environment->primaryAtomIndex];
@@ -68,7 +81,7 @@ __global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, in
 		{
 			//calculate intermolecular energies
 			calcInterAtomicEnergy
-			<<<molecules[currentMol].numAtoms, molecules[otherMol].numAtoms>>>
+			<<<molecules[currentMol].numOfAtoms, molecules[otherMol].numOfAtoms>>>
 			(molecules, currentMol, otherMol, environment, energies, segmentSize);
 		}
 	}
@@ -78,7 +91,6 @@ __global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int o
 {
 	Atom atom1 = molecules[currentMol].atoms[blockIdx.x],
 		 atom2 = molecules[otherMol].atoms[threadIdx.x];
-	//energyIdx will need to take into account different mol sizes (in atoms)
 	int energyIdx = otherMol * segmentSize + blockIdx.x * blockDim.x + threadIdx.x;
 	
 	if (!(currentMol == otherMol && threadIdx.x == blockIdx.x) && atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
@@ -98,12 +110,9 @@ __global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int o
 		double r2 = (deltaX * deltaX) +
 			 (deltaY * deltaY) + 
 			 (deltaZ * deltaZ);
-			
-		//gets the fValue if in the same molecule
-		double fvalue = 1.0;
 		
-		totalEnergy += calc_lj(atom1, atom2, r2) * fvalue;
-		totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2)) * fvalue;
+		totalEnergy += calc_lj(atom1, atom2, r2);
+		totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
 		
 		energies[energyIdx] = totalEnergy;
 	}
@@ -165,7 +174,6 @@ __device__ double calc_lj(Atom atom1, Atom atom2, double r2)
     	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
     }
-
 }
 
 __device__ double calcCharge(double charge1, double charge2, double r)

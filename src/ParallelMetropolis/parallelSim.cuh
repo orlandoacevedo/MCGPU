@@ -35,6 +35,16 @@ struct SimPointers
 	double *energiesH, *energiesD;
 };
 
+__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, int startIdx, Environment *enviro, double *energies, int segmentSize);
+__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *enviro, double *energies, int segmentSize);
+__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *enviro, double *energies, int segmentSize);
+__device__ double calc_lj(Atom atom1, Atom atom2, double r2);
+__device__ double calcCharge(double charge1, double charge2, double r);
+__device__ double makePeriodic(double x, double box);
+__device__ double calcBlending(double d1, double d2);
+__device__ int getXFromIndex(int idx);
+__device__ int getYFromIndex(int x, int idx);
+		
 class ParallelSim
 {
     private:
@@ -57,15 +67,6 @@ class ParallelSim
 		void writeChangeToDevice(int changeIdx);
 		double calcSystemEnergy();
 		double calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
-		__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *enviro, double *energies, int segmentSize);
-		__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *enviro, double *energies, int segmentSize);
-		__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *enviro, double *energies, int segmentSize);
-		__device__ double calc_lj(Atom atom1, Atom atom2, double r2);
-		__device__ double calcCharge(double charge1, double charge2, double r);
-		__device__ double makePeriodic(double x, double box);
-		__device__ double calcBlending(double d1, double d2);
-		__device__ int getXFromIndex(int idx);
-		__device__ int getYFromIndex(int x, int idx);
         void runParallel(int steps);
         /*double calcEnergyWrapper(GPUSimBox *box);
         double calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules);*/
