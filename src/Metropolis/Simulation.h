@@ -10,14 +10,8 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-//#include "Metropolis/SimulationArgs.h" // AlbertIncludes
-#include "SimulationArgs.h" // AlbertIncludes
+#include "SimulationArgs.h"
 #include "Box.h"
-#include "SerialSim/SerialBox.cpp" // AlbertIncludes
-//#include "Metropolis/SerialSim/SerialBox.h" // AlbertIncludes
-// #include "Metropolis/SerialSim/SerialCalcs.h"
-// #include "Metropolis/ParallelSim/ParallelBox.cuh"
-// #include "Metropolis/ParallelSim/ParallelCalcs.h"
 
 const double kBoltz = 0.00198717;
 

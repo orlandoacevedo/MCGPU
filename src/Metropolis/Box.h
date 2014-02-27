@@ -10,9 +10,8 @@
 #ifndef BOX_H
 #define BOX_H
 
-//#include "Metropolis/Utilities/StructLibrary.h" // AlbertIncludes
-#include "Utilities/StructLibrary.cpp" //AlbertIncludes
 #include <stdlib.h>
+#include "Utilities/StructLibrary.h"
 
 #define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
 

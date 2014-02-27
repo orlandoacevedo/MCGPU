@@ -6,32 +6,26 @@
 	
 	-> February 26, by Albert Wallace
 */
-#ifndef SIMULATION_CPP
-#define SIMULATION_CPP
-
+#include <stdio.h>
 
 #include "Simulation.h"
-//#include "Metropolis/SimulationArgs.h" // AlbertIncludes
+#include "SimulationArgs.h"
 #include "Box.h"
-#include "SimulationArgs.h" // AlbertIncludes
-#include "SerialSim/SerialBox.cpp" // AlbertIncludes
-//#include "Metropolis/SerialSim/SerialBox.h" //AlbertIncludes
-//#include "Metropolis/SerialSim/SerialCalcs.h"
-//#include "Metropolis/ParallelSim/ParallelBox.cuh"
-//#include "Metropolis/ParallelSim/ParallelCalcs.h"
+#include "SerialSim/SerialBox.h"
+#include "Utilities/IOUtilities.h"
 
 
 //Constructor & Destructor
 Simulation::Simulation(SimulationArgs args)
 {
-	IOUtilities configScan(args.configPath);
+	IOUtilities configScan = IOUtilities(args.configPath);
 	configScan.readInConfig();
-	box = (Box*) (new SerialBox(configScan));
+	box = new SerialBox(configScan);
 }
 
 Simulation::~Simulation()
 {
-	if( box == NULL )
+	if(box != NULL)
 	{
 		delete box;
 		box = NULL;
@@ -46,5 +40,3 @@ void Simulation::run()
 	printf("Y: %f\n",boxEnviro->y);
 	printf("Z: %f\n",boxEnviro->z);
 }
-
-#endif

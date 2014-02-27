@@ -14,12 +14,8 @@
 #ifndef IOUTILITIES_H
 #define IOUTILITIES_H
 
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include "StructLibrary.cpp" //this is our goal for inclusion, but for now...
-#include <cstdlib>
+#include <string>
+#include "StructLibrary.h" //this is our goal for inclusion, but for now...
 
 //using namespace std;
 
@@ -78,5 +74,9 @@ class IOUtilities
 		void throwScanError(std::string message);
 		bool readInConfigAlreadyDone;
 };
+
+void writeToLog(std::string text,int stamp);
+void writeToLog(std::stringstream& ss, int stamp);
+
 #endif
 

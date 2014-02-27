@@ -10,16 +10,20 @@
 		->Wed, 26 Feb (Albert)
 */
 /*Based on work from earlier sessions by Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo*/
- 
-#ifndef IOUTILITIES_CPP
-#define IOUTILITIES_CPP
- 
+
 //_________________________________________________________________________________________________________________
 //  INCLUDE statements
 //_________________________________________________________________________________________________________________
 #include <assert.h>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <stdlib.h>
+#include <errno.h>
+
+#include "StructLibrary.h"
 #include "IOUtilities.h"
-#include "errno.h"
 
 //_________________________________________________________________________________________________________________
 //  DEFINE statements
@@ -45,7 +49,7 @@
 *@params: configPath: the path to the main configuration file, which itself points to other specialized configuration files
 * 	and contains other bits of information to set up a proper Environment for simulation.
 */
-IOUtilities::IOUtilities(string configPath){
+IOUtilities::IOUtilities(std::string configPath){
 
 
 	//UtilitiesInfo filePathsEtc; //all the variables used for this class are stuck in this struct for easy, yet unsafe, access
@@ -79,7 +83,7 @@ void IOUtilities::readInConfig()
 		}
 	else
 	{
-		ifstream configscanner(filePathsEtc->configPath.c_str());
+		std::ifstream configscanner(filePathsEtc->configPath.c_str());
 		if (! configscanner.is_open())
 		{
 			throwScanError("Configuration file failed to open.");
@@ -87,11 +91,11 @@ void IOUtilities::readInConfig()
 		}
 		else
 		{
-			string line;
+			std::string line;
 			int currentLine = 1;
 			while (configscanner.good())
 			{
-				getline(configscanner,line);
+				std::getline(configscanner,line);
 			
 				//assigns attributes based on line number
 				//current line = actual line in the configuration file
@@ -282,10 +286,10 @@ void IOUtilities::readInConfig()
 	}
 }
 
-void IOUtilities::throwScanError(string message)
+void IOUtilities::throwScanError(std::string message)
 {
 
-	cerr << endl << message << endl << "	Error Number: " << errno << endl <<endl;
+	std::cerr << std::endl << message << std::endl << "	Error Number: " << errno << std::endl << std::endl;
 
 	return;
 }
@@ -591,10 +595,10 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
 {
 	//molecules = (Molecule *)malloc(sizeof(Molecule) * enviro->numOfMolecules);
 	
-    ofstream outputFile;
+    std::ofstream outputFile;
     outputFile.open(pdbFile);
     int numOfMolecules=sourceEnvironment.numOfMolecules;
-    outputFile << "REMARK Created by MCGPU" << endl;
+    outputFile << "REMARK Created by MCGPU" << std::endl;
     //int atomIndex = 0;
     for (int i = 0; i < numOfMolecules; i++)
     {
@@ -602,10 +606,10 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
         for (int j = 0; j < currentMol.numAtoms; j++)
         {
         	Atom currentAtom = currentMol.atoms[j];
-            outputFile.setf(ios_base::left,ios_base::adjustfield);
+            outputFile.setf(std::ios_base::left,std::ios_base::adjustfield);
             outputFile.width(6);
             outputFile << "ATOM";
-            outputFile.setf(ios_base::right,ios_base::adjustfield);
+            outputFile.setf(std::ios_base::right,std::ios_base::adjustfield);
             outputFile.width(5);
             outputFile << currentAtom.id + 1;
             outputFile.width(3); // change from 5
@@ -614,18 +618,18 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
             outputFile << "UNK";
             outputFile.width(6);
             outputFile << i + 1;
-            outputFile.setf(ios_base::fixed, ios_base::floatfield);
+            outputFile.setf(std::ios_base::fixed, std::ios_base::floatfield);
             outputFile.precision(3);
             outputFile.width(12);
             outputFile << currentAtom.x;
             outputFile.width(8);
             outputFile << currentAtom.y;
             outputFile.width(8);
-            outputFile << currentAtom.z << endl;
+            outputFile << currentAtom.z << std::endl;
         }
-        outputFile << "TER" << endl;
+        outputFile << "TER" << std::endl;
     }
-    outputFile << "END" << endl;
+    outputFile << "END" << std::endl;
     outputFile.close();
 
 	return 0;
@@ -637,37 +641,37 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
 //said string contains almost all of the text you wish to be written to the file.
 //opening and closing of the file will be done on the fly, and should be guaranteed once this method reaches its end.
 //If stringstream is needed, you may call the overloaded version below, which will still call this version of the method
-void writeToLog(string text,int stamp){
-    string filename = "OutputLog";
-	 ofstream logFile;
-	 logFile.open(filename.c_str(),ios::out|ios::app);
+void writeToLog(std::string text,int stamp){
+    std::string filename = "OutputLog";
+	std::ofstream logFile;
+	logFile.open(filename.c_str(),std::ios::out|std::ios::app);
 	 
-	 string hash ="";
-	 time_t current_time;
+	std::string hash ="";
+	time_t current_time;
     struct tm * time_info;
     char timeString[9];  // space for "HH:MM:SS\0"
 	 
 	 switch(stamp){
 	     case START:
 		      //The start of a new simulation
-		      logFile << "\n\n\n\n\n\n" << endl;
-				logFile << "======================================================================"<<endl;
+		      logFile << "\n\n\n\n\n\n" << std::endl;
+				logFile << "======================================================================"<< std::endl;
 				logFile << "                       Starting Simulation: ";				
             time(&current_time);
             time_info = localtime(&current_time);
             strftime(timeString, sizeof(timeString), "%H:%M:%S", time_info);
-				logFile << timeString << endl;
-				logFile << "----------------------------------------------------------------------"<<endl;
+				logFile << timeString << std::endl;
+				logFile << "----------------------------------------------------------------------"<< std::endl;
 				break;
 			case END: 
 			   //The end of a running simulation
-				logFile << "----------------------------------------------------------------------"<<endl;
+				logFile << "----------------------------------------------------------------------"<< std::endl;
 				logFile << "                       Ending Simulation: ";
             time(&current_time);
             time_info = localtime(&current_time);
             strftime(timeString, sizeof(timeString), "%H:%M:%S", time_info);
-				logFile << timeString << endl;
-				logFile << "======================================================================"<<endl;
+				logFile << timeString << std::endl;
+				logFile << "======================================================================"<< std::endl;
 				break;		
 	     case OPLS:
 		      //OPLS error
@@ -685,7 +689,7 @@ void writeToLog(string text,int stamp){
 	         logFile << "";
 		      break;		
 	 }
-	 logFile << text << endl;
+	 logFile << text << std::endl;
 	 logFile.close();	 
 }
 
@@ -694,10 +698,8 @@ void writeToLog(string text,int stamp){
 //this overloaded version allows for a stringstream, instead of a normal string, to be input.
 //said string contains almost all of the text you wish to be written to the file.
 //opening and closing of the file will be done on the fly, and should be guaranteed once this method reaches its end.
-void writeToLog(stringstream& ss, int stamp ){
+void writeToLog(std::stringstream& ss, int stamp ){
     writeToLog(ss.str(),stamp);
 	 ss.str(""); // clears the string steam...
 	 ss.clear();
 }
-
-#endif

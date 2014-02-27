@@ -5,22 +5,15 @@
 ///
 /// @author Tavis Maclellan
 /// @date Created 2/23/2014
-/// @date Updated 2/26/2014
-
-#ifndef METROSIM_APPLICATION_CPP
-#define METROSIM_APPLICATION_CPP
+/// @date Updated 2/27/2014
 
 #include <stdlib.h>
 #include <stdio.h>
 
-
 #include "Application.h"
-//#include "Metropolis/SimulationArgs.h" // AlbertIncludes
-#include "../Metropolis/SimulationArgs.h" // AlbertIncludes
-#include "CommandParsing.cpp"
-//#include "Metropolis/Simulation.h" // AlbertIncludes
-#include "../Metropolis/Simulation.cpp" // AlbertIncludes
-
+#include "CommandParsing.h"
+#include "Metropolis/Simulation.h"
+#include "Metropolis/SimulationArgs.h"
 
 
 int metrosim::run(int argc, char** argv)
@@ -33,9 +26,8 @@ int metrosim::run(int argc, char** argv)
 
 	fprintf(stdout, "Running simulation...\n\n");
 
-	Simulation::Simulation* sim = new Simulation::Simulation(args);
-	sim->run();
-	delete sim;
+	Simulation sim = Simulation(args);
+	sim.run();
 
 	exit(EXIT_SUCCESS);
 }
@@ -45,5 +37,3 @@ int main(int argc, char** argv)
 	metrosim::run(argc, argv);
 	
 }
-
-#endif

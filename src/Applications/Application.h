@@ -9,15 +9,13 @@
 #ifndef METROSIM_APPLICATION_H
 #define METROSIM_APPLICATION_H
 
-
 #include <stdlib.h>
 #include <stdio.h>
-#include "../Metropolis/Simulation.h" // AlbertIncludes
+
 #include "Application.h"
-//#include "Metropolis/SimulationArgs.h" // AlbertIncludes
-#include "../Metropolis/SimulationArgs.h" // AlbertIncludes
 #include "CommandParsing.h"
-//#include "Metropolis/Simulation.h" // AlbertIncludes
+#include "Metropolis/Simulation.h"
+#include "Metropolis/SimulationArgs.h"
 
 
 namespace metrosim

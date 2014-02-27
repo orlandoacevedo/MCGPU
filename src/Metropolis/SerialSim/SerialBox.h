@@ -10,18 +10,12 @@
 #ifndef SERIALBOX_H
 #define SERIALBOX_H
 
-//#include "Metropolis/Utilities/ConfigScanTemp.h" //AlbertIncludes
-//#include "Metropolis/Box.h" //AlbertIncludes
+#include "Metropolis/Utilities/IOUtilities.h"
+#include "Metropolis/Box.h"
 
-//AlbertIncludes...
-#include "../Utilities/IOUtilities.cpp"
-#include "../Box.h"
-//end AlbertIncludes
-
-class SerialBox : Box
+class SerialBox : public Box
 {
 	public:
-		//Constructor & Destructor
 		SerialBox(IOUtilities configScan);
 		~SerialBox();
 };

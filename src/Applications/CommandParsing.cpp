@@ -1,6 +1,3 @@
-#ifndef METROSIM_COMMAND_PARSING_CPP
-#define METROSIM_COMMAND_PARSING_CPP
-
 /// @file CommandParsing.cpp
 ///
 /// Contains definitions for methods that read and parse command line
@@ -15,9 +12,9 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <errno.h>
+
 #include "CommandParsing.h"
-//#include "Metropolis/SimulationArgs.h" // AlbertIncludes
-#include "../Metropolis/SimulationArgs.h" // AlbertIncludes
+#include "Metropolis/SimulationArgs.h"
 
 namespace metrosim
 {
@@ -267,5 +264,3 @@ namespace metrosim
 		fprintf(stdout, usage, APP_NAME);
 	}
 }
-
-#endif
