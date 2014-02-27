@@ -103,7 +103,7 @@ void ParallelSim::writeChangeToDevice(int changeIdx)
 	//get device pointer to device Atoms from device Molecule, and store in temp Molecule
 	//temp Molecule.atoms will now contain a pointer to Atoms on device
 	//this pointer never meant to be followed from host
-	cudaMemcpy(&(changedMol->atoms), &((ptrs->moleculesD + changeIdx).atoms), sizeof(Atom*), cudaMemcpyDevicetoHost);
+	cudaMemcpy(&(changedMol->atoms), &((ptrs->moleculesD + changeIdx).atoms), sizeof(Atom*), cudaMemcpyDeviceToHost);
 	//copy changed molecule to device
 	cudaMemcpy(ptrs->moleculesD + changeIdx, changedMol, sizeof(Molecule), cudaMemcpyHostToDevice);
 	//copy changed atoms to device
@@ -126,9 +126,10 @@ double ParallelSim::calcSystemEnergy()
 double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx)
 {
 	double totalEnergy = 0;
+	int i;
 	
 	//initialize energies to 0
-	for (int i = 0; i < ptrs->numEnergies; i++)
+	for (i = 0; i < ptrs->numEnergies; i++)
 	{
 		ptrs->energiesH[i] = 0;
 	}
@@ -149,9 +150,9 @@ double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx)
 						
 	cudaMemcpy(ptrs->energiesH, ptrs->energiesD, ptrs->numEnergies * sizeof(double), cudaMemcpyDeviceToHost);
 	
-	for (i = 0; i < numEnergies; i++)
+	for (i = 0; i < ptrs->numEnergies; i++)
 	{
-		totalEnergy += energiesH[i];
+		totalEnergy += ptrs->energiesH[i];
 	}
 	
 	return totalEnergy;
@@ -507,7 +508,7 @@ Molecule* ParallelSim::getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, E
 
 void ParallelSim::runParallel(int steps)
 {	
-    double temperature = enviro->temperature;
+    double temperature = ptrs->envH->temperature;
     double kT = kBoltz * temperature;
     double newEnergyCont, oldEnergyCont;
 
