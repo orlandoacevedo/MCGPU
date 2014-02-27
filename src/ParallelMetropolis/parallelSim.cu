@@ -24,7 +24,7 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
     accepted = 0;
     rejected = 0;
 	
-	ptrs = (*SimPointers) malloc(sizeof(SimPointers));
+	ptrs = (SimPointers*) malloc(sizeof(SimPointers));
 	
 	ptrs->innerbox = box->getSimBox();
 	ptrs->envH = ptrs->innerbox->getEnviro();
@@ -36,8 +36,8 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 	ptrs->numM = ptrs->envH->numOfMolecules;
 	ptrs->numEnergies = ptrs->numA * ptrs->numA;//This is an upper bound. May be able to be tightened.
 	
-	ptrs->molTrans = (*Molecule) malloc(ptrs->numM * sizeof(Molecule));
-	ptrs->energiesH = (*double) malloc(ptrs->numEnergies * sizeof(double));
+	ptrs->molTrans = (Molecule*) malloc(ptrs->numM * sizeof(Molecule));
+	ptrs->energiesH = (double*) malloc(ptrs->numEnergies * sizeof(double));
 	
 	cudaMalloc(&(ptrs->envD), sizeof(Environment));
 	cudaMalloc(&(ptrs->atomsD), ptrs->numA * sizeof(Atom));
@@ -76,9 +76,9 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 	cudaMemcpy(ptrs->energiesD, ptrs->energiesH, ptrs->numEnergies * sizeof(double), cudaMemcpyHostToDevice);
 }
 
-/*ParallelSim::~ParallelSim()
+ParallelSim::~ParallelSim()
 {
-    if (energySum_host!=NULL)
+    /*if (energySum_host!=NULL)
     {
         free(energySum_host);
         energySum_host=NULL;
@@ -88,13 +88,13 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
     {
         cudaFree(energySum_device);
         energySum_device=NULL;
-    }
-}*/
+    }*/
+}
 
 void ParallelSim::writeChangeToDevice(int changeIdx)
 {
 	//create temp Molecule
-	Molecule *changedMol = (*Molecule) malloc(sizeof(Molecule));
+	Molecule *changedMol = (Molecule*) malloc(sizeof(Molecule));
 	
 	//copy changed Molecule into temp Molecule
 	//ready to be copied over to device, except that it still contains host pointer in .atoms
@@ -103,7 +103,7 @@ void ParallelSim::writeChangeToDevice(int changeIdx)
 	//get device pointer to device Atoms from device Molecule, and store in temp Molecule
 	//temp Molecule.atoms will now contain a pointer to Atoms on device
 	//this pointer never meant to be followed from host
-	cudaMemcpy(&(changedMol->atoms), &((ptrs->moleculesD + changeIdx).atoms), sizeof(Atom*), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&(changedMol->atoms), &((ptrs->moleculesD + changeIdx)->atoms), sizeof(Atom*), cudaMemcpyDeviceToHost);
 	//copy changed molecule to device
 	cudaMemcpy(ptrs->moleculesD + changeIdx, changedMol, sizeof(Molecule), cudaMemcpyHostToDevice);
 	//copy changed atoms to device
