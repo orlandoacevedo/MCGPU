@@ -216,7 +216,7 @@ void IOUtilities::readInConfig()
 						break;
 					//Turning off [commenting out] the following lines, as they go unused in our configuration files, 
 					//  and our structures do not hold the data that would be read.	
-					/*
+					
 					case 24:
 						if(line.length() > 0)
 						{
@@ -255,7 +255,7 @@ void IOUtilities::readInConfig()
 							return;
 						}
 						break;
-						*/ //end of disabled configuration file code.
+						//end of disabled configuration file code.
 				}
 			
 				currentLine++;
