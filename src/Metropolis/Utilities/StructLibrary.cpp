@@ -63,10 +63,9 @@ Environment createEnvironment(double x, double y, double z, double maxTranslatio
 
 
 //Molecule
-Molecule createMolecule(int id, Atom *atoms, int numAtoms)
+Molecule createMolecule(Atom *atoms, int numAtoms)
 {
 	Molecule molecule;
-	molecule.id = id;
 	molecule.atoms = atoms;
 	molecule.numAtoms = numAtoms;
 	return molecule;
