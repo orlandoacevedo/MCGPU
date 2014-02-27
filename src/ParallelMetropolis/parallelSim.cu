@@ -263,13 +263,12 @@ __device__ double calc_lj(Atom atom1, Atom atom2, double r2)
     else
     {
     	//calculate terms
-    	const double sig2OverR2 = pow(sigma, 2) / r2;
-		const double sig6OverR6 = pow(sig2OverR2, 3);
-    	const double sig12OverR12 = pow(sig6OverR6, 2);
+    	const double sig2OverR2 = (sigma*sigma) / r2;
+		const double sig6OverR6 = (sig2OverR2*sig2OverR2*sig2OverR2);
+    	const double sig12OverR12 = (sig6OverR6*sig6OverR6);
     	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
     }
-
 }
 
 __device__ double calcCharge(double charge1, double charge2, double r)
