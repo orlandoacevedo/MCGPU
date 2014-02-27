@@ -16,7 +16,7 @@
 
 int metrosim::run(int argc, char** argv)
 {
-	SimulationArgs args;
+	SimulationArgs args = SimulationArgs();
 	if (!getCommands(argc, argv, &args))
 	{
 		exit(EXIT_FAILURE);
