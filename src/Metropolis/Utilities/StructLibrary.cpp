@@ -1,3 +1,14 @@
+#ifndef STRUCTLIBRARY_CPP
+#define STRUCTLIBRARY_CPP
+
+/*
+	Contains all structs and methods for simulation objects (atom,molecule,etc.)
+
+	Author: Nathan Coleman
+	Last Changed: February 27, 2014 by Albert Wallace
+	Previously Changed: February 19; February 26, 2014
+*/
+
 #include "StructLibrary.h"
 
 using namespace std;
@@ -74,3 +85,5 @@ Molecule createMolecule(Atom *atoms, int numAtoms)
 void copyMolecule(Molecule *destination, Molecule *source){}
 
 void printMolecule(Molecule *molecule){}
+
+#endif

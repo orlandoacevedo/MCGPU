@@ -1,3 +1,6 @@
+#ifndef METROSIM_COMMAND_PARSING_CPP
+#define METROSIM_COMMAND_PARSING_CPP
+
 /// @file CommandParsing.cpp
 ///
 /// Contains definitions for methods that read and parse command line
@@ -5,7 +8,7 @@
 ///
 /// @author Tavis Maclellan
 /// @date Created 2/23/2014
-/// @date Updated 2/26/2014
+/// @date Updated 2/26/2014 -> further shoehorning done by Albert Wallace on 27 February
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,11 +16,13 @@
 #include <getopt.h>
 #include <errno.h>
 #include "CommandParsing.h"
-#include "Metropolis/SimulationArgs.h"
+//#include "Metropolis/SimulationArgs.h" // AlbertIncludes
+#include "../Metropolis/SimulationArgs.h" // AlbertIncludes
 
 namespace metrosim
 {
 
+	//bool metrosim::getCommands(int argc, char** argv, SimulationArgs* args) //RBAl
 	bool getCommands(int argc, char** argv, SimulationArgs* args)
 	{
 		CommandParameters params = CommandParameters();
@@ -34,6 +39,7 @@ namespace metrosim
 		return true;
 	}
 
+	//bool metrosim::readCommandLine(int argc, char** argv, CommandParameters* params) //RBAl
 	bool readCommandLine(int argc, char** argv, CommandParameters* params)
 	{
 		// The getopt variables
@@ -126,6 +132,7 @@ namespace metrosim
 		return true;
 	}
 
+	//bool metrosim::parseCommandLine(CommandParameters* params, SimulationArgs* args) //RBAl
 	bool parseCommandLine(CommandParameters* params, SimulationArgs* args)
 	{
 		if (params->helpFlag)		/* print help screen and exit */
@@ -195,6 +202,7 @@ namespace metrosim
 		return true;
 	}
 
+	//bool metrosim::parseConfigPath(char** dest, char* arg)  //RBAl
 	bool parseConfigPath(char** dest, char* arg)
 	{
 		if (arg == NULL || arg[0] == '\0')
@@ -207,6 +215,7 @@ namespace metrosim
 		return true;
 	}
 
+	//bool metrosim::parseStatusInterval(int* dest, char* arg) //RBAl
 	bool parseStatusInterval(int* dest, char* arg)
 	{
 		if (arg == NULL) /* argument is invalid */
@@ -240,9 +249,12 @@ namespace metrosim
 		return true;
 	}
 
+	//void metrosim::printHelpScreen() //RBAl
 	void printHelpScreen()
 	{
 		const char* usage = "Usage  : <config_file> [-i interval] [-sp] [-fd] [-h]\n";
 		fprintf(stdout, usage, APP_NAME);
 	}
 }
+
+#endif

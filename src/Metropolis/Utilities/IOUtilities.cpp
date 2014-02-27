@@ -11,12 +11,14 @@
 */
 /*Based on work from earlier sessions by Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo*/
  
+#ifndef IOUTILITIES_CPP
+#define IOUTILITIES_CPP
  
 //_________________________________________________________________________________________________________________
 //  INCLUDE statements
 //_________________________________________________________________________________________________________________
 #include <assert.h>
-#include "IOUtilities.cuh"
+#include "IOUtilities.h"
 #include "errno.h"
 
 //_________________________________________________________________________________________________________________
@@ -51,10 +53,11 @@ IOUtilities::IOUtilities(string configPath){
 	
 	//note to people/myself: //enviro = currentEnvironment
 	
-    memset(&filePathsEtc,0,sizeof(UtilitiesInfo)); //filePathsEtc is a struct of type UtilitiesInfo, and this is apparently the best way to instantiate the struct
+    //memset(&filePathsEtc,0,sizeof(UtilitiesInfo)); //filePathsEtc is a struct of type UtilitiesInfo, and this is apparently the best way to instantiate the struct
     			//except that may not be required? but it's left in for legacy reasons
-    filePathsEtc.configPath = configPath;
-    filePathsEtc.numOfSteps=0;
+    filePathsEtc = new UtilitiesInfo();
+    filePathsEtc->configPath = configPath;
+    filePathsEtc->numOfSteps=0;
     readInConfigAlreadyDone = false;
     readInConfig(); //do the rest of the construction
     readInConfigAlreadyDone = true; //setting it this way will prevent unnecessarily running the entirety of readInConfig
@@ -76,7 +79,7 @@ void IOUtilities::readInConfig()
 		}
 	else
 	{
-		ifstream configscanner(filePathsEtc.configPath.c_str());
+		ifstream configscanner(filePathsEtc->configPath.c_str());
 		if (! configscanner.is_open())
 		{
 			throwScanError("Configuration file failed to open.");
@@ -97,7 +100,7 @@ void IOUtilities::readInConfig()
 					case 2:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.x = atof(line.c_str());
+							filePathsEtc->currentEnvironment->x = atof(line.c_str());
 						}
 						else
 						{
@@ -108,7 +111,7 @@ void IOUtilities::readInConfig()
 					case 3:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.y = atof(line.c_str());
+							filePathsEtc->currentEnvironment->y = atof(line.c_str());
 						}
 						else
 						{
@@ -119,7 +122,7 @@ void IOUtilities::readInConfig()
 					case 4:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.z = atof(line.c_str());
+							filePathsEtc->currentEnvironment->z = atof(line.c_str());
 						}
 						else
 						{
@@ -130,7 +133,7 @@ void IOUtilities::readInConfig()
 					case 6:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.temp = atof(line.c_str());
+							filePathsEtc->currentEnvironment->temp = atof(line.c_str());
 						}
 						else
 						{
@@ -141,7 +144,7 @@ void IOUtilities::readInConfig()
 					case 8:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.maxTranslation = atof(line.c_str());
+							filePathsEtc->currentEnvironment->maxTranslation = atof(line.c_str());
 						}
 						else
 						{
@@ -152,7 +155,7 @@ void IOUtilities::readInConfig()
 					case 10:
 						if(line.length() > 0)
 						{
-							filePathsEtc.numOfSteps = atoi(line.c_str());
+							filePathsEtc->numOfSteps = atoi(line.c_str());
 						}
 						else
 						{
@@ -163,7 +166,7 @@ void IOUtilities::readInConfig()
 					case 12:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.numOfMolecules = atoi(line.c_str());
+							filePathsEtc->currentEnvironment->numOfMolecules = atoi(line.c_str());
 							//printf("number is %d",enviro.numOfMolecules);
 						}
 						else
@@ -175,7 +178,7 @@ void IOUtilities::readInConfig()
 					case 14:
 						if(line.length() > 0)
 						{
-							filePathsEtc.oplsuaparPath = line;
+							filePathsEtc->oplsuaparPath = line;
 						}
 						else
 						{
@@ -186,7 +189,7 @@ void IOUtilities::readInConfig()
 					case 16:
 						if(line.length() > 0)
 						{
-							filePathsEtc.zmatrixPath = line;
+							filePathsEtc->zmatrixPath = line;
 						}
 						else
 						{
@@ -197,7 +200,7 @@ void IOUtilities::readInConfig()
 					case 18:
 						if(line.length() > 0)
 						{
-							filePathsEtc.statePath = line;
+							filePathsEtc->statePath = line;
 						}
 						else
 						{
@@ -207,7 +210,7 @@ void IOUtilities::readInConfig()
 						break;
 					case 20:
 						if(line.length() > 0){
-							filePathsEtc.stateOutputPath = line;
+							filePathsEtc->stateOutputPath = line;
 						}
 						else
 						{
@@ -217,7 +220,7 @@ void IOUtilities::readInConfig()
 						break;
 					case 22:
 						if(line.length() > 0){
-							filePathsEtc.pdbOutputPath = line;
+							filePathsEtc->pdbOutputPath = line;
 						}
 						else
 						{
@@ -228,7 +231,7 @@ void IOUtilities::readInConfig()
 					case 24:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.cutoff = atof(line.c_str());
+							filePathsEtc->currentEnvironment->cutoff = atof(line.c_str());
 						}
 						else
 						{
@@ -239,7 +242,7 @@ void IOUtilities::readInConfig()
 					case 26:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.maxRotation = atof(line.c_str());
+							filePathsEtc->currentEnvironment->maxRotation = atof(line.c_str());
 						}
 						else
 						{
@@ -250,19 +253,19 @@ void IOUtilities::readInConfig()
 					case 28:
 						if(line.length() > 0)
 						{
-							filePathsEtc.currentEnvironment.randomseed=atoi(line.c_str());
+							filePathsEtc->currentEnvironment->randomseed=atoi(line.c_str());
 						}
-						break;
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing random seed value.");
 							return;
 						}
+						break;
 					case 30:
 						if(line.length() > 0)
 						{
 							// Convert to a zero-based index
-							filePathsEtc.currentEnvironment.primaryAtomIndex=atoi(line.c_str()) - 1;
+							filePathsEtc->currentEnvironment->primaryAtomIndex=atoi(line.c_str()) - 1;
 						}
 						else
 						{
@@ -696,3 +699,5 @@ void writeToLog(stringstream& ss, int stamp ){
 	 ss.str(""); // clears the string steam...
 	 ss.clear();
 }
+
+#endif

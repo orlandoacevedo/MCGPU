@@ -3,22 +3,28 @@
 
 	Author: Nathan Coleman
 	Last Changed: February 21, 2014
+	
+	-> February 26, by Albert Wallace
 */
+#ifndef SIMULATION_CPP
+#define SIMULATION_CPP
+
 
 #include "Simulation.h"
-#include "Metropolis/SimulationArgs.h"
+//#include "Metropolis/SimulationArgs.h" // AlbertIncludes
 #include "Box.h"
-#include "Metropolis/SerialSim/SerialBox.h"
+#include "SimulationArgs.h" // AlbertIncludes
+#include "SerialSim/SerialBox.cpp" // AlbertIncludes
+//#include "Metropolis/SerialSim/SerialBox.h" //AlbertIncludes
 //#include "Metropolis/SerialSim/SerialCalcs.h"
 //#include "Metropolis/ParallelSim/ParallelBox.cuh"
 //#include "Metropolis/ParallelSim/ParallelCalcs.h"
 
-using namespace std;
 
 //Constructor & Destructor
 Simulation::Simulation(SimulationArgs args)
 {
-	Config_Scan configScan(args.configPath);
+	IOUtilities configScan(args.configPath);
 	configScan.readInConfig();
 	box = (Box*) (new SerialBox(configScan));
 }
@@ -40,3 +46,5 @@ void Simulation::run()
 	printf("Y: %f\n",boxEnviro->y);
 	printf("Z: %f\n",boxEnviro->z);
 }
+
+#endif

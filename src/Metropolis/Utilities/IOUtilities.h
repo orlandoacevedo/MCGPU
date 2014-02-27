@@ -18,10 +18,11 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "StructLibrary.h" //this is our goal for inclusion, but for now...
+#include "StructLibrary.cpp" //this is our goal for inclusion, but for now...
 #include <cstdlib>
 
-using namespace std;
+//using namespace std;
+
 //_________________________________________________________________________________________________________________
 //  UtilitiesInfo structure
 //_________________________________________________________________________________________________________________
@@ -30,13 +31,13 @@ using namespace std;
 struct UtilitiesInfo
 {
 	Environment * currentEnvironment; //The current working environment for the simulation
-    string configPath; //The path to the main configuration file read in for the simulation
+    std::string configPath; //The path to the main configuration file read in for the simulation
     unsigned int numOfSteps; //The number of steps to run the simulation
-    string oplsuaparPath; //The path to the opls files containing additional geometry data, to be used (eventually) during simulation
-    string zmatrixPath; //The path to the Z-matrix files to be used during simulation
-    string statePath; //The path to the state information file to be used in the simulation
-    string stateOutputPath; //The path where we write the state output files after simulation
-    string pdbOutputPath; //The path where we write the pdb output files after simulation
+    std::string oplsuaparPath; //The path to the opls files containing additional geometry data, to be used (eventually) during simulation
+    std::string zmatrixPath; //The path to the Z-matrix files to be used during simulation
+    std::string statePath; //The path to the state information file to be used in the simulation
+    std::string stateOutputPath; //The path where we write the state output files after simulation
+    std::string pdbOutputPath; //The path where we write the pdb output files after simulation
     unsigned int cutoff; //The nonbonded cutoff distance.
     
     UtilitiesInfo() //constructor for the structure
@@ -62,19 +63,19 @@ struct UtilitiesInfo
 class IOUtilities
 {	
 	public:
-		IOUtilities(string configPath); //this should be the constructor, which does very little on its own
+		IOUtilities(std::string configPath); //this should be the constructor, which does very little on its own
 		void readInConfig(); //this should ideally be merged into the constructor, but run separately, everything is okay
 		int ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection);
 	 	int WriteStateFile(char const* StateFile, Environment * sourceEnvironment, Molecule * sourceMoleculeCollection); 	
 	 	int writePDB(char const* pdbFile); //this is the old version from SimBox, probably not useful or usable
 	 	int writePDB(char const* pdbFile, Environment sourceEnvironment, Molecule * sourceMoleculeCollection); //this is a new version, possibly required for this implementation with IOUtilities
-	 	UtilitiesInfo filePathsEtc;
+	 	UtilitiesInfo * filePathsEtc;
 	 	
 	 	//unsigned int getrandomseed() {return filePathsEtc.currentEnvironment.randomseed;}; //this random seed isn't so random; it's found within the configuration file.
 	 			//as you can guess, the constructor for this class stores that very info in the Environment struct. For sake of safety, we'll leave it there.
 	 	
 	 private:
-		void throwScanError(string message);
+		void throwScanError(std::string message);
 		bool readInConfigAlreadyDone;
 };
 #endif

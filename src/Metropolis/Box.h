@@ -1,7 +1,17 @@
+/*
+	SuperClass to the SerialBox and ParallelBox classes.
+
+	Author: Nathan Coleman, Tavis Maclellan
+	Last Changed by author: February 26, 2014
+	
+	-> other changes: February 26 (after authors), by Albert Wallace
+*/
+
 #ifndef BOX_H
 #define BOX_H
 
-#include "Metropolis/Utilities/StructLibrary.h"
+//#include "Metropolis/Utilities/StructLibrary.h" // AlbertIncludes
+#include "Utilities/StructLibrary.cpp" //AlbertIncludes
 #include <stdlib.h>
 
 #define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}

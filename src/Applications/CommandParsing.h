@@ -11,7 +11,9 @@
 #define METROSIM_COMMAND_PARSING_H
 
 #include <stdlib.h>
-#include "Metropolis/SimulationArgs.h"
+//#include "Metropolis/SimulationArgs.h" // AlbertIncludes
+#include "../Metropolis/SimulationArgs.h" // AlbertIncludes
+
 
 #ifndef APP_NAME
 #define APP_NAME "metrosim"		///< The executable name of the application.
