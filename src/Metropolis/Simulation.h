@@ -21,6 +21,7 @@ class Simulation
 		Simulation(SimulationArgs args);
 		~Simulation();
 		void run();
+		
 	private:
 		Box *box;
 };
