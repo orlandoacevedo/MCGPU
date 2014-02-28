@@ -1,7 +1,19 @@
+/// @file DeviceQuery.cu
+///
+/// Contains functions to query the current system device capabilities
+/// and set the current CUDA device that meets the minimum user
+/// specifications.
+///
+/// @author Joshua Mosby
+/// @date Created 2/28/2014
+/// @date Updated 2/28/2014
+
 //This program checks if there is a CUDA capable graphics card 
 //and selects the best one
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "DeviceQuery.cuh"
 
 //This function checks the device (devProp) against the specifications
 //It returns true if the device meets specifications, false otherwise
