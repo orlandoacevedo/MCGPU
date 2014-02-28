@@ -76,8 +76,8 @@ bool chooseBestDevice(int specMajor, int specMinor) {
          return false;
       }
       
-		devID = 0;
-      for (i = 1; i < newDevCount; i++) {
+		int devID = 0;
+      for (int i = 1; i < newDevCount; i++) {
          if (matchSpecs(devPropArray[i], devPropArray[devID].major, devPropArray[devID].minor)) {
             devID = i;
          }
