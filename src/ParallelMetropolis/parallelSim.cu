@@ -100,14 +100,16 @@ void ParallelSim::writeChangeToDevice(int changeIdx)
 	//ready to be copied over to device, except that it still contains host pointer in .atoms
 	memcpy(changedMol, ptrs->moleculesH + changeIdx, sizeof(Molecule));
 	
-	//get device pointer to device Atoms from device Molecule, and store in temp Molecule
-	//temp Molecule.atoms will now contain a pointer to Atoms on device
+	//changedMol.atoms will now contain a pointer to Atoms on device
 	//this pointer never meant to be followed from host
-	cudaMemcpy(&(changedMol->atoms), &((ptrs->moleculesD + changeIdx)->atoms), sizeof(Atom*), cudaMemcpyDeviceToHost);
+	changedMol->atoms = ptrs->molTrans[changeIdx].atoms;
+	
 	//copy changed molecule to device
 	cudaMemcpy(ptrs->moleculesD + changeIdx, changedMol, sizeof(Molecule), cudaMemcpyHostToDevice);
+	
 	//copy changed atoms to device
-	cudaMemcpy(ptrs->moleculesD[changeIdx].atoms, changedMol->atoms, changedMol->numOfAtoms * sizeof(Atom), cudaMemcpyHostToDevice);
+	Atom *destAtoms = ptrs->molTrans[changeIdx].atoms;
+	cudaMemcpy(destAtoms, ptrs->moleculesH[changeIdx].atoms, ptrs->moleculesH[changeIdx].numOfAtoms * sizeof(Atom), cudaMemcpyHostToDevice);
 }
 
 double ParallelSim::calcSystemEnergy()
@@ -119,7 +121,7 @@ double ParallelSim::calcSystemEnergy()
 	{
 		totalEnergy += calcMolecularEnergyContribution(mol, mol);
 	}
-	
+
     return totalEnergy;
 }
 
@@ -143,18 +145,21 @@ double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx)
 	(ptrs->moleculesD, molIdx, ptrs->numM, startIdx, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
 	
 	//calculate intramolecular energies for changed molecule
-	int numAinM = ptrs->moleculesD[molIdx].numOfAtoms;
+	/*int numAinM = ptrs->moleculesH[molIdx].numOfAtoms;
 	int numIntraEnergies = numAinM * (numAinM - 1) / 2;
+	
 	calcIntraMolecularEnergy<<<numIntraEnergies / BLOCK_SIZE + 1, BLOCK_SIZE>>>
-	(ptrs->moleculesD, molIdx, numIntraEnergies, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
-						
+	(ptrs->moleculesD, molIdx, numIntraEnergies, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);*/
+				
 	cudaMemcpy(ptrs->energiesH, ptrs->energiesD, ptrs->numEnergies * sizeof(double), cudaMemcpyDeviceToHost);
 	
 	for (i = 0; i < ptrs->numEnergies; i++)
 	{
-		totalEnergy += ptrs->energiesH[i];
+		if (ptrs->energiesH[i] != 0)
+		{
+			totalEnergy += ptrs->energiesH[i];
+		}
 	}
-	
 	return totalEnergy;
 }
 
@@ -227,27 +232,29 @@ __global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, in
 	if (energyIdx < numE)
 	{
 		energyIdx += currentMol * segmentSize;
-		
-		double totalEnergy = 0;
+		if (atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
+		{
+			double totalEnergy = 0;
+				
+			//calculate difference in coordinates
+			double deltaX = atom1.x - atom2.x;
+			double deltaY = atom1.y - atom2.y;
+			double deltaZ = atom1.z - atom2.z;
+		  
+			//calculate distance between atoms
+			deltaX = makePeriodic(deltaX, enviro->x);
+			deltaY = makePeriodic(deltaY, enviro->y);
+			deltaZ = makePeriodic(deltaZ, enviro->z);
 			
-		//calculate difference in coordinates
-		double deltaX = atom1.x - atom2.x;
-		double deltaY = atom1.y - atom2.y;
-		double deltaZ = atom1.z - atom2.z;
-	  
-		//calculate distance between atoms
-		deltaX = makePeriodic(deltaX, enviro->x);
-		deltaY = makePeriodic(deltaY, enviro->y);
-		deltaZ = makePeriodic(deltaZ, enviro->z);
-		
-		double r2 = (deltaX * deltaX) +
-			 (deltaY * deltaY) + 
-			 (deltaZ * deltaZ);
-		
-		totalEnergy += calc_lj(atom1, atom2, r2);
-		totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
-		
-		energies[energyIdx] = totalEnergy;
+			double r2 = (deltaX * deltaX) +
+				 (deltaY * deltaY) + 
+				 (deltaZ * deltaZ);
+			
+			totalEnergy += calc_lj(atom1, atom2, r2);
+			totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+			
+			energies[energyIdx] = totalEnergy;
+		}
 	}
 }
 
@@ -511,15 +518,14 @@ void ParallelSim::runParallel(int steps)
     double temperature = ptrs->envH->temperature;
     double kT = kBoltz * temperature;
     double newEnergyCont, oldEnergyCont;
-
+	
     if (oldEnergy == 0)
 	{
 		oldEnergy = calcSystemEnergy();
 	}
-	 
+	
     for(int move = 0; move < steps; move++)
     {
-            
         int changeIdx = ptrs->innerbox->chooseMolecule();
 
 		oldEnergyCont = calcMolecularEnergyContribution(changeIdx);
@@ -548,7 +554,7 @@ void ParallelSim::runParallel(int steps)
                 accept = false;
             }
         }
-
+		
         if(accept)
         {
             accepted++;
