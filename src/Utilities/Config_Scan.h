@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "metroUtil.cpp"
+#include "metroUtil.h"
 #include <cstdlib>
 
 using namespace std;
