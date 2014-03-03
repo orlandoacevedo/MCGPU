@@ -260,7 +260,7 @@ namespace metrosim
 	//void metrosim::printHelpScreen() //RBAl
 	void printHelpScreen()
 	{
-		const char* usage = "Usage  : <config_file> [-i interval] [-sp] [-fd] [-h]\n";
+		const char* usage = "Usage  : %s: <config_file> [-i interval] [-sp] [-fd] [-h]\n";
 		fprintf(stdout, usage, APP_NAME);
 	}
 }

@@ -26,21 +26,34 @@ int metrosim::run(int argc, char** argv)
 	}
 
 	DeviceContext context = DeviceContext();
-	if (!openDeviceContext(&context, MIN_MAJOR_VER, MIN_MINOR_VER, DEVICE_ANY))
+	if (args.simulationMode == SimulationMode::Parallel)
 	{
-		exit(EXIT_FAILURE);
+		if (!openDeviceContext(&context, MIN_MAJOR_VER, MIN_MINOR_VER, DEVICE_ANY))
+		{
+			exit(EXIT_FAILURE);
+		}
 	}
 
-	fprintf(stdout, "Beginning simulation...\n\n");
+	if (args.simulationMode == SimulationMode::Parallel)
+	{
+		fprintf(stdout, "Beginning simulation using GPU...\n");
+	}
+	else
+	{
+		fprintf(stdout, "Beginning simulation using CPU...\n");
+	}
 
 	Simulation sim = Simulation(args);
 	sim.run();
 
 	fprintf(stdout, "Finishing simulation...\n\n");
 
-	if (!closeDeviceContext(&context))
+	if (args.simulationMode == SimulationMode::Parallel)
 	{
-		exit(EXIT_FAILURE);
+		if (!closeDeviceContext(&context))
+		{
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	exit(EXIT_SUCCESS);
