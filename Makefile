@@ -72,7 +72,7 @@ CuFlags := -c -g -arch sm_35 -rdc true
 LFlags := -g -pg
 
 # Linker specific flags for the CUDA compiler
-LCuFlags := -g -pf -lcudadevrt
+LCuFlags := -g -pg -lcudadevrt
 
 ###################
 # Program Outputs #
