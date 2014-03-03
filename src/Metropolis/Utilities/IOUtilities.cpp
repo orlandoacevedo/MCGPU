@@ -661,15 +661,15 @@ void IOUtilities::deleteOpls_Scan()
 int IOUtilities::scanInOpls()
 {
     int numOfLines=0;
-    ifstream oplsScanner(filePathsEtc->oplsuaparPath.c_str()); //##
+    std::ifstream oplsScanner(filePathsEtc->oplsuaparPath.c_str()); //##
     if( !oplsScanner.is_open() ) //##
         return -1; //##
     else { //##
-        string line;  //##
+        std::string line;  //##
         while( oplsScanner.good() ) //##
         { //##
             numOfLines++; //##
-            getline(oplsScanner,line); //##
+            std::getline(oplsScanner,line); //##
 
             //check if it is a commented line,
             //or if it is a title line
@@ -687,11 +687,11 @@ int IOUtilities::scanInOpls()
 
 void IOUtilities::addLineToTable(string line, int numOfLines) //##
 {
-    string hashNum;
+    std::string hashNum;
     int secCol;
     double charge,sigma,epsilon;
-    string name, extra;
-    stringstream ss(line);
+    std::string name, extra;
+    std::stringstream ss(line);
 
     //check to see what format it is opls, V value, or neither
     int format = checkFormat(line);
@@ -702,8 +702,8 @@ void IOUtilities::addLineToTable(string line, int numOfLines) //##
         char *atomtype = (char*)name.c_str(); 
          
         Atom temp = createAtom(0, -1, -1, -1, sigma, epsilon, charge, *atomtype);
-        pair<map<string,Atom>::iterator,bool> ret;
-        ret = oplsTable.insert( pair<string,Atom>(hashNum,temp) );
+        std::pair<map<string,Atom>::iterator,bool> ret;
+        ret = oplsTable.insert( std::pair<string,Atom>(hashNum,temp) );
 
         if (ret.second==false)
         {
@@ -715,8 +715,8 @@ void IOUtilities::addLineToTable(string line, int numOfLines) //##
         double v0,v1,v2,v3;
         ss >> hashNum >> v0 >> v1 >> v2 >> v3 ;
         Fourier vValues = {v0,v1,v2,v3};
-        pair<map<string,Fourier>::iterator,bool> ret2;
-        ret2 = fourierTable.insert( pair<string,Fourier>(hashNum,vValues) );
+        std::pair<map<string,Fourier>::iterator,bool> ret2;
+        ret2 = fourierTable.insert( std::pair<string,Fourier>(hashNum,vValues) );
 
         if (ret2.second==false)
         {
@@ -729,15 +729,15 @@ void IOUtilities::addLineToTable(string line, int numOfLines) //##
     }
 }
 
-int IOUtilities::checkFormat(string line)
+int IOUtilities::checkFormat(std::string line)
 {   	 
     int hashNum, secCol;
     double charge,sigma,epsilon;
-    string name, extra;
-    stringstream iss(line);
+    std::string name, extra;
+    std::stringstream iss(line);
 
     double v1,v2,v3,v4;
-    stringstream issw(line);
+    std::stringstream issw(line);
 
     //see if format is the V values for the diherdral format
     if((issw >> hashNum >> v1 >> v2 >> v3 >> v4) )
@@ -758,56 +758,56 @@ int IOUtilities::checkFormat(string line)
 
 void IOUtilities::logErrors()
 {
-    stringstream output;
+    std::stringstream output;
     // See if there were any errors
     if(errLinesOPLS.empty() || errHashes.empty()|| errHashesFourier.empty())
     {
-	     //Errors in the format
-		  output<<"Errors found in the OPLS file: "<< fileName<<endl;
+	    //Errors in the format
+		output<<"Errors found in the OPLS file: "<< filePathsEtc->oplsuaparPath.c_str() <<std::endl;
         if(!errLinesOPLS.empty())
         {
-		      output << "Found Errors in the Format of the following Lines: " << endl;
+		      output << "Found Errors in the Format of the following Lines: " << std::endl;
 				for(int a=0; a<errLinesOPLS.size(); a++)
                 {
 				    if(a%10==0 && a!=0) //ten per line
                     {
-					     output << endl;
+					     output << std::endl;
                     }
 				    output << errLinesOPLS[a]<< " ";
 				}
-				output << endl<< endl;
+				output << std::endl << std::endl;
 		  }
 		  if(!errHashes.empty())
           {
-		      output << "Error - The following OPLS values existed more than once: " << endl;
+		      output << "Error - The following OPLS values existed more than once: " << std::endl;
 				for(int a=0; a<errHashes.size(); a++)
                 {
 				    if(a%10==0 && a!=0) //ten per line
                     {
-					     output << endl;
+					     output << std::endl;
                     }
 				    output << errHashes[a]<< " ";
 				}
-				output << endl<< endl;
+				output << std::endl << std::endl;
 		  }
 		  if(!errHashesFourier.empty())
           {
-		      output << "Error - The following Fourier Coefficent values existed more than once: " << endl;
+		      output << "Error - The following Fourier Coefficent values existed more than once: " << std::endl;
 				for(int a=0; a<errHashesFourier.size(); a++)
                 {
 				    if(a%10==0 && a!=0) //ten per line
                     {
-					     output << endl;
+					     output << std::endl;
                     }
 				    output << errHashesFourier[a]<< " ";
 				}
-				output << endl<< endl;
+				output << std::endl << std::endl;
 		  }
 		  writeToLog(output,OPLS);
 	}
 }
 
-Atom IOUtilities::getAtom(string hashNum)
+Atom IOUtilities::getAtom(std::string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -815,12 +815,12 @@ Atom IOUtilities::getAtom(string hashNum)
 	}
 	else
     {
-	    cerr << "Index does not exist: "<< hashNum <<endl;
+	    std::cerr << "Index does not exist: "<< hashNum << std::endl;
 		return createAtom(0, -1, -1, -1, -1, -1, -1, NULL);
 	}
 }
 
-double IOUtilities::getSigma(string hashNum)
+double IOUtilities::getSigma(std::string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -829,12 +829,12 @@ double IOUtilities::getSigma(string hashNum)
     }
     else
     {
-        cerr << "Index does not exist: "<< hashNum <<endl;
+        std::cerr << "Index does not exist: "<< hashNum << std::endl;
         return -1;
     }
 }
 
-double IOUtilities::getEpsilon(string hashNum)
+double IOUtilities::getEpsilon(std::string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -843,12 +843,12 @@ double IOUtilities::getEpsilon(string hashNum)
     }
     else
     {
-        cerr << "Index does not exist: "<< hashNum <<endl;
+        std::cerr << "Index does not exist: "<< hashNum << std::endl;
         return -1;
     }
 }
 
-double IOUtilities::getCharge(string hashNum)
+double IOUtilities::getCharge(std::string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -857,12 +857,12 @@ double IOUtilities::getCharge(string hashNum)
     }
     else
     {
-        cerr << "Index does not exist: "<< hashNum <<endl;
+        std::cerr << "Index does not exist: "<< hashNum << std::endl;
         return -1;
     }
 }
 
-Fourier IOUtilities::getFourier(string hashNum)
+Fourier IOUtilities::getFourier(std::string hashNum)
 {
     if(fourierTable.count(hashNum)>0 )
     {
@@ -871,7 +871,7 @@ Fourier IOUtilities::getFourier(string hashNum)
     }
     else
     {	    
-        cerr << "Index does not exist: "<< hashNum <<endl;
+        std::cerr << "Index does not exist: "<< hashNum << std::endl;
         Fourier temp ={-1,-1,-1,-1};
         return temp;
     }

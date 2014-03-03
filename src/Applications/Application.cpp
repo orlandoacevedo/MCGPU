@@ -14,6 +14,7 @@
 #include "CommandParsing.h"
 #include "Metropolis/Simulation.h"
 #include "Metropolis/SimulationArgs.h"
+#include "Metropolis/Utilities/DeviceQuery.h"
 
 
 int metrosim::run(int argc, char** argv)
@@ -24,10 +25,23 @@ int metrosim::run(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	fprintf(stdout, "Running simulation...\n\n");
+	DeviceContext context = DeviceContext();
+	if (!openDeviceContext(&context, MIN_MAJOR_VER, MIN_MINOR_VER, DEVICE_ANY))
+	{
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(stdout, "Beginning simulation...\n\n");
 
 	Simulation sim = Simulation(args);
 	sim.run();
+
+	fprintf(stdout, "Finishing simulation...\n\n");
+
+	if (!closeDeviceContext(&context))
+	{
+		exit(EXIT_FAILURE);
+	}
 
 	exit(EXIT_SUCCESS);
 }

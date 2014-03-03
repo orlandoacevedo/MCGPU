@@ -101,12 +101,11 @@ class IOUtilities
 			//From OPLS_Scan
 			/**
 			Scans in the opls File calls sub-function addLineToTable
-			@param filename - the name/path of the opls file
 			@return - success code 
 					  0: successful
 					  1: error
 			*/
-			int scanInOpls(string filename); 
+			int scanInOpls(); 
 		
 			/**
 			Parses out a line from the opls file and gets (sigma, epsilon, charge)
