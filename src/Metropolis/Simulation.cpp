@@ -19,7 +19,12 @@
 Simulation::Simulation(SimulationArgs args)
 {
 	IOUtilities configScan = IOUtilities(args.configPath);
-	configScan.readInConfig();
+	if (!configScan.readInConfig())
+	{
+		fprintf(stderr, "Terminiating Simulation...\n\n");
+		exit(1);
+	}
+
 	box = new SerialBox(configScan);
 }
 
@@ -36,7 +41,7 @@ Simulation::~Simulation()
 void Simulation::run()
 {
 	Environment *boxEnviro = box->getEnvironment();
-	printf("X: %f\n",boxEnviro->x);
+	printf("\nX: %f\n",boxEnviro->x);
 	printf("Y: %f\n",boxEnviro->y);
 	printf("Z: %f\n",boxEnviro->z);
 }

@@ -72,8 +72,8 @@ IOUtilities::IOUtilities(std::string configPath){
     filePathsEtc->configPath = configPath;
     filePathsEtc->numOfSteps=0;
     readInConfigAlreadyDone = false;
-    readInConfig(); //do the rest of the construction
-    readInConfigAlreadyDone = true; //setting it this way will prevent unnecessarily running the entirety of readInConfig
+    // readInConfigAlreadyDone = readInConfig(); //do the rest of the construction
+    // readInConfigAlreadyDone = true; //setting it this way will prevent unnecessarily running the entirety of readInConfig
     			//though this setup means we cannot change the config file during the run, but this is by design.
 }
 
@@ -84,19 +84,19 @@ IOUtilities::IOUtilities(std::string configPath){
 *@params: [none; uses variables within the class to pass information]
 *@return: [none; uses variables within the class to pass information]
 */
-void IOUtilities::readInConfig()
+bool IOUtilities::readInConfig()
 {
 	if (readInConfigAlreadyDone)
 	{
-		//it's already been done during construction; do nothing
-		}
+		return true;
+	}
 	else
 	{
 		std::ifstream configscanner(filePathsEtc->configPath.c_str());
 		if (! configscanner.is_open())
 		{
 			throwScanError("Configuration file failed to open.");
-			return;
+			return false;
 		}
 		else
 		{
@@ -118,7 +118,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment x value.");
-							return;
+							return false;
 						}
 						break;
 					case 3:
@@ -129,7 +129,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment y value.");
-							return;
+							return false;
 						}
 						break;
 					case 4:
@@ -140,7 +140,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment z value.");
-							return;
+							return false;
 						}
 						break;
 					case 6:
@@ -151,7 +151,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment temperature value.");
-							return;
+							return false;
 						}
 						break;
 					case 8:
@@ -162,7 +162,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment max translation value.");
-							return;
+							return false;
 						}
 						break;
 					case 10:
@@ -173,7 +173,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing number of steps value.");
-							return;
+							return false;
 						}
 						break;
 					case 12:
@@ -185,7 +185,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing number of molecules value.");
-							return;
+							return false;
 						}
 						break;
 					case 14:
@@ -196,7 +196,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing oplsuapar path value.");
-							return;
+							return false;
 						}
 						break;
 					case 16:
@@ -204,41 +204,21 @@ void IOUtilities::readInConfig()
 						{
 							filePathsEtc->zmatrixPath = line;
 						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing z-matrix path value.");
-							return;
-						}
 						break;
 					case 18:
 						if(line.length() > 0)
 						{
 							filePathsEtc->statePath = line;
 						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing state file output path value.");
-							return;
-						}
 						break;
 					case 20:
 						if(line.length() > 0){
 							filePathsEtc->stateOutputPath = line;
 						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing state file output path value.");
-							return;
-						}
 						break;
 					case 22:
 						if(line.length() > 0){
 							filePathsEtc->pdbOutputPath = line;
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing PDB output path value.");
-							return;
 						}
 						break;
 					case 24:
@@ -249,7 +229,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment cutoff value.");
-							return;
+							return false;
 						}
 						break;
 					case 26:
@@ -260,7 +240,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment max rotation value.");
-							return;
+							return false;
 						}
 						break;
 					case 28:
@@ -271,7 +251,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing random seed value.");
-							return;
+							return false;
 						}
 						break;
 					case 30:
@@ -283,14 +263,23 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment primary atom index value.");
-							return;
+							return false;
 						}
 						break;
 						//end of disabled configuration file code.
 				}
-			
+
 				currentLine++;
 			}
+
+			if (filePathsEtc->zmatrixPath.empty() && filePathsEtc->statePath.empty())
+			{
+				throwScanError("Configuration file must specify either a Z-matrix or State file input.\n");
+				return false;
+			}
+
+			readInConfigAlreadyDone = true;
+			return true;
 		}
 	}
 }

@@ -89,7 +89,7 @@ class IOUtilities
 {	
 	public:
 			IOUtilities(std::string configPath); //this should be the constructor, which does very little on its own
-			void readInConfig(); //this should ideally be merged into the constructor, but run separately, everything is okay
+			bool readInConfig(); //this should ideally be merged into the constructor, but run separately, everything is okay
 			int ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection);
 			int WriteStateFile(char const* StateFile, Environment * sourceEnvironment, Molecule * sourceMoleculeCollection); 	
 			int writePDB(char const* pdbFile); //this is the old version from SimBox, probably not useful or usable
