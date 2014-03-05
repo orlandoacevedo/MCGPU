@@ -38,7 +38,7 @@ namespace metrosim
 		bool helpFlag;
 
 		/// Declares whether the query device option was specified.
-		bool queryFlag;
+		bool listDevicesFlag;
 
 		/// The number of non-option arguments given by the user.
 		int argCount;
@@ -66,7 +66,7 @@ namespace metrosim
 								argCount(0),
 								argList(NULL),
 								helpFlag(false),
-								queryFlag(false),
+								listDevicesFlag(false),
 								statusFlag(false), 
 								serialFlag(false),
 								parallelFlag(false), 

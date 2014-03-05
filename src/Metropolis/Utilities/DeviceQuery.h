@@ -36,4 +36,6 @@ bool openDeviceContext(DeviceContext* context, int major, int minor, int deviceI
 
 bool closeDeviceContext(DeviceContext* context);
 
+void printDeviceInformation();
+
 #endif

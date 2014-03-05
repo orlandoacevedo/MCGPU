@@ -65,9 +65,38 @@ bool closeDeviceContext(struct DeviceContext* context)
 	return true;
 }
 
+void printDeviceInformation()
+{
+	int devCount = 0;
+	cudaGetDeviceCount(&devCount);
+
+	if (devCount <= 0)
+	{
+		fprintf(stdout, "There are no available devices detected.\n");
+		return;
+	}
+
+	fprintf(stdout, "There are %d device(s) detected.\n\n", devCount);
+
+	for (int i = 0; i < devCount; ++i)
+	{
+		cudaDeviceProp info;
+		cudaGetDeviceProperties(&info, i);
+
+		fprintf(stdout, "Device %d: %s\n", i, info.name);
+		fprintf(stdout, "Clock Rate: %d\n", info.clockRate);
+		fprintf(stdout, "CUDA Version: %d.%d\n", info.major, info.minor);
+		fprintf(stdout, "Processor Count: %d\n", info.multiProcessorCount);
+		fprintf(stdout, "Global Memory: %d Bytes\n", info.totalGlobalMem);
+		fprintf(stdout, "Constant Memory: %d Bytes\n", info.totalConstMem);
+		fprintf(stdout, "Warp Size: %d\n", info.warpSize);
+		fprintf(stdout, "\n");
+	}
+}
+
 bool findDevice(int major, int minor, int device, cudaDeviceProp* properties)
 {
-	int devCount;
+	int devCount = 0;
 	cudaGetDeviceCount(&devCount);
 
 	if (devCount <= 0)
@@ -110,7 +139,7 @@ bool findDevice(int major, int minor, int device, cudaDeviceProp* properties)
 
 bool findBestDevice(int major, int minor, int* device, cudaDeviceProp* properties)
 {
-	int devCount;
+	int devCount = 0;
 	cudaGetDeviceCount(&devCount);
 
 	if (devCount <= 0)
