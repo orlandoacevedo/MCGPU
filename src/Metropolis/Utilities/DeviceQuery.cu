@@ -85,7 +85,7 @@ void printDeviceInformation()
 
 		fprintf(stdout, "Device %d: %s\n", i, info.name);
 		fprintf(stdout, "Clock Rate: %d\n", info.clockRate);
-		fprintf(stdout, "CUDA Version: %d.%d\n", info.major, info.minor);
+		fprintf(stdout, "Compute Capability: %d.%d\n", info.major, info.minor);
 		fprintf(stdout, "Processor Count: %d\n", info.multiProcessorCount);
 		fprintf(stdout, "Global Memory: %d Bytes\n", info.totalGlobalMem);
 		fprintf(stdout, "Constant Memory: %d Bytes\n", info.totalConstMem);
