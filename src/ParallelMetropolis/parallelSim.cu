@@ -565,6 +565,7 @@ void ParallelSim::runParallel(int steps)
             rejected++;
             //restore previous configuration
             ptrs->innerbox->Rollback(changeIdx);
+			writeChangeToDevice(changeIdx);
         }
     }
     currentEnergy=oldEnergy;
