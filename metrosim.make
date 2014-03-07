@@ -18,9 +18,13 @@ LFlags := -g -pg
 # Linker specific flags for the CUDA compiler
 LCuFlags := -g -pg -lcudadevrt
 
-AppName = metrosim
+Single := -DUSE_SINGLE_PRECISION
 
-all : build
+AppName := metrosim
+
+all : metrosim_double
+
+metrosim_double : build
 	g++ src/Applications/Application.cpp $(Include) $(CxxFlags) -o obj/src/Applications/Application.o
 	g++ src/Applications/CommandParsing.cpp $(Include) $(CxxFlags) -o obj/src/Applications/CommandParsing.o
 	g++ src/Metropolis/Simulation.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Simulation.o
@@ -28,6 +32,19 @@ all : build
 	g++ src/Metropolis/Utilities/IOUtilities.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/IOUtilities.o
 	g++ src/Metropolis/Utilities/StructLibrary.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/StructLibrary.o
 	nvcc src/Metropolis/Utilities/DeviceQuery.cu $(Include) -c -g -o obj/src/Metropolis/Utilities/DeviceQuery.o
+	nvcc -o bin/$(AppName) -g -pg obj/src/Applications/Application.o obj/src/Applications/CommandParsing.o \
+								  obj/src/Metropolis/Simulation.o obj/src/Metropolis/SerialSim/SerialBox.o \
+								  obj/src/Metropolis/Utilities/IOUtilities.o obj/src/Metropolis/Utilities/StructLibrary.o \
+								  obj/src/Metropolis/Utilities/DeviceQuery.o
+
+metrosim_single : build
+	g++ src/Applications/Application.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Applications/Application.o
+	g++ src/Applications/CommandParsing.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Applications/CommandParsing.o
+	g++ src/Metropolis/Simulation.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Metropolis/Simulation.o
+	g++ src/Metropolis/SerialSim/SerialBox.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Metropolis/SerialSim/SerialBox.o
+	g++ src/Metropolis/Utilities/IOUtilities.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/IOUtilities.o
+	g++ src/Metropolis/Utilities/StructLibrary.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/StructLibrary.o
+	nvcc src/Metropolis/Utilities/DeviceQuery.cu $(Single) $(Include) -c -g -o obj/src/Metropolis/Utilities/DeviceQuery.o
 	nvcc -o bin/$(AppName) -g -pg obj/src/Applications/Application.o obj/src/Applications/CommandParsing.o \
 								  obj/src/Metropolis/Simulation.o obj/src/Metropolis/SerialSim/SerialBox.o \
 								  obj/src/Metropolis/Utilities/IOUtilities.o obj/src/Metropolis/Utilities/StructLibrary.o \

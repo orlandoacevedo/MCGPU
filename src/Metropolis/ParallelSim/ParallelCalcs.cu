@@ -7,14 +7,15 @@
 
 #include <stdio.h>
 #include <math.h>
+#include "Metropolis/DataTypes.h"
 #include "ParallelCalcs.h"
 #include "ParallelCalcs.cuh"
 
 using namespace std;
 
-double calcMolecularEnergyContribution(int molIdx, int startIdx)
+Real calcMolecularEnergyContribution(int molIdx, int startIdx)
 {
-	double totalEnergy = 0;
+	Real totalEnergy = 0;
 	
 	//initialize energies to 0
 	for (int i = 0; i < ptrs->numEnergies; i++)
@@ -22,7 +23,7 @@ double calcMolecularEnergyContribution(int molIdx, int startIdx)
 		ptrs->energiesH[i] = 0;
 	}
 	
-	cudaMemcpy(ptrs->energiesD, ptrs->energiesH, ptrs->numEnergies * sizeof(double), cudaMemcpyHostToDevice);
+	cudaMemcpy(ptrs->energiesD, ptrs->energiesH, ptrs->numEnergies * sizeof(Real), cudaMemcpyHostToDevice);
 	
 	//calculate intermolecular energies (cutoff check for each molecule)
 	//using startIdx this way has the potential to waste a significant
@@ -36,7 +37,7 @@ double calcMolecularEnergyContribution(int molIdx, int startIdx)
 	calcIntraMolecularEnergy<<<numIntraEnergies / BLOCK_SIZE + 1, BLOCK_SIZE>>>
 	(ptrs->moleculesD, molIdx, numIntraEnergies, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
 						
-	cudaMemcpy(ptrs->energiesH, ptrs->energiesD, ptrs->numEnergies * sizeof(double), cudaMemcpyDeviceToHost);
+	cudaMemcpy(ptrs->energiesH, ptrs->energiesD, ptrs->numEnergies * sizeof(Real), cudaMemcpyDeviceToHost);
 	
 	for (i = 0; i < numEnergies; i++)
 	{
@@ -46,9 +47,9 @@ double calcMolecularEnergyContribution(int molIdx, int startIdx)
 	return totalEnergy;
 }
 
-double ParallelSim::calcSystemEnergy()
+Real ParallelSim::calcSystemEnergy()
 {
-	double totalEnergy = 0;
+	Real totalEnergy = 0;
 
 	//for each molecule
 	for (int mol = 0; mol < ptrs->numM; mol++)
@@ -59,7 +60,7 @@ double ParallelSim::calcSystemEnergy()
     return totalEnergy;
 }
 
-__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, int startIdx, Environment *environment, double *energies, int segmentSize)
+__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, int startIdx, Environment *environment, Real *energies, int segmentSize)
 {
 	int otherMol = blockIdx.x * blockDim.x + threadIdx.x;
 	
@@ -69,11 +70,11 @@ __global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, in
 		Atom atom2 = molecules[otherMol].atoms[environment->primaryAtomIndex];
 			
 		//calculate distance between atoms
-		double deltaX = makePeriodic(atom1.x - atom2.x, environment->x);
-		double deltaY = makePeriodic(atom1.y - atom2.y, environment->y);
-		double deltaZ = makePeriodic(atom1.z - atom2.z, environment->z);
+		Real deltaX = makePeriodic(atom1.x - atom2.x, environment->x);
+		Real deltaY = makePeriodic(atom1.y - atom2.y, environment->y);
+		Real deltaZ = makePeriodic(atom1.z - atom2.z, environment->z);
 		
-		double r2 = (deltaX * deltaX) +
+		Real r2 = (deltaX * deltaX) +
 					(deltaY * deltaY) + 
 					(deltaZ * deltaZ);
 
@@ -87,7 +88,7 @@ __global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, in
 	}
 }
 
-__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *environment, double *energies, int segmentSize)
+__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *environment, Real *energies, int segmentSize)
 {
 	Atom atom1 = molecules[currentMol].atoms[blockIdx.x],
 		 atom2 = molecules[otherMol].atoms[threadIdx.x];
@@ -95,19 +96,19 @@ __global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int o
 	
 	if (!(currentMol == otherMol && threadIdx.x == blockIdx.x) && atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
 	{
-		double totalEnergy = 0;
+		Real totalEnergy = 0;
 		
 		//calculate difference in coordinates
-		double deltaX = atom1.x - atom2.x;
-		double deltaY = atom1.y - atom2.y;
-		double deltaZ = atom1.z - atom2.z;
+		Real deltaX = atom1.x - atom2.x;
+		Real deltaY = atom1.y - atom2.y;
+		Real deltaZ = atom1.z - atom2.z;
 	  
 		//calculate distance between atoms
 		deltaX = makePeriodic(deltaX, environment->x);
 		deltaY = makePeriodic(deltaY, environment->y);
 		deltaZ = makePeriodic(deltaZ, environment->z);
 		
-		double r2 = (deltaX * deltaX) +
+		Real r2 = (deltaX * deltaX) +
 			 (deltaY * deltaY) + 
 			 (deltaZ * deltaZ);
 		
@@ -118,7 +119,7 @@ __global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int o
 	}
 }
 
-__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *environment, double *energies, int segmentSize)
+__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *environment, Real *energies, int segmentSize)
 {
 	Molecule cMol = molecules[currentMol];
 	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x,
@@ -129,24 +130,24 @@ __global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, in
 	{
 		energyIdx += currentMol * segmentSize;
 		
-		double totalEnergy = 0;
+		Real totalEnergy = 0;
 			
 		//calculate difference in coordinates
-		double deltaX = atom1.x - atom2.x;
-		double deltaY = atom1.y - atom2.y;
-		double deltaZ = atom1.z - atom2.z;
+		Real deltaX = atom1.x - atom2.x;
+		Real deltaY = atom1.y - atom2.y;
+		Real deltaZ = atom1.z - atom2.z;
 	  
 		//calculate distance between atoms
 		deltaX = makePeriodic(deltaX, environment->x);
 		deltaY = makePeriodic(deltaY, environment->y);
 		deltaZ = makePeriodic(deltaZ, environment->z);
 		
-		double r2 = (deltaX * deltaX) +
+		Real r2 = (deltaX * deltaX) +
 			 (deltaY * deltaY) + 
 			 (deltaZ * deltaZ);
 			
 		//gets the fValue if in the same molecule
-		double fvalue = 1.0;
+		Real fvalue = 1;
 		
 		totalEnergy += calc_lj(atom1, atom2, r2) * fvalue;
 		totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2)) * fvalue;
@@ -155,11 +156,11 @@ __global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, in
 	}
 }
 
-__device__ double calc_lj(Atom atom1, Atom atom2, double r2)
+__device__ Real calc_lj(Atom atom1, Atom atom2, Real r2)
 {
     //store LJ constants locally
-    double sigma = calcBlending(atom1.sigma, atom2.sigma);
-    double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+    Real sigma = calcBlending(atom1.sigma, atom2.sigma);
+    Real epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
     
     if (r2 == 0.0)
     {
@@ -168,15 +169,15 @@ __device__ double calc_lj(Atom atom1, Atom atom2, double r2)
     else
     {
     	//calculate terms
-    	const double sig2OverR2 = (sigma*sigma) / r2;
-		const double sig6OverR6 = (sig2OverR2*sig2OverR2*sig2OverR2);
-    	const double sig12OverR12 = (sig6OverR6*sig6OverR6);
-    	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+    	const Real sig2OverR2 = (sigma*sigma) / r2;
+		const Real sig6OverR6 = (sig2OverR2*sig2OverR2*sig2OverR2);
+    	const Real sig12OverR12 = (sig6OverR6*sig6OverR6);
+    	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
     }
 }
 
-__device__ double calcCharge(double charge1, double charge2, double r)
+__device__ Real calcCharge(Real charge1, Real charge2, Real r)
 {  
     if (r == 0.0)
     {
@@ -185,12 +186,12 @@ __device__ double calcCharge(double charge1, double charge2, double r)
     else
     {
     	// conversion factor below for units in kcal/mol
-    	const double e = 332.06;
+    	const Real e = 332.06;
         return (charge1 * charge2 * e) / r;
     }
 }
 
-__device__ double makePeriodic(double x, double box)
+__device__ Real makePeriodic(Real x, Real box)
 {
     
     while(x < -0.5 * box)
@@ -207,7 +208,7 @@ __device__ double makePeriodic(double x, double box)
 
 }
 
-__device__ double calcBlending(double d1, double d2)
+__device__ Real calcBlending(Real d1, Real d2)
 {
     return sqrt(d1 * d2);
 }
