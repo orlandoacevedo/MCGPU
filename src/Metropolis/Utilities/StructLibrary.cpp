@@ -10,11 +10,12 @@
 */
 
 #include "StructLibrary.h"
+#include "Metropolis/DataTypes.h"
 
 using namespace std;
 
 //Atom
-Atom createAtom(unsigned long id, double x, double y, double z)
+Atom createAtom(unsigned long id, Real x, Real y, Real z)
 {
 	Atom atom;
 	atom.id = id;
@@ -24,7 +25,7 @@ Atom createAtom(unsigned long id, double x, double y, double z)
 	return atom;
 }
 
-Atom createAtom(unsigned long id, double x, double y, double z, double sigma, double epsilon)
+Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon)
 {
 	Atom atom;
 	atom.id = id;
@@ -36,7 +37,7 @@ Atom createAtom(unsigned long id, double x, double y, double z, double sigma, do
 	return atom;
 }
 
-Atom createAtom(unsigned long id, double x, double y, double z, double sigma, double epsilon, double charge, char name)
+Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, char name)
 {
 	Atom atom;
 	atom.id = id;
@@ -52,12 +53,12 @@ Atom createAtom(unsigned long id, double x, double y, double z, double sigma, do
 
 void printAtoms(Atom *atoms, int count){}
 
-void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, int accepts, int rejects, double totalEnergy){}
+void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, int accepts, int rejects, Real totalEnergy){}
 
 
 
 //Environment
-Environment createEnvironment(double x, double y, double z, double maxTranslation, double temp, int numAtoms, double cutoff, double maxRotation)
+Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real temp, int numAtoms, Real cutoff, Real maxRotation)
 {
 	Environment environment;
 	environment.x = x;

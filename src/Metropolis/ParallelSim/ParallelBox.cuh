@@ -11,6 +11,7 @@
 
 #include "Utilities/Config_Scan.h"
 #include "Metropolis/Box.h"
+#include "Metropolis/DataTypes.h"
 
 //DeviceMolecule struct needs to be moved to same location as other structs
 class ParallelBox : Box
@@ -19,7 +20,7 @@ class ParallelBox : Box
 		Atom *atomsD;
 		Environment *environmentD;
 		Molecules *moleculesD, *transferMoleculesD;
-		double *energiesD;
+		Real *energiesD;
 
 
 	public:

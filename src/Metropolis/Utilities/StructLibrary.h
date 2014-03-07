@@ -10,19 +10,20 @@
 #define STRUCTLIBRARY_H
 
 #include <string>
+#include "Metropolis/DataTypes.h"
 
 //Forward declaration so that each can be used in methods below
 struct Atom
 {
 	std::string name; //this line was added in by albert to make IOUtilities compile
-	double x, y, z, sigma, epsilon, charge;
+	Real x, y, z, sigma, epsilon, charge;
 	unsigned long id;
 	
 };
 
 struct Environment
 {
-	double x, y, z, cutoff, temp, maxTranslation, maxRotation;
+	Real x, y, z, cutoff, temp, maxTranslation, maxRotation;
 	int numAtoms;
 	int numOfMolecules; //this line was added in by Albert to make IOUtilities compile
 	int primaryAtomIndex;
@@ -53,14 +54,14 @@ struct Molecule
 };
 
 //Atom
-Atom createAtom(unsigned long id, double x, double y, double z);
-Atom createAtom(unsigned long id, double x, double y, double z, double sigma, double epsilon);
-Atom createAtom(unsigned long id, double x, double y, double z, double sigma, double epsilon, double charge, char name);
+Atom createAtom(unsigned long id, Real x, Real y, Real z);
+Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon);
+Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, char name);
 void printAtoms(Atom *atoms, int count);
-void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, int accepts, int rejects, double totalEnergy);
+void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, int accepts, int rejects, Real totalEnergy);
 
 //Environment
-Environment createEnvironment(double x, double y, double z, double maxTranslation, double temp, int numAtoms, double cutoff, double maxRotation);
+Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real temp, int numAtoms, Real cutoff, Real maxRotation);
 
 //Molecule
 Molecule createMolecule(int id, Atom *atoms, int atomCount);
