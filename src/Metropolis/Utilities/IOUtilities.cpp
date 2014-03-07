@@ -64,7 +64,6 @@ IOUtilities::IOUtilities(std::string configPath){
 	
 	//note to people/myself: //enviro = currentEnvironment
 	
-<<<<<<< HEAD
 	configPath = configPath; //the path to the primary configuration file, which holds all other potential file paths
 	currentEnvironment = new Environment(); //The current working environment for the simulation
     unsigned int numOfSteps = 0; //The number of steps to run the simulation
@@ -76,17 +75,6 @@ IOUtilities::IOUtilities(std::string configPath){
 	cutoff = 0; //The nonbonded cutoff distance.
     
     readInConfig(); //do the rest of the construction
-=======
-    //memset(&filePathsEtc,0,sizeof(UtilitiesInfo)); //filePathsEtc is a struct of type UtilitiesInfo, and this is apparently the best way to instantiate the struct
-    			//except that may not be required? but it's left in for legacy reasons
-    filePathsEtc = new UtilitiesInfo();
-    filePathsEtc->configPath = configPath;
-    filePathsEtc->numOfSteps=0;
-    readInConfigAlreadyDone = false;
-    // readInConfigAlreadyDone = readInConfig(); //do the rest of the construction
-    // readInConfigAlreadyDone = true; //setting it this way will prevent unnecessarily running the entirety of readInConfig
-    			//though this setup means we cannot change the config file during the run, but this is by design.
->>>>>>> FETCH_HEAD
 }
 
 /*
@@ -96,17 +84,13 @@ IOUtilities::IOUtilities(std::string configPath){
 *@params: [none; uses variables within the class to pass information]
 *@return: [none; uses variables within the class to pass information]
 */
-bool IOUtilities::readInConfig()
+void IOUtilities::readInConfig()
 {
 	std::ifstream configscanner(configPath.c_str());
 	if (! configscanner.is_open())
 	{
-<<<<<<< HEAD
 		throwScanError("Configuration file failed to open.");
 		return;
-=======
-		return true;
->>>>>>> FETCH_HEAD
 	}
 	else
 	{
@@ -114,7 +98,6 @@ bool IOUtilities::readInConfig()
 		int currentLine = 1;
 		while (configscanner.good())
 		{
-<<<<<<< HEAD
 			std::getline(configscanner,line);
 		
 			//assigns attributes based on line number
@@ -301,193 +284,6 @@ bool IOUtilities::readInConfig()
 			}
 		
 			currentLine++;
-=======
-			throwScanError("Configuration file failed to open.");
-			return false;
-		}
-		else
-		{
-			std::string line;
-			int currentLine = 1;
-			while (configscanner.good())
-			{
-				std::getline(configscanner,line);
-			
-				//assigns attributes based on line number
-				//current line = actual line in the configuration file
-				switch(currentLine)
-				{
-					case 2:
-						if(line.length() > 0)
-						{
-							filePathsEtc->currentEnvironment->x = atof(line.c_str());
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing environment x value.");
-							return false;
-						}
-						break;
-					case 3:
-						if(line.length() > 0)
-						{
-							filePathsEtc->currentEnvironment->y = atof(line.c_str());
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing environment y value.");
-							return false;
-						}
-						break;
-					case 4:
-						if(line.length() > 0)
-						{
-							filePathsEtc->currentEnvironment->z = atof(line.c_str());
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing environment z value.");
-							return false;
-						}
-						break;
-					case 6:
-						if(line.length() > 0)
-						{
-							filePathsEtc->currentEnvironment->temp = atof(line.c_str());
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing environment temperature value.");
-							return false;
-						}
-						break;
-					case 8:
-						if(line.length() > 0)
-						{
-							filePathsEtc->currentEnvironment->maxTranslation = atof(line.c_str());
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing environment max translation value.");
-							return false;
-						}
-						break;
-					case 10:
-						if(line.length() > 0)
-						{
-							filePathsEtc->numOfSteps = atoi(line.c_str());
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing number of steps value.");
-							return false;
-						}
-						break;
-					case 12:
-						if(line.length() > 0)
-						{
-							filePathsEtc->currentEnvironment->numOfMolecules = atoi(line.c_str());
-							//printf("number is %d",enviro.numOfMolecules);
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing number of molecules value.");
-							return false;
-						}
-						break;
-					case 14:
-						if(line.length() > 0)
-						{
-							filePathsEtc->oplsuaparPath = line;
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing oplsuapar path value.");
-							return false;
-						}
-						break;
-					case 16:
-						if(line.length() > 0)
-						{
-							filePathsEtc->zmatrixPath = line;
-						}
-						break;
-					case 18:
-						if(line.length() > 0)
-						{
-							filePathsEtc->statePath = line;
-						}
-						break;
-					case 20:
-						if(line.length() > 0){
-							filePathsEtc->stateOutputPath = line;
-						}
-						break;
-					case 22:
-						if(line.length() > 0){
-							filePathsEtc->pdbOutputPath = line;
-						}
-						break;
-					case 24:
-						if(line.length() > 0)
-						{
-							filePathsEtc->currentEnvironment->cutoff = atof(line.c_str());
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing environment cutoff value.");
-							return false;
-						}
-						break;
-					case 26:
-						if(line.length() > 0)
-						{
-							filePathsEtc->currentEnvironment->maxRotation = atof(line.c_str());
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing environment max rotation value.");
-							return false;
-						}
-						break;
-					case 28:
-						if(line.length() > 0)
-						{
-							filePathsEtc->currentEnvironment->randomseed=atoi(line.c_str());
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing random seed value.");
-							return false;
-						}
-						break;
-					case 30:
-						if(line.length() > 0)
-						{
-							// Convert to a zero-based index
-							filePathsEtc->currentEnvironment->primaryAtomIndex=atoi(line.c_str()) - 1;
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing environment primary atom index value.");
-							return false;
-						}
-						break;
-						//end of disabled configuration file code.
-				}
-
-				currentLine++;
-			}
-
-			if (filePathsEtc->zmatrixPath.empty() && filePathsEtc->statePath.empty())
-			{
-				throwScanError("Configuration file must specify either a Z-matrix or State file input.\n");
-				return false;
-			}
-
-			readInConfigAlreadyDone = true;
-			return true;
->>>>>>> FETCH_HEAD
 		}
 	}
 }
@@ -858,19 +654,15 @@ void IOUtilities::destructOpls_Scan()
 int IOUtilities::scanInOpls()
 {
     int numOfLines=0;
-<<<<<<< HEAD
     std::ifstream oplsScanner(oplsuaparPath.c_str()); //##
-=======
-    std::ifstream oplsScanner(filePathsEtc->oplsuaparPath.c_str()); //##
->>>>>>> FETCH_HEAD
     if( !oplsScanner.is_open() ) //##
         return -1; //##
     else { //##
-        std::string line;  //##
+        string line;  //##
         while( oplsScanner.good() ) //##
         { //##
             numOfLines++; //##
-            std::getline(oplsScanner,line); //##
+            getline(oplsScanner,line); //##
 
             //check if it is a commented line,
             //or if it is a title line
@@ -888,14 +680,10 @@ int IOUtilities::scanInOpls()
 
 void IOUtilities::addLineToTable(string line, int numOfLines) //##
 {
-    std::string hashNum;
+    string hashNum;
     int secCol;
     double charge,sigma,epsilon;
-<<<<<<< HEAD
     string name, extra;
-=======
-    std::string name, extra;
->>>>>>> FETCH_HEAD
     std::stringstream ss(line);
 
     //check to see what format it is opls, V value, or neither
@@ -906,15 +694,9 @@ void IOUtilities::addLineToTable(string line, int numOfLines) //##
         ss >> hashNum >> secCol >> name >> charge >> sigma >> epsilon;
         char *atomtype = (char*)name.c_str(); 
          
-<<<<<<< HEAD
         Atom temp = Atom(0, -1, -1, -1, sigma, epsilon, charge, *atomtype);
         std::pair<std::map<std::string,Atom>::iterator,bool> ret;
         ret = oplsTable.insert(std::pair<std::string,Atom>(hashNum,temp) );
-=======
-        Atom temp = createAtom(0, -1, -1, -1, sigma, epsilon, charge, *atomtype);
-        std::pair<map<string,Atom>::iterator,bool> ret;
-        ret = oplsTable.insert( std::pair<string,Atom>(hashNum,temp) );
->>>>>>> FETCH_HEAD
 
         if (ret.second==false)
         {
@@ -940,19 +722,11 @@ void IOUtilities::addLineToTable(string line, int numOfLines) //##
     }
 }
 
-<<<<<<< HEAD
 int IOUtilities::OPLScheckFormat(string line)
 {   	 
     int hashNum, secCol;
     double charge,sigma,epsilon;
     string name, extra;
-=======
-int IOUtilities::checkFormat(std::string line)
-{   	 
-    int hashNum, secCol;
-    double charge,sigma,epsilon;
-    std::string name, extra;
->>>>>>> FETCH_HEAD
     std::stringstream iss(line);
 
     double v1,v2,v3,v4;
@@ -981,13 +755,8 @@ void IOUtilities::logErrors()
     // See if there were any errors
     if(errLinesOPLS.empty() || errHashes.empty()|| errHashesFourier.empty())
     {
-<<<<<<< HEAD
 	     //Errors in the format
 		  output<<"Errors found in the OPLS file: "<< oplsuaparPath<<std::endl;
-=======
-	    //Errors in the format
-		output<<"Errors found in the OPLS file: "<< filePathsEtc->oplsuaparPath.c_str() <<std::endl;
->>>>>>> FETCH_HEAD
         if(!errLinesOPLS.empty())
         {
 		      output << "Found Errors in the Format of the following Lines: " << std::endl;
@@ -999,11 +768,7 @@ void IOUtilities::logErrors()
                     }
 				    output << errLinesOPLS[a]<< " ";
 				}
-<<<<<<< HEAD
 				output << std::endl<< std::endl;
-=======
-				output << std::endl << std::endl;
->>>>>>> FETCH_HEAD
 		  }
 		  if(!errHashes.empty())
           {
@@ -1016,11 +781,7 @@ void IOUtilities::logErrors()
                     }
 				    output << errHashes[a]<< " ";
 				}
-<<<<<<< HEAD
 				output << std::endl<< std::endl;
-=======
-				output << std::endl << std::endl;
->>>>>>> FETCH_HEAD
 		  }
 		  if(!errHashesFourier.empty())
           {
@@ -1033,17 +794,13 @@ void IOUtilities::logErrors()
                     }
 				    output << errHashesFourier[a]<< " ";
 				}
-<<<<<<< HEAD
 				output << std::endl<< std::endl;
-=======
-				output << std::endl << std::endl;
->>>>>>> FETCH_HEAD
 		  }
 		  writeToLog(output,OPLS);
 	}
 }
 
-Atom IOUtilities::getAtom(std::string hashNum)
+Atom IOUtilities::getAtom(string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -1051,17 +808,12 @@ Atom IOUtilities::getAtom(std::string hashNum)
 	}
 	else
     {
-<<<<<<< HEAD
 	    std::cerr << "Index does not exist: "<< hashNum <<std::endl;
 		return Atom(0, -1, -1, -1, -1, -1, -1, '0');
-=======
-	    std::cerr << "Index does not exist: "<< hashNum << std::endl;
-		return createAtom(0, -1, -1, -1, -1, -1, -1, NULL);
->>>>>>> FETCH_HEAD
 	}
 }
 
-double IOUtilities::getSigma(std::string hashNum)
+double IOUtilities::getSigma(string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -1070,16 +822,12 @@ double IOUtilities::getSigma(std::string hashNum)
     }
     else
     {
-<<<<<<< HEAD
         std::cerr << "Index does not exist: "<< hashNum <<std::endl;
-=======
-        std::cerr << "Index does not exist: "<< hashNum << std::endl;
->>>>>>> FETCH_HEAD
         return -1;
     }
 }
 
-double IOUtilities::getEpsilon(std::string hashNum)
+double IOUtilities::getEpsilon(string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -1088,16 +836,12 @@ double IOUtilities::getEpsilon(std::string hashNum)
     }
     else
     {
-<<<<<<< HEAD
         std::cerr << "Index does not exist: "<< hashNum <<std::endl;
-=======
-        std::cerr << "Index does not exist: "<< hashNum << std::endl;
->>>>>>> FETCH_HEAD
         return -1;
     }
 }
 
-double IOUtilities::getCharge(std::string hashNum)
+double IOUtilities::getCharge(string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -1106,16 +850,12 @@ double IOUtilities::getCharge(std::string hashNum)
     }
     else
     {
-<<<<<<< HEAD
         std::cerr << "Index does not exist: "<< hashNum <<std::endl;
-=======
-        std::cerr << "Index does not exist: "<< hashNum << std::endl;
->>>>>>> FETCH_HEAD
         return -1;
     }
 }
 
-Fourier IOUtilities::getFourier(std::string hashNum)
+Fourier IOUtilities::getFourier(string hashNum)
 {
     if(fourierTable.count(hashNum)>0 )
     {
@@ -1124,11 +864,7 @@ Fourier IOUtilities::getFourier(std::string hashNum)
     }
     else
     {	    
-<<<<<<< HEAD
         std::cerr << "Index does not exist: "<< hashNum <<std::endl;
-=======
-        std::cerr << "Index does not exist: "<< hashNum << std::endl;
->>>>>>> FETCH_HEAD
         Fourier temp ={-1,-1,-1,-1};
         return temp;
     }

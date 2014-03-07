@@ -173,7 +173,6 @@ struct Fourier
 
 struct Atom
 {
-<<<<<<< HEAD
 	char name;
 	double x, y, z, sigma, epsilon, charge;
 	unsigned long atomIdentificationNumber;
@@ -198,11 +197,6 @@ struct Atom
 		charge = inCharge;
 		name = inName;
 	}
-=======
-	std::string name; //this line was added in by albert to make IOUtilities compile
-	Real x, y, z, sigma, epsilon, charge;
-	unsigned long id;
->>>>>>> FETCH_HEAD
 	
 };
 
