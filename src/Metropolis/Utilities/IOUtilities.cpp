@@ -1,6 +1,6 @@
 /*Intended goal: support read, parse, and extract operations on configuration files to properly initialize 
 *  a simulation environment.
-* [1] This file/class will, ideally, replace Config_Scan.cpp & will augment MetroUtil.cpp. (Started on 19 Feb. Beta completion on 28 Feb.)
+* [1] This file/class will, ideally, replace Config_Scan.cpp & will augment MetroUtil.cpp. (Started, 19 Feb. Beta completion, 28 Feb.)
 * [2] This file/class will, ideally, replace Opls_Scan and Zmatrix_Scan. (Started, 26 Feb. -Albert)
 *Created 19 February 2014. Albert Wallace
 */
@@ -10,6 +10,7 @@
 		->Wed, 26 Feb (Albert)
 		->Thu, 27 Feb (Albert, then Tavis)
 		->Fri, 28 Feb (Albert)
+		->Mon, 03 Mar; Wed, 05 Mar; Thur, 06 Mar (Albert)
 */
 /*Based on work from earlier sessions by Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo*/
 
@@ -17,19 +18,16 @@
 // He has good ideas and we should listen to him.
 // Also, do destructors. Please.
 
+//Again, dear self: Also try to handle the Zmatrix and State file. If there is no state file but there is a Zmatrix, it's fine.
+// if there is no Zmatrix but a state file, also fine. If both are there, that's fine. If neither is there, make a critical error out of it
+// and halt the process.
+
+
+
+
 //_________________________________________________________________________________________________________________
 //  INCLUDE statements
 //_________________________________________________________________________________________________________________
-#include <assert.h>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <iostream>
-#include <stdlib.h>
-#include <errno.h>
-#include <exception>
-#include <stdexcept>
-#include <vector>
 
 #include "StructLibrary.h"
 #include "IOUtilities.h"
@@ -61,20 +59,34 @@
 IOUtilities::IOUtilities(std::string configPath){
 
 
-	//UtilitiesInfo filePathsEtc; //all the variables used for this class are stuck in this struct for easy, yet unsafe, access
+	//UtilitiesInfo ; //all the variables used for this class are stuck in this struct for easy, yet unsafe, access
 					//there were apparently getters and setters to access them all, so if necessary, we can have one getter later for the entire struct
 	
 	//note to people/myself: //enviro = currentEnvironment
 	
+<<<<<<< HEAD
+	configPath = configPath; //the path to the primary configuration file, which holds all other potential file paths
+	currentEnvironment = new Environment(); //The current working environment for the simulation
+    unsigned int numOfSteps = 0; //The number of steps to run the simulation
+	oplsuaparPath = ""; //The path to the opls files containing additional geometry data, to be used (eventually) during simulation
+	zmatrixPath = ""; //The path to the Z-matrix files to be used during simulation
+	statePath = ""; //The path to the state information file to be used in the simulation
+	stateOutputPath = ""; //The path where we write the state output files after simulation
+	pdbOutputPath = ""; //The path where we write the pdb output files after simulation
+	cutoff = 0; //The nonbonded cutoff distance.
+    
+    readInConfig(); //do the rest of the construction
+=======
     //memset(&filePathsEtc,0,sizeof(UtilitiesInfo)); //filePathsEtc is a struct of type UtilitiesInfo, and this is apparently the best way to instantiate the struct
     			//except that may not be required? but it's left in for legacy reasons
     filePathsEtc = new UtilitiesInfo();
     filePathsEtc->configPath = configPath;
     filePathsEtc->numOfSteps=0;
     readInConfigAlreadyDone = false;
-    readInConfig(); //do the rest of the construction
-    readInConfigAlreadyDone = true; //setting it this way will prevent unnecessarily running the entirety of readInConfig
+    // readInConfigAlreadyDone = readInConfig(); //do the rest of the construction
+    // readInConfigAlreadyDone = true; //setting it this way will prevent unnecessarily running the entirety of readInConfig
     			//though this setup means we cannot change the config file during the run, but this is by design.
+>>>>>>> FETCH_HEAD
 }
 
 /*
@@ -84,19 +96,214 @@ IOUtilities::IOUtilities(std::string configPath){
 *@params: [none; uses variables within the class to pass information]
 *@return: [none; uses variables within the class to pass information]
 */
-void IOUtilities::readInConfig()
+bool IOUtilities::readInConfig()
 {
-	if (readInConfigAlreadyDone)
+	std::ifstream configscanner(configPath.c_str());
+	if (! configscanner.is_open())
 	{
-		//it's already been done during construction; do nothing
-		}
+<<<<<<< HEAD
+		throwScanError("Configuration file failed to open.");
+		return;
+=======
+		return true;
+>>>>>>> FETCH_HEAD
+	}
 	else
 	{
-		std::ifstream configscanner(filePathsEtc->configPath.c_str());
-		if (! configscanner.is_open())
+		std::string line;
+		int currentLine = 1;
+		while (configscanner.good())
 		{
+<<<<<<< HEAD
+			std::getline(configscanner,line);
+		
+			//assigns attributes based on line number
+			//current line = actual line in the configuration file
+			switch(currentLine)
+			{
+				case 2:
+					if(line.length() > 0)
+					{
+						currentEnvironment->x = atof(line.c_str());
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing environment x value.");
+						return;
+					}
+					break;
+				case 3:
+					if(line.length() > 0)
+					{
+						currentEnvironment->y = atof(line.c_str());
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing environment y value.");
+						return;
+					}
+					break;
+				case 4:
+					if(line.length() > 0)
+					{
+						currentEnvironment->z = atof(line.c_str());
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing environment z value.");
+						return;
+					}
+					break;
+				case 6:
+					if(line.length() > 0)
+					{
+						currentEnvironment->temp = atof(line.c_str());
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing environment temperature value.");
+						return;
+					}
+					break;
+				case 8:
+					if(line.length() > 0)
+					{
+						currentEnvironment->maxTranslation = atof(line.c_str());
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing environment max translation value.");
+						return;
+					}
+					break;
+				case 10:
+					if(line.length() > 0)
+					{
+						numOfSteps = atoi(line.c_str());
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing number of steps value.");
+						return;
+					}
+					break;
+				case 12:
+					if(line.length() > 0)
+					{
+						currentEnvironment->numOfMolecules = atoi(line.c_str());
+						//printf("number is %d",enviro.numOfMolecules);
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing number of molecules value.");
+						return;
+					}
+					break;
+				case 14:
+					if(line.length() > 0)
+					{
+						oplsuaparPath = line;
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing oplsuapar path value.");
+						return;
+					}
+					break;
+				case 16:
+					if(line.length() > 0)
+					{
+						zmatrixPath = line;
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing z-matrix path value.");
+						return;
+					}
+					break;
+				case 18:
+					if(line.length() > 0)
+					{
+						statePath = line;
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing state file output path value.");
+						return;
+					}
+					break;
+				case 20:
+					if(line.length() > 0){
+						stateOutputPath = line;
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing state file output path value.");
+						return;
+					}
+					break;
+				case 22:
+					if(line.length() > 0){
+						pdbOutputPath = line;
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing PDB output path value.");
+						return;
+					}
+					break;
+				case 24:
+					if(line.length() > 0)
+					{
+						currentEnvironment->cutoff = atof(line.c_str());
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing environment cutoff value.");
+						return;
+					}
+					break;
+				case 26:
+					if(line.length() > 0)
+					{
+						currentEnvironment->maxRotation = atof(line.c_str());
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing environment max rotation value.");
+						return;
+					}
+					break;
+				case 28:
+					if(line.length() > 0)
+					{
+						currentEnvironment->randomseed=atoi(line.c_str());
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing random seed value.");
+						return;
+					}
+					break;
+				case 30:
+					if(line.length() > 0)
+					{
+						// Convert to a zero-based index
+						currentEnvironment->primaryAtomIndex=atoi(line.c_str()) - 1;
+					}
+					else
+					{
+						throwScanError("Configuration file not well formed. Missing environment primary atom index value.");
+						return;
+					}
+					break;
+					//end of disabled configuration file code.
+			}
+		
+			currentLine++;
+=======
 			throwScanError("Configuration file failed to open.");
-			return;
+			return false;
 		}
 		else
 		{
@@ -118,7 +325,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment x value.");
-							return;
+							return false;
 						}
 						break;
 					case 3:
@@ -129,7 +336,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment y value.");
-							return;
+							return false;
 						}
 						break;
 					case 4:
@@ -140,7 +347,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment z value.");
-							return;
+							return false;
 						}
 						break;
 					case 6:
@@ -151,7 +358,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment temperature value.");
-							return;
+							return false;
 						}
 						break;
 					case 8:
@@ -162,7 +369,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment max translation value.");
-							return;
+							return false;
 						}
 						break;
 					case 10:
@@ -173,7 +380,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing number of steps value.");
-							return;
+							return false;
 						}
 						break;
 					case 12:
@@ -185,7 +392,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing number of molecules value.");
-							return;
+							return false;
 						}
 						break;
 					case 14:
@@ -196,7 +403,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing oplsuapar path value.");
-							return;
+							return false;
 						}
 						break;
 					case 16:
@@ -204,41 +411,21 @@ void IOUtilities::readInConfig()
 						{
 							filePathsEtc->zmatrixPath = line;
 						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing z-matrix path value.");
-							return;
-						}
 						break;
 					case 18:
 						if(line.length() > 0)
 						{
 							filePathsEtc->statePath = line;
 						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing state file output path value.");
-							return;
-						}
 						break;
 					case 20:
 						if(line.length() > 0){
 							filePathsEtc->stateOutputPath = line;
 						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing state file output path value.");
-							return;
-						}
 						break;
 					case 22:
 						if(line.length() > 0){
 							filePathsEtc->pdbOutputPath = line;
-						}
-						else
-						{
-							throwScanError("Configuration file not well formed. Missing PDB output path value.");
-							return;
 						}
 						break;
 					case 24:
@@ -249,7 +436,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment cutoff value.");
-							return;
+							return false;
 						}
 						break;
 					case 26:
@@ -260,7 +447,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment max rotation value.");
-							return;
+							return false;
 						}
 						break;
 					case 28:
@@ -271,7 +458,7 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing random seed value.");
-							return;
+							return false;
 						}
 						break;
 					case 30:
@@ -283,14 +470,24 @@ void IOUtilities::readInConfig()
 						else
 						{
 							throwScanError("Configuration file not well formed. Missing environment primary atom index value.");
-							return;
+							return false;
 						}
 						break;
 						//end of disabled configuration file code.
 				}
-			
+
 				currentLine++;
 			}
+
+			if (filePathsEtc->zmatrixPath.empty() && filePathsEtc->statePath.empty())
+			{
+				throwScanError("Configuration file must specify either a Z-matrix or State file input.\n");
+				return false;
+			}
+
+			readInConfigAlreadyDone = true;
+			return true;
+>>>>>>> FETCH_HEAD
 		}
 	}
 }
@@ -313,9 +510,9 @@ void IOUtilities::throwScanError(std::string message)
 /*
 int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection)
 {
-    ifstream inFile;
+    std::ifstream inFile;
     Environment tmpenv;
-    stringstream ss;
+    std::stringstream ss;
     char buf[250];
     
     cout<<"read state file "<<StateFile<<endl;
@@ -327,7 +524,7 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
     //read and check the environment
     if (inFile.is_open())
     {
-      inFile>>tmpenv.x>>tmpenv.y>>tmpenv.z>>tmpenv.maxTranslation>>tmpenv.numOfAtoms>>tmpenv.temp>>tmpenv.cutoff;
+      inFile>>tmpenv.x>>tmpenv.y>>tmpenv.z>>tmpenv.maxTranslation>>tmpenv.numAtoms>>tmpenv.temp>>tmpenv.cutoff;
     }
     
     if (memcmp(&tmpenv,destinationEnvironment,sizeof(Environment))!=0)
@@ -336,7 +533,7 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
        ss<<"x "<<tmpenv.x<<" "<<destinationEnvironment->x<<endl;
        ss<<"y "<<tmpenv.y<<" "<<destinationEnvironment->y<<endl;
        ss<<"z "<<tmpenv.z<<" "<<destinationEnvironment->z<<endl;
-       ss<<"numOfAtoms "<<tmpenv.numOfAtoms<<" "<<destinationEnvironment->numOfAtoms<<endl;
+       ss<<"numAtoms "<<tmpenv.numAtoms<<" "<<destinationEnvironment->numAtoms<<endl;
        ss<<"temperature "<<tmpenv.temp<<" "<<destinationEnvironment->temp<<endl;
        ss<<"cutoff "<<tmpenv.cutoff<<" "<<destinationEnvironment->cutoff<<endl;
        ss<<ss.str()<<endl; writeToLog(ss);      
@@ -351,78 +548,78 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
  	Angle currentAngle;
     Dihedral currentDi;
  	Hop      currentHop;
- 	Molecule *ptr=destinationMoleculeCollection;
+ 	Molecule *moleculePtr=destinationMoleculeCollection;
 
     while(inFile.good()&&molecno<destinationEnvironment->numOfMolecules)
     {
         inFile>>no;
-        assert(ptr->id==no);
+        assert(moleculePtr->moleculeIdentificationNumber==no);
         inFile.getline(buf,sizeof(buf)); //bypass atom flag
         inFile.getline(buf,sizeof(buf));
         assert(strcmp(buf,"= Atoms")==0);
 
-        for(int i=0;i<ptr->numOfAtoms;i++)
+        for(int i=0;i<moleculePtr->numAtoms;i++)
         {
-        	inFile>>currentAtom.id >> currentAtom.x >> currentAtom.y >> currentAtom.z>> currentAtom.sigma >> currentAtom.epsilon >> currentAtom.charge;
-        	assert(currentAtom.id==ptr->atoms[i].id);
-        	//printf("id:%d,x:%f,y:%f\n",currentAtom.id,currentAtom.x,currentAtom.y);
-        	memcpy(&ptr->atoms[i],&currentAtom,sizeof(Atom));
+        	inFile>>currentAtom.atomIdentificationNumber >> currentAtom.x >> currentAtom.y >> currentAtom.z>> currentAtom.sigma >> currentAtom.epsilon >> currentAtom.charge;
+        	assert(currentAtom.atomIdentificationNumber==ptr->atoms[i].atomIdentificationNumber);
+        	//printf("id:%d,x:%f,y:%f\n",currentAtom.atomIdentificationNumber,currentAtom.x,currentAtom.y);
+        	memcpy(&moleculePtr->atoms[i],&currentAtom,sizeof(Atom));
         }
 
         inFile.getline(buf,sizeof(buf)); //ignore bonds flag
         inFile.getline(buf,sizeof(buf));
         assert(strcmp(buf,"= Bonds")==0);
-        for(int i=0;i<ptr->numOfBonds;i++)
+        for(int i=0;i<moleculePtr->numOfBonds;i++)
         {
         	inFile>>currentBond.atom1 >>currentBond.atom2 >> currentBond.distance >> currentBond.variable;
-        	assert(currentBond.atom1==ptr->bonds[i].atom1);
-        	assert(currentBond.atom2==ptr->bonds[i].atom2);      	
-        	memcpy(&ptr->bonds[i],&currentBond,sizeof(Bond));
+        	assert(currentBond.atom1==moleculePtr->bonds[i].atom1);
+        	assert(currentBond.atom2==moleculePtr->bonds[i].atom2);      	
+        	memcpy(&moleculePtr->bonds[i],&currentBond,sizeof(Bond));
         }
 
         inFile.getline(buf,sizeof(buf)); //ignore Dihedrals flag
         inFile.getline(buf,sizeof(buf));
         assert(strcmp(buf,"= Dihedrals")==0);
-        for(int i=0;i<ptr->numOfDihedrals;i++)
+        for(int i=0;i<moleculePtr->numOfDihedrals;i++)
         {
         	inFile>>currentDi.atom1>>currentDi.atom2>>currentDi.value>>currentDi.variable;
-        	assert(currentDi.atom1==ptr->dihedrals[i].atom1);
-        	assert(currentDi.atom2==ptr->dihedrals[i].atom2);      	
-        	memcpy(&ptr->dihedrals[i],&currentDi,sizeof(Dihedral));
+        	assert(currentDi.atom1==moleculePtr->dihedrals[i].atom1);
+        	assert(currentDi.atom2==moleculePtr->dihedrals[i].atom2);      	
+        	memcpy(&moleculePtr->dihedrals[i],&currentDi,sizeof(Dihedral));
         }
 
         inFile.getline(buf,sizeof(buf)); //ignore hops flag
         inFile.getline(buf,sizeof(buf));
         assert(strcmp(buf,"=Hops")==0);
         // known BUG - if molecule has no hops (3 atoms or less) state file gives error crashing simulation
-        for(int i=0;i<ptr->numOfHops;i++)
+        for(int i=0;i<moleculePtr->numOfHops;i++)
         {
         	inFile>>currentHop.atom1>>currentHop.atom2 >>currentHop.hop;
-        	assert(currentHop.atom1==ptr->hops[i].atom1);
-        	assert(currentHop.atom2==ptr->hops[i].atom2);      	
-        	memcpy(&ptr->hops[i],&currentHop,sizeof(Hop));
+        	assert(currentHop.atom1==moleculePtr->hops[i].atom1);
+        	assert(currentHop.atom2==moleculePtr->hops[i].atom2);      	
+        	memcpy(&moleculePtr->hops[i],&currentHop,sizeof(Hop));
         }
 
         inFile.getline(buf,sizeof(buf)); //ignore angles flag
         inFile.getline(buf,sizeof(buf));
         assert(strcmp(buf,"= Angles")==0);
-        for(int i=0;i<ptr->numOfAngles;i++)
+        for(int i=0;i<moleculePtr->numOfAngles;i++)
         {
         	inFile>>currentAngle.atom1 >> currentAngle.atom2 >>currentAngle.value >>currentAngle.variable;
-        	assert(currentAngle.atom1==ptr->angles[i].atom1);
-        	assert(currentAngle.atom2==ptr->angles[i].atom2);      	
-        	memcpy(&ptr->angles[i],&currentAngle,sizeof(Angle));
+        	assert(currentAngle.atom1==moleculePtr->angles[i].atom1);
+        	assert(currentAngle.atom2==moleculePtr->angles[i].atom2);      	
+        	memcpy(&moleculePtr->angles[i],&currentAngle,sizeof(Angle));
         }       
 
         inFile.getline(buf,sizeof(buf)); //bypass == flag
         inFile.getline(buf,sizeof(buf));
         assert(strcmp(buf,"==")==0);   
 
-        ptr++;                    
+        moleculePtr++;                    
         molecno++;
     }
     inFile.close();
-    WriteStateFile("Confirm.state", destinationEnvironment, ptr);
+    WriteStateFile("Confirm.state", destinationEnvironment, moleculePtr);
 
 	return 0;
 }
@@ -445,21 +642,21 @@ int IOUtilities::WriteStateFile(char const* StateFile, Environment * sourceEnvir
     outFile.open(StateFile);
     
     //print the environment
-    outFile << sourceEnvironment->x << " " << sourceEnvironment->y << " " << sourceEnvironment->z << " " << sourceEnvironment->maxTranslation<<" " << sourceEnvironment->numOfAtoms
+    outFile << sourceEnvironment->x << " " << sourceEnvironment->y << " " << sourceEnvironment->z << " " << sourceEnvironment->maxTranslation<<" " << sourceEnvironment->numAtoms
         << " " << sourceEnvironment->temperature << " " << sourceEnvironment->cutoff <<endl;
     outFile << endl; // blank line
     
     for(int i = 0; i < numOfMolecules; i++)
     {
         Molecule currentMol = sourceMoleculeCollections[i];
-        outFile << currentMol.id << endl;
+        outFile << currentMol.moleculeIdentificationNumber << endl;
         outFile << "= Atoms" << endl; // delimiter
     
         //write atoms
-        for(int j = 0; j < currentMol.numOfAtoms; j++)
+        for(int j = 0; j < currentMol.numAtoms; j++)
         {
             Atom currentAtom = currentMol.atoms[j];
-            outFile << currentAtom.id << " "
+            outFile << currentAtom.atomIdentificationNumber << " "
                 << currentAtom.x << " " << currentAtom.y << " " << currentAtom.z
                 << " " << currentAtom.sigma << " " << currentAtom.epsilon  << " "
                 << currentAtom.charge << endl;
@@ -563,7 +760,7 @@ int IOUtilities::writePDB(char const* pdbFile)
     for (int i = 0; i < numOfMolecules; i++)
     {
     	Molecule currentMol = molecules[i];    	
-        for (int j = 0; j < currentMol.numOfAtoms; j++)
+        for (int j = 0; j < currentMol.numAtoms; j++)
         {
         	Atom currentAtom = currentMol.atoms[j];
             outputFile.setf(ios_base::left,ios_base::adjustfield);
@@ -571,7 +768,7 @@ int IOUtilities::writePDB(char const* pdbFile)
             outputFile << "ATOM";
             outputFile.setf(ios_base::right,ios_base::adjustfield);
             outputFile.width(5);
-            outputFile << currentAtom.id + 1;
+            outputFile << currentAtom.atomIdentificationNumber + 1;
             outputFile.width(3); // change from 5
             outputFile << currentAtom.name;
             outputFile.width(6); // change from 4
@@ -620,7 +817,7 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
             outputFile << "ATOM";
             outputFile.setf(std::ios_base::right,std::ios_base::adjustfield);
             outputFile.width(5);
-            outputFile << currentAtom.id + 1;
+            outputFile << currentAtom.atomIdentificationNumber + 1;
             outputFile.width(3); // change from 5
             outputFile << currentAtom.name;
             outputFile.width(6); // change from 4
@@ -648,12 +845,12 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
 //  OPLS configuration scanning. [from Opls_Scan.cpp]
 //_________________________________________________________________________________________________________________
 
-/*Opls_Scan::Opls_Scan(string filename)
-{
-   fileName = filename;
-}*/
+// Opls_Scan::Opls_Scan(string filename)
+// {
+//    fileName = filename;
+// }
 
-void IOUtilities::deleteOpls_Scan()
+void IOUtilities::destructOpls_Scan()
 {
     oplsTable.clear();
 }
@@ -661,15 +858,19 @@ void IOUtilities::deleteOpls_Scan()
 int IOUtilities::scanInOpls()
 {
     int numOfLines=0;
-    ifstream oplsScanner(filePathsEtc->oplsuaparPath.c_str()); //##
+<<<<<<< HEAD
+    std::ifstream oplsScanner(oplsuaparPath.c_str()); //##
+=======
+    std::ifstream oplsScanner(filePathsEtc->oplsuaparPath.c_str()); //##
+>>>>>>> FETCH_HEAD
     if( !oplsScanner.is_open() ) //##
         return -1; //##
     else { //##
-        string line;  //##
+        std::string line;  //##
         while( oplsScanner.good() ) //##
         { //##
             numOfLines++; //##
-            getline(oplsScanner,line); //##
+            std::getline(oplsScanner,line); //##
 
             //check if it is a commented line,
             //or if it is a title line
@@ -687,23 +888,33 @@ int IOUtilities::scanInOpls()
 
 void IOUtilities::addLineToTable(string line, int numOfLines) //##
 {
-    string hashNum;
+    std::string hashNum;
     int secCol;
     double charge,sigma,epsilon;
+<<<<<<< HEAD
     string name, extra;
-    stringstream ss(line);
+=======
+    std::string name, extra;
+>>>>>>> FETCH_HEAD
+    std::stringstream ss(line);
 
     //check to see what format it is opls, V value, or neither
-    int format = checkFormat(line);
+    int format = OPLScheckFormat(line);
               
     if(format == 1)
     {      	
         ss >> hashNum >> secCol >> name >> charge >> sigma >> epsilon;
         char *atomtype = (char*)name.c_str(); 
          
+<<<<<<< HEAD
+        Atom temp = Atom(0, -1, -1, -1, sigma, epsilon, charge, *atomtype);
+        std::pair<std::map<std::string,Atom>::iterator,bool> ret;
+        ret = oplsTable.insert(std::pair<std::string,Atom>(hashNum,temp) );
+=======
         Atom temp = createAtom(0, -1, -1, -1, sigma, epsilon, charge, *atomtype);
-        pair<map<string,Atom>::iterator,bool> ret;
-        ret = oplsTable.insert( pair<string,Atom>(hashNum,temp) );
+        std::pair<map<string,Atom>::iterator,bool> ret;
+        ret = oplsTable.insert( std::pair<string,Atom>(hashNum,temp) );
+>>>>>>> FETCH_HEAD
 
         if (ret.second==false)
         {
@@ -715,8 +926,8 @@ void IOUtilities::addLineToTable(string line, int numOfLines) //##
         double v0,v1,v2,v3;
         ss >> hashNum >> v0 >> v1 >> v2 >> v3 ;
         Fourier vValues = {v0,v1,v2,v3};
-        pair<map<string,Fourier>::iterator,bool> ret2;
-        ret2 = fourierTable.insert( pair<string,Fourier>(hashNum,vValues) );
+        std::pair<map<string,Fourier>::iterator,bool> ret2;
+        ret2 = fourierTable.insert( std::pair<string,Fourier>(hashNum,vValues) );
 
         if (ret2.second==false)
         {
@@ -729,15 +940,23 @@ void IOUtilities::addLineToTable(string line, int numOfLines) //##
     }
 }
 
-int IOUtilities::checkFormat(string line)
+<<<<<<< HEAD
+int IOUtilities::OPLScheckFormat(string line)
 {   	 
     int hashNum, secCol;
     double charge,sigma,epsilon;
     string name, extra;
-    stringstream iss(line);
+=======
+int IOUtilities::checkFormat(std::string line)
+{   	 
+    int hashNum, secCol;
+    double charge,sigma,epsilon;
+    std::string name, extra;
+>>>>>>> FETCH_HEAD
+    std::stringstream iss(line);
 
     double v1,v2,v3,v4;
-    stringstream issw(line);
+    std::stringstream issw(line);
 
     //see if format is the V values for the diherdral format
     if((issw >> hashNum >> v1 >> v2 >> v3 >> v4) )
@@ -758,56 +977,73 @@ int IOUtilities::checkFormat(string line)
 
 void IOUtilities::logErrors()
 {
-    stringstream output;
+    std::stringstream output;
     // See if there were any errors
     if(errLinesOPLS.empty() || errHashes.empty()|| errHashesFourier.empty())
     {
+<<<<<<< HEAD
 	     //Errors in the format
-		  output<<"Errors found in the OPLS file: "<< fileName<<endl;
+		  output<<"Errors found in the OPLS file: "<< oplsuaparPath<<std::endl;
+=======
+	    //Errors in the format
+		output<<"Errors found in the OPLS file: "<< filePathsEtc->oplsuaparPath.c_str() <<std::endl;
+>>>>>>> FETCH_HEAD
         if(!errLinesOPLS.empty())
         {
-		      output << "Found Errors in the Format of the following Lines: " << endl;
+		      output << "Found Errors in the Format of the following Lines: " << std::endl;
 				for(int a=0; a<errLinesOPLS.size(); a++)
                 {
 				    if(a%10==0 && a!=0) //ten per line
                     {
-					     output << endl;
+					     output << std::endl;
                     }
 				    output << errLinesOPLS[a]<< " ";
 				}
-				output << endl<< endl;
+<<<<<<< HEAD
+				output << std::endl<< std::endl;
+=======
+				output << std::endl << std::endl;
+>>>>>>> FETCH_HEAD
 		  }
 		  if(!errHashes.empty())
           {
-		      output << "Error - The following OPLS values existed more than once: " << endl;
+		      output << "Error - The following OPLS values existed more than once: " << std::endl;
 				for(int a=0; a<errHashes.size(); a++)
                 {
 				    if(a%10==0 && a!=0) //ten per line
                     {
-					     output << endl;
+					     output << std::endl;
                     }
 				    output << errHashes[a]<< " ";
 				}
-				output << endl<< endl;
+<<<<<<< HEAD
+				output << std::endl<< std::endl;
+=======
+				output << std::endl << std::endl;
+>>>>>>> FETCH_HEAD
 		  }
 		  if(!errHashesFourier.empty())
           {
-		      output << "Error - The following Fourier Coefficent values existed more than once: " << endl;
+		      output << "Error - The following Fourier Coefficent values existed more than once: " << std::endl;
 				for(int a=0; a<errHashesFourier.size(); a++)
                 {
 				    if(a%10==0 && a!=0) //ten per line
                     {
-					     output << endl;
+					     output << std::endl;
                     }
 				    output << errHashesFourier[a]<< " ";
 				}
-				output << endl<< endl;
+<<<<<<< HEAD
+				output << std::endl<< std::endl;
+=======
+				output << std::endl << std::endl;
+>>>>>>> FETCH_HEAD
 		  }
 		  writeToLog(output,OPLS);
 	}
 }
 
-Atom IOUtilities::getAtom(string hashNum)
+Atom IOUtilities::getAtom(std::string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -815,12 +1051,17 @@ Atom IOUtilities::getAtom(string hashNum)
 	}
 	else
     {
-	    cerr << "Index does not exist: "<< hashNum <<endl;
+<<<<<<< HEAD
+	    std::cerr << "Index does not exist: "<< hashNum <<std::endl;
+		return Atom(0, -1, -1, -1, -1, -1, -1, '0');
+=======
+	    std::cerr << "Index does not exist: "<< hashNum << std::endl;
 		return createAtom(0, -1, -1, -1, -1, -1, -1, NULL);
+>>>>>>> FETCH_HEAD
 	}
 }
 
-double IOUtilities::getSigma(string hashNum)
+double IOUtilities::getSigma(std::string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -829,12 +1070,16 @@ double IOUtilities::getSigma(string hashNum)
     }
     else
     {
-        cerr << "Index does not exist: "<< hashNum <<endl;
+<<<<<<< HEAD
+        std::cerr << "Index does not exist: "<< hashNum <<std::endl;
+=======
+        std::cerr << "Index does not exist: "<< hashNum << std::endl;
+>>>>>>> FETCH_HEAD
         return -1;
     }
 }
 
-double IOUtilities::getEpsilon(string hashNum)
+double IOUtilities::getEpsilon(std::string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -843,12 +1088,16 @@ double IOUtilities::getEpsilon(string hashNum)
     }
     else
     {
-        cerr << "Index does not exist: "<< hashNum <<endl;
+<<<<<<< HEAD
+        std::cerr << "Index does not exist: "<< hashNum <<std::endl;
+=======
+        std::cerr << "Index does not exist: "<< hashNum << std::endl;
+>>>>>>> FETCH_HEAD
         return -1;
     }
 }
 
-double IOUtilities::getCharge(string hashNum)
+double IOUtilities::getCharge(std::string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -857,12 +1106,16 @@ double IOUtilities::getCharge(string hashNum)
     }
     else
     {
-        cerr << "Index does not exist: "<< hashNum <<endl;
+<<<<<<< HEAD
+        std::cerr << "Index does not exist: "<< hashNum <<std::endl;
+=======
+        std::cerr << "Index does not exist: "<< hashNum << std::endl;
+>>>>>>> FETCH_HEAD
         return -1;
     }
 }
 
-Fourier IOUtilities::getFourier(string hashNum)
+Fourier IOUtilities::getFourier(std::string hashNum)
 {
     if(fourierTable.count(hashNum)>0 )
     {
@@ -871,7 +1124,11 @@ Fourier IOUtilities::getFourier(string hashNum)
     }
     else
     {	    
-        cerr << "Index does not exist: "<< hashNum <<endl;
+<<<<<<< HEAD
+        std::cerr << "Index does not exist: "<< hashNum <<std::endl;
+=======
+        std::cerr << "Index does not exist: "<< hashNum << std::endl;
+>>>>>>> FETCH_HEAD
         Fourier temp ={-1,-1,-1,-1};
         return temp;
     }
@@ -880,24 +1137,26 @@ Fourier IOUtilities::getFourier(string hashNum)
 
 
 
-/*
+
 //_________________________________________________________________________________________________________________
 //  Zmatrix opening & parsing/Zmatrix configuration. [from Zmatrix_Scan.cpp]
 //_________________________________________________________________________________________________________________
-Zmatrix_Scan::Zmatrix_Scan(string filename, Opls_Scan* oplsScannerRef)
-{
-    fileName = filename;
-    oplsScanner = oplsScannerRef;
-    startNewMolecule = false;
-}
 
-Zmatrix_Scan::~Zmatrix_Scan(){}
 
-int Zmatrix_Scan::scanInZmatrix()
+// Zmatrix_Scan::Zmatrix_Scan(string filename, Opls_Scan* oplsScannerRef)
+// {
+//     fileName = filename;
+//     oplsScanner = oplsScannerRef;
+//     startNewMolecule_ZM = false;
+// }
+
+void IOUtilities::destructZmatrix_Scan(){}
+
+int IOUtilities::scanInZmatrix()
 {
-    stringstream output;
+    std::stringstream output;
     int numOfLines=0;
-    ifstream zmatrixScanner(fileName.c_str());
+    std::ifstream zmatrixScanner(zmatrixPath.c_str());
 
     if( !zmatrixScanner.is_open() )
     {
@@ -924,44 +1183,48 @@ int Zmatrix_Scan::scanInZmatrix()
             }
             catch(std::out_of_range& e){}
 
-            if (startNewMolecule)
+            if (startNewMolecule_ZM)
             {
                 Atom* atomArray;
                 Bond* bondArray;
                 Angle* angleArray;
                 Dihedral* dihedralArray;
                 
-                atomArray = (Atom*) malloc(sizeof(Atom) * atomVector.size());
-                bondArray = (Bond*) malloc(sizeof(Bond) * bondVector.size());
-                angleArray = (Angle*) malloc(sizeof(Angle) * angleVector.size());
-                dihedralArray = (Dihedral*) malloc(sizeof(Dihedral) * dihedralVector.size());
+                atomArray = (Atom*) malloc(sizeof(Atom) * atomVector_ZM.size());
+                bondArray = (Bond*) malloc(sizeof(Bond) * bondVector_ZM.size());
+                angleArray = (Angle*) malloc(sizeof(Angle) * angleVector_ZM.size());
+                dihedralArray = (Dihedral*) malloc(sizeof(Dihedral) * dihedralVector_ZM.size());
 
-                for (int i = 0; i < atomVector.size(); i++)
+                for (int i = 0; i < atomVector_ZM.size(); i++)
                 {
-                    atomArray[i] = atomVector[i];
+                    atomArray[i] = atomVector_ZM[i];
                 }
-                for (int i = 0; i < bondVector.size(); i++)
+                for (int i = 0; i < bondVector_ZM.size(); i++)
                 {
-                    bondArray[i] = bondVector[i];
+                    bondArray[i] = bondVector_ZM[i];
                 }
-                for (int i = 0; i < angleVector.size(); i++)
+                for (int i = 0; i < angleVector_ZM.size(); i++)
                 {
-                    angleArray[i] = angleVector[i];
+                    angleArray[i] = angleVector_ZM[i];
                 }
-                for (int i = 0; i < dihedralVector.size(); i++)
+                for (int i = 0; i < dihedralVector_ZM.size(); i++)
                 {
-                    dihedralArray[i] = dihedralVector[i];
+                    dihedralArray[i] = dihedralVector_ZM[i];
                 }
+				
+				Hop * dummyHop = new Hop();
+				
+				Molecule dummyMolecule(-1, atomArray, angleArray, bondArray, dihedralArray, dummyHop,
+                     atomVector_ZM.size(), angleVector_ZM.size(), bondVector_ZM.size(), dihedralVector_ZM.size(), 0);
+				
+                moleculePattern_ZM.push_back(dummyMolecule);
 
-                moleculePattern.push_back(createMolecule(-1, atomArray, angleArray, bondArray, dihedralArray, 
-                     atomVector.size(), angleVector.size(), bondVector.size(), dihedralVector.size()));
+                atomVector_ZM.clear();
+                bondVector_ZM.clear();
+                angleVector_ZM.clear();
+                dihedralVector_ZM.clear();
 
-                atomVector.clear();
-                bondVector.clear();
-                angleVector.clear();
-                dihedralVector.clear();
-
-                startNewMolecule = false;
+                startNewMolecule_ZM = false;
             } 
         }
 
@@ -972,15 +1235,15 @@ int Zmatrix_Scan::scanInZmatrix()
     return 0;
 }
 
-void Zmatrix_Scan::parseLine(string line, int numOfLines)
+void IOUtilities::parseLine(string line, int numOfLines)
 {
 
     string atomID, atomType, oplsA, oplsB, bondWith, bondDistance, angleWith, angleMeasure, dihedralWith, dihedralMeasure;
 
-    stringstream ss;
+    std::stringstream ss;
 
     //check if line contains correct format
-    int format = checkFormat(line);
+    int format = ZMcheckFormat(line);
 
     if(format == 1)
     {
@@ -996,8 +1259,8 @@ void Zmatrix_Scan::parseLine(string line, int numOfLines)
 		  
         if (oplsA.compare("-1") != 0)
         {
-            lineAtom = oplsScanner->getAtom(oplsA);
-            lineAtom.id = atoi(atomID.c_str());
+            lineAtom = getAtom(oplsA);
+            lineAtom.atomIdentificationNumber = atoi(atomID.c_str());
             lineAtom.x = 0;
             lineAtom.y = 0;
             lineAtom.z = 0;
@@ -1005,59 +1268,59 @@ void Zmatrix_Scan::parseLine(string line, int numOfLines)
         else//dummy atom
         {
         	char dummy = 'X';
-            lineAtom = createAtom(atoi(atomID.c_str()), -1, -1, -1, -1, -1, -1, dummy);
+            lineAtom = Atom(atoi(atomID.c_str()), -1, -1, -1, -1, -1, -1, dummy);
         }
-		  atomVector.push_back(lineAtom);
+		  atomVector_ZM.push_back(lineAtom);
 
         if (bondWith.compare("0") != 0)
         {
-            lineBond.atom1 = lineAtom.id;
+            lineBond.atom1 = lineAtom.atomIdentificationNumber;
             lineBond.atom2 = atoi(bondWith.c_str());
-            lineBond.distance = atof(bondDistance.c_str());
-            lineBond.variable = false;
-            bondVector.push_back(lineBond);
+            lineBond.lengthOfBond = atof(bondDistance.c_str());
+            lineBond.canBeVaried = false;
+            bondVector_ZM.push_back(lineBond);
         }
 
         if (angleWith.compare("0") != 0)
         {
-            lineAngle.atom1 = lineAtom.id;
+            lineAngle.atom1 = lineAtom.atomIdentificationNumber;
             lineAngle.atom2 = atoi(angleWith.c_str());
-            lineAngle.value = atof(angleMeasure.c_str());
-            lineAngle.variable = false;
-            angleVector.push_back(lineAngle);
+            lineAngle.magnitudeOfAngle = atof(angleMeasure.c_str());
+            lineAngle.canBeVaried = false;
+            angleVector_ZM.push_back(lineAngle);
         }
 
         if (dihedralWith.compare("0") != 0)
         {
-            lineDihedral.atom1 = lineAtom.id;
+            lineDihedral.atom1 = lineAtom.atomIdentificationNumber;
             lineDihedral.atom2 = atoi(dihedralWith.c_str());
-            lineDihedral.value = atof(dihedralMeasure.c_str());
-            lineDihedral.variable = false;
-            dihedralVector.push_back(lineDihedral);
+            lineDihedral.distanceBetweenAtoms = atof(dihedralMeasure.c_str());
+            lineDihedral.canBeVaried = false;
+            dihedralVector_ZM.push_back(lineDihedral);
         }
     } //end if format == 1
 
     else if(format == 2)
     {
-        startNewMolecule = true;
+        startNewMolecule_ZM = true;
 	}
     else if(format == 3)
     {
-        startNewMolecule = true;
+        startNewMolecule_ZM = true;
     }
-    if (previousFormat >= 3 && format == -1)
+    if (previousFormat_ZM >= 3 && format == -1)
     {
-        handleZAdditions(line, previousFormat);
+        handleZAdditions(line, previousFormat_ZM);
     }
 
-    previousFormat = format;
+    previousFormat_ZM = format;
 }
     
-int Zmatrix_Scan::checkFormat(string line)
+int IOUtilities::ZMcheckFormat(string line)
 {
     int format =-1; 
-    stringstream iss(line);
-    stringstream iss2(line);
+    std::stringstream iss(line);
+    std::stringstream iss2(line);
     string atomType, someLine;
     int atomID, oplsA, oplsB, bondWith, angleWith,dihedralWith,extra;
     double bondDistance, angleMeasure, dihedralMeasure;	 
@@ -1123,11 +1386,11 @@ int Zmatrix_Scan::checkFormat(string line)
     return format;
 }
 
-void Zmatrix_Scan::handleZAdditions(string line, int cmdFormat)
+void IOUtilities::handleZAdditions(string line, int cmdFormat)
 {
     vector<int> atomIds;
     int id;
-    stringstream tss(line.substr(0,15) );
+    std::stringstream tss(line.substr(0,15) );
 
     if(line.find("AUTO")!=string::npos)
     {
@@ -1162,12 +1425,12 @@ void Zmatrix_Scan::handleZAdditions(string line, int cmdFormat)
             break;
             case 4:
                 // Variable Bonds follow
-                for(int i=0; i< moleculePattern[0].numOfBonds; i++)
+                for(int i=0; i< moleculePattern_ZM[0].numOfBonds; i++)
                 {
-                    if(  moleculePattern[0].bonds[i].atom1 >= start &&  moleculePattern[0].bonds[i].atom1 <= end)
+                    if(  moleculePattern_ZM[0].bonds[i].atom1 >= start &&  moleculePattern_ZM[0].bonds[i].atom1 <= end)
                     {
-                        //cout << "Bond Atom1: "<<  moleculePattern[0].bonds[i].atom1 << " : " <<  moleculePattern[0].bonds[i].variable<<endl;//DEBUG
-                        moleculePattern[0].bonds[i].variable = true;
+                        //cout << "Bond Atom1: "<<  moleculePattern_ZM[0].bonds[i].atom1 << " : " <<  moleculePattern_ZM[0].bonds[i].variable<<std::endl;//DEBUG
+                        moleculePattern_ZM[0].bonds[i].canBeVaried = true;
                     }
                 }
                 break;
@@ -1179,12 +1442,12 @@ void Zmatrix_Scan::handleZAdditions(string line, int cmdFormat)
                 break;
             case 7:
                 //  Variable Bond Angles follow
-                for(int i=0; i<  moleculePattern[0].numOfAngles; i++)
+                for(int i=0; i<  moleculePattern_ZM[0].numOfAngles; i++)
                 {
-                    if(  moleculePattern[0].angles[i].atom1 >= start && moleculePattern[0].angles[i].atom1 <= end)
+                    if(  moleculePattern_ZM[0].angles[i].atom1 >= start && moleculePattern_ZM[0].angles[i].atom1 <= end)
                     {
-                    //cout << "Angle Atom1: "<<  moleculePattern[0].angles[i].atom1 << " : " << moleculePattern[0].angles[i].variable << endl;//DEBUG
-                    moleculePattern[0].angles[i].variable = true;
+                    //cout << "Angle Atom1: "<<  moleculePattern_ZM[0].angles[i].atom1 << " : " << moleculePattern_ZM[0].angles[i].variable << std::endl;//DEBUG
+                    moleculePattern_ZM[0].angles[i].canBeVaried = true;
                     }
                 }
                 break;
@@ -1193,12 +1456,12 @@ void Zmatrix_Scan::handleZAdditions(string line, int cmdFormat)
                 break;
             case 9:
                 // Variable Dihedrals follow
-                for(int i=0; i< moleculePattern[0].numOfDihedrals; i++)
+                for(int i=0; i< moleculePattern_ZM[0].numOfDihedrals; i++)
                 {
-                    if(  moleculePattern[0].dihedrals[i].atom1 >= start &&  moleculePattern[0].dihedrals[i].atom1 <= end )
+                    if(  moleculePattern_ZM[0].dihedrals[i].atom1 >= start &&  moleculePattern_ZM[0].dihedrals[i].atom1 <= end )
                     {
-                        //cout << "Dihedral Atom1: "<<  moleculePattern[0].dihedrals[i].atom1 << " : " <<   moleculePattern[0].dihedrals[i].variable << endl;//DEBUG
-                        moleculePattern[0].dihedrals[i].variable = true;
+                        //cout << "Dihedral Atom1: "<<  moleculePattern_ZM[0].dihedrals[i].atom1 << " : " <<   moleculePattern_ZM[0].dihedrals[i].variable << std::endl;//DEBUG
+                        moleculePattern_ZM[0].dihedrals[i].canBeVaried = true;
                     }
                 }
                 break;
@@ -1212,12 +1475,12 @@ void Zmatrix_Scan::handleZAdditions(string line, int cmdFormat)
     }
 }
 
-vector<Hop> Zmatrix_Scan::calculateHops(Molecule molec)
+vector<Hop> IOUtilities::calculateHops(Molecule molec)
 {
     vector<Hop> newHops;
     int **graph;
-    int size = molec.numOfAtoms;
-	 int startId = molec.atoms[0].id;
+    int size = molec.numAtoms;
+	 int startId = molec.atoms[0].atomIdentificationNumber;
 
     buildAdjacencyMatrix(graph,molec);
 
@@ -1228,7 +1491,7 @@ vector<Hop> Zmatrix_Scan::calculateHops(Molecule molec)
             int distance = findHopDistance(atom1,atom2,size,graph);
             if(distance >=3)
             {
-				Hop tempHop = createHop(atom1+startId,atom2+startId,distance); //+startId because atoms may not start at 1
+				Hop tempHop(atom1+startId,atom2+startId,distance); //+startId because atoms may not start at 1
                 newHops.push_back(tempHop);					
             }  		      
         }
@@ -1237,7 +1500,7 @@ vector<Hop> Zmatrix_Scan::calculateHops(Molecule molec)
     return newHops; 
 }
 
-bool Zmatrix_Scan::contains(vector<int> &vect, int item)
+bool IOUtilities::contains(vector<int> &vect, int item)
 {
     for(int i=0; i<vect.size(); i++)
     {
@@ -1251,17 +1514,17 @@ bool Zmatrix_Scan::contains(vector<int> &vect, int item)
 }
 
 
-int Zmatrix_Scan::findHopDistance(int atom1,int atom2,int size, int **graph)
+int IOUtilities::findHopDistance(int atom1,int atom2,int size, int **graph)
 {
     map<int,int> distance;
-    queue<int> Queue;
+    std::queue<int> Queue;
     vector<int> checked;
     vector<int> bonds;
 
 
     Queue.push(atom1);
     checked.push_back(atom1);
-    distance.insert( pair<int,int>(atom1,0) );	
+    distance.insert( std::pair<int,int>(atom1,0) );	
 
     while(!Queue.empty())
     {
@@ -1288,7 +1551,7 @@ int Zmatrix_Scan::findHopDistance(int atom1,int atom2,int size, int **graph)
             {
                 checked.push_back(currentBond);
                 int newDistance = distance[target]+1;
-                distance.insert(pair<int,int>(currentBond, newDistance));
+                distance.insert(std::pair<int,int>(currentBond, newDistance));
                 Queue.push(currentBond);
             }
         }
@@ -1298,11 +1561,11 @@ int Zmatrix_Scan::findHopDistance(int atom1,int atom2,int size, int **graph)
     return -1; //Temp fill
 }
 
-void Zmatrix_Scan::buildAdjacencyMatrix(int **&graph, Molecule molec)
+void IOUtilities::buildAdjacencyMatrix(int **&graph, Molecule molec)
 {
-    int size = molec.numOfAtoms;
-	int startId = molec.atoms[0].id; //the first atom ID in the molecule
-	int lastId = startId + molec.numOfAtoms -1; //the last atom ID in the molecule
+    int size = molec.numAtoms;
+	int startId = molec.atoms[0].atomIdentificationNumber; //the first atom ID in the molecule
+	int lastId = startId + molec.numAtoms -1; //the last atom ID in the molecule
     graph =  new int*[size]; //create colums
     for(int i=0; i<size; i++) //create rows
     {
@@ -1332,41 +1595,42 @@ void Zmatrix_Scan::buildAdjacencyMatrix(int **&graph, Molecule molec)
     }
 }
 
-vector<Molecule> Zmatrix_Scan::buildMolecule(int startingID)
+
+vector<Molecule> IOUtilities::buildMolecule(int startingID)
 {
-	int numOfMolec = moleculePattern.size();
-	Molecule newMolecules[numOfMolec];
+	int numOfMolec = moleculePattern_ZM.size();
+	Molecule * newMolecules = new Molecule[numOfMolec];
 	 
     //need a deep copy of molecule pattern incase it is modified.
-    for (int i = 0; i < moleculePattern.size(); i++)
+    for (int i = 0; i < moleculePattern_ZM.size(); i++)
     {
-        Atom *atomCopy = new Atom[ moleculePattern[i].numOfAtoms] ;
-        for(int a=0; a <  moleculePattern[i].numOfAtoms ; a++)
+        Atom *atomCopy = new Atom[ moleculePattern_ZM[i].numAtoms] ;
+        for(int a=0; a <  moleculePattern_ZM[i].numAtoms ; a++)
         {
-            atomCopy[a]=  moleculePattern[i].atoms[a];
+            atomCopy[a]=  moleculePattern_ZM[i].atoms[a];
         }
 
-        Bond *bondCopy = new Bond[ moleculePattern[i].numOfBonds] ;
-        for(int a=0; a <  moleculePattern[i].numOfBonds ; a++)
+        Bond *bondCopy = new Bond[ moleculePattern_ZM[i].numOfBonds] ;
+        for(int a=0; a <  moleculePattern_ZM[i].numOfBonds ; a++)
         {
-            bondCopy[a]=  moleculePattern[i].bonds[a];
+            bondCopy[a]=  moleculePattern_ZM[i].bonds[a];
         }
 
-        Angle *angleCopy = new Angle[ moleculePattern[i].numOfAngles] ;
-        for(int a=0; a <  moleculePattern[i].numOfAngles ; a++)
+        Angle *angleCopy = new Angle[ moleculePattern_ZM[i].numOfAngles] ;
+        for(int a=0; a <  moleculePattern_ZM[i].numOfAngles ; a++)
         {
-            angleCopy[a]=  moleculePattern[i].angles[a];
+            angleCopy[a]=  moleculePattern_ZM[i].angles[a];
         }
 
-        Dihedral *dihedCopy = new Dihedral[ moleculePattern[i].numOfDihedrals];
-        for(int a=0; a <  moleculePattern[i].numOfDihedrals ; a++)
+        Dihedral *dihedCopy = new Dihedral[ moleculePattern_ZM[i].numOfDihedrals];
+        for(int a=0; a <  moleculePattern_ZM[i].numOfDihedrals ; a++)
         {
-            dihedCopy[a]=  moleculePattern[i].dihedrals[a];
+            dihedCopy[a]=  moleculePattern_ZM[i].dihedrals[a];
         }
 
         //calculate and add array of Hops to the molecule
         vector<Hop> calculatedHops;
-        calculatedHops = calculateHops(moleculePattern[i]);
+        calculatedHops = calculateHops(moleculePattern_ZM[i]);
         int numOfHops = calculatedHops.size();
         Hop *hopCopy = new Hop[numOfHops];
         for(int a=0; a < numOfHops; a++)
@@ -1375,13 +1639,22 @@ vector<Molecule> Zmatrix_Scan::buildMolecule(int startingID)
         }
 
 
-        Molecule molecCopy = createMolecule(-1,atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
-                                    moleculePattern[i].numOfAtoms, 
-                                    moleculePattern[i].numOfAngles,
-                                    moleculePattern[i].numOfBonds,
-                                    moleculePattern[i].numOfDihedrals,
+        
+        	/*Molecule molecCopy(-1,atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
+                                    moleculePattern_ZM[i].numAtoms, 
+                                    moleculePattern_ZM[i].numOfAngles,
+                                    moleculePattern_ZM[i].numOfBonds,
+                                    moleculePattern_ZM[i].numOfDihedrals,
                                     numOfHops);	
-		  newMolecules[i] = molecCopy; 
+		  newMolecules[i] = molecCopy; */
+		  
+		  newMolecules[i] = Molecule(-1,atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
+                                    moleculePattern_ZM[i].numAtoms, 
+                                    moleculePattern_ZM[i].numOfAngles,
+                                    moleculePattern_ZM[i].numOfBonds,
+                                    moleculePattern_ZM[i].numOfDihedrals,
+                                    numOfHops);	
+                                   
              
     }
 				
@@ -1394,11 +1667,11 @@ vector<Molecule> Zmatrix_Scan::buildMolecule(int startingID)
     {
         if(i == 0)
         {
-            newMolecules[i].id = startingID;
+            newMolecules[i].moleculeIdentificationNumber = startingID;
         }
         else
         {
-            newMolecules[i].id = newMolecules[i-1].id + newMolecules[i-1].numOfAtoms; 
+            newMolecules[i].moleculeIdentificationNumber = newMolecules[i-1].moleculeIdentificationNumber + newMolecules[i-1].numAtoms; 
         }
     }
 	 
@@ -1406,11 +1679,11 @@ vector<Molecule> Zmatrix_Scan::buildMolecule(int startingID)
     {
         Molecule newMolecule = newMolecules[j];
         //map unique IDs to atoms within structs based on startingID
-        for(int i = 0; i < newMolecules[j].numOfAtoms; i++)
+        for(int i = 0; i < newMolecules[j].numAtoms; i++)
         {
-            int atomID = newMolecule.atoms[i].id - 1;
+            int atomID = newMolecule.atoms[i].atomIdentificationNumber - 1;
             //newMolecule.atoms[i].id = atomID + newMolecule.id;
-				newMolecule.atoms[i].id = atomID + startingID;
+				newMolecule.atoms[i].atomIdentificationNumber = atomID + startingID;
 
         }
         for (int i = 0; i < newMolecule.numOfBonds; i++)
@@ -1457,7 +1730,6 @@ vector<Molecule> Zmatrix_Scan::buildMolecule(int startingID)
 
     return vector<Molecule>(newMolecules,newMolecules+sizeof(newMolecules)/sizeof(Molecule) );
 }
-*/
 
 
 //_________________________________________________________________________________________________________________
@@ -1478,9 +1750,9 @@ vector<Molecule> Zmatrix_Scan::buildMolecule(int startingID)
 *@returns: [none]
 */
 void writeToLog(std::string text,int stamp){
-    std::string filename = "OutputLog";
+    std::string logFilename = "OutputLog";
 	std::ofstream logFile;
-	logFile.open(filename.c_str(),std::ios::out|std::ios::app);
+	logFile.open(logFilename.c_str(),std::ios::out|std::ios::app);
 	 
 	std::string hash ="";
 	time_t current_time;

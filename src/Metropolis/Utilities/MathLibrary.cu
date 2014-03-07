@@ -22,7 +22,7 @@ Vector createVector(Point origin, double deltaX, double deltaY, double deltaZ)
 	end.x += deltaX;
 	end.y += deltaY;
 	end.z += deltaZ;
-	
+
 	Vector vector;
 	vector.origin = origin;
 	vector.end = end;
@@ -39,3 +39,5 @@ Plane createPlane(Point point, Vector normal)
 	plane.normal = normal;
 	return plane;
 }
+
+

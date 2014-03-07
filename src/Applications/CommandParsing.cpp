@@ -15,6 +15,7 @@
 
 #include "CommandParsing.h"
 #include "Metropolis/SimulationArgs.h"
+#include "Metropolis/Utilities/DeviceQuery.h"
 
 namespace metrosim
 {
@@ -46,7 +47,7 @@ namespace metrosim
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:spfdhq";
+		const char* short_options = ":i:spfdhQ";
 
 		// The long options recognized by the program
 		struct option long_options[] = {
@@ -56,7 +57,7 @@ namespace metrosim
 			{"single_precision",  	no_argument, 		0, 	'f'},
 			{"double_precision", 	no_argument, 		0, 	'd'},
 			{"help", 				no_argument, 		0, 	'h'},
-			{"query_devices",		no_argument,		0,	'q'},
+			{"list_devices",		no_argument,		0,	'Q'},
 			{0, 0, 0, 0} };
 
 		// Iterate over all command-line arguments and match any option entries.
@@ -90,8 +91,8 @@ namespace metrosim
 				case 'h':	/* print help */
 					params->helpFlag = true;
 					break;
-				case 'q':	/* print device information */
-					params->queryFlag = true;
+				case 'Q':	/* list all devices */
+					params->listDevicesFlag = true;
 					break;
 				case ':':	/* missing argument */
 					if (sizeof(argv[optind-1]) > 2 && argv[optind-1][0] == '-' && argv[optind-1][1] == '-')
@@ -142,10 +143,9 @@ namespace metrosim
 			return false;
 		}
 
-		if (params->queryFlag)		/* query device information and print */
+		if (params->listDevicesFlag)	/* query device information and print */
 		{
-			// TODO: insert query print code here.
-			fprintf(stdout, "%s: application does not support querying at this time.\n", APP_NAME);
+			printDeviceInformation();
 			return false;
 		}
 
@@ -260,7 +260,7 @@ namespace metrosim
 	//void metrosim::printHelpScreen() //RBAl
 	void printHelpScreen()
 	{
-		const char* usage = "Usage  : <config_file> [-i interval] [-sp] [-fd] [-h]\n";
+		const char* usage = "\nUsage  : %s: <config_file> [-i interval] [-sp] [-fd] [-hQ]\n\n";
 		fprintf(stdout, usage, APP_NAME);
 	}
 }

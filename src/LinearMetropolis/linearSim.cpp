@@ -60,29 +60,24 @@ double LinearSim::calcMolecularEnergyContribution(Molecule *molecules, Environme
 	//for every other molecule
 	for (int otherMol = startIdx; otherMol < enviro->numOfMolecules; otherMol++)
 	{
-		Atom atom1 = molecules[currentMol].atoms[enviro->primaryAtomIndex];
-		Atom atom2 = molecules[otherMol].atoms[enviro->primaryAtomIndex];
-		
-		//square cutoff value for easy comparison
-		double cutoffSQ = enviro->cutoff * enviro->cutoff;
-			
-		//calculate difference in coordinates
-		double deltaX = atom1.x - atom2.x;
-		double deltaY = atom1.y - atom2.y;
-		double deltaZ = atom1.z - atom2.z;
-	  
-		//calculate distance between atoms
-		deltaX = box->makePeriodic(deltaX, enviro->x);
-		deltaY = box->makePeriodic(deltaY, enviro->y);
-		deltaZ = box->makePeriodic(deltaZ, enviro->z);
-		
-		double r2 = (deltaX * deltaX) +
-					(deltaY * deltaY) + 
-					(deltaZ * deltaZ);
-
-		if (r2 < cutoffSQ)
+		if (otherMol != currentMol)
 		{
-			totalEnergy += calcInterMolecularEnergy(molecules, currentMol, otherMol, enviro);
+			Atom atom1 = molecules[currentMol].atoms[enviro->primaryAtomIndex];
+			Atom atom2 = molecules[otherMol].atoms[enviro->primaryAtomIndex];
+				
+			//calculate difference in coordinates
+			double deltaX = box->makePeriodic(atom1.x - atom2.x, enviro->x);
+			double deltaY = box->makePeriodic(atom1.y - atom2.y, enviro->y);
+			double deltaZ = box->makePeriodic(atom1.z - atom2.z, enviro->z);
+		  
+			double r2 = (deltaX * deltaX) +
+						(deltaY * deltaY) + 
+						(deltaZ * deltaZ);
+
+			if (r2 < enviro->cutoff * enviro->cutoff)
+			{
+				totalEnergy += calcInterMolecularEnergy(molecules, currentMol, otherMol, enviro);
+			}
 		}
 	}
 	return totalEnergy;
@@ -103,7 +98,7 @@ double LinearSim::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 		{
 			Atom atom2 = molecules[mol2].atoms[j];
 		
-			if (atom1.id <= atom2.id && atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
+			if (atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
 			{
 				//calculate difference in coordinates
 				double deltaX = atom1.x - atom2.x;
@@ -121,17 +116,16 @@ double LinearSim::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 					
 				//gets the fValue if in the same molecule
 				double fvalue = 1.0;
-				if(mol1 == mol2)
+				/*if(mol1 == mol2)
 				{
 					int ** hopTab1 = box->tables[mol1 % box->molecTypenum].hopTable;
 					fvalue = box->getFValue(i, j, hopTab1);
-				}
+				}*/
 				
 				totalEnergy += calc_lj(atom1, atom2, r2) * fvalue;
 				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2)) * fvalue;
 			}
 		}
-		
 	}
 	return totalEnergy;
 }

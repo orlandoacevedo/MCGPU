@@ -5,16 +5,17 @@
 */
 
 #include <math.h>
+#include "Metropolis/DataTypes.h"
 #include "SerialCalcs.h"
 
 using namespace std;
 
-double calcBlending(double d1, double d2)
+Real calcBlending(Real d1, Real d2)
 {
     return sqrt(d1 * d2);
 }
 
-double calcCharge(double charge1, double charge2, double r)
+Real calcCharge(Real charge1, Real charge2, Real r)
 {  
     if (r == 0.0)
     {
@@ -23,14 +24,14 @@ double calcCharge(double charge1, double charge2, double r)
     else
     {
     	// conversion factor below for units in kcal/mol
-    	const double e = 332.06;
+    	const Real e = 332.06;
         return (charge1 * charge2 * e) / r;
     }
 }
 
-double calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro)
+Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro)
 {
-	double totalEnergy = 0;
+	Real totalEnergy = 0;
 	
 	for (int i = 0; i < molecules[mol1].numAtoms; i++)
 	{
@@ -43,21 +44,21 @@ double calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environ
 			if (atom1.id <= atom2.id && atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
 			{
 				//calculate difference in coordinates
-				double deltaX = atom1.x - atom2.x;
-				double deltaY = atom1.y - atom2.y;
-				double deltaZ = atom1.z - atom2.z;
+				Real deltaX = atom1.x - atom2.x;
+				Real deltaY = atom1.y - atom2.y;
+				Real deltaZ = atom1.z - atom2.z;
 			  
 				//calculate distance between atoms
 				deltaX = makePeriodic(deltaX, enviro->x);
 				deltaY = makePeriodic(deltaY, enviro->y);
 				deltaZ = makePeriodic(deltaZ, enviro->z);
 				
-				double r2 = (deltaX * deltaX) +
+				Real r2 = (deltaX * deltaX) +
 					 (deltaY * deltaY) + 
 					 (deltaZ * deltaZ);
 					
 				//gets the fValue if in the same molecule
-				double fvalue = 1.0;
+				Real fvalue = 1.0;
 				//if(mol1 == mol2)
 				//{
 				//	int ** hopTab1 = tables[mol1 % molecTypenum].hopTable;
@@ -73,11 +74,11 @@ double calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environ
 	return totalEnergy;
 }
 
-double calc_lj(Atom atom1, Atom atom2, double r2)
+Real calc_lj(Atom atom1, Atom atom2, Real r2)
 {
     //store LJ constants locally
-    double sigma = calcBlending(atom1.sigma, atom2.sigma);
-    double epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+    Real sigma = calcBlending(atom1.sigma, atom2.sigma);
+    Real epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
     
     if (r2 == 0.0)
     {
@@ -86,18 +87,18 @@ double calc_lj(Atom atom1, Atom atom2, double r2)
     else
     {
     	//calculate terms
-    	const double sig2OverR2 = pow(sigma, 2) / r2;
-		const double sig6OverR6 = pow(sig2OverR2, 3);
-    	const double sig12OverR12 = pow(sig6OverR6, 2);
-    	const double energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+    	const Real sig2OverR2 = pow(sigma, 2) / r2;
+		const Real sig6OverR6 = pow(sig2OverR2, 3);
+    	const Real sig12OverR12 = pow(sig6OverR6, 2);
+    	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
     }
 
 }
 
-double calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx)
+Real calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx)
 {
-    double totalEnergy = 0;
+    Real totalEnergy = 0;
 	
 	//for every other molecule
 	for (int otherMol = startIdx; otherMol < environment->numOfMolecules; otherMol++)
@@ -106,19 +107,19 @@ double calcMolecularEnergyContribution(Molecule *molecules, Environment *environ
 		Atom atom2 = molecules[otherMol].atoms[environment->primaryAtomIndex];
 		
 		//square cutoff value for easy comparison
-		double cutoffSQ = environment->cutoff * environment->cutoff;
+		Real cutoffSQ = environment->cutoff * environment->cutoff;
 			
 		//calculate difference in coordinates
-		double deltaX = atom1.x - atom2.x;
-		double deltaY = atom1.y - atom2.y;
-		double deltaZ = atom1.z - atom2.z;
+		Real deltaX = atom1.x - atom2.x;
+		Real deltaY = atom1.y - atom2.y;
+		Real deltaZ = atom1.z - atom2.z;
 	  
 		//calculate distance between atoms
 		deltaX = makePeriodic(deltaX, environment->x);
 		deltaY = makePeriodic(deltaY, environment->y);
 		deltaZ = makePeriodic(deltaZ, environment->z);
 		
-		double r2 = (deltaX * deltaX) +
+		Real r2 = (deltaX * deltaX) +
 					(deltaY * deltaY) + 
 					(deltaZ * deltaZ);
 
@@ -130,9 +131,9 @@ double calcMolecularEnergyContribution(Molecule *molecules, Environment *environ
 	return totalEnergy;
 }
 
-double calcSystemEnergy(Molecule *molecules, Environment *enviro)
+Real calcSystemEnergy(Molecule *molecules, Environment *enviro)
 {
-    double totalEnergy = 0;
+    Real totalEnergy = 0;
 
 	//for each molecule
 	for (int mol = 0; mol < enviro->numOfMolecules; mol++)
@@ -143,7 +144,7 @@ double calcSystemEnergy(Molecule *molecules, Environment *enviro)
     return totalEnergy;
 }
 
-double makePeriodic(double x, double box)
+Real makePeriodic(Real x, Real box)
 {
     
     while(x < -0.5 * box)

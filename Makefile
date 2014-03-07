@@ -66,13 +66,13 @@ CxxFlags := -c -g -pg
 
 # Compiler specific flags for the CUDA compiler when generating .o files
 # and when generating .d files for dependency information
-CuFlags := -c -g -arch sm_35 -rdc true
+CuFlags := -c -g -arch=sm_35 -rdc true
 
 # Linker specific flags when the compiler is linking the executable
 LFlags := -g -pg
 
 # Linker specific flags for the CUDA compiler
-LCuFlags := -g -pf -lcudadevrt
+LCuFlags := -g -pg -arch=sm_35 -lcudadevrt -rdc true
 
 ###################
 # Program Outputs #
@@ -208,7 +208,7 @@ $(1)_OBJS := $$(filter %.o,$$($(1)_LIST))
 $(1)_OBJS += $$(foreach folder,$$($(1)_MODULE_LIST),$(find-objects))
 
 $(1): $$(sort $$($(1)_OBJS))
-	$(3) $(4) $$^ -o $(BinDir)/$$@
+	$(3) $$^ -o $(BinDir)/$$@ $(4)
 	
 endef
 

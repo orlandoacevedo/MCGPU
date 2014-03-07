@@ -32,12 +32,13 @@ struct SimPointers
     Atom *atomsH, *atomsD;
     Molecule *moleculesH, *moleculesD, *molTrans;
 	int numA, numM, numEnergies, maxMolSize;
-	double *energiesH, *energiesD;
+	double *energiesD;
 };
 
 __global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, int startIdx, Environment *enviro, double *energies, int segmentSize);
 __global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *enviro, double *energies, int segmentSize);
 __global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *enviro, double *energies, int segmentSize);
+__global__ void aggregateEnergies(double *energies, int numEnergies, int interval, int batchSize);
 __device__ double calc_lj(Atom atom1, Atom atom2, double r2);
 __device__ double calcCharge(double charge1, double charge2, double r);
 __device__ double makePeriodic(double x, double box);
@@ -68,8 +69,6 @@ class ParallelSim
 		double calcSystemEnergy();
 		double calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
         void runParallel(int steps);
-        /*double calcEnergyWrapper(GPUSimBox *box);
-        double calcEnergyOnHost(Atom atom1, Atom atom2, Environment *enviro, Molecule *molecules);*/
 
     public:
         double wrapBox(double x, double box);

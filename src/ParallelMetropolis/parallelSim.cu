@@ -1,8 +1,8 @@
 /*!\file
-  \Class for parallel Simulation, including Energy calculate and points to molocoles,only save all states
+  \Class for parallel Simulation, including Energy calculate and points to molocules,only save all states
   \author David(Xiao Zhang).
  
-  This file contains implement of SimBox that are used to handle enviroments and common function
+  This file contains implement of SimBox that are used to handle environments and common function
   for box.
  */
 
@@ -18,11 +18,11 @@
 ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 {
 	box = initbox;
-    steps = initsteps;
- 	currentEnergy = 0;
-    oldEnergy = 0;
-    accepted = 0;
-    rejected = 0;
+	steps = initsteps;
+	currentEnergy = 0;
+	oldEnergy = 0;
+	accepted = 0;
+	rejected = 0;
 	
 	ptrs = (SimPointers*) malloc(sizeof(SimPointers));
 	
@@ -34,23 +34,14 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 	
 	ptrs->numA = ptrs->envH->numOfAtoms;
 	ptrs->numM = ptrs->envH->numOfMolecules;
-	ptrs->numEnergies = ptrs->numA * ptrs->numA;//This is an upper bound. May be able to be tightened.
 	
 	ptrs->molTrans = (Molecule*) malloc(ptrs->numM * sizeof(Molecule));
-	ptrs->energiesH = (double*) malloc(ptrs->numEnergies * sizeof(double));
 	
 	cudaMalloc(&(ptrs->envD), sizeof(Environment));
 	cudaMalloc(&(ptrs->atomsD), ptrs->numA * sizeof(Atom));
 	cudaMalloc(&(ptrs->moleculesD), ptrs->numM * sizeof(Molecule));
-	cudaMalloc(&(ptrs->energiesD), ptrs->numEnergies * sizeof(double));
 	
 	int i;
-	
-	//initialize energies
-	for (i = 0; i < ptrs->numEnergies; i++)
-	{
-		ptrs->energiesH[i] = 0;
-	}
 	
 	//sets up device molecules for transfer copies host molecules exactly except
 	//for *atoms, which is translated to GPU pointers calculated here
@@ -69,11 +60,17 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 		}
 	}
 	
+	//This is an upper bound. May be able to be tightened.
+	ptrs->numEnergies = ptrs->numA * ptrs->maxMolSize * ptrs->maxMolSize;
+	cudaMalloc(&(ptrs->energiesD), ptrs->numEnergies * sizeof(double));
+	
+	//initialize energies
+	cudaMemset(ptrs->energiesD, 0, sizeof(double));
+	
 	//copy data to device
 	cudaMemcpy(ptrs->envD, ptrs->envH, sizeof(Environment), cudaMemcpyHostToDevice);
 	cudaMemcpy(ptrs->atomsD, ptrs->atomsH, ptrs->numA * sizeof(Atom), cudaMemcpyHostToDevice);
 	cudaMemcpy(ptrs->moleculesD, ptrs->molTrans, ptrs->numM * sizeof(Molecule), cudaMemcpyHostToDevice);
-	cudaMemcpy(ptrs->energiesD, ptrs->energiesH, ptrs->numEnergies * sizeof(double), cudaMemcpyHostToDevice);
 }
 
 ParallelSim::~ParallelSim()
@@ -100,14 +97,16 @@ void ParallelSim::writeChangeToDevice(int changeIdx)
 	//ready to be copied over to device, except that it still contains host pointer in .atoms
 	memcpy(changedMol, ptrs->moleculesH + changeIdx, sizeof(Molecule));
 	
-	//get device pointer to device Atoms from device Molecule, and store in temp Molecule
-	//temp Molecule.atoms will now contain a pointer to Atoms on device
+	//changedMol.atoms will now contain a pointer to Atoms on device
 	//this pointer never meant to be followed from host
-	cudaMemcpy(&(changedMol->atoms), &((ptrs->moleculesD + changeIdx)->atoms), sizeof(Atom*), cudaMemcpyDeviceToHost);
+	changedMol->atoms = ptrs->molTrans[changeIdx].atoms;
+	
 	//copy changed molecule to device
 	cudaMemcpy(ptrs->moleculesD + changeIdx, changedMol, sizeof(Molecule), cudaMemcpyHostToDevice);
+	
 	//copy changed atoms to device
-	cudaMemcpy(ptrs->moleculesD[changeIdx].atoms, changedMol->atoms, changedMol->numOfAtoms * sizeof(Atom), cudaMemcpyHostToDevice);
+	Atom *destAtoms = ptrs->molTrans[changeIdx].atoms;
+	cudaMemcpy(destAtoms, ptrs->moleculesH[changeIdx].atoms, ptrs->moleculesH[changeIdx].numOfAtoms * sizeof(Atom), cudaMemcpyHostToDevice);
 }
 
 double ParallelSim::calcSystemEnergy()
@@ -119,7 +118,7 @@ double ParallelSim::calcSystemEnergy()
 	{
 		totalEnergy += calcMolecularEnergyContribution(mol, mol);
 	}
-	
+
     return totalEnergy;
 }
 
@@ -129,12 +128,7 @@ double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx)
 	int i;
 	
 	//initialize energies to 0
-	for (i = 0; i < ptrs->numEnergies; i++)
-	{
-		ptrs->energiesH[i] = 0;
-	}
-	
-	cudaMemcpy(ptrs->energiesD, ptrs->energiesH, ptrs->numEnergies * sizeof(double), cudaMemcpyHostToDevice);
+	cudaMemset(ptrs->energiesD, 0, sizeof(double));
 	
 	//calculate intermolecular energies (cutoff check for each molecule)
 	//using startIdx this way has the potential to waste a significant
@@ -143,17 +137,23 @@ double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx)
 	(ptrs->moleculesD, molIdx, ptrs->numM, startIdx, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
 	
 	//calculate intramolecular energies for changed molecule
-	int numAinM = ptrs->moleculesD[molIdx].numOfAtoms;
+	/*int numAinM = ptrs->moleculesH[molIdx].numOfAtoms;
 	int numIntraEnergies = numAinM * (numAinM - 1) / 2;
-	calcIntraMolecularEnergy<<<numIntraEnergies / BLOCK_SIZE + 1, BLOCK_SIZE>>>
-	(ptrs->moleculesD, molIdx, numIntraEnergies, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
-						
-	cudaMemcpy(ptrs->energiesH, ptrs->energiesD, ptrs->numEnergies * sizeof(double), cudaMemcpyDeviceToHost);
 	
-	for (i = 0; i < ptrs->numEnergies; i++)
+	calcIntraMolecularEnergy<<<numIntraEnergies / BLOCK_SIZE + 1, BLOCK_SIZE>>>
+	(ptrs->moleculesD, molIdx, numIntraEnergies, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);*/
+	
+	//a batch size of 3 seems to offer the best tradeoff
+	int batchSize = 3;
+	int numBaseThreads = ptrs->numM * ptrs->maxMolSize * ptrs->maxMolSize / (batchSize * BLOCK_SIZE);
+	for (i = 1; i < ptrs->numEnergies; i *= batchSize)
 	{
-		totalEnergy += ptrs->energiesH[i];
+		aggregateEnergies<<<numBaseThreads / i + 1, BLOCK_SIZE>>>
+		(ptrs->energiesD, ptrs->numEnergies, i, batchSize);
 	}
+	
+	cudaMemcpy(&totalEnergy, ptrs->energiesD, sizeof(double), cudaMemcpyDeviceToHost);
+	cudaMemset(ptrs->energiesD, 0, sizeof(double));
 	
 	return totalEnergy;
 }
@@ -227,27 +227,43 @@ __global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, in
 	if (energyIdx < numE)
 	{
 		energyIdx += currentMol * segmentSize;
-		
-		double totalEnergy = 0;
+		if (atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
+		{
+			double totalEnergy = 0;
+				
+			//calculate difference in coordinates
+			double deltaX = atom1.x - atom2.x;
+			double deltaY = atom1.y - atom2.y;
+			double deltaZ = atom1.z - atom2.z;
+		  
+			//calculate distance between atoms
+			deltaX = makePeriodic(deltaX, enviro->x);
+			deltaY = makePeriodic(deltaY, enviro->y);
+			deltaZ = makePeriodic(deltaZ, enviro->z);
 			
-		//calculate difference in coordinates
-		double deltaX = atom1.x - atom2.x;
-		double deltaY = atom1.y - atom2.y;
-		double deltaZ = atom1.z - atom2.z;
-	  
-		//calculate distance between atoms
-		deltaX = makePeriodic(deltaX, enviro->x);
-		deltaY = makePeriodic(deltaY, enviro->y);
-		deltaZ = makePeriodic(deltaZ, enviro->z);
-		
-		double r2 = (deltaX * deltaX) +
-			 (deltaY * deltaY) + 
-			 (deltaZ * deltaZ);
-		
-		totalEnergy += calc_lj(atom1, atom2, r2);
-		totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
-		
-		energies[energyIdx] = totalEnergy;
+			double r2 = (deltaX * deltaX) +
+				 (deltaY * deltaY) + 
+				 (deltaZ * deltaZ);
+			
+			totalEnergy += calc_lj(atom1, atom2, r2);
+			totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+			
+			energies[energyIdx] = totalEnergy;
+		}
+	}
+}
+
+__global__ void aggregateEnergies(double *energies, int numEnergies, int interval, int batchSize)
+{
+	int idx = batchSize * interval * (blockIdx.x * blockDim.x + threadIdx.x), i;
+	
+	for (i = 1; i < batchSize; i++)
+	{
+		if (idx + i * interval < numEnergies)
+		{
+			energies[idx] += energies[idx + i * interval];
+			energies[idx + i * interval] = 0;
+		}
 	}
 }
 
@@ -511,15 +527,14 @@ void ParallelSim::runParallel(int steps)
     double temperature = ptrs->envH->temperature;
     double kT = kBoltz * temperature;
     double newEnergyCont, oldEnergyCont;
-
+	
     if (oldEnergy == 0)
 	{
 		oldEnergy = calcSystemEnergy();
 	}
-	 
+	
     for(int move = 0; move < steps; move++)
     {
-            
         int changeIdx = ptrs->innerbox->chooseMolecule();
 
 		oldEnergyCont = calcMolecularEnergyContribution(changeIdx);
@@ -548,7 +563,7 @@ void ParallelSim::runParallel(int steps)
                 accept = false;
             }
         }
-
+		
         if(accept)
         {
             accepted++;
@@ -559,6 +574,7 @@ void ParallelSim::runParallel(int steps)
             rejected++;
             //restore previous configuration
             ptrs->innerbox->Rollback(changeIdx);
+			writeChangeToDevice(changeIdx);
         }
     }
     currentEnergy=oldEnergy;
