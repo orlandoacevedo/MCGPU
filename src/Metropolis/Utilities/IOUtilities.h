@@ -10,7 +10,7 @@
 		->Wed, 26 Feb (Albert)
 		->Thu, 27 Feb (Albert, then Tavis)
 		->Fri, 28 Feb (Albert)
-		->Mon, 03 Mar; Wed, 05 Mar; Thur, 06 Mar (Albert)
+		->Mon, 03 Mar; Wed, 05 Mar; Thur, 06 Mar, Fri, 07 Mar; Monday, 10 Mar (Albert)
 */
 /*Based on work from earlier sessions by Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo*/
 
@@ -51,12 +51,11 @@ using std::map;
 class IOUtilities
 {	
 	public:
-			IOUtilities(std::string configPath); //this should be the constructor, which does very little on its own
-<<<<<<< HEAD
-			void readInConfig();
-=======
-			bool readInConfig(); //this should ideally be merged into the constructor, but run separately, everything is okay
->>>>>>> FETCH_HEAD
+			IOUtilities(std::string configPath); //this should be the constructor, which does very little on its own.
+				///As of right now, only calls the readInConfig() method, and does nothing more. So only file paths are acquired,
+				///   but nothing else is set up for further execution
+			void readInConfig(); //this represents the first of the chain of calls to configuration methods, called from
+						// the constructor. (Does *not* call the second in the chain, or in other words does not continue environment setup.)
 			int ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection);
 			int WriteStateFile(char const* StateFile, Environment * sourceEnvironment, Molecule * sourceMoleculeCollection); 	
 			int writePDB(char const* pdbFile); //this is the old version from SimBox, probably not useful or usable
@@ -91,7 +90,7 @@ class IOUtilities
 			  Checks the format of the line being read in
 			  returns false if the format of the line is invalid
 			  @param line -  a line from the opls file
-			@return - Format code
+			  @return - Format code
 					  -1: Invalid Format
 					  1: Normal OPLS format
 					  2: Fourier Coefficent format
@@ -143,6 +142,7 @@ class IOUtilities
 	 private:
 		void throwScanError(std::string message);
 		bool readInConfigAlreadyDone;
+		bool criticalErrorEncountered;
 		
 		//From OPLS_Scan
 			/**

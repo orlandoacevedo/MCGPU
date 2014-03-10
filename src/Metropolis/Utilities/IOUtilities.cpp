@@ -10,7 +10,7 @@
 		->Wed, 26 Feb (Albert)
 		->Thu, 27 Feb (Albert, then Tavis)
 		->Fri, 28 Feb (Albert)
-		->Mon, 03 Mar; Wed, 05 Mar; Thur, 06 Mar (Albert)
+		->Mon, 03 Mar; Wed, 05 Mar; Thur, 06 Mar; Fri, 07 Mar (Albert)
 */
 /*Based on work from earlier sessions by Alexander Luchs, Riley Spahn, Seth Wooten, and Orlando Acevedo*/
 
@@ -73,6 +73,8 @@ IOUtilities::IOUtilities(std::string configPath){
 	stateOutputPath = ""; //The path where we write the state output files after simulation
 	pdbOutputPath = ""; //The path where we write the pdb output files after simulation
 	cutoff = 0; //The nonbonded cutoff distance.
+	
+	criticalErrorEncountered = false; //set to true if, at any point, a critical error prevents the program from reliably setting up the environment
     
     readInConfig(); //do the rest of the construction
 }
@@ -86,6 +88,7 @@ IOUtilities::IOUtilities(std::string configPath){
 */
 void IOUtilities::readInConfig()
 {
+	bool isSafeToContinue = true;
 	std::ifstream configscanner(configPath.c_str());
 	if (! configscanner.is_open())
 	{
@@ -201,6 +204,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing z-matrix path value.");
+						isSafeToContinue = false; //now that it is false, check if there is a state file
 						return;
 					}
 					break;
@@ -209,10 +213,16 @@ void IOUtilities::readInConfig()
 					{
 						statePath = line;
 					}
-					else
+					else if (isSafeToContinue == false)
 					{
-						throwScanError("Configuration file not well formed. Missing state file output path value.");
+						criticalErrorEncountered = true;
+						throwScanError("Configuration file not well formed. Missing value pointing to prior state file path. Cannot safely continue with program execution.");
 						return;
+					}
+					else
+					{	
+						throwScanError("INFO: Value pointing to prior state file path not found in main config file. Environment setup defaulting to clean simulation.");
+						isSafeToContinue = true;
 					}
 					break;
 				case 20:
