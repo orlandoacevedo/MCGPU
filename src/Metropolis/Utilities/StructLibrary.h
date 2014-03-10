@@ -2,15 +2,19 @@
 	Contains all structs and methods for simulation objects (atom,molecule,etc.)
 
 	Author: Nathan Coleman
-	Last Changed: March 06, 2014 by Albert Wallace
-	Previously Changed: Feb 19, Feb 26, Feb 28, Mar 03, Mar 05, Mar 06. [By Albert]
+	Last Changed: March 10, 2014 by Albert Wallace
+	Previously Changed: Feb 19, Feb 26, Feb 28, Mar 03, Mar 05, Mar 06, Mar 07. [By Albert]
 */
 
 #ifndef STRUCTLIBRARY_H
 #define STRUCTLIBRARY_H
 
 #include <string>
-#include "Metropolis/DataTypes.h"
+//#include "../DataTypes.h" //use this statement on OS X, maybe for individual testing
+#include "Metropolis/DataTypes.h" //use this statement on Linux (?), or whenever the makefile is being applied
+			///this should be included to allow all DOUBLE *and* FLOAT value types to be dynamically determined; ...
+			/// ...redefine each DOUBLE *and* FLOAT using the new type defined in the DataTypes file.
+
 
 //Forward declaration so that each can be used in methods below
 
