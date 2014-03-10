@@ -18,7 +18,7 @@ using namespace std;
 Atom createAtom(unsigned long id, Real x, Real y, Real z)
 {
 	Atom atom;
-	atom.id = id;
+	atom.atomIdentificationNumber = id;
 	atom.x = x;
 	atom.y = y;
 	atom.z = z;
@@ -28,7 +28,7 @@ Atom createAtom(unsigned long id, Real x, Real y, Real z)
 Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon)
 {
 	Atom atom;
-	atom.id = id;
+	atom.atomIdentificationNumber = id;
 	atom.x = x;
 	atom.y = y;
 	atom.z = z;
@@ -40,7 +40,7 @@ Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsil
 Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, char name)
 {
 	Atom atom;
-	atom.id = id;
+	atom.atomIdentificationNumber = id;
 	atom.x = x;
 	atom.y = y;
 	atom.z = z;

@@ -35,7 +35,7 @@
 
 #include "StructLibrary.h"
 //#include "../../Utilities/geometricUtil.h"
-#include "mathLibrary.h"
+#include "MathLibrary.h"
 
 //_________________________________________________________________________________________________________________
 //  Specific namespace/using requirements
@@ -54,7 +54,7 @@ class IOUtilities
 			IOUtilities(std::string configPath); //this should be the constructor, which does very little on its own.
 				///As of right now, only calls the readInConfig() method, and does nothing more. So only file paths are acquired,
 				///   but nothing else is set up for further execution
-			void readInConfig(); //this represents the first of the chain of calls to configuration methods, called from
+			bool readInConfig(); //this represents the first of the chain of calls to configuration methods, called from
 						// the constructor. (Does *not* call the second in the chain, or in other words does not continue environment setup.)
 			int ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection);
 			int WriteStateFile(char const* StateFile, Environment * sourceEnvironment, Molecule * sourceMoleculeCollection); 	
