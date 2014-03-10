@@ -135,9 +135,10 @@ double ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx)
 	//amount of GPU resources, look into other methods later.
 	calcInterMolecularEnergy<<<ptrs->numM / BLOCK_SIZE + 1, BLOCK_SIZE>>>
 	(ptrs->moleculesD, molIdx, ptrs->numM, startIdx, ptrs->envD, ptrs->energiesD, ptrs->maxMolSize * ptrs->maxMolSize);
-	if (cudaDeviceSynchronize() != cudaSuccess) {
-printf("cudaDeviceSynchronize was not a success\n");
-}
+	if (cudaDeviceSynchronize() != cudaSuccess) 
+   {
+      printf("cudaDeviceSynchronize was not a success\n");
+   }
 	//calculate intramolecular energies for changed molecule
 	/*int numAinM = ptrs->moleculesH[molIdx].numOfAtoms;
 	int numIntraEnergies = numAinM * (numAinM - 1) / 2;
@@ -152,6 +153,10 @@ printf("cudaDeviceSynchronize was not a success\n");
 	{
 		aggregateEnergies<<<numBaseThreads / i + 1, BLOCK_SIZE>>>
 		(ptrs->energiesD, ptrs->numEnergies, i, batchSize);
+      if (cudaDeviceSynchronize() != cudaSuccess) 
+      {
+         printf("cudaDeviceSynchronize was not a success\n");
+      }
 	}
 	
 	cudaMemcpy(&totalEnergy, ptrs->energiesD, sizeof(double), cudaMemcpyDeviceToHost);
@@ -184,11 +189,13 @@ __global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, in
 			calcInterAtomicEnergy
 			<<<molecules[currentMol].numOfAtoms, molecules[otherMol].numOfAtoms>>>
 			(molecules, currentMol, otherMol, enviro, energies, segmentSize);
-         if (cudaDeviceSynchronize() != cudaSuccess) {
-printf("cudaDeviceSynchronize was not a success\n");
-}
+         if (cudaDeviceSynchronize() != cudaSuccess) 
+         {
+            printf("cudaDeviceSynchronize was not a success\n");
+         }
 		}
 	}
+
 }
 
 __global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *enviro, double *energies, int segmentSize)
