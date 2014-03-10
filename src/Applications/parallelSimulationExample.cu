@@ -39,7 +39,7 @@ stringstream ss;
 
 int main(int argc, char ** argv)
 {
-    char statename[255];
+	char statename[255];
     writeToLog("",START);
     clock_t startTime, endTime;
     startTime = clock();    
@@ -134,5 +134,5 @@ int main(int argc, char ** argv)
     ss << "\nSimulation Complete \nRun Time: " << diffTime << endl;
     cout << ss.str() <<endl;
     writeToLog(ss);
-	
+	cudaDeviceReset();
 }
