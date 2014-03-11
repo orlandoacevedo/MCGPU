@@ -139,7 +139,7 @@ class IOUtilities
 			*/
 			Fourier getFourier(string hashNum);
 	 	
-	 private:
+	
 		void throwScanError(std::string message);
 		bool readInConfigAlreadyDone;
 		bool criticalErrorEncountered;
@@ -311,7 +311,6 @@ class IOUtilities
 		  /******************
 		  *Path variables and the temporary environment
 		  ***************************************/
-		  
 		  	Environment * currentEnvironment; //The current working environment for the simulation
     		std::string configPath; //The path to the main configuration file read in for the simulation
     		unsigned int numOfSteps; //The number of steps to run the simulation

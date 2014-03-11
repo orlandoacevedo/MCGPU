@@ -55,7 +55,7 @@
 *@params: configPath: the path to the main configuration file, which itself points to other specialized configuration files
 * 	and contains other bits of information to set up a proper Environment for simulation.
 */
-IOUtilities::IOUtilities(std::string configPath){
+IOUtilities::IOUtilities(std::string configPathIn){
 
 
 	//UtilitiesInfo ; //all the variables used for this class are stuck in this struct for easy, yet unsafe, access
@@ -63,7 +63,7 @@ IOUtilities::IOUtilities(std::string configPath){
 	
 	//note to people/myself: //enviro = currentEnvironment
 	
-	configPath = configPath; //the path to the primary configuration file, which holds all other potential file paths
+	configPath = configPathIn; //the path to the primary configuration file, which holds all other potential file paths
 	currentEnvironment = new Environment(); //The current working environment for the simulation
     unsigned int numOfSteps = 0; //The number of steps to run the simulation
 	oplsuaparPath = ""; //The path to the opls files containing additional geometry data, to be used (eventually) during simulation
