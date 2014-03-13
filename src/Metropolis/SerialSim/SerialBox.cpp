@@ -16,8 +16,13 @@ double randomFloat(const double start, const double end){return 0.0;}
 
 SerialBox::SerialBox(IOUtilities configScan) : Box()
 {
+	atoms = NULL;
+	molecules = NULL;
 	environment = new Environment();
-	memcpy(environment, configScan.filePathsEtc->currentEnvironment, sizeof(Environment));
+	memcpy(environment, configScan.currentEnvironment, sizeof(Environment));
+
+	configScan.scanInOpls();
+	configScan.scanInZmatrix();
 }
 
 SerialBox::~SerialBox()

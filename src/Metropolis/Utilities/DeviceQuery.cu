@@ -87,8 +87,8 @@ void printDeviceInformation()
 		fprintf(stdout, "Clock Rate: %d\n", info.clockRate);
 		fprintf(stdout, "Compute Capability: %d.%d\n", info.major, info.minor);
 		fprintf(stdout, "Processor Count: %d\n", info.multiProcessorCount);
-		fprintf(stdout, "Global Memory: %d Bytes\n", info.totalGlobalMem);
-		fprintf(stdout, "Constant Memory: %d Bytes\n", info.totalConstMem);
+		fprintf(stdout, "Global Memory: %zu Bytes\n", info.totalGlobalMem);
+		fprintf(stdout, "Constant Memory: %zu Bytes\n", info.totalConstMem);
 		fprintf(stdout, "Warp Size: %d\n", info.warpSize);
 		fprintf(stdout, "\n");
 	}

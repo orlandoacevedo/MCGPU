@@ -36,7 +36,7 @@
 
 #include "StructLibrary.h"
 //#include "../../Utilities/geometricUtil.h"
-#include "mathLibrary.h"
+#include "MathLibrary.h"
 
 //_________________________________________________________________________________________________________________
 //  Specific namespace/using requirements
@@ -51,16 +51,18 @@ using std::map;
 //_________________________________________________________________________________________________________________
 class IOUtilities
 {	
+
 	public: //all things are allowed to be public during testing
 					IOUtilities(std::string configPath); //this should be the constructor, which does very little on its own.
-						///As of right now, only calls the readInConfig() method, and does nothing more. So only file paths are acquired,
-						///   but nothing else is set up for further execution
-					void readInConfig(); //this represents the first of the chain of calls to configuration methods, called from
-								// the constructor. (Does *not* call the second in the chain, or in other words does not continue environment setup.)
+						///Calls the driver method after initializing *some* variables, and does nothing more.
+					void readInConfig(); //this represents the first of the chain of calls to configuration methods. 
+							//(Does *not* call the second in the chain, or in other words does not continue environment setup.
+							// Look for the driver method for proper order of execution after this.)
 					int ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection);
 					int WriteStateFile(char const* StateFile, Environment * sourceEnvironment, Molecule * sourceMoleculeCollection); 	
 					int writePDB(char const* pdbFile); //this is the old version from SimBox, probably not useful or usable
 					int writePDB(char const* pdbFile, Environment sourceEnvironment, Molecule * sourceMoleculeCollection); //this is a new version, possibly required for this implementation with IOUtilities
+
 
 					void throwScanError(std::string message);
 					bool readInConfigAlreadyDone;
@@ -141,6 +143,7 @@ class IOUtilities
 					@return - TODO
 					*/
 					Fourier getFourier(string hashNum);		
+
 		//From OPLS_Scan
 					/**
 					OPLS scanning is required to assign sigma, epsilon and charge values.
@@ -308,7 +311,6 @@ class IOUtilities
 		  /**********************************
 		  *Path variables and the temporary environment
 		  ***************************************/
-		  
 					Environment * currentEnvironment; //The current working environment for the simulation
 					std::string configPath; //The path to the main configuration file read in for the simulation
 					unsigned int numOfSteps; //The number of steps to run the simulation
@@ -336,6 +338,7 @@ class IOUtilities
 					Angle * anglepool;
 					Dihedral * dihedralpool;
 					Hop *      hoppool;
+
 		  
 };
 

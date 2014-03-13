@@ -31,10 +31,8 @@
 //  INCLUDE statements
 //_________________________________________________________________________________________________________________
 
-
-#include "StructLibrary.h"
 #include "IOUtilities.h"
-
+#include "StructLibrary.h"
 //_________________________________________________________________________________________________________________
 //  DEFINE statements
 //_________________________________________________________________________________________________________________
@@ -59,7 +57,7 @@
 *@params: configPath: the path to the main configuration file, which itself points to other specialized configuration files
 * 	and contains other bits of information to set up a proper Environment for simulation.
 */
-IOUtilities::IOUtilities(std::string configPath){
+IOUtilities::IOUtilities(std::string configPathIn){
 
 
 	//UtilitiesInfo ; //all the variables used for this class are stuck in this struct for easy, yet unsafe, access
@@ -67,7 +65,7 @@ IOUtilities::IOUtilities(std::string configPath){
 	
 	//note to people/myself: //enviro = currentEnvironment
 	
-	configPath = configPath; //the path to the primary configuration file, which holds all other potential file paths
+	configPath = configPathIn; //the path to the primary configuration file, which holds all other potential file paths
 	currentEnvironment = new Environment(); //The current working environment for the simulation
     unsigned int numOfSteps = 0; //The number of steps to run the simulation
 	oplsuaparPath = ""; //The path to the opls files containing additional geometry data, to be used (eventually) during simulation
@@ -89,14 +87,14 @@ IOUtilities::IOUtilities(std::string configPath){
 *@params: [none; uses variables within the class to pass information]
 *@return: [none; uses variables within the class to pass information]
 */
-void IOUtilities::readInConfig()
+bool IOUtilities::readInConfig()
 {
 	bool isSafeToContinue = true;
 	std::ifstream configscanner(configPath.c_str());
 	if (! configscanner.is_open())
 	{
 		throwScanError("Configuration file failed to open.");
-		return;
+		return false;
 	}
 	else
 	{
@@ -118,7 +116,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing environment x value.");
-						return;
+						return false;
 					}
 					break;
 				case 3:
@@ -129,7 +127,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing environment y value.");
-						return;
+						return false;
 					}
 					break;
 				case 4:
@@ -140,7 +138,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing environment z value.");
-						return;
+						return false;
 					}
 					break;
 				case 6:
@@ -151,7 +149,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing environment temperature value.");
-						return;
+						return false;
 					}
 					break;
 				case 8:
@@ -162,7 +160,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing environment max translation value.");
-						return;
+						return false;
 					}
 					break;
 				case 10:
@@ -173,7 +171,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing number of steps value.");
-						return;
+						return false;
 					}
 					break;
 				case 12:
@@ -185,7 +183,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing number of molecules value.");
-						return;
+						return false;
 					}
 					break;
 				case 14:
@@ -196,7 +194,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing oplsuapar path value.");
-						return;
+						return false;
 					}
 					break;
 				case 16:
@@ -220,7 +218,7 @@ void IOUtilities::readInConfig()
 					{
 						criticalErrorEncountered = true;
 						throwScanError("Configuration file not well formed. Missing value pointing to prior state file path. Cannot safely continue with program execution.");
-						return;
+						return false;
 					}
 					else
 					{	
@@ -235,7 +233,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing state file output path value.");
-						return;
+						return false;
 					}
 					break;
 				case 22:
@@ -245,7 +243,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing PDB output path value.");
-						return;
+						return false;
 					}
 					break;
 				case 24:
@@ -256,7 +254,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing environment cutoff value.");
-						return;
+						return false;
 					}
 					break;
 				case 26:
@@ -267,7 +265,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing environment max rotation value.");
-						return;
+						return false;
 					}
 					break;
 				case 28:
@@ -278,7 +276,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing random seed value.");
-						return;
+						return false;
 					}
 					break;
 				case 30:
@@ -290,7 +288,7 @@ void IOUtilities::readInConfig()
 					else
 					{
 						throwScanError("Configuration file not well formed. Missing environment primary atom index value.");
-						return;
+						return false;
 					}
 					break;
 					//end of disabled configuration file code.
@@ -299,6 +297,7 @@ void IOUtilities::readInConfig()
 			currentLine++;
 		}
 	}
+	return true;
 }
 
 
