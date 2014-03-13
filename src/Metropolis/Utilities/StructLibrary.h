@@ -10,13 +10,33 @@
 #define STRUCTLIBRARY_H
 
 #include <string>
-//#include "../DataTypes.h" //use this statement on OS X, maybe for individual testing
-#include "Metropolis/DataTypes.h" //use this statement on Linux (?), or whenever the makefile is being applied
+#include "../DataTypes.h" //use this statement on OS X, maybe for individual testing
+//#include "Metropolis/DataTypes.h" //use this statement on Linux (?), or whenever the makefile is being applied
 			///this should be included to allow all DOUBLE *and* FLOAT value types to be dynamically determined; ...
 			/// ...redefine each DOUBLE *and* FLOAT using the new type defined in the DataTypes file.
 
 
 //Forward declaration so that each can be used in methods below
+
+/**
+	Used in box consturction. The tables are used to look up hop values between
+	two atom pairs. A table is created for each different type of molecule in the simulation
+*/
+struct Table
+{
+
+    int **hopTable;
+    
+    Table()
+    {
+    }
+    
+    Table(int **table) //constructor with parameters
+	{
+	hopTable = table;
+	}
+};
+
 
 /*!
   Structure to respresent bonds between atoms in a molecule.

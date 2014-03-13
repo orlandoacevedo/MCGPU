@@ -79,7 +79,7 @@ IOUtilities::IOUtilities(std::string configPath){
 	
 	criticalErrorEncountered = false; //set to true if, at any point, a critical error prevents the program from reliably setting up the environment
     
-    pullInDataToConstructSimBox(); //do the rest of the construction with this driver method
+    pullInDataToConstructSimBox(); //do the rest of the construction
 }
 
 /*
@@ -208,7 +208,7 @@ void IOUtilities::readInConfig()
 					{
 						throwScanError("Configuration file not well formed. Missing z-matrix path value.");
 						isSafeToContinue = false; //now that it is false, check if there is a state file
-						exit(1);
+						return;
 					}
 					break;
 				case 18:
@@ -301,14 +301,11 @@ void IOUtilities::readInConfig()
 	}
 }
 
-
-/*
-	*Used to throw error messages to screen during the read of the primary config file, with a count of the errors encountered
-	*@param: message: the message to be displayed on the screen
-	*/
 void IOUtilities::throwScanError(std::string message)
 {
+
 	std::cerr << std::endl << message << std::endl << "	Error Number: " << errno << std::endl << std::endl;
+
 	return;
 }
 
@@ -319,6 +316,7 @@ void IOUtilities::throwScanError(std::string message)
 	
 	@param StateFile - takes the location of the state file to be read in
 */
+
 int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection)
 {
     std::ifstream inFile;
@@ -546,7 +544,7 @@ int IOUtilities::WriteStateFile(char const* StateFile, Environment * sourceEnvir
 
 
 /**
-	*Writes to a PDB file for visualizing the box
+	writes to a PDB file for visualizing the box
 	//this method copied over from...Simbox. Retooling needed. (Variable references point to SimBox locations)
 	
 	//other versions found in metroUtil were not used; it relied only on SimBox
@@ -559,10 +557,55 @@ int IOUtilities::WriteStateFile(char const* StateFile, Environment * sourceEnvir
 	//  will likely require writing back to the host, rather than storing the info on the GPU until the very end...
 	//  as the SimBox holds all the current information being accessed by this method.
 	
-	*@param pdbFile - Location of the pdbFile to be written to
-	*@param sourceEnvironment: The environment as it currently exists in the SimBox to be visualized
-	*@param: sourceMoleculeCollection: Is an array of molecules, dynamically allocated & created elsewhere [such as in the SimBox]
+	@param pdbFile - Location of the pdbFile to be written to
 */
+/*
+int IOUtilities::writePDB(char const* pdbFile)
+{
+    std::ofstream outputFile;
+    outputFile.open(pdbFile);
+    int numOfMolecules=enviro->numOfMolecules;
+    outputFile << "REMARK Created by MCGPU" << std::endl;
+    //int atomIndex = 0;
+    for (int i = 0; i < numOfMolecules; i++)
+    {
+    	Molecule currentMol = molecules[i];    	
+        for (int j = 0; j < currentMol.numAtoms; j++)
+        {
+        	Atom currentAtom = currentMol.atoms[j];
+            outputFile.setf(ios_base::left,ios_base::adjustfield);
+            outputFile.width(6);
+            outputFile << "ATOM";
+            outputFile.setf(ios_base::right,ios_base::adjustfield);
+            outputFile.width(5);
+            outputFile << currentAtom.atomIdentificationNumber + 1;
+            outputFile.width(3); // change from 5
+            outputFile << currentAtom.name;
+            outputFile.width(6); // change from 4
+            outputFile << "UNK";
+            outputFile.width(6);
+            outputFile << i + 1;
+            outputFile.setf(ios_base::fixed, ios_base::floatfield);
+            outputFile.precision(3);
+            outputFile.width(12);
+            outputFile << currentAtom.x;
+            outputFile.width(8);
+            outputFile << currentAtom.y;
+            outputFile.width(8);
+            outputFile << currentAtom.z << std::endl;
+        }
+        outputFile << "TER" << std::endl;
+    }
+    outputFile << "END" << std::endl;
+    outputFile.close();
+
+	return 0;
+}*/
+
+
+//potential overloading of the above function
+//Used to visualize the molecule. Or something like that.
+//@param: sourceMoleculeCollection: Is an array of molecules, dynamically allocated & created elsewhere [such as in the SimBox]
 
 int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Molecule * sourceMoleculeCollection)
 {
@@ -611,6 +654,12 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
 //_________________________________________________________________________________________________________________
 //  OPLS configuration scanning. [from Opls_Scan.cpp]
 //_________________________________________________________________________________________________________________
+
+// Opls_Scan::Opls_Scan(string filename)
+// {
+//    fileName = filename;
+// }
+
 void IOUtilities::destructOpls_Scan()
 {
     oplsTable.clear();
@@ -1541,7 +1590,7 @@ void IOUtilities::pullInDataToConstructSimBox()
   //enviro=(Environment *)malloc(sizeof(Environment)); //TBRe
   //memcpy(enviro,(configScan.getEnviro()),sizeof(Environment)); //TBRe
   // //Albert note: enviro = currentEnvironment, FYI; TBR
-  readInConfig();
+  
 	ss << "Reading Configuation File \nPath: " << configPath << std::endl;
   std::cout<<ss.str()<<std::endl; 
   writeToLog(ss, DEFAULT);

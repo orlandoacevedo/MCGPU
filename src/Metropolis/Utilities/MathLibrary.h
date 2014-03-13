@@ -15,8 +15,9 @@
 //  INCLUDE statements
 //_________________________________________________________________________________________________________________
 //_________________________________________________________________________________________________________________
-#include <math.h>
 
+#include <math.h>
+//#include "math.h" //for Albert's testing
 
 #include <assert.h>
 #include <errno.h>
@@ -34,7 +35,7 @@
 
 
 #include "StructLibrary.h"
-//include Metropolis/DataTypes.h
+include Metropolis/DataTypes.h
 
 //_________________________________________________________________________________________________________________
 //  Specific namespace/using requirements
