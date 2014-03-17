@@ -227,7 +227,7 @@ struct Atom
 struct Environment
 {
 	Real x, y, z, cutoff, temp, maxTranslation, maxRotation;
-	int numAtoms;
+	int numOfAtoms;
 	int numOfMolecules; //this line was added in by Albert to make IOUtilities compile
 	int primaryAtomIndex;
 
@@ -242,7 +242,7 @@ struct Environment
 		temp = 0.0;
 		maxTranslation = 0.0;
 		maxRotation = 0.0;
-		numAtoms = 0;
+		numOfAtoms = 0;
 		numOfMolecules = 0;
 		primaryAtomIndex = 0;
 		randomseed = 0;
@@ -255,7 +255,7 @@ struct Molecule
 	/*
 	The number of atoms in the molecule.
 	*/
-	int numAtoms;
+	int numOfAtoms;
 	/*
 	The identification number for a given molecule. Previously referred to as simply "ID".
 	*/
@@ -310,7 +310,7 @@ struct Molecule
 		dihedrals = dihedrals;
 		hops = hops;
 
-		numAtoms = atomCount;
+		numOfAtoms = atomCount;
 		numOfAngles = angleCount;
 		numOfBonds = bondCount;
 		numOfDihedrals = dihedralCount;
@@ -326,7 +326,7 @@ struct Molecule
 		dihedrals = new Dihedral();
 		hops = new Hop();
 
-		numAtoms = 0;
+		numOfAtoms = 0;
 		numOfAngles = 0;
 		numOfBonds = 0;
 		numOfDihedrals = 0;

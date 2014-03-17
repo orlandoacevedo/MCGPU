@@ -39,3 +39,48 @@ Path: ../src/Utilities/bossFiles/mesh.z
 
 Error, Could not open: ../src/Utilities/bossFiles/mesh.z
 
+Running simulation based on Z-Matrix File
+
+Reading Configuation File 
+Path: stuff/demoConfiguration.txt
+
+Reading OPLS File 
+Path: ../src/Utilities/bossFiles/oplsaa.par
+
+OplsScan and OPLS ref table Created 
+
+Reading Z-Matrix File 
+Path: ../src/Utilities/bossFiles/mesh.z
+
+Error, Could not open: ../src/Utilities/bossFiles/mesh.z
+
+Running simulation based on Z-Matrix File
+
+Reading Configuation File 
+Path: stuff/demoConfiguration.txt
+
+Reading OPLS File 
+Path: ../src/Utilities/bossFiles/oplsaa.par
+
+OplsScan and OPLS ref table Created 
+
+Reading Z-Matrix File 
+Path: ../src/Utilities/bossFiles/mesh.z
+
+Error, Could not open: ../src/Utilities/bossFiles/mesh.z
+
+Running simulation based on Z-Matrix File
+
+Reading Configuation File 
+Path: stuff/demoConfiguration.txt
+
+Reading OPLS File 
+Path: ../src/Utilities/bossFiles/oplsaa.par
+
+OplsScan and OPLS ref table Created 
+
+Reading Z-Matrix File 
+Path: ../src/Utilities/bossFiles/mesh.z
+
+Error, Could not open: ../src/Utilities/bossFiles/mesh.z
+

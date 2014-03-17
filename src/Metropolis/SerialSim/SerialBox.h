@@ -18,6 +18,9 @@ class SerialBox : public Box
 	public:
 		SerialBox(IOUtilities configScan);
 		~SerialBox();
+
+		int molecTypenum;
+		Table *tables;
 };
 
 #endif
