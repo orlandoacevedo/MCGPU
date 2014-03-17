@@ -23,6 +23,12 @@ SerialBox::SerialBox(IOUtilities configScan) : Box()
 
 	configScan.scanInOpls();
 	configScan.scanInZmatrix();
+
+	int moleculeIndex = 0;
+	int atomCount = 0;
+
+	vector<Molecule> molecVec = configScan.buildMolecule(atomCount);
+	int molecMod = environment->numOfMolecules % molecVec.size();
 }
 
 SerialBox::~SerialBox()

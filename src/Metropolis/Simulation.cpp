@@ -19,7 +19,7 @@
 Simulation::Simulation(SimulationArgs args)
 {
 	IOUtilities configScan = IOUtilities(args.configPath);
-	if (!configScan.readInConfig())
+	if (!configScan.readInConfig() )
 	{
 		fprintf(stderr, "Terminating Simulation...\n\n");
 		exit(1);

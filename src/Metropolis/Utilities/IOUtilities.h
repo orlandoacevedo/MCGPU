@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <string.h>
 #include <vector>
 
 #include "StructLibrary.h"
@@ -55,7 +56,7 @@ class IOUtilities
 	public: //all things are allowed to be public during testing
 					IOUtilities(std::string configPath); //this should be the constructor, which does very little on its own.
 						///Calls the driver method after initializing *some* variables, and does nothing more.
-					void readInConfig(); //this represents the first of the chain of calls to configuration methods. 
+					bool readInConfig(); //this represents the first of the chain of calls to configuration methods. 
 							//(Does *not* call the second in the chain, or in other words does not continue environment setup.
 							// Look for the driver method for proper order of execution after this.)
 					int ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection);
