@@ -60,8 +60,7 @@ ParallelSim::ParallelSim(GPUSimBox *initbox,int initsteps)
 		}
 	}
 	
-	//This is an upper bound. May be able to be tightened.
-	ptrs->numEnergies = ptrs->numA * ptrs->maxMolSize * ptrs->maxMolSize;
+	ptrs->numEnergies = ptrs->numM * ptrs->maxMolSize * ptrs->maxMolSize;
 	cudaMalloc(&(ptrs->energiesD), ptrs->numEnergies * sizeof(double));
 	
 	//initialize energies

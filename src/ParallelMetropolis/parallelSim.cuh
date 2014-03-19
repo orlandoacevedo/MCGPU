@@ -32,7 +32,7 @@ struct SimPointers
     Atom *atomsH, *atomsD;
     Molecule *moleculesH, *moleculesD, *molTrans;
 	int numA, numM, numEnergies, maxMolSize;
-	double *energiesD;
+	double *energiesH, *energiesD;
 };
 
 __global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, int startIdx, Environment *enviro, double *energies, int segmentSize);
