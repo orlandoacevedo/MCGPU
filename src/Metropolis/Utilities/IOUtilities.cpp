@@ -334,7 +334,7 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
     //read and check the environment
     if (inFile.is_open())
     {
-      inFile>>tmpenv.x>>tmpenv.y>>tmpenv.z>>tmpenv.maxTranslation>>tmpenv.numAtoms>>tmpenv.temp>>tmpenv.cutoff;
+      inFile>>tmpenv.x>>tmpenv.y>>tmpenv.z>>tmpenv.maxTranslation>>tmpenv.numOfAtoms>>tmpenv.temp>>tmpenv.cutoff;
     }
     
     if (memcmp(&tmpenv,destinationEnvironment,sizeof(Environment))!=0)
@@ -343,7 +343,7 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
        ss<<"x "<<tmpenv.x<<" "<<destinationEnvironment->x<<std::endl;
        ss<<"y "<<tmpenv.y<<" "<<destinationEnvironment->y<<std::endl;
        ss<<"z "<<tmpenv.z<<" "<<destinationEnvironment->z<<std::endl;
-       ss<<"numAtoms "<<tmpenv.numAtoms<<" "<<destinationEnvironment->numAtoms<<std::endl;
+       ss<<"numOfAtoms "<<tmpenv.numOfAtoms<<" "<<destinationEnvironment->numOfAtoms<<std::endl;
        ss<<"temperature "<<tmpenv.temp<<" "<<destinationEnvironment->temp<<std::endl;
        ss<<"cutoff "<<tmpenv.cutoff<<" "<<destinationEnvironment->cutoff<<std::endl;
        ss<<ss.str()<<std::endl; 
@@ -369,7 +369,7 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
         inFile.getline(buf,sizeof(buf));
         assert(strcmp(buf,"= Atoms")==0);
 
-        for(int i=0;i<moleculePtr->numAtoms;i++)
+        for(int i=0;i<moleculePtr->numOfAtoms;i++)
         {
         	inFile>>currentAtom.atomIdentificationNumber >> currentAtom.x >> currentAtom.y >> currentAtom.z>> currentAtom.sigma >> currentAtom.epsilon >> currentAtom.charge;
         	assert(currentAtom.atomIdentificationNumber==moleculePtr->atoms[i].atomIdentificationNumber);
@@ -453,7 +453,7 @@ int IOUtilities::WriteStateFile(char const* StateFile, Environment * sourceEnvir
     outFile.open(StateFile);
     
     //print the environment
-    outFile << sourceEnvironment->x << " " << sourceEnvironment->y << " " << sourceEnvironment->z << " " << sourceEnvironment->maxTranslation<<" " << sourceEnvironment->numAtoms
+    outFile << sourceEnvironment->x << " " << sourceEnvironment->y << " " << sourceEnvironment->z << " " << sourceEnvironment->maxTranslation<<" " << sourceEnvironment->numOfAtoms
         << " " << sourceEnvironment->temp << " " << sourceEnvironment->cutoff <<std::endl;
     outFile << std::endl; // blank line
     
@@ -464,7 +464,7 @@ int IOUtilities::WriteStateFile(char const* StateFile, Environment * sourceEnvir
         outFile << "= Atoms" << std::endl; // delimiter
     
         //write atoms
-        for(int j = 0; j < currentMol.numAtoms; j++)
+        for(int j = 0; j < currentMol.numOfAtoms; j++)
         {
             Atom currentAtom = currentMol.atoms[j];
             outFile << currentAtom.atomIdentificationNumber << " "
@@ -575,7 +575,7 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
     for (int i = 0; i < numOfMolecules; i++)
     {
     	Molecule currentMol = sourceMoleculeCollection[i];    	
-        for (int j = 0; j < currentMol.numAtoms; j++)
+        for (int j = 0; j < currentMol.numOfAtoms; j++)
         {
         	Atom currentAtom = currentMol.atoms[j];
             outputFile.setf(std::ios_base::left,std::ios_base::adjustfield);
@@ -1179,7 +1179,7 @@ vector<Hop> IOUtilities::calculateHops(Molecule molec)
 {
     vector<Hop> newHops;
     int **graph;
-    int size = molec.numAtoms;
+    int size = molec.numOfAtoms;
 	 int startId = molec.atoms[0].atomIdentificationNumber;
 
     buildAdjacencyMatrix(graph,molec);
@@ -1263,9 +1263,9 @@ int IOUtilities::findHopDistance(int atom1,int atom2,int size, int **graph)
 
 void IOUtilities::buildAdjacencyMatrix(int **&graph, Molecule molec)
 {
-    int size = molec.numAtoms;
+    int size = molec.numOfAtoms;
 	int startId = molec.atoms[0].atomIdentificationNumber; //the first atom ID in the molecule
-	int lastId = startId + molec.numAtoms -1; //the last atom ID in the molecule
+	int lastId = startId + molec.numOfAtoms -1; //the last atom ID in the molecule
     graph =  new int*[size]; //create colums
     for(int i=0; i<size; i++) //create rows
     {
@@ -1304,8 +1304,8 @@ vector<Molecule> IOUtilities::buildMolecule(int startingID)
     //need a deep copy of molecule pattern incase it is modified.
     for (int i = 0; i < moleculePattern_ZM.size(); i++)
     {
-        Atom *atomCopy = new Atom[ moleculePattern_ZM[i].numAtoms] ;
-        for(int a=0; a <  moleculePattern_ZM[i].numAtoms ; a++)
+        Atom *atomCopy = new Atom[ moleculePattern_ZM[i].numOfAtoms] ;
+        for(int a=0; a <  moleculePattern_ZM[i].numOfAtoms ; a++)
         {
             atomCopy[a]=  moleculePattern_ZM[i].atoms[a];
         }
@@ -1341,7 +1341,7 @@ vector<Molecule> IOUtilities::buildMolecule(int startingID)
 
         
         	/*Molecule molecCopy(-1,atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
-                                    moleculePattern_ZM[i].numAtoms, 
+                                    moleculePattern_ZM[i].numOfAtoms, 
                                     moleculePattern_ZM[i].numOfAngles,
                                     moleculePattern_ZM[i].numOfBonds,
                                     moleculePattern_ZM[i].numOfDihedrals,
@@ -1349,7 +1349,7 @@ vector<Molecule> IOUtilities::buildMolecule(int startingID)
 		  newMolecules[i] = molecCopy; */
 		  
 		  newMolecules[i] = Molecule(-1,atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
-                                    moleculePattern_ZM[i].numAtoms, 
+                                    moleculePattern_ZM[i].numOfAtoms, 
                                     moleculePattern_ZM[i].numOfAngles,
                                     moleculePattern_ZM[i].numOfBonds,
                                     moleculePattern_ZM[i].numOfDihedrals,
@@ -1371,7 +1371,7 @@ vector<Molecule> IOUtilities::buildMolecule(int startingID)
         }
         else
         {
-            newMolecules[i].moleculeIdentificationNumber = newMolecules[i-1].moleculeIdentificationNumber + newMolecules[i-1].numAtoms; 
+            newMolecules[i].moleculeIdentificationNumber = newMolecules[i-1].moleculeIdentificationNumber + newMolecules[i-1].numOfAtoms; 
         }
     }
 	 
@@ -1379,7 +1379,7 @@ vector<Molecule> IOUtilities::buildMolecule(int startingID)
     {
         Molecule newMolecule = newMolecules[j];
         //map unique IDs to atoms within structs based on startingID
-        for(int i = 0; i < newMolecules[j].numAtoms; i++)
+        for(int i = 0; i < newMolecules[j].numOfAtoms; i++)
         {
             int atomID = newMolecule.atoms[i].atomIdentificationNumber - 1;
             //newMolecule.atoms[i].id = atomID + newMolecule.id;
@@ -1601,23 +1601,23 @@ void IOUtilities::pullInDataToConstructSimBox()
     {
   		Molecule molec1 = molecVec[j];   
          //Copy data from vector to molecule
-  		count[0]+=molec1.numAtoms;
+  		count[0]+=molec1.numOfAtoms;
   		count[1]+=molec1.numOfBonds;
   		count[2]+=molec1.numOfAngles;
   		count[3]+=molec1.numOfDihedrals;
   		count[4]+=molec1.numOfHops;
   		
-  		std::cout << "before table building. Number of atom "<< molec1.numAtoms << std::endl;
+  		std::cout << "before table building. Number of atom "<< molec1.numOfAtoms << std::endl;
   		
   		Hop *myHop = molec1.hops;
   		int **table;
-  		table = new int*[molec1.numAtoms];
-  		for(int k = 0; k< molec1.numAtoms;k++)
-  			table[k] = new int[molec1.numAtoms];
-  		//int table[molec1.numAtoms][molec1.numAtoms];
-  		for(int test = 0; test< molec1.numAtoms;test++)
+  		table = new int*[molec1.numOfAtoms];
+  		for(int k = 0; k< molec1.numOfAtoms;k++)
+  			table[k] = new int[molec1.numOfAtoms];
+  		//int table[molec1.numOfAtoms][molec1.numOfAtoms];
+  		for(int test = 0; test< molec1.numOfAtoms;test++)
         {
-  			for(int test1 = 0; test1 < molec1.numAtoms; test1++)
+  			for(int test1 = 0; test1 < molec1.numOfAtoms; test1++)
             {
   				table[test][test1] = 0;
   			}
@@ -1637,10 +1637,10 @@ void IOUtilities::pullInDataToConstructSimBox()
 	  
 	   std::cout << "after table building"<< std::endl;
 	   //memset(table,0,sizeof(table));
-	   //int table[molec1.numAtoms][molec1.numAtoms];
+	   //int table[molec1.numOfAtoms][molec1.numOfAtoms];
 	   //std::cout << " this is " << j << std::endl;
 	   tables[j] = Table(table); //createTable is in metroUtil
-	   currentAtomCount += molec1.numAtoms;
+	   currentAtomCount += molec1.numOfAtoms;
 	   std::cout << "after table creation. Current atom cout: "<< currentAtomCount << std::endl;
     }
      
@@ -1669,20 +1669,20 @@ void IOUtilities::pullInDataToConstructSimBox()
         molecules[j].hops = (Hop *)(hoppool+count[4]);
 
         molecules[j].moleculeIdentificationNumber = molec1.moleculeIdentificationNumber;
-        molecules[j].numAtoms = molec1.numAtoms;
+        molecules[j].numOfAtoms = molec1.numOfAtoms;
         molecules[j].numOfBonds = molec1.numOfBonds;
         molecules[j].numOfDihedrals = molec1.numOfDihedrals;
         molecules[j].numOfAngles = molec1.numOfAngles;
         molecules[j].numOfHops = molec1.numOfHops;
 
-        count[0]+=molec1.numAtoms;
+        count[0]+=molec1.numOfAtoms;
         count[1]+=molec1.numOfBonds;
         count[2]+=molec1.numOfAngles;
         count[3]+=molec1.numOfDihedrals;
         count[4]+=molec1.numOfHops;
 
         //get the atoms from the vector molecule
-        for(int k = 0; k < molec1.numAtoms; k++)
+        for(int k = 0; k < molec1.numOfAtoms; k++)
         {
             molecules[j].atoms[k] = molec1.atoms[k];
         }               
@@ -1762,7 +1762,7 @@ void IOUtilities::pullInDataToConstructSimBox()
         }
     }
      
-    enviro->numAtoms = count[0]*molecDiv;
+    enviro->numOfAtoms = count[0]*molecDiv;
 	ss << "Molecules Created into an Array" << std::endl;
     writeToLog(ss, DEFAULT);
      

@@ -22,6 +22,10 @@ class Box
 		Atom *atoms;
 		Environment *environment;
 		Molecule *molecules;
+		Bond *bonds;
+		Angle *angles;
+		Dihedral *dihedrals;
+		Hop *hops;
 		Real *energies;
 		int atomCount, moleculeCount, energyCount, maxMolSize;
 

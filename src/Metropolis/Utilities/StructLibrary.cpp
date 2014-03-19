@@ -58,7 +58,7 @@ void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, 
 
 
 //Environment
-Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real temp, int numAtoms, Real cutoff, Real maxRotation)
+Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real temp, int numOfAtoms, Real cutoff, Real maxRotation)
 {
 	Environment environment;
 	environment.x = x;
@@ -68,18 +68,18 @@ Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real 
 	environment.maxRotation = maxRotation;
 	environment.cutoff = cutoff;
 	environment.temp = temp;
-	environment.numAtoms = numAtoms;
+	environment.numOfAtoms = numOfAtoms;
 	return environment;
 }
 
 
 
 //Molecule
-Molecule createMolecule(Atom *atoms, int numAtoms)
+Molecule createMolecule(Atom *atoms, int numOfAtoms)
 {
 	Molecule molecule;
 	molecule.atoms = atoms;
-	molecule.numAtoms = numAtoms;
+	molecule.numOfAtoms = numOfAtoms;
 	return molecule;
 }
 

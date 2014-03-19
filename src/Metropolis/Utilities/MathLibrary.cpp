@@ -509,7 +509,7 @@ Molecule moveMolecule(Molecule molec, Atom pivot, double xTrans, double yTrans,
         double zTrans, double xRot, double yRot, double zRot)
 {
     
-    for(int i = 0; i < molec.numAtoms; i++)
+    for(int i = 0; i < molec.numOfAtoms; i++)
     {
         //translate molecule to the origin to rotate
         molec.atoms[i] = translateAtom(molec.atoms[i], -pivot.x, -pivot.y, -pivot.z);
@@ -540,7 +540,7 @@ Molecule translateMolecule(Molecule molec, double maxTranslation)
 	const double yTrans = randomNUM(-maxTranslation, maxTranslation);
 	const double zTrans = randomNUM(-maxTranslation, maxTranslation);
 	
-    for(int i = 0; i < molec.numAtoms; i++)
+    for(int i = 0; i < molec.numOfAtoms; i++)
     {
     	molec.atoms[i] = translateAtom(molec.atoms[i], xTrans, yTrans, zTrans);
     }  
@@ -553,7 +553,7 @@ Molecule rotateMolec(Molecule molec, Atom pivot, double maxRotation)
 	const double yRot = randomNUM(-maxRotation, maxRotation);
 	const double zRot = randomNUM(-maxRotation, maxRotation);
     
-    for(int i = 0; i < molec.numAtoms; i++)
+    for(int i = 0; i < molec.numOfAtoms; i++)
     {
         //translate molecule to the origin to rotate
         molec.atoms[i] = translateAtom(molec.atoms[i], -pivot.x, -pivot.y, -pivot.z);
@@ -660,7 +660,7 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
     	double centX, centY, centZ=0.0; //centerPoint to build molecule around
     	Atom lineAtom;
         //run build on each atom in the molecule
-        for(int x = 0; x < molec[m].numAtoms; x++)
+        for(int x = 0; x < molec[m].numOfAtoms; x++)
         {	     
             lineAtom = molec[m].atoms[x];
     		//set the vectors with appropiate contents as if in Zmatrix		  
@@ -824,9 +824,9 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
     	int x=0;
     	if(m>0)
         {
-            x=molec[m-1].numAtoms;
+            x=molec[m-1].numOfAtoms;
         }
-    	while( i < molec[m].numAtoms)
+    	while( i < molec[m].numOfAtoms)
         {
             molec[m].atoms[i].x = atomVector[x].x;
             molec[m].atoms[i].y = atomVector[x].y;
@@ -911,7 +911,7 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
         }
 		
 		//check if atom 4 exists
-		if(molec[m].numAtoms < 4)
+		if(molec[m].numOfAtoms < 4)
         {
 			break;
         }
@@ -922,7 +922,7 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 		double vecangdih[3],vecangbnd[3];
 		double vx[3], vy[3], vz[3];
 		
-		for(int N = 3; N < molec[m].numAtoms; N++)
+		for(int N = 3; N < molec[m].numOfAtoms; N++)
         {
 			lineAtom = molec[m].atoms[N];
 			setMoleculeVectors(molec, numBonded, lineAtom.atomIdentificationNumber, bondVector, angleVector, dihedralVector);

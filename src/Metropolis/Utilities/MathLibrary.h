@@ -35,7 +35,7 @@
 
 
 #include "StructLibrary.h"
-include Metropolis/DataTypes.h
+//include Metropolis/DataTypes.h
 
 //_________________________________________________________________________________________________________________
 //  Specific namespace/using requirements
