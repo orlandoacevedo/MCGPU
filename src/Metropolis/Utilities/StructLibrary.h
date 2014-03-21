@@ -300,15 +300,15 @@ struct Molecule
     /*
     Constructor(s) for the molecule
     */
-    Molecule(int id, Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals, Hop *hops, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
+    Molecule(int id, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
     	{
 		moleculeIdentificationNumber = id;
 
-		atoms = atoms;
-		angles = angles;
-		bonds = bonds;
-		dihedrals = dihedrals;
-		hops = hops;
+		atoms = atomsIn;
+		angles = anglesIn;
+		bonds = bondsIn;
+		dihedrals = dihedralsIn;
+		hops = hopsIn;
 
 		numOfAtoms = atomCount;
 		numOfAngles = angleCount;

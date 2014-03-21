@@ -1299,7 +1299,7 @@ void IOUtilities::buildAdjacencyMatrix(int **&graph, Molecule molec)
 vector<Molecule> IOUtilities::buildMolecule(int startingID)
 {
 	int numOfMolec = moleculePattern_ZM.size();
-	Molecule * newMolecules = new Molecule[numOfMolec];
+	Molecule newMolecules[numOfMolec];
 	 
     //need a deep copy of molecule pattern incase it is modified.
     for (int i = 0; i < moleculePattern_ZM.size(); i++)
@@ -1347,7 +1347,7 @@ vector<Molecule> IOUtilities::buildMolecule(int startingID)
                                     moleculePattern_ZM[i].numOfDihedrals,
                                     numOfHops);	
 		  newMolecules[i] = molecCopy; */
-		  
+		 
 		  newMolecules[i] = Molecule(-1,atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
                                     moleculePattern_ZM[i].numOfAtoms, 
                                     moleculePattern_ZM[i].numOfAngles,
@@ -1577,13 +1577,14 @@ void IOUtilities::pullInDataToConstructSimBox()
    int atomCount = 0;
 
    vector<Molecule> molecVec = buildMolecule(atomCount);
+   //###FLOATING POINT ERROR NEXT LINE!!!###
    int molecMod = currentEnvironment->numOfMolecules % molecVec.size();
    if (molecMod != 0)
    {
-       enviro->numOfMolecules += molecVec.size() - molecMod;
+       currentEnvironment->numOfMolecules += molecVec.size() - molecMod;
        std::cout << "Number of molecules not divisible by specified z-matrix. Changing number of molecules to: " << currentEnvironment->numOfMolecules << std::endl;
     }
-    molecules = (Molecule *)malloc(sizeof(Molecule) * enviro->numOfMolecules);
+    molecules = (Molecule *)malloc(sizeof(Molecule) * currentEnvironment->numOfMolecules);
     
     int molecDiv = currentEnvironment->numOfMolecules / molecVec.size();
     //int molecTypenum;
@@ -1761,25 +1762,25 @@ void IOUtilities::pullInDataToConstructSimBox()
             hoppool[offset*count[4]+k].atom2+=m*count[0];
         }
     }
-     
-    enviro->numOfAtoms = count[0]*molecDiv;
-	ss << "Molecules Created into an Array" << std::endl;
-    writeToLog(ss, DEFAULT);
+    std::cout << "ERROR AFTER THIS" << std::endl;
+    //currentEnvironment->numOfAtoms = count[0]*molecDiv;
+	//ss << "Molecules Created into an Array" << std::endl;
+    //writeToLog(ss, DEFAULT);
      
     if (!statePath.empty())
     {
-		ss << "Reading State File \nPath: " << statePath << std::endl;
-        std::cout << ss.str() << std::endl; 
-        writeToLog(ss, DEFAULT);
+		//ss << "Reading State File \nPath: " << statePath << std::endl;
+        //std::cout << ss.str() << std::endl; 
+        //writeToLog(ss, DEFAULT);
      	//ReadStateFile(configScan.getStatePath().c_str());
-     	ReadStateFile(statePath.c_str(), enviro, molecules);
+     	//ReadStateFile(statePath.c_str(), currentEnvironment, molecules);
     }
     else
     {
-        ss << "Assigning Molecule Positions..." << std::endl;
-        writeToLog(ss, DEFAULT);
+        //ss << "Assigning Molecule Positions..." << std::endl;
+        //writeToLog(ss, DEFAULT);
         //generatefccBox(molecules,enviro);//generate fcc lattice box
-        ss << "Finished Assigning Molecule Positions" << std::endl;
-        writeToLog(ss, DEFAULT);
+        //ss << "Finished Assigning Molecule Positions" << std::endl;
+        //writeToLog(ss, DEFAULT);
     }
 }
