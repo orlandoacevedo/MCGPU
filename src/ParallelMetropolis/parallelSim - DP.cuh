@@ -32,11 +32,12 @@ struct SimPointers
     Atom *atomsH, *atomsD;
     Molecule *moleculesH, *moleculesD, *molTrans;
 	int numA, numM, numEnergies, maxMolSize;
-	int *molBatchH, *molBatchD;
 	double *energiesH, *energiesD;
 };
 
-__global__ void calcInterAtomicEnergy(Molecule *molecules, int curentMol, Environment *enviro, double *energies, int numEnergies, int *molBatch, int maxMolSize);
+__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, int startIdx, Environment *enviro, double *energies, int segmentSize);
+__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *enviro, double *energies, int segmentSize);
+__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *enviro, double *energies, int segmentSize);
 __global__ void aggregateEnergies(double *energies, int numEnergies, int interval, int batchSize);
 __device__ double calc_lj(Atom atom1, Atom atom2, double r2);
 __device__ double calcCharge(double charge1, double charge2, double r);
@@ -67,9 +68,6 @@ class ParallelSim
 		void writeChangeToDevice(int changeIdx);
 		double calcSystemEnergy();
 		double calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
-		double calcBatchEnergy(int numMols, int molIdx);
-		double getEnergyFromDevice();
-		double makePeriodicH(double x, double box);
         void runParallel(int steps);
 
     public:
