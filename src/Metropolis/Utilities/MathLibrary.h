@@ -16,8 +16,8 @@
 //_________________________________________________________________________________________________________________
 //_________________________________________________________________________________________________________________
 
-#include <math.h>
-//#include "math.h" //for Albert's testing
+#include <math.h> //AlbertExcludes
+//#include "math.h" //for Albert's testing //AlbertIncludes
 
 #include <assert.h>
 #include <errno.h>
@@ -34,7 +34,8 @@
 #include <algorithm>
 
 
-#include "StructLibrary.h"
+#include "StructLibrary.h" //AlbertExcludes
+//#include "StructLibrary.cpp" //AlbertIncludes
 //include Metropolis/DataTypes.h
 
 //_________________________________________________________________________________________________________________

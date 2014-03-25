@@ -33,6 +33,7 @@
 
 #include "IOUtilities.h"
 #include "StructLibrary.h"
+
 //_________________________________________________________________________________________________________________
 //  DEFINE statements
 //_________________________________________________________________________________________________________________
@@ -1539,7 +1540,7 @@ void IOUtilities::pullInDataToConstructSimBox()
   
   //enviro=(Environment *)malloc(sizeof(Environment)); //TBRe
   //memcpy(enviro,(configScan.getEnviro()),sizeof(Environment)); //TBRe
-  // //Albert note: enviro = currentEnvironment, FYI; TBR
+  // //Albert note: enviro = currentEnvironment, FYI; TBRe
   readInConfig();
 	ss << "Reading Configuation File \nPath: " << configPath << std::endl;
   std::cout<<ss.str()<<std::endl; 
@@ -1550,7 +1551,15 @@ void IOUtilities::pullInDataToConstructSimBox()
   std::cout<<ss.str()<<std::endl; 
   writeToLog(ss, DEFAULT);
 
-  scanInOpls();
+  if (scanInOpls() == -1)
+  {
+  	ss << "******Fatal Error! Exiting program. Cause: Could not open OPLS info at: " << oplsuaparPath << std::endl;
+  	std::cerr << ss.str()<< std::endl;
+  	writeToLog(ss, DEFAULT);
+  	
+    exit(1);
+   }
+   
 	ss << "OplsScan and OPLS ref table Created " << std::endl;
   std::cout<<ss.str()<<std::endl; 
   writeToLog(ss, DEFAULT);
@@ -1561,12 +1570,13 @@ void IOUtilities::pullInDataToConstructSimBox()
   writeToLog(ss, DEFAULT);
   //Zmatrix_Scan zMatrixScan (configScan.getZmatrixPath(), &oplsScan); //TBRe
   if (scanInZmatrix() == -1)
-  {
-  	ss << "Error, Could not open: " << zmatrixPath << std::endl;
-  	std::cerr << ss.str()<< std::endl;
-  	writeToLog(ss, DEFAULT);
-    exit(1);
-   }
+   {
+   	ss << "******Fatal Error! Exiting program. Cause: Could not open Zmatrix info at: " << zmatrixPath << std::endl;
+   	std::cerr << ss.str()<< std::endl;
+   	writeToLog(ss, DEFAULT);
+   	
+     exit(1);
+    }
    
    ss << "Opened Z-Matrix File \nBuilding "<< currentEnvironment->numOfMolecules << " Molecules..." << std::endl;
    std::cout<<ss.str()<<std::endl; 
@@ -1578,7 +1588,16 @@ void IOUtilities::pullInDataToConstructSimBox()
 
    vector<Molecule> molecVec = buildMolecule(atomCount);
    //###FLOATING POINT ERROR NEXT LINE!!!###
-   int molecMod = currentEnvironment->numOfMolecules % molecVec.size();
+   int storedNumOfMolecules = currentEnvironment->numOfMolecules;
+   if (molecVec.size() < 1 || storedNumOfMolecules < 1)
+   {
+   		ss << "FATAL ERROR! Low-level error description: Size of vector molecVec & value of integer storedNumOfMolecules should be greater than or equal to 1." << std::endl << "Values instead ...molecVec: " <<  molecVec.size() << "  ||| ...and storedNumOfMolecules: " << storedNumOfMolecules << std::endl << "...EXITING..." << std::endl;
+   		std::cerr << ss.str()<< std::endl;
+	   	writeToLog(ss, DEFAULT);
+	   	exit(1);
+	}
+   //std::cout << "DEBUG: value of integer storedNumOfMolecules before floating point error: " << storedNumOfMolecules << std::endl;
+   int molecMod = storedNumOfMolecules % molecVec.size();
    if (molecMod != 0)
    {
        currentEnvironment->numOfMolecules += molecVec.size() - molecMod;
