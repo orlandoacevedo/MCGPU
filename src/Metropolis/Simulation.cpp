@@ -19,6 +19,7 @@
 Simulation::Simulation(SimulationArgs args)
 {
 	IOUtilities configScan = IOUtilities(args.configPath);
+
 	if (!configScan.readInConfig() )
 	{
 		fprintf(stderr, "Terminating Simulation...\n\n");
@@ -40,8 +41,5 @@ Simulation::~Simulation()
 //Utility
 void Simulation::run()
 {
-	Environment *boxEnviro = box->getEnvironment();
-	printf("\nX: %f\n",boxEnviro->x);
-	printf("Y: %f\n",boxEnviro->y);
-	printf("Z: %f\n",boxEnviro->z);
+
 }

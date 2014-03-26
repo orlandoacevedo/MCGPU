@@ -1661,7 +1661,7 @@ void IOUtilities::pullInDataToConstructSimBox()
 	   //std::cout << " this is " << j << std::endl;
 	   tables[j] = Table(table); //createTable is in metroUtil
 	   currentAtomCount += molec1.numOfAtoms;
-	   std::cout << "after table creation. Current atom cout: "<< currentAtomCount << std::endl;
+	   std::cout << "after table creation. Current atom count: "<< currentAtomCount << std::endl;
     }
      
     atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]);
@@ -1745,43 +1745,44 @@ void IOUtilities::pullInDataToConstructSimBox()
             molecules[offset+n].dihedrals =  molecules[n].dihedrals+count[3]*m;
             molecules[offset+n].hops =  molecules[n].hops+count[4]*m;
         }
+//################# SEG FAULT ##############################
+        // memcpy(&atompool[offset*count[0]],atompool,sizeof(Atom)*count[0]);
+        // memcpy(&bondpool[offset*count[1]],bondpool,sizeof(Bond)*count[1]);
+        // memcpy(&anglepool[offset*count[2]],anglepool,sizeof(Angle)*count[2]);
+        // memcpy(&dihedralpool[offset*count[3]],dihedralpool,sizeof(Dihedral)*count[3]);
+        // memcpy(&hoppool[offset*count[4]],hoppool,sizeof(Hop)*count[4]);
+//##########################################################
         
-        memcpy(&atompool[offset*count[0]],atompool,sizeof(Atom)*count[0]);
-        memcpy(&bondpool[offset*count[1]],bondpool,sizeof(Bond)*count[1]);
-        memcpy(&anglepool[offset*count[2]],anglepool,sizeof(Angle)*count[2]);
-        memcpy(&dihedralpool[offset*count[3]],dihedralpool,sizeof(Dihedral)*count[3]);
-        memcpy(&hoppool[offset*count[4]],hoppool,sizeof(Hop)*count[4]);
+  //       for(int k=0;k<count[0];k++)
+  //       {
+  //           atompool[offset*count[0]+k].atomIdentificationNumber=offset*count[0]+k;
+  //       }
         
-        for(int k=0;k<count[0];k++)
-        {
-            atompool[offset*count[0]+k].atomIdentificationNumber=offset*count[0]+k;
-        }
+  //       for(int k=0;k<count[1];k++)
+  //       {
+  //           bondpool[offset*count[1]+k].atom1+=m*count[0];
+  //           bondpool[offset*count[1]+k].atom2+=m*count[0];
+  //       }
         
-        for(int k=0;k<count[1];k++)
-        {
-            bondpool[offset*count[1]+k].atom1+=m*count[0];
-            bondpool[offset*count[1]+k].atom2+=m*count[0];
-        }
+  //       for(int k=0;k<count[2];k++)
+  //       {
+  //           anglepool[offset*count[2]+k].atom1+=m*count[0];
+  //           anglepool[offset*count[2]+k].atom2+=m*count[0];
+  //       }
         
-        for(int k=0;k<count[2];k++)
-        {
-            anglepool[offset*count[2]+k].atom1+=m*count[0];
-            anglepool[offset*count[2]+k].atom2+=m*count[0];
-        }
+  //       for(int k=0;k<count[3];k++)
+  //       {
+  //           dihedralpool[offset*count[3]+k].atom1+=m*count[0];
+  //           dihedralpool[offset*count[3]+k].atom2+=m*count[0];
+  //       }
         
-        for(int k=0;k<count[3];k++)
-        {
-            dihedralpool[offset*count[3]+k].atom1+=m*count[0];
-            dihedralpool[offset*count[3]+k].atom2+=m*count[0];
-        }
-        
-        for(int k=0;k<count[4];k++)
-        {
-            hoppool[offset*count[4]+k].atom1+=m*count[0];
-            hoppool[offset*count[4]+k].atom2+=m*count[0];
-        }
+  //       for(int k=0;k<count[4];k++)
+  //       {
+  //           hoppool[offset*count[4]+k].atom1+=m*count[0];
+  //           hoppool[offset*count[4]+k].atom2+=m*count[0];
+  //       }
     }
-    std::cout << "ERROR AFTER THIS" << std::endl;
+
     //currentEnvironment->numOfAtoms = count[0]*molecDiv;
 	//ss << "Molecules Created into an Array" << std::endl;
     //writeToLog(ss, DEFAULT);
@@ -1802,4 +1803,6 @@ void IOUtilities::pullInDataToConstructSimBox()
         //ss << "Finished Assigning Molecule Positions" << std::endl;
         //writeToLog(ss, DEFAULT);
     }
+
+    std::cout << "ERROR AFTER THIS" << std::endl;
 }

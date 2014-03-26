@@ -19,8 +19,7 @@ double randomFloat(const double start, const double end){return 0.0;}
 
 SerialBox::SerialBox(IOUtilities configScan) : Box()
 {
-    configScan.pullInDataToConstructSimBox();
-	std::cout << "ERROR AFTER THIS" << std::endl;
+	
 }
 
 SerialBox::~SerialBox()
