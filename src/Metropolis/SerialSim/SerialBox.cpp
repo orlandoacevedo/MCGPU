@@ -26,6 +26,12 @@ SerialBox::SerialBox(IOUtilities configScan) : Box()
 	environment = configScan.currentEnvironment;
 	hops = configScan.hoppool;
 	molecules = configScan.molecules;
+
+	atomCount = environment->numOfAtoms;
+	moleculeCount = environment->numOfMolecules;
+
+	std::cout << "# of atoms: " << atomCount << std::endl;
+	std::cout << "# of molecules: " << moleculeCount << std::endl;
 }
 
 SerialBox::~SerialBox()
