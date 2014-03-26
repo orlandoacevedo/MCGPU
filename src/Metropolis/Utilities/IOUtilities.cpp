@@ -1894,6 +1894,4 @@ void IOUtilities::pullInDataToConstructSimBox()
         std::cout << ss.str() << std::endl; 
         writeToLog(ss, DEFAULT);
     }
-
-    std::cout << "ERROR AFTER THIS" << std::endl;
 }
