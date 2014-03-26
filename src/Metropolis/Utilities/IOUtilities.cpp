@@ -76,6 +76,12 @@ IOUtilities::IOUtilities(std::string configPathIn){
 	pdbOutputPath = ""; //The path where we write the pdb output files after simulation
 	cutoff = 0; //The nonbonded cutoff distance.
 	
+	//Do what the original constructors did in this space.
+	startNewMolecule_ZM = false;
+	
+	
+	//End outside construction. Continue work.
+	
 	criticalErrorEncountered = false; //set to true if, at any point, a critical error prevents the program from reliably setting up the environment
     
     pullInDataToConstructSimBox(); //do the rest of the construction with this driver method
@@ -207,7 +213,7 @@ bool IOUtilities::readInConfig()
 					{
 						throwScanError("Configuration file not well formed. Missing z-matrix path value.");
 						isSafeToContinue = false; //now that it is false, check if there is a state file
-						exit(1);
+						//exit(1); //TBRe; we assume that we can read from the state path until proven otherwise.
 					}
 					break;
 				case 18:
@@ -219,7 +225,7 @@ bool IOUtilities::readInConfig()
 					{
 						criticalErrorEncountered = true;
 						throwScanError("Configuration file not well formed. Missing value pointing to prior state file path. Cannot safely continue with program execution.");
-						return false;
+						return false; //preferable to simply exiting, as we want to give the program a chance to do...whatever?
 					}
 					else
 					{	
@@ -1428,7 +1434,7 @@ vector<Molecule> IOUtilities::buildMolecule(int startingID)
             newMolecule.hops[i].atom2 = atom2ID + startingID;
         }
     }
-
+	std::cout << "IOUtilities::buildMolecule: have the value of sizeof newMolecules divided by sizeof one Molecule: " << sizeof(newMolecules)/sizeof(Molecule) << std::endl; 
     return vector<Molecule>(newMolecules,newMolecules+sizeof(newMolecules)/sizeof(Molecule) );
 }
 
@@ -1455,7 +1461,7 @@ void writeToLog(std::string text,int stamp){
 	std::ofstream logFile;
 	logFile.open(logFilename.c_str(),std::ios::out|std::ios::app);
 	 
-	std::string hash ="";
+	//std::string hash =""; //TBRe
 	time_t current_time;
     struct tm * time_info;
     char timeString[9];  // space for "HH:MM:SS\0"
@@ -1472,7 +1478,7 @@ void writeToLog(std::string text,int stamp){
 				logFile << timeString << std::endl;
 				logFile << "----------------------------------------------------------------------"<< std::endl;
 				break;
-			case END: 
+		case END: 
 			   //The end of a running simulation
 				logFile << "----------------------------------------------------------------------"<< std::endl;
 				logFile << "                       Ending Simulation: ";
@@ -1494,6 +1500,9 @@ void writeToLog(std::string text,int stamp){
 		      //GEOM error Geometric
 				logFile << "--GEOM: ";
 				break;
+		case DEFAULT:
+			logFile << "";
+		      break;		
 	     default:
 	         logFile << "";
 		      break;		
@@ -1663,25 +1672,94 @@ void IOUtilities::pullInDataToConstructSimBox()
 	   currentAtomCount += molec1.numOfAtoms;
 	   std::cout << "after table creation. Current atom count: "<< currentAtomCount << std::endl;
     }
+
+//########### BEGINNING OF HEAVY CONSTRUCTION TO DEBUG SEGMENTATION FAULTS ##################
      
-    atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]);
-    bondpool     =(Bond *)malloc(sizeof(Bond)*molecDiv*count[1]);
-    anglepool    =(Angle *)malloc(sizeof(Angle)*molecDiv*count[2]);
-    dihedralpool =(Dihedral *)malloc(sizeof(Dihedral)*molecDiv*count[3]);
-    hoppool      =(Hop *)malloc(sizeof(Hop)*molecDiv*count[4]);  
-    memset(atompool,0,sizeof(Atom)*molecDiv*count[0]);
-    memset(bondpool,0,sizeof(Bond)*molecDiv*count[1]);
-    memset(anglepool,0,sizeof(Angle)*molecDiv*count[2]);
-    memset(dihedralpool,0,sizeof(Dihedral)*molecDiv*count[3]);
-    memset(hoppool,0,sizeof(Hop)*molecDiv*count[4]);
+    std::cout << "Counts 0 through 4 INITIALLY: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
+	std::cout << "Value of molecDiv INITIALLY: " << molecDiv << std::endl;
+	int bustedCalculation = sizeof(Atom)*molecDiv*count[0];
+	int potentialArrayLengthOfAtomPool = molecDiv * count[0];
+	std::cout << "DEBUG: Value of sizeof Atom times molecDiv times count is allegedly, as written, in variable bustedCalculation: " << bustedCalculation << std::endl;
+    //atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]);
+    //atompool = (Atom *)malloc(bustedCalculation);
+    //Atom * atompool = new Atom[potentialArrayLengthOfAtomPool];
+    atompool = new Atom[potentialArrayLengthOfAtomPool];
+    std::cout << "DEBUG: Trying to reach this many atom spots in the atompool variable: _" << potentialArrayLengthOfAtomPool << std::endl;
+    for (int positionInFillProcess = 0; positionInFillProcess < potentialArrayLengthOfAtomPool; positionInFillProcess++)
+    {
+    	atompool[positionInFillProcess] = Atom(0 + positionInFillProcess, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 'Z'); //potential workaround to get space
+    	if (positionInFillProcess % 250 == 0)
+    	{
+    		std::cout << "Debug: position in making space for atompool has made it up to _" << positionInFillProcess << "_ ATPslots." << std::endl;
+    	}
+    }
+   //  Atom testAtomPool[55296]; //debug
+//     Atom * testOldC_atomPool = (Atom*) calloc (potentialArrayLengthOfAtomPool, sizeof(Atom)); //debug
+    // std::cout << "DEBUG: Size of data *type* pointed to by pointer atompool INITIALLY: " << sizeof *atompool << std::endl;
+//     std::cout << "DEBUG: Size of testAtomPool: " << sizeof testAtomPool << std::endl;
+//     std::cout << "DEBUG: Size of old C method of allocating space for an array: " << sizeof testOldC_atomPool << std::endl;
+//     if (sizeof *atompool != bustedCalculation)
+//     	{
+//     	std::cout << "DEBUG: Help! Something is wrong with the attempt to malloc space for variable atompool! Please fix me!" << std::endl;
+//     	}
+    //bondpool     =(Bond *)malloc(sizeof(Bond)*molecDiv*count[1]);
+    bondpool = new Bond[molecDiv*count[1]];
+    //anglepool    =(Angle *)malloc(sizeof(Angle)*molecDiv*count[2]);
+    anglepool = new Angle[molecDiv*count[2]];
+    //dihedralpool =(Dihedral *)malloc(sizeof(Dihedral)*molecDiv*count[3]);
+    dihedralpool = new Dihedral[molecDiv*count[3]];
+    //hoppool      =(Hop *)malloc(sizeof(Hop)*molecDiv*count[4]);
+    hoppool = new Hop[molecDiv*count[4]];
+    for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[1]; positionInFillProcess++)
+    {
+    	bondpool[positionInFillProcess] = Bond(); //potential workaround to get space
+    	if (positionInFillProcess % 250 == 0)
+    	{
+    		std::cout << "Debug: position in making space for bondpool has made it up to _" << positionInFillProcess << "_  BPslots." << std::endl;
+    	}
+    }
+    for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[2]; positionInFillProcess++)
+    {
+    	anglepool[positionInFillProcess] = Angle(); //potential workaround to get space
+    	if (positionInFillProcess % 250 == 0)
+    	{
+    		std::cout << "Debug: position in making space for anglepool has made it up to _" << positionInFillProcess << "_ AGPslots." << std::endl;
+    	}
+    }
+    for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[3]; positionInFillProcess++)
+    {
+    	dihedralpool[positionInFillProcess] = Dihedral(); //potential workaround to get space
+    	if (positionInFillProcess % 250 == 0)
+    	{
+    		std::cout << "Debug: position in making space for dihedralpool has made it up to _" << positionInFillProcess << "_ DPslots." << std::endl;
+    	}
+    }
+    for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[4]; positionInFillProcess++)
+    {
+    	hoppool[positionInFillProcess] = Hop(); //potential workaround to get space
+    	if (positionInFillProcess % 250 == 0)
+    	{
+    		std::cout << "Debug: position in making space for hoppool has made it up to _" << positionInFillProcess << "_ HPslots." << std::endl;
+    	}
+    }  
+    // memset(atompool,0,sizeof(Atom)*molecDiv*count[0]);
+//     memset(bondpool,0,sizeof(Bond)*molecDiv*count[1]);
+//     memset(anglepool,0,sizeof(Angle)*molecDiv*count[2]);
+//     memset(dihedralpool,0,sizeof(Dihedral)*molecDiv*count[3]);
+//     memset(hoppool,0,sizeof(Hop)*molecDiv*count[4]);
+
+//############# Albert Stopped Here ######################
 
     //arrange first part of molecules
     memset(count,0,sizeof(count));
+    std::cout << "the loop based on molecVec.size() after -Arrange first part of molecules- should run this many times: " << molecVec.size() << std::endl;
  	for(int j = 0; j < molecVec.size(); j++)
     {
  	      //Copy data from vector to molecule
         Molecule molec1 = molecVec[j];   
-
+		
+		std::cout << "during random molecule creation, various values within count are..." << "Counts 0 through 4: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
+		std::cout << "Also, at this point, we know atompool is a pointer and has a value. what is that value? " << atompool << std::endl;
         molecules[j].atoms = (Atom *)(atompool+count[0]);
         molecules[j].bonds = (Bond *)(bondpool+count[1]);
         molecules[j].angles = (Angle *)(anglepool+count[2]);
@@ -1746,62 +1824,68 @@ void IOUtilities::pullInDataToConstructSimBox()
             molecules[offset+n].hops =  molecules[n].hops+count[4]*m;
         }
 //################# SEG FAULT ##############################
-        // memcpy(&atompool[offset*count[0]],atompool,sizeof(Atom)*count[0]);
-        // memcpy(&bondpool[offset*count[1]],bondpool,sizeof(Bond)*count[1]);
-        // memcpy(&anglepool[offset*count[2]],anglepool,sizeof(Angle)*count[2]);
-        // memcpy(&dihedralpool[offset*count[3]],dihedralpool,sizeof(Dihedral)*count[3]);
-        // memcpy(&hoppool[offset*count[4]],hoppool,sizeof(Hop)*count[4]);
+		// std::cout << "Counts 0 through 4: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
+// 		std::cout << "Size of Atom, Bond, Angle, Dihedral, and Hop, respectively: " << sizeof(Atom) << " ... " << sizeof(Bond) << " ... " << sizeof(Angle) << " ... " << sizeof(Dihedral) << " ... " << sizeof(Hop) << std::endl;
+// 		std::cout << "Offset value: " << offset << "." << std::endl;
+// 		std::cout << "Size of data pointed to by pointer atompool FINALLY: " << sizeof *atompool << endl;
+        memcpy(&atompool[offset*count[0]],atompool,sizeof(Atom)*count[0]);
+        memcpy(&bondpool[offset*count[1]],bondpool,sizeof(Bond)*count[1]);
+        memcpy(&anglepool[offset*count[2]],anglepool,sizeof(Angle)*count[2]);
+        memcpy(&dihedralpool[offset*count[3]],dihedralpool,sizeof(Dihedral)*count[3]);
+        memcpy(&hoppool[offset*count[4]],hoppool,sizeof(Hop)*count[4]);
 //##########################################################
         
-  //       for(int k=0;k<count[0];k++)
-  //       {
-  //           atompool[offset*count[0]+k].atomIdentificationNumber=offset*count[0]+k;
-  //       }
+      for(int k=0;k<count[0];k++)
+      {
+          atompool[offset*count[0]+k].atomIdentificationNumber=offset*count[0]+k;
+      }
         
-  //       for(int k=0;k<count[1];k++)
-  //       {
-  //           bondpool[offset*count[1]+k].atom1+=m*count[0];
-  //           bondpool[offset*count[1]+k].atom2+=m*count[0];
-  //       }
+      for(int k=0;k<count[1];k++)
+      {
+          bondpool[offset*count[1]+k].atom1+=m*count[0];
+          bondpool[offset*count[1]+k].atom2+=m*count[0];
+      }
         
-  //       for(int k=0;k<count[2];k++)
-  //       {
-  //           anglepool[offset*count[2]+k].atom1+=m*count[0];
-  //           anglepool[offset*count[2]+k].atom2+=m*count[0];
-  //       }
+      for(int k=0;k<count[2];k++)
+      {
+          anglepool[offset*count[2]+k].atom1+=m*count[0];
+          anglepool[offset*count[2]+k].atom2+=m*count[0];
+      }
         
-  //       for(int k=0;k<count[3];k++)
-  //       {
-  //           dihedralpool[offset*count[3]+k].atom1+=m*count[0];
-  //           dihedralpool[offset*count[3]+k].atom2+=m*count[0];
-  //       }
+      for(int k=0;k<count[3];k++)
+      {
+          dihedralpool[offset*count[3]+k].atom1+=m*count[0];
+          dihedralpool[offset*count[3]+k].atom2+=m*count[0];
+      }
         
-  //       for(int k=0;k<count[4];k++)
-  //       {
-  //           hoppool[offset*count[4]+k].atom1+=m*count[0];
-  //           hoppool[offset*count[4]+k].atom2+=m*count[0];
-  //       }
+      for(int k=0;k<count[4];k++)
+      {
+          hoppool[offset*count[4]+k].atom1+=m*count[0];
+          hoppool[offset*count[4]+k].atom2+=m*count[0];
+      }
     }
 
-    //currentEnvironment->numOfAtoms = count[0]*molecDiv;
-	//ss << "Molecules Created into an Array" << std::endl;
-    //writeToLog(ss, DEFAULT);
+    currentEnvironment->numOfAtoms = count[0]*molecDiv;
+	ss << "Molecules Created into an Array" << std::endl;
+    writeToLog(ss, DEFAULT);
      
     if (!statePath.empty())
     {
-		//ss << "Reading State File \nPath: " << statePath << std::endl;
-        //std::cout << ss.str() << std::endl; 
-        //writeToLog(ss, DEFAULT);
-     	//ReadStateFile(configScan.getStatePath().c_str());
-     	//ReadStateFile(statePath.c_str(), currentEnvironment, molecules);
+		ss << "Reading State File \nPath: " << statePath << std::endl;
+        std::cout << ss.str() << std::endl; 
+        writeToLog(ss, DEFAULT);
+     	//ReadStateFile(configScan.getStatePath().c_str()); //to be removed! TBRe
+     	ReadStateFile(statePath.c_str(), currentEnvironment, molecules);
     }
     else
     {
-        //ss << "Assigning Molecule Positions..." << std::endl;
-        //writeToLog(ss, DEFAULT);
-        //generatefccBox(molecules,enviro);//generate fcc lattice box
-        //ss << "Finished Assigning Molecule Positions" << std::endl;
-        //writeToLog(ss, DEFAULT);
+        ss << "Assigning Molecule Positions..." << std::endl;
+        std::cout << ss.str() << std::endl; 
+        writeToLog(ss, DEFAULT);
+        //generatefccBox(molecules,enviro);//generate fcc lattice box //this has to be done by the box...
+        ss << "Finished Assigning Molecule Positions" << std::endl;
+        std::cout << ss.str() << std::endl; 
+        writeToLog(ss, DEFAULT);
     }
 
     std::cout << "ERROR AFTER THIS" << std::endl;
