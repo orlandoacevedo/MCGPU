@@ -1675,23 +1675,23 @@ void IOUtilities::pullInDataToConstructSimBox()
 
 //########### BEGINNING OF HEAVY CONSTRUCTION TO DEBUG SEGMENTATION FAULTS ##################
      
-    std::cout << "Counts 0 through 4 INITIALLY: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
-	std::cout << "Value of molecDiv INITIALLY: " << molecDiv << std::endl;
+    //std::cout << "Counts 0 through 4 INITIALLY: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
+	//std::cout << "Value of molecDiv INITIALLY: " << molecDiv << std::endl;
 	int bustedCalculation = sizeof(Atom)*molecDiv*count[0];
 	int potentialArrayLengthOfAtomPool = molecDiv * count[0];
-	std::cout << "DEBUG: Value of sizeof Atom times molecDiv times count is allegedly, as written, in variable bustedCalculation: " << bustedCalculation << std::endl;
+	//std::cout << "DEBUG: Value of sizeof Atom times molecDiv times count is allegedly, as written, in variable bustedCalculation: " << bustedCalculation << std::endl;
     //atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]);
     //atompool = (Atom *)malloc(bustedCalculation);
     //Atom * atompool = new Atom[potentialArrayLengthOfAtomPool];
     atompool = new Atom[potentialArrayLengthOfAtomPool];
-    std::cout << "DEBUG: Trying to reach this many atom spots in the atompool variable: _" << potentialArrayLengthOfAtomPool << std::endl;
+    //std::cout << "DEBUG: Trying to reach this many atom spots in the atompool variable: _" << potentialArrayLengthOfAtomPool << std::endl;
     for (int positionInFillProcess = 0; positionInFillProcess < potentialArrayLengthOfAtomPool; positionInFillProcess++)
     {
     	atompool[positionInFillProcess] = Atom(0 + positionInFillProcess, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 'Z'); //potential workaround to get space
-    	if (positionInFillProcess % 250 == 0)
-    	{
-    		std::cout << "Debug: position in making space for atompool has made it up to _" << positionInFillProcess << "_ ATPslots." << std::endl;
-    	}
+    	// if (positionInFillProcess % 250 == 0)
+//     	{
+//     		std::cout << "Debug: position in making space for atompool has made it up to _" << positionInFillProcess << "_ ATPslots." << std::endl;
+//     	}
     }
    //  Atom testAtomPool[55296]; //debug
 //     Atom * testOldC_atomPool = (Atom*) calloc (potentialArrayLengthOfAtomPool, sizeof(Atom)); //debug
@@ -1713,34 +1713,34 @@ void IOUtilities::pullInDataToConstructSimBox()
     for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[1]; positionInFillProcess++)
     {
     	bondpool[positionInFillProcess] = Bond(); //potential workaround to get space
-    	if (positionInFillProcess % 250 == 0)
-    	{
-    		std::cout << "Debug: position in making space for bondpool has made it up to _" << positionInFillProcess << "_  BPslots." << std::endl;
-    	}
+    	// if (positionInFillProcess % 250 == 0)
+//     	{
+//     		std::cout << "Debug: position in making space for bondpool has made it up to _" << positionInFillProcess << "_  BPslots." << std::endl;
+//     	}
     }
     for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[2]; positionInFillProcess++)
     {
     	anglepool[positionInFillProcess] = Angle(); //potential workaround to get space
-    	if (positionInFillProcess % 250 == 0)
-    	{
-    		std::cout << "Debug: position in making space for anglepool has made it up to _" << positionInFillProcess << "_ AGPslots." << std::endl;
-    	}
+    	// if (positionInFillProcess % 250 == 0)
+//     	{
+//     		std::cout << "Debug: position in making space for anglepool has made it up to _" << positionInFillProcess << "_ AGPslots." << std::endl;
+//     	}
     }
     for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[3]; positionInFillProcess++)
     {
     	dihedralpool[positionInFillProcess] = Dihedral(); //potential workaround to get space
-    	if (positionInFillProcess % 250 == 0)
-    	{
-    		std::cout << "Debug: position in making space for dihedralpool has made it up to _" << positionInFillProcess << "_ DPslots." << std::endl;
-    	}
+    	// if (positionInFillProcess % 250 == 0)
+//     	{
+//     		std::cout << "Debug: position in making space for dihedralpool has made it up to _" << positionInFillProcess << "_ DPslots." << std::endl;
+//     	}
     }
     for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[4]; positionInFillProcess++)
     {
     	hoppool[positionInFillProcess] = Hop(); //potential workaround to get space
-    	if (positionInFillProcess % 250 == 0)
-    	{
-    		std::cout << "Debug: position in making space for hoppool has made it up to _" << positionInFillProcess << "_ HPslots." << std::endl;
-    	}
+    	// if (positionInFillProcess % 250 == 0)
+//     	{
+//     		std::cout << "Debug: position in making space for hoppool has made it up to _" << positionInFillProcess << "_ HPslots." << std::endl;
+//     	}
     }  
     // memset(atompool,0,sizeof(Atom)*molecDiv*count[0]);
 //     memset(bondpool,0,sizeof(Bond)*molecDiv*count[1]);
@@ -1752,14 +1752,14 @@ void IOUtilities::pullInDataToConstructSimBox()
 
     //arrange first part of molecules
     memset(count,0,sizeof(count));
-    std::cout << "the loop based on molecVec.size() after -Arrange first part of molecules- should run this many times: " << molecVec.size() << std::endl;
+    //std::cout << "the loop based on molecVec.size() after -Arrange first part of molecules- should run this many times: " << molecVec.size() << std::endl;
  	for(int j = 0; j < molecVec.size(); j++)
     {
  	      //Copy data from vector to molecule
         Molecule molec1 = molecVec[j];   
 		
-		std::cout << "during random molecule creation, various values within count are..." << "Counts 0 through 4: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
-		std::cout << "Also, at this point, we know atompool is a pointer and has a value. what is that value? " << atompool << std::endl;
+		//std::cout << "during random molecule creation, various values within count are..." << "Counts 0 through 4: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
+		//std::cout << "Also, at this point, we know atompool is a pointer and has a value. what is that value? " << atompool << std::endl;
         molecules[j].atoms = (Atom *)(atompool+count[0]);
         molecules[j].bonds = (Bond *)(bondpool+count[1]);
         molecules[j].angles = (Angle *)(anglepool+count[2]);
