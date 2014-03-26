@@ -1828,11 +1828,18 @@ void IOUtilities::pullInDataToConstructSimBox()
 // 		std::cout << "Size of Atom, Bond, Angle, Dihedral, and Hop, respectively: " << sizeof(Atom) << " ... " << sizeof(Bond) << " ... " << sizeof(Angle) << " ... " << sizeof(Dihedral) << " ... " << sizeof(Hop) << std::endl;
 // 		std::cout << "Offset value: " << offset << "." << std::endl;
 // 		std::cout << "Size of data pointed to by pointer atompool FINALLY: " << sizeof *atompool << endl;
-        memcpy(&atompool[offset*count[0]],atompool,sizeof(Atom)*count[0]);
-        memcpy(&bondpool[offset*count[1]],bondpool,sizeof(Bond)*count[1]);
-        memcpy(&anglepool[offset*count[2]],anglepool,sizeof(Angle)*count[2]);
-        memcpy(&dihedralpool[offset*count[3]],dihedralpool,sizeof(Dihedral)*count[3]);
-        memcpy(&hoppool[offset*count[4]],hoppool,sizeof(Hop)*count[4]);
+
+        // memcpy(&atompool[offset*count[0]],atompool,sizeof(Atom)*count[0]);
+//         memcpy(&bondpool[offset*count[1]],bondpool,sizeof(Bond)*count[1]);
+//         memcpy(&anglepool[offset*count[2]],anglepool,sizeof(Angle)*count[2]);
+//         memcpy(&dihedralpool[offset*count[3]],dihedralpool,sizeof(Dihedral)*count[3]);
+//         memcpy(&hoppool[offset*count[4]],hoppool,sizeof(Hop)*count[4]);
+		//if you remove the next 5 lines, uncomment the above 5 lines.
+		memmove(&atompool[offset*count[0]],atompool,sizeof(Atom)*count[0]);
+        memmove(&bondpool[offset*count[1]],bondpool,sizeof(Bond)*count[1]);
+        memmove(&anglepool[offset*count[2]],anglepool,sizeof(Angle)*count[2]);
+        memmove(&dihedralpool[offset*count[3]],dihedralpool,sizeof(Dihedral)*count[3]);
+        memmove(&hoppool[offset*count[4]],hoppool,sizeof(Hop)*count[4]);
 //##########################################################
         
       for(int k=0;k<count[0];k++)
