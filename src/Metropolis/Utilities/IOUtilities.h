@@ -37,7 +37,8 @@
 
 #include "StructLibrary.h"
 //#include "../../Utilities/geometricUtil.h"
-#include "MathLibrary.h"
+//#include "MathLibrary.cpp" //AlbertIncludes
+#include "MathLibrary.h" //AlbertExcludes
 
 //_________________________________________________________________________________________________________________
 //  Specific namespace/using requirements
@@ -333,7 +334,7 @@ class IOUtilities
 				//and some of the variables to be used for storage until the box itself is created
 					Molecule changedmole;
 					Molecule *molecules;
-					Environment *enviro;
+					//Environment *enviro; //in the future, look at currentEnvironment for this
 					Atom * atompool;
 					Bond * bondpool;
 					Angle * anglepool;
