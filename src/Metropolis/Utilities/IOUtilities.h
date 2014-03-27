@@ -334,7 +334,7 @@ class IOUtilities
 				//and some of the variables to be used for storage until the box itself is created
 					Molecule changedmole;
 					Molecule *molecules;
-					Environment *enviro; //in the future, look at currentEnvironment for this
+					//Environment *enviro; //in the future, look at currentEnvironment for this
 					Atom * atompool;
 					Bond * bondpool;
 					Angle * anglepool;

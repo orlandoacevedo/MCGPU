@@ -5,6 +5,7 @@
 *Created 19 February 2014. Albert Wallace
 */
 /*
+
 --Changes made on:
 		->Sun, 23 Feb 2014 (Albert)
 		->Wed, 26 Feb (Albert)
@@ -44,6 +45,9 @@
 #define OPLS 3
 #define Z_MATRIX 4
 #define GEOM 5
+	//if you want debugging output
+//#define IOUTIL_DEBUG
+
 
 //_________________________________________________________________________________________________________________
 //_________________________________________________________________________________________________________________
@@ -85,6 +89,11 @@ IOUtilities::IOUtilities(std::string configPathIn){
 	criticalErrorEncountered = false; //set to true if, at any point, a critical error prevents the program from reliably setting up the environment
     
     pullInDataToConstructSimBox(); //do the rest of the construction with this driver method
+    
+    if (criticalErrorEncountered) //you should never reach this if a critical error was truly encountered, but just for the sake of output...
+    {
+    	throwScanError("Critical error detected during environment construction. If you see this message, be wary of results!.");
+    }
 }
 
 /*
@@ -185,7 +194,7 @@ bool IOUtilities::readInConfig()
 					if(line.length() > 0)
 					{
 						currentEnvironment->numOfMolecules = atoi(line.c_str());
-						//printf("number is %d",enviro.numOfMolecules);
+						//printf("number is %d",currentEnvironment.numOfMolecules);
 					}
 					else
 					{
@@ -572,7 +581,7 @@ int IOUtilities::WriteStateFile(char const* StateFile, Environment * sourceEnvir
 
 int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Molecule * sourceMoleculeCollection)
 {
-	//molecules = (Molecule *)malloc(sizeof(Molecule) * enviro->numOfMolecules);
+	//molecules = (Molecule *)malloc(sizeof(Molecule) * sourceEnvironment->numOfMolecules);
 	
     std::ofstream outputFile;
     outputFile.open(pdbFile);
@@ -1434,7 +1443,10 @@ vector<Molecule> IOUtilities::buildMolecule(int startingID)
             newMolecule.hops[i].atom2 = atom2ID + startingID;
         }
     }
+    
+#ifdef IOUTIL_DEBUG
 	std::cout << "IOUtilities::buildMolecule: have the value of sizeof newMolecules divided by sizeof one Molecule: " << sizeof(newMolecules)/sizeof(Molecule) << std::endl; 
+#endif
     return vector<Molecule>(newMolecules,newMolecules+sizeof(newMolecules)/sizeof(Molecule) );
 }
 
@@ -1537,7 +1549,7 @@ ________________________________________________________________________________
 void IOUtilities::pullInDataToConstructSimBox()
 {
 	molecules=NULL;
-	enviro=NULL;
+	//enviro=NULL; //TBRe
 	std::stringstream ss;
 	memset(&changedmole,0,sizeof(changedmole));
 		
@@ -1596,7 +1608,7 @@ void IOUtilities::pullInDataToConstructSimBox()
    int atomCount = 0;
 
    vector<Molecule> molecVec = buildMolecule(atomCount);
-   //###FLOATING POINT ERROR NEXT LINE!!!###
+   //If floating point error occurs, it's at this next line.
    int storedNumOfMolecules = currentEnvironment->numOfMolecules;
    if (molecVec.size() < 1 || storedNumOfMolecules < 1)
    {
@@ -1605,7 +1617,9 @@ void IOUtilities::pullInDataToConstructSimBox()
 	   	writeToLog(ss, DEFAULT);
 	   	exit(1);
 	}
+#ifdef IOUTIL_DEBUG
    //std::cout << "DEBUG: value of integer storedNumOfMolecules before floating point error: " << storedNumOfMolecules << std::endl;
+#endif
    int molecMod = storedNumOfMolecules % molecVec.size();
    if (molecMod != 0)
    {
@@ -1674,34 +1688,41 @@ void IOUtilities::pullInDataToConstructSimBox()
     }
 
 //########### BEGINNING OF HEAVY CONSTRUCTION TO DEBUG SEGMENTATION FAULTS ##################
-     
-    //std::cout << "Counts 0 through 4 INITIALLY: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
-	//std::cout << "Value of molecDiv INITIALLY: " << molecDiv << std::endl;
+#ifdef IOUTIL_DEBUG
+    std::cout << "Counts 0 through 4 INITIALLY: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
+	std::cout << "Value of molecDiv INITIALLY: " << molecDiv << std::endl;
+#endif
 	int bustedCalculation = sizeof(Atom)*molecDiv*count[0];
 	int potentialArrayLengthOfAtomPool = molecDiv * count[0];
-	//std::cout << "DEBUG: Value of sizeof Atom times molecDiv times count is allegedly, as written, in variable bustedCalculation: " << bustedCalculation << std::endl;
-    //atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]);
-    //atompool = (Atom *)malloc(bustedCalculation);
-    //Atom * atompool = new Atom[potentialArrayLengthOfAtomPool];
+#ifdef IOUTIL_DEBUG
+	std::cout << "DEBUG: Value of sizeof Atom times molecDiv times count is allegedly, as written, in variable bustedCalculation: " << bustedCalculation << std::endl;
+#endif
+    //atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]); //old method of allocation
     atompool = new Atom[potentialArrayLengthOfAtomPool];
-    //std::cout << "DEBUG: Trying to reach this many atom spots in the atompool variable: _" << potentialArrayLengthOfAtomPool << std::endl;
+#ifdef IOUTIL_DEBUG
+    std::cout << "DEBUG: Trying to reach this many atom spots in the atompool variable: _" << potentialArrayLengthOfAtomPool << std::endl;
+#endif
     for (int positionInFillProcess = 0; positionInFillProcess < potentialArrayLengthOfAtomPool; positionInFillProcess++)
     {
     	atompool[positionInFillProcess] = Atom(0 + positionInFillProcess, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 'Z'); //potential workaround to get space
-    	// if (positionInFillProcess % 250 == 0)
-//     	{
-//     		std::cout << "Debug: position in making space for atompool has made it up to _" << positionInFillProcess << "_ ATPslots." << std::endl;
-//     	}
+#ifdef IOUTIL_DEBUG
+    	if (positionInFillProcess % 250 == 0)
+     	{
+     		std::cout << "Debug: position in making space for atompool has made it up to _" << positionInFillProcess << "_ ATPslots." << std::endl;
+     	}
+#endif
     }
-   //  Atom testAtomPool[55296]; //debug
-//     Atom * testOldC_atomPool = (Atom*) calloc (potentialArrayLengthOfAtomPool, sizeof(Atom)); //debug
-    // std::cout << "DEBUG: Size of data *type* pointed to by pointer atompool INITIALLY: " << sizeof *atompool << std::endl;
-//     std::cout << "DEBUG: Size of testAtomPool: " << sizeof testAtomPool << std::endl;
-//     std::cout << "DEBUG: Size of old C method of allocating space for an array: " << sizeof testOldC_atomPool << std::endl;
-//     if (sizeof *atompool != bustedCalculation)
-//     	{
-//     	std::cout << "DEBUG: Help! Something is wrong with the attempt to malloc space for variable atompool! Please fix me!" << std::endl;
-//     	}
+#ifdef IOUTIL_DEBUG
+     Atom testAtomPool[55296]; //debug
+     Atom * testOldC_atomPool = (Atom*) calloc (potentialArrayLengthOfAtomPool, sizeof(Atom)); //debug
+     std::cout << "DEBUG: Size of data *type* pointed to by pointer atompool INITIALLY: " << sizeof *atompool << std::endl;
+     std::cout << "DEBUG: Size of testAtomPool: " << sizeof testAtomPool << std::endl;
+     std::cout << "DEBUG: Size of old C method of allocating space for an array: " << sizeof testOldC_atomPool << std::endl;
+     if (sizeof *atompool != bustedCalculation)
+     	{
+     	std::cout << "DEBUG: Help! Something is wrong with the attempt to malloc space for variable atompool! Please fix me!" << std::endl;
+     	}
+#endif
     //bondpool     =(Bond *)malloc(sizeof(Bond)*molecDiv*count[1]);
     bondpool = new Bond[molecDiv*count[1]];
     //anglepool    =(Angle *)malloc(sizeof(Angle)*molecDiv*count[2]);
@@ -1713,34 +1734,42 @@ void IOUtilities::pullInDataToConstructSimBox()
     for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[1]; positionInFillProcess++)
     {
     	bondpool[positionInFillProcess] = Bond(); //potential workaround to get space
-    	// if (positionInFillProcess % 250 == 0)
-//     	{
-//     		std::cout << "Debug: position in making space for bondpool has made it up to _" << positionInFillProcess << "_  BPslots." << std::endl;
-//     	}
+#ifdef IOUTIL_DEBUG
+    	if (positionInFillProcess % 250 == 0)
+     	{
+     		std::cout << "Debug: position in making space for bondpool has made it up to _" << positionInFillProcess << "_  BPslots." << std::endl;
+     	}
+#endif
     }
     for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[2]; positionInFillProcess++)
     {
     	anglepool[positionInFillProcess] = Angle(); //potential workaround to get space
-    	// if (positionInFillProcess % 250 == 0)
-//     	{
-//     		std::cout << "Debug: position in making space for anglepool has made it up to _" << positionInFillProcess << "_ AGPslots." << std::endl;
-//     	}
+#ifdef IOUTIL_DEBUG
+    	if (positionInFillProcess % 250 == 0)
+     	{
+     		std::cout << "Debug: position in making space for anglepool has made it up to _" << positionInFillProcess << "_ AGPslots." << std::endl;
+     	}
+#endif
     }
     for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[3]; positionInFillProcess++)
     {
     	dihedralpool[positionInFillProcess] = Dihedral(); //potential workaround to get space
-    	// if (positionInFillProcess % 250 == 0)
-//     	{
-//     		std::cout << "Debug: position in making space for dihedralpool has made it up to _" << positionInFillProcess << "_ DPslots." << std::endl;
-//     	}
+#ifdef IOUTIL_DEBUG
+    	if (positionInFillProcess % 250 == 0)
+     	{
+     		std::cout << "Debug: position in making space for dihedralpool has made it up to _" << positionInFillProcess << "_ DPslots." << std::endl;
+     	}
+#endif
     }
     for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[4]; positionInFillProcess++)
     {
     	hoppool[positionInFillProcess] = Hop(); //potential workaround to get space
-    	// if (positionInFillProcess % 250 == 0)
-//     	{
-//     		std::cout << "Debug: position in making space for hoppool has made it up to _" << positionInFillProcess << "_ HPslots." << std::endl;
-//     	}
+#ifdef IOUTIL_DEBUG
+    	if (positionInFillProcess % 250 == 0)
+     	{
+     		std::cout << "Debug: position in making space for hoppool has made it up to _" << positionInFillProcess << "_ HPslots." << std::endl;
+     	}
+#endif
     }  
     // memset(atompool,0,sizeof(Atom)*molecDiv*count[0]);
 //     memset(bondpool,0,sizeof(Bond)*molecDiv*count[1]);
@@ -1752,7 +1781,9 @@ void IOUtilities::pullInDataToConstructSimBox()
 
     //arrange first part of molecules
     memset(count,0,sizeof(count));
+#ifdef IOUTIL_DEBUG
     //std::cout << "the loop based on molecVec.size() after -Arrange first part of molecules- should run this many times: " << molecVec.size() << std::endl;
+#endif
  	for(int j = 0; j < molecVec.size(); j++)
     {
  	      //Copy data from vector to molecule
@@ -1824,11 +1855,12 @@ void IOUtilities::pullInDataToConstructSimBox()
             molecules[offset+n].hops =  molecules[n].hops+count[4]*m;
         }
 //################# SEG FAULT ##############################
-		// std::cout << "Counts 0 through 4: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
-// 		std::cout << "Size of Atom, Bond, Angle, Dihedral, and Hop, respectively: " << sizeof(Atom) << " ... " << sizeof(Bond) << " ... " << sizeof(Angle) << " ... " << sizeof(Dihedral) << " ... " << sizeof(Hop) << std::endl;
-// 		std::cout << "Offset value: " << offset << "." << std::endl;
-// 		std::cout << "Size of data pointed to by pointer atompool FINALLY: " << sizeof *atompool << endl;
-
+#ifdef IOUTIL_DEBUG
+		std::cout << "Counts 0 through 4: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
+ 		std::cout << "Size of Atom, Bond, Angle, Dihedral, and Hop, respectively: " << sizeof(Atom) << " ... " << sizeof(Bond) << " ... " << sizeof(Angle) << " ... " << sizeof(Dihedral) << " ... " << sizeof(Hop) << std::endl;
+ 		std::cout << "Offset value: " << offset << "." << std::endl;
+ 		std::cout << "Size of data pointed to by pointer atompool FINALLY: " << sizeof *atompool << std::endl;
+#endif
         // memcpy(&atompool[offset*count[0]],atompool,sizeof(Atom)*count[0]);
 //         memcpy(&bondpool[offset*count[1]],bondpool,sizeof(Bond)*count[1]);
 //         memcpy(&anglepool[offset*count[2]],anglepool,sizeof(Angle)*count[2]);
@@ -1889,7 +1921,7 @@ void IOUtilities::pullInDataToConstructSimBox()
         ss << "Assigning Molecule Positions..." << std::endl;
         std::cout << ss.str() << std::endl; 
         writeToLog(ss, DEFAULT);
-        //generatefccBox(molecules,enviro);//generate fcc lattice box //this has to be done by the box...
+        //generatefccBox(molecules,currentEnvironment);//generate fcc lattice box //this has to be done by the box...
         ss << "Finished Assigning Molecule Positions" << std::endl;
         std::cout << ss.str() << std::endl; 
         writeToLog(ss, DEFAULT);
