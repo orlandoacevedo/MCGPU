@@ -49,9 +49,9 @@ class Box
 		int getEnergyCount(){return energyCount;};
 		int getMaxMolSize(){return maxMolSize;};
 		int chooseMolecule();
-		int changeMolecule(int molIdx);
+		virtual int changeMolecule(int molIdx);
 		void keepMoleculeInBox(Molecule *molecule, Environment *enviro);
-		int Rollback(int moleno);
+		virtual int rollback(int moleno);
 		int saveChangedMole(int moleno);
 		int copyMolecule(Molecule *mole_dst, Molecule *mole_src);
 	 	double wrapBox(double x, double box);

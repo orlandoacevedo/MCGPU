@@ -22,15 +22,15 @@
 //Constructor & Destructor
 Simulation::Simulation(SimulationArgs simArgs)
 {
-   IOUtilities configScan = IOUtilities(args.configPath);
+   IOUtilities ioUtil = IOUtilities(args.configPath);
 
-   if (!configScan.readInConfig() )
+   if (!ioUtil.readInConfig() )
    {
       fprintf(stderr, "Terminating Simulation...\n\n");
       exit(1);
    }
    args = simArgs;
-   box = new Box(configScan);
+   box = new Box(ioUtil);
 }
 
 Simulation::~Simulation()
@@ -45,17 +45,14 @@ Simulation::~Simulation()
 //Utility
 void Simulation::run()
 {
-   //declare variables unique to both parallel and serial
+   //declare variables common to both parallel and serial
    Molecule *molecules = box->getMolecules();
    Environment *enviro = box->getEnvironment();
-   double oldEnergy = 0;
-   double currentEnergy = 0;
+   double oldEnergy = 0, currentEnergy = 0;
    double newEnergyCont, oldEnergyCont;
-   //double temperature = enviro->temp;
    double  kT = kBoltz * enviro->temp;
    int accepted = 0;
    int rejected = 0;
-   int steps = 1000;
    
    //calculate old energy
    if (oldEnergy == 0)
@@ -68,7 +65,7 @@ void Simulation::run()
       }
    }
    
-   for(int move = 0; move < steps; move++)
+   for(int move = 0; move < simSteps; move++)
    {
       int changeIdx = box->chooseMolecule();
       
@@ -80,9 +77,6 @@ void Simulation::run()
       }
          
       box->changeMolecule(changeIdx);
-      if (args.simulationMode == SimulationMode::Parallel) {
-         ((ParallelBox) box)->writeChangeToDevice(changeIdx);
-      }
       
       if (args.simulationMode == SimulationMode::Parallel) {
          newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(changeIdx);
@@ -120,11 +114,7 @@ void Simulation::run()
       {
          rejected++;
          //restore previous configuration
-         box->Rollback(changeIdx);
-            
-         if (args.simulationMode == SimulationMode::Parallel) {
-            ((ParallelBox) box)->writeChangeToDevice(changeIdx);
-         }
+         box->rollback(changeIdx);
       }
    }
    currentEnergy = oldEnergy;

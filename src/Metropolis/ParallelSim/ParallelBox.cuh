@@ -26,9 +26,10 @@ class ParallelBox : Box
 		void writeChangeToDevice(int changeIdx);
 
 	public:
-		//Constructor & Destructor
 		ParallelBox(IOUtilities ioUtil);
 		~ParallelBox();
+		virtual int changeMolecule(int molIdx);
+		virtual int rollback(int moleno);
 };
 
 #endif

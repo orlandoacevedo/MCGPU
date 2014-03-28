@@ -23,6 +23,18 @@ ParallelBox::~ParallelBox()
 	//free device memory
 }
 
+virtual int ParallelBox::changeMolecule(int molIdx)
+{
+	Box::changeMolecule(molIdx);
+	writeChangeToDevice(molIdx);
+}
+
+virtual int ParallelBox::rollback(int moleno)
+{
+	Box::rollback(molIdx);
+	writeChangeToDevice(molIdx);
+}
+
 void ParallelBox::copyDataToDevice()
 {
 	transferMoleculesH = (Molecule*) malloc(moleculeCount * sizeof(Molecule));

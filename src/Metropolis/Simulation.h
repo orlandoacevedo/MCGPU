@@ -24,7 +24,8 @@ class Simulation
 		
 	private:
 		Box *box;
-      SimulationArgs args;
+		SimulationArgs args;
+		int simSteps;
 };
 
 #endif
