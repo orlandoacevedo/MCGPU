@@ -77,29 +77,29 @@ void Box::keepMoleculeInBox(Molecule *molecule, Environment *enviro)
 
 int Box::Rollback(int moleno)
 {
-	return copyMolecule(&molecules[moleno],&changedmole);
+	return copyMolecule(&molecules[moleno],&changedMol);
 }
 
 int Box::saveChangedMole(int moleno)
 {
 	Molecule *mole_src = &molecules[moleno];
 
-	//free memory of changedmole before allocate memory
-	FREE(changedmole.atoms);
-	FREE(changedmole.bonds);
-	FREE(changedmole.angles);
-	FREE(changedmole.dihedrals);
-	FREE(changedmole.hops);
+	//free memory of changedMol before allocate memory
+	FREE(changedMol.atoms);
+	FREE(changedMol.bonds);
+	FREE(changedMol.angles);
+	FREE(changedMol.dihedrals);
+	FREE(changedMol.hops);
 
-	memcpy(&changedmole,mole_src,sizeof(changedmole));
+	memcpy(&changedMol,mole_src,sizeof(changedMol));
 
-	changedmole.atoms = (Atom *)malloc(sizeof(Atom) * mole_src->numOfAtoms);
-	changedmole.bonds = (Bond *)malloc(sizeof(Bond) * mole_src->numOfBonds);
-	changedmole.angles = (Angle *)malloc(sizeof(Angle) * mole_src->numOfAngles);
-	changedmole.dihedrals = (Dihedral *)malloc(sizeof(Dihedral) * mole_src->numOfDihedrals);
-	changedmole.hops = (Hop *)malloc(sizeof(Hop) * mole_src->numOfHops);
+	changedMol.atoms = (Atom *)malloc(sizeof(Atom) * mole_src->numOfAtoms);
+	changedMol.bonds = (Bond *)malloc(sizeof(Bond) * mole_src->numOfBonds);
+	changedMol.angles = (Angle *)malloc(sizeof(Angle) * mole_src->numOfAngles);
+	changedMol.dihedrals = (Dihedral *)malloc(sizeof(Dihedral) * mole_src->numOfDihedrals);
+	changedMol.hops = (Hop *)malloc(sizeof(Hop) * mole_src->numOfHops);
 
-	copyMolecule(&changedmole,mole_src);
+	copyMolecule(&changedMol,mole_src);
 
 	return 0;
 }
