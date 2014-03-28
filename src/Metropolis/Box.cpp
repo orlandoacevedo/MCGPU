@@ -35,7 +35,7 @@ int Box::chooseMolecule()
 	return (int) randomReal(0, environment->numOfMolecules);
 }
 
-virtual int Box::changeMolecule(int molIdx)
+int Box::changeMolecule(int molIdx)
 {
 	double maxTranslation = environment->maxTranslation;
 	double maxRotation = environment->maxRotation;
@@ -75,7 +75,7 @@ void Box::keepMoleculeInBox(Molecule *molecule, Environment *environment)
 		}
 }
 
-virtual int Box::rollback(int moleno)
+int Box::rollback(int moleno)
 {
 	return copyMolecule(&molecules[moleno],&changedMol);
 }
