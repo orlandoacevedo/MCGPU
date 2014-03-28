@@ -13,6 +13,7 @@
 #include "SimulationArgs.h"
 #include "Box.h"
 #include "SerialSim/SerialBox.h"
+#include "SerialSim/SerialCalcs.h"
 #include "ParallelSim/ParallelCalcs.h"
 #include "ParallelSim/ParallelCalcs.cuh"
 #include "Utilities/IOUtilities.h"
@@ -45,16 +46,16 @@ Simulation::~Simulation()
 void Simulation::run()
 {
    //declare variables unique to both parallel and serial
+   Molecule *molecules = box->getMolecules();
+   Environment *enviro = box->getEnvironment();
    double oldEnergy = 0;
    double currentEnergy = 0;
    double newEnergyCont, oldEnergyCont;
-   double temperature = environment->temperature;
-   double  kT = kBoltz * temperature;
+   //double temperature = enviro->temp;
+   double  kT = kBoltz * enviro->temp;
    int accepted = 0;
    int rejected = 0;
    int steps = 1000;
-   Molecule *molecules = box->getMolecules();
-   Environment *enviro = box->getEnviro();
    
    //calculate old energy
    if (oldEnergy == 0)
@@ -63,7 +64,7 @@ void Simulation::run()
          oldEnergy = ParallelCalcs::calcSystemEnergy();
       }
       else {
-         oldEnergy = SerialCalcs::calcSystemEnergy();
+         oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
       }
    }
    
@@ -100,7 +101,7 @@ void Simulation::run()
       {
          double x = exp(-(newEnergyCont - oldEnergyCont) / kT);
          
-         if(x >= randomFloat(0.0, 1.0))
+         if(x >= randomReal(0.0, 1.0))
          {
             accept = true;
          }
