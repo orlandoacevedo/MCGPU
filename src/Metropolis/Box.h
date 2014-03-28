@@ -13,7 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "Utilitis/MathLibrary.h"
+#include "Utilities/MathLibrary.h"
 #include "Utilities/Config_Scan.h"
 #include "Metropolis/DataTypes.h"
 #include "Utilities/StructLibrary.h"
