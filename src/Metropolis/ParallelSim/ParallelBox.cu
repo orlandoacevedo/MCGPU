@@ -28,7 +28,7 @@ int ParallelBox::changeMolecule(int molIdx)
 	Box::changeMolecule(molIdx);
 	writeChangeToDevice(molIdx);
 	
-	return molIdx
+	return molIdx;
 }
 
 int ParallelBox::rollback(int moleno)
@@ -59,12 +59,12 @@ void ParallelBox::copyDataToDevice()
 	for (int i = 0; i < moleculeCount; i++)
 	{
 		transferMoleculesH[i].atoms = a;
-		transferMoleculesH[i].numOfAtoms = moleculesH[i].numOfAtoms;
-		a += moleculesH[i].numOfAtoms;
+		transferMoleculesH[i].numOfAtoms = molecules[i].numOfAtoms;
+		a += molecules[i].numOfAtoms;
 		
-		if (moleculesH[i].numOfAtoms > maxMolSize)
+		if (molecules[i].numOfAtoms > maxMolSize)
 		{
-			maxMolSize = moleculesH[i].numOfAtoms;
+			maxMolSize = molecules[i].numOfAtoms;
 		}
 	}
 	
@@ -87,16 +87,16 @@ void ParallelBox::writeChangeToDevice(int changeIdx)
 	
 	//copy changed Molecule into temp Molecule
 	//ready to be copied over to device, except that it still contains host pointer in .atoms
-	memcpy(changedMol, ptrs->moleculesH + changeIdx, sizeof(Molecule));
+	memcpy(changedMol, molecules + changeIdx, sizeof(Molecule));
 	
 	//changedMol.atoms will now contain a pointer to Atoms on device
 	//this pointer never meant to be followed from host
-	changedMol->atoms = ptrs->molTrans[changeIdx].atoms;
+	changedMol->atoms = transferMoleculesH[changeIdx].atoms;
 	
 	//copy changed molecule to device
-	cudaMemcpy(ptrs->moleculesD + changeIdx, changedMol, sizeof(Molecule), cudaMemcpyHostToDevice);
+	cudaMemcpy(moleculesD + changeIdx, changedMol, sizeof(Molecule), cudaMemcpyHostToDevice);
 	
 	//copy changed atoms to device
-	Atom *destAtoms = ptrs->molTrans[changeIdx].atoms;
-	cudaMemcpy(destAtoms, ptrs->moleculesH[changeIdx].atoms, ptrs->moleculesH[changeIdx].numOfAtoms * sizeof(Atom), cudaMemcpyHostToDevice);
+	Atom *destAtoms = transferMoleculesH[changeIdx].atoms;
+	cudaMemcpy(destAtoms, molecules[changeIdx].atoms, molecules[changeIdx].numOfAtoms * sizeof(Atom), cudaMemcpyHostToDevice);
 }

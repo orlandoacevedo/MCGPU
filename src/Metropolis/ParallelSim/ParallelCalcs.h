@@ -15,11 +15,11 @@
 
 namespace ParallelCalcs
 {
-	Real calcSystemEnergy();
-	Real calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
-	int createMolBatch(int curentMol, int startIdx);
-	Real calcBatchEnergy(int numMols, int molIdx);
-	Real getEnergyFromDevice();
+	Real calcSystemEnergy(Box box);
+	Real calcMolecularEnergyContribution(Box box, int molIdx, int startIdx = 0);
+	int createMolBatch(Box box, int currentMol, int startIdx);
+	Real calcBatchEnergy(Box box, int numMols, int molIdx);
+	Real getEnergyFromDevice(Box box);
 }
 
 #endif

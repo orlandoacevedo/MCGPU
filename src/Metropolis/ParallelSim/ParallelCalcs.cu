@@ -10,61 +10,61 @@
 
 using namespace std;
 
-Real ParallelCalcs::calcSystemEnergy()
+Real ParallelCalcs::calcSystemEnergy(Box box)
 {
 	Real totalEnergy = 0;
 	
 	//for each molecule
-	for (int mol = 0; mol < moleculeCount; mol++)
+	for (int mol = 0; mol < box->moleculeCount; mol++)
 	{
-		totalEnergy += calcMolecularEnergyContribution(mol, mol);
+		totalEnergy += calcMolecularEnergyContribution(box, mol, mol);
 	}
 
     return totalEnergy;
 }
 
-Real ParallelCalcs::calcMolecularEnergyContribution(int molIdx, int startIdx)
+Real ParallelCalcs::calcMolecularEnergyContribution(Box box, int molIdx, int startIdx)
 {
-	return calcBatchEnergy(createMolBatch(molIdx, startIdx), molIdx);
+	return calcBatchEnergy(createMolBatch(box, molIdx, startIdx), molIdx);
 }
 
-int ParallelCalcs::createMolBatch(int curentMol, int startIdx)
+int ParallelCalcs::createMolBatch(Box box, int currentMol, int startIdx)
 {
 	//initialize neighbor molecule slots to NO
-	cudaMemset(nbrMolsD, NO, moleculeCount * sizeof(int));
+	cudaMemset(box->nbrMolsD, NO, box->moleculeCount * sizeof(int));
 	
-	checkMoleculeDistances<<<moleculeCount / MOL_BLOCK + 1, MOL_BLOCK>>>(moleculesD, curentMol, startIdx, moleculeCount, environmentD, nbrMolsD);
+	checkMoleculeDistances<<<box->moleculeCount / MOL_BLOCK + 1, MOL_BLOCK>>>(box->moleculesD, currentMol, startIdx, box->moleculeCount, box->environmentD, box->nbrMolsD);
 	
-	cudaMemcpy(nbrMolsH, nbrMolsD, moleculeCount * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(box->nbrMolsH, box->nbrMolsD, box->moleculeCount * sizeof(int), cudaMemcpyDeviceToHost);
 	
-	memset(molBatchH, -1, moleculeCount * sizeof(int));
+	memset(box->molBatchH, -1, box->moleculeCount * sizeof(int));
 	
 	int batchSize = 0;
 	
-	for (int i = startIdx; i < moleculeCount; i++)
+	for (int i = startIdx; i < box->moleculeCount; i++)
 	{
-		if (nbrMolsH[i] == YES)
+		if (box->nbrMolsH[i] == YES)
 		{
-			molBatchH[batchSize++] = i;
+			box->molBatchH[batchSize++] = i;
 		}
 	}
 	
 	return batchSize;
 }
 
-Real ParallelCalcs::calcBatchEnergy(int numMols, int molIdx)
+Real ParallelCalcs::calcBatchEnergy(Box box, int numMols, int molIdx)
 {
 	if (numMols > 0)
 	{
 		//initialize energies to 0
-		cudaMemset(energiesD, 0, sizeof(Real));
+		cudaMemset(box->energiesD, 0, sizeof(Real));
 		
-		cudaMemcpy(molBatchD, molBatchH, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
+		cudaMemcpy(box->molBatchD, box->molBatchH, box->moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
 		
-		calcInterAtomicEnergy<<<energyCount / BATCH_BLOCK + 1, BATCH_BLOCK>>>
-		(moleculesD, molIdx, environmentD, energiesD, energyCount, molBatchD, maxMolSize);
+		calcInterAtomicEnergy<<<box->energyCount / BATCH_BLOCK + 1, BATCH_BLOCK>>>
+		(box->moleculesD, molIdx, box->environmentD, box->energiesD, box->energyCount, box->molBatchD, box->maxMolSize);
 		
-		return getEnergyFromDevice();
+		return getEnergyFromDevice(box);
 	}
 	else
 	{
@@ -72,25 +72,25 @@ Real ParallelCalcs::calcBatchEnergy(int numMols, int molIdx)
 	}
 }
 
-Real ParallelCalcs::getEnergyFromDevice()
+Real ParallelCalcs::getEnergyFromDevice(Box box)
 {
 	Real totalEnergy = 0;
 	
 	//a batch size of 3 seems to offer the best tradeoff
 	int batchSize = 3, blockSize = AGG_BLOCK;
-	int numBaseThreads = energyCount / (batchSize);
-	for (int i = 1; i < energyCount; i *= batchSize)
+	int numBaseThreads = box->energyCount / (batchSize);
+	for (int i = 1; i < box->energyCount; i *= batchSize)
 	{
 		if (blockSize > MAX_WARP && numBaseThreads / i + 1 < blockSize)
 		{
 			blockSize /= 2;
 		}
 		aggregateEnergies<<<numBaseThreads / (i * blockSize) + 1, blockSize>>>
-		(energiesD, energyCount, i, batchSize);
+		(box->energiesD, box->energyCount, i, batchSize);
 	}
 	
-	cudaMemcpy(&totalEnergy, energiesD, sizeof(Real), cudaMemcpyDeviceToHost);
-	cudaMemset(energiesD, 0, sizeof(Real));
+	cudaMemcpy(&totalEnergy, box->energiesD, sizeof(Real), cudaMemcpyDeviceToHost);
+	cudaMemset(box->energiesD, 0, sizeof(Real));
 	
 	return totalEnergy;
 }
