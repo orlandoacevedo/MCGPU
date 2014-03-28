@@ -49,7 +49,7 @@
 #define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
 
 	//if you want debugging output
-//#define IOUTIL_DEBUG
+#define IOUTIL_DEBUG
 
 
 //_________________________________________________________________________________________________________________
@@ -1901,7 +1901,9 @@ void IOUtilities::pullInDataToConstructSimBox()
         memmove(&dihedralpool[offset*count[3]],dihedralpool,sizeof(Dihedral)*count[3]);
         memmove(&hoppool[offset*count[4]],hoppool,sizeof(Hop)*count[4]);
 //##########################################################
-        
+#ifdef IOUTIL_DEBUG
+	std::cout << "Made it past the original segfault point. If you reached this land, you're probably safe." << std::endl;
+#endif
       for(int k=0;k<count[0];k++)
       {
           atompool[offset*count[0]+k].id=offset*count[0]+k;
@@ -1931,7 +1933,9 @@ void IOUtilities::pullInDataToConstructSimBox()
           hoppool[offset*count[4]+k].atom2+=m*count[0];
       }
     }
-
+#ifdef IOUTIL_DEBUG
+	std::cout << "Made it to the point where we are done placing atoms into an array." << std::endl;
+#endif
     currentEnvironment->numOfAtoms = count[0]*molecDiv;
 	ss << "Molecules Created into an Array" << std::endl;
     writeToLog(ss, DEFAULT);
