@@ -10,10 +10,29 @@
 
 #include "Metropolis/Utilities/StructLibrary.h"
 #include "Metropolis/DataTypes.h"
+#include "ParallelBox.cuh"
 
-__global__ void calcInterMolecularEnergy(Molecule *molecules, int currentMol, int numM, Environment *environment, Real *energies, int segmentSize);
-__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, int otherMol, Environment *environment, Real *energies, int segmentSize);
-__global__ void calcIntraMolecularEnergy(Molecule *molecules, int currentMol, int numE, Environment *environment, Real *energies, int segmentSize);
+struct SimPointers
+{
+	ParallelBox *innerbox;
+    Environment *envH, *envD;
+    Atom *atomsH, *atomsD;
+    Molecule *moleculesH, *moleculesD, *molTrans;
+	int numA, numM, numEnergies, maxMolSize;
+	int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
+	double *energiesH, *energiesD;
+};
+
+SimPointers *ptrs;
+int steps;
+float currentEnergy;
+float oldEnergy;
+int accepted;
+int rejected;
+
+__global__ void checkMoleculeDistances(Molecule *molecules, int currentMol, int startIdx, int numM, Environment *enviro, int *inCutoff);
+__global__ void calcInterAtomicEnergy(Molecule *molecules, int curentMol, Environment *enviro, Real *energies, int numEnergies, int *molBatch, int maxMolSize);
+__global__ void aggregateEnergies(Real *energies, int numEnergies, int interval, int batchSize);
 __device__ Real calc_lj(Atom atom1, Atom atom2, Real r2);
 __device__ Real calcCharge(Real charge1, Real charge2, Real r);
 __device__ Real makePeriodic(Real x, Real box);
