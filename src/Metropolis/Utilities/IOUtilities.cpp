@@ -45,6 +45,9 @@
 #define OPLS 3
 #define Z_MATRIX 4
 #define GEOM 5
+
+#define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
+
 	//if you want debugging output
 //#define IOUTIL_DEBUG
 
@@ -97,8 +100,32 @@ IOUtilities::IOUtilities(std::string configPathIn){
 }
 
 /*
-*Primary method called to read from the main configuration file. Parses all known information in the predefined format
-*	and stores it into an Environment structure, or otherwise in the UtilitiesInfo structure which holds various file paths, etc.
+*Function called to destruct/deallocate memory for the class. Please be aware, if you call this destructor, or if any other destructors touch these variables through pointers,
+*		you WILL have to read in all the necessary configuration information again, or face seg faults!
+*	@Params: None.
+*	@Returns: None.
+*/
+IOUtilities::~IOUtilities()
+{
+  FREE(molecules);
+  FREE(currentEnvironment);
+  FREE(atompool);
+  FREE(bondpool);
+  FREE(anglepool);
+  FREE(dihedralpool);
+  FREE(hoppool);
+ 
+  //free memory of changedmole
+  FREE(changedmole.atoms);
+  FREE(changedmole.bonds);
+  FREE(changedmole.angles);
+  FREE(changedmole.dihedrals);
+  FREE(changedmole.hops);
+}
+
+/*
+*Method called to read from the main configuration file. Parses all known information in the predefined format
+*	and stores it into an Environment structure, or otherwise in local variables defined as necessary.
 *
 *@params: [none; uses variables within the class to pass information]
 *@return: [none; uses variables within the class to pass information]
@@ -1691,14 +1718,22 @@ void IOUtilities::pullInDataToConstructSimBox()
 #ifdef IOUTIL_DEBUG
     std::cout << "Counts 0 through 4 INITIALLY: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
 	std::cout << "Value of molecDiv INITIALLY: " << molecDiv << std::endl;
-#endif
 	int bustedCalculation = sizeof(Atom)*molecDiv*count[0];
-	int potentialArrayLengthOfAtomPool = molecDiv * count[0];
+#endif
+	int potentialArrayLengthOfAtomPool = molecDiv * count[0]; //this is actually used in production code
 #ifdef IOUTIL_DEBUG
 	std::cout << "DEBUG: Value of sizeof Atom times molecDiv times count is allegedly, as written, in variable bustedCalculation: " << bustedCalculation << std::endl;
 #endif
     //atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]); //old method of allocation
     atompool = new Atom[potentialArrayLengthOfAtomPool];
+	//bondpool     =(Bond *)malloc(sizeof(Bond)*molecDiv*count[1]);
+    bondpool = new Bond[molecDiv*count[1]];
+    //anglepool    =(Angle *)malloc(sizeof(Angle)*molecDiv*count[2]);
+    anglepool = new Angle[molecDiv*count[2]];
+    //dihedralpool =(Dihedral *)malloc(sizeof(Dihedral)*molecDiv*count[3]);
+    dihedralpool = new Dihedral[molecDiv*count[3]];
+    //hoppool      =(Hop *)malloc(sizeof(Hop)*molecDiv*count[4]);
+    hoppool = new Hop[molecDiv*count[4]];
 #ifdef IOUTIL_DEBUG
     std::cout << "DEBUG: Trying to reach this many atom spots in the atompool variable: _" << potentialArrayLengthOfAtomPool << std::endl;
 #endif
@@ -1715,22 +1750,14 @@ void IOUtilities::pullInDataToConstructSimBox()
 #ifdef IOUTIL_DEBUG
      Atom testAtomPool[55296]; //debug
      Atom * testOldC_atomPool = (Atom*) calloc (potentialArrayLengthOfAtomPool, sizeof(Atom)); //debug
-     std::cout << "DEBUG: Size of data *type* pointed to by pointer atompool INITIALLY: " << sizeof *atompool << std::endl;
-     std::cout << "DEBUG: Size of testAtomPool: " << sizeof testAtomPool << std::endl;
-     std::cout << "DEBUG: Size of old C method of allocating space for an array: " << sizeof testOldC_atomPool << std::endl;
-     if (sizeof *atompool != bustedCalculation)
+     std::cout << "DEBUG: [for freehand math/pointer checking] Size of data *type* pointed to by pointer atompool INITIALLY: " << sizeof *atompool << std::endl;
+     std::cout << "DEBUG: [for freehand math/pointer checking] Size of testAtomPool: " << sizeof testAtomPool << std::endl;
+     std::cout << "DEBUG: [for freehand math/pointer checking] Size of old C method of allocating space for an array: " << sizeof testOldC_atomPool << std::endl;
+     if ((sizeof *atompool)*molecDiv*count[0] != bustedCalculation)
      	{
      	std::cout << "DEBUG: Help! Something is wrong with the attempt to malloc space for variable atompool! Please fix me!" << std::endl;
      	}
 #endif
-    //bondpool     =(Bond *)malloc(sizeof(Bond)*molecDiv*count[1]);
-    bondpool = new Bond[molecDiv*count[1]];
-    //anglepool    =(Angle *)malloc(sizeof(Angle)*molecDiv*count[2]);
-    anglepool = new Angle[molecDiv*count[2]];
-    //dihedralpool =(Dihedral *)malloc(sizeof(Dihedral)*molecDiv*count[3]);
-    dihedralpool = new Dihedral[molecDiv*count[3]];
-    //hoppool      =(Hop *)malloc(sizeof(Hop)*molecDiv*count[4]);
-    hoppool = new Hop[molecDiv*count[4]];
     for (int positionInFillProcess = 0; positionInFillProcess < molecDiv*count[1]; positionInFillProcess++)
     {
     	bondpool[positionInFillProcess] = Bond(); //potential workaround to get space
@@ -1787,10 +1814,11 @@ void IOUtilities::pullInDataToConstructSimBox()
  	for(int j = 0; j < molecVec.size(); j++)
     {
  	      //Copy data from vector to molecule
-        Molecule molec1 = molecVec[j];   
-		
-		//std::cout << "during random molecule creation, various values within count are..." << "Counts 0 through 4: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
-		//std::cout << "Also, at this point, we know atompool is a pointer and has a value. what is that value? " << atompool << std::endl;
+        Molecule molec1 = molecVec[j];   //temporary storage place for one individual molecule at a time
+#ifdef IOUTIL_DEBUG
+		std::cout << "during random molecule creation, various values within count are..." << "Counts 0 through 4: " << count[0] << " ... " << count[1] << " ... " << count[2] << " ... " << count[3] << " ... " << count[4] << std::endl;
+		std::cout << "Also, at this point, we know atompool is a pointer and has a value. what is that value? " << atompool << std::endl;
+#endif
         molecules[j].atoms = (Atom *)(atompool+count[0]);
         molecules[j].bonds = (Bond *)(bondpool+count[1]);
         molecules[j].angles = (Angle *)(anglepool+count[2]);
@@ -1915,15 +1943,17 @@ void IOUtilities::pullInDataToConstructSimBox()
         writeToLog(ss, DEFAULT);
      	//ReadStateFile(configScan.getStatePath().c_str()); //to be removed! TBRe
      	ReadStateFile(statePath.c_str(), currentEnvironment, molecules);
+		ss << "INFO: Ready to recreate box using information from within state file..." << std::endl;
+        std::cout << ss.str() << std::endl;
     }
     else
     {
-        ss << "Assigning Molecule Positions..." << std::endl;
+        ss << "INFO: Ready for assigning of Molecule Positions within box..." << std::endl;
         std::cout << ss.str() << std::endl; 
         writeToLog(ss, DEFAULT);
         //generatefccBox(molecules,currentEnvironment);//generate fcc lattice box //this has to be done by the box...
-        ss << "Finished Assigning Molecule Positions" << std::endl;
-        std::cout << ss.str() << std::endl; 
+        //ss << "Finished Assigning Molecule Positions" << std::endl;
+        //std::cout << ss.str() << std::endl; 
         writeToLog(ss, DEFAULT);
     }
 }

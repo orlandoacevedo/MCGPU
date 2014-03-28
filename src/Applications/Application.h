@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "Application.h"
 #include "CommandParsing.h"
 #include "Metropolis/Simulation.h"
 #include "Metropolis/SimulationArgs.h"

@@ -313,7 +313,7 @@ class IOUtilities
 		  /**********************************
 		  *Path variables and the temporary environment
 		  ***************************************/
-					Environment * currentEnvironment; //The current working environment for the simulation
+					
 					std::string configPath; //The path to the main configuration file read in for the simulation
 					unsigned int numOfSteps; //The number of steps to run the simulation
 					std::string oplsuaparPath; //The path to the opls files containing additional geometry data, to be used (eventually) during simulation
@@ -334,6 +334,7 @@ class IOUtilities
 				//and some of the variables to be used for storage until the box itself is created
 					Molecule changedmole;
 					Molecule *molecules;
+					Environment * currentEnvironment; //The current working environment for the simulation
 					//Environment *enviro; //in the future, look at currentEnvironment for this
 					Atom * atompool;
 					Bond * bondpool;
