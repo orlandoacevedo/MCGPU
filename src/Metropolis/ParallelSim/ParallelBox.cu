@@ -27,12 +27,16 @@ int ParallelBox::changeMolecule(int molIdx)
 {
 	Box::changeMolecule(molIdx);
 	writeChangeToDevice(molIdx);
+	
+	return molIdx
 }
 
 int ParallelBox::rollback(int moleno)
 {
-	Box::rollback(molIdx);
-	writeChangeToDevice(molIdx);
+	Box::rollback(moleno);
+	writeChangeToDevice(moleno);
+	
+	return moleno;
 }
 
 void ParallelBox::copyDataToDevice()
