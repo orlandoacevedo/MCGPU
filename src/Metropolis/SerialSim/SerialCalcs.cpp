@@ -10,12 +10,12 @@
 
 using namespace std;
 
-Real calcBlending(Real d1, Real d2)
+Real SerialCalcs::calcBlending(Real d1, Real d2)
 {
     return sqrt(d1 * d2);
 }
 
-Real calcCharge(Real charge1, Real charge2, Real r)
+Real SerialCalcs::calcCharge(Real charge1, Real charge2, Real r)
 {  
     if (r == 0.0)
     {
@@ -29,15 +29,15 @@ Real calcCharge(Real charge1, Real charge2, Real r)
     }
 }
 
-Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro)
+Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro)
 {
 	Real totalEnergy = 0;
 	
-	for (int i = 0; i < molecules[mol1].numAtoms; i++)
+	for (int i = 0; i < molecules[mol1].numOfAtoms; i++)
 	{
 		Atom atom1 = molecules[mol1].atoms[i];
 	
-		for (int j = 0; j < molecules[mol2].numAtoms; j++)
+		for (int j = 0; j < molecules[mol2].numOfAtoms; j++)
 		{
 			Atom atom2 = molecules[mol2].atoms[j];
 		
@@ -74,7 +74,7 @@ Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environme
 	return totalEnergy;
 }
 
-Real calc_lj(Atom atom1, Atom atom2, Real r2)
+Real SerialCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
 {
     //store LJ constants locally
     Real sigma = calcBlending(atom1.sigma, atom2.sigma);
@@ -96,7 +96,7 @@ Real calc_lj(Atom atom1, Atom atom2, Real r2)
 
 }
 
-Real calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx)
+Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx)
 {
     Real totalEnergy = 0;
 	
@@ -131,7 +131,7 @@ Real calcMolecularEnergyContribution(Molecule *molecules, Environment *environme
 	return totalEnergy;
 }
 
-Real calcSystemEnergy(Molecule *molecules, Environment *enviro)
+Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
 {
     Real totalEnergy = 0;
 
@@ -144,7 +144,7 @@ Real calcSystemEnergy(Molecule *molecules, Environment *enviro)
     return totalEnergy;
 }
 
-Real makePeriodic(Real x, Real box)
+Real SerialCalcs::makePeriodic(Real x, Real box)
 {
     
     while(x < -0.5 * box)

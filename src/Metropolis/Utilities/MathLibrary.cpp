@@ -58,7 +58,7 @@ Atom getAtom(vector<Atom> atoms, unsigned long atomID)
 {
     for(int i = 0; i < atoms.size(); i++)
     {
-        if(atoms[i].atomIdentificationNumber == atomID)
+        if(atoms[i].id == atomID)
         {
             return atoms[i];
         }
@@ -669,7 +669,7 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
         {	     
             lineAtom = molec[m].atoms[x];
     		//set the vectors with appropiate contents as if in Zmatrix		  
-    		setMoleculeVectors(molec, numBonded, lineAtom.atomIdentificationNumber, bondVector, angleVector, dihedralVector);
+    		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
     		  
     		//use the first atoms position as the centerpoint
     		if(x==0)
@@ -683,12 +683,12 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
     		lineAtom.y=centY;
     		lineAtom.z=centZ;
     		  
-    		int bondFound = hasBond(bondVector,lineAtom.atomIdentificationNumber);
+    		int bondFound = hasBond(bondVector,lineAtom.id);
     		if(bondFound >= 0)
             {
     		      Bond lineBond =  bondVector[bondFound];
     				// Get other atom in bond
-                unsigned long otherID = getOppositeAtom(lineBond, lineAtom.atomIdentificationNumber);
+                unsigned long otherID = getOppositeAtom(lineBond, lineAtom.id);
     				
                 Atom otherAtom = getAtom(atomVector, otherID);
 
@@ -698,18 +698,18 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
                 lineAtom.z = otherAtom.z;
     		}
     		  
-    		int angleFound = hasAngle(angleVector,lineAtom.atomIdentificationNumber);
+    		int angleFound = hasAngle(angleVector,lineAtom.id);
     		if(angleFound >=0 )
             {
     		      Angle lineAngle = angleVector[angleFound];
     				// Get other atom listed in angle
                 Atom otherAtom = createAtom(-1, -1, -1, -1);
-                unsigned long otherID = getOppositeAtom(lineAngle, lineAtom.atomIdentificationNumber);
+                unsigned long otherID = getOppositeAtom(lineAngle, lineAtom.id);
                 otherAtom = getAtom(atomVector, otherID);
 
                 // Get common atom that lineAtom and otherAtom are bonded to
                 //it will be the vertex of the angle.
-                unsigned long commonID = getCommonAtom(bondVector, lineAtom.atomIdentificationNumber,
+                unsigned long commonID = getCommonAtom(bondVector, lineAtom.id,
                     otherID);
                 Atom commonAtom = getAtom(atomVector, commonID);
 
@@ -719,12 +719,12 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
                 lineAtom = rotateAtomInPlane(lineAtom, commonAtom, otherAtom, angleChange);
     		}
     		  
-    		int dihedralFound = hasDihedral(dihedralVector, lineAtom.atomIdentificationNumber);
+    		int dihedralFound = hasDihedral(dihedralVector, lineAtom.id);
     		if(dihedralFound >= 0)
             {
     		      Dihedral lineDihedral = dihedralVector[dihedralFound];
     				//get other atom in the dihedral
-                unsigned long otherID = getOppositeAtom(lineDihedral, lineAtom.atomIdentificationNumber);
+                unsigned long otherID = getOppositeAtom(lineDihedral, lineAtom.id);
                 Atom otherAtom = getAtom(atomVector, otherID);
 
                 //There are guranteed to be 4 atoms involved in the dihedral
@@ -732,9 +732,9 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
                 //planes.
 
                 //get all of the atoms bonded to lineAtom
-                vector<unsigned long> bondedToLineAtom = getAllBonds(bondVector, lineAtom.atomIdentificationNumber);
+                vector<unsigned long> bondedToLineAtom = getAllBonds(bondVector, lineAtom.id);
                 //get all of the atoms bonded to  otherAtom
-                vector<unsigned long> bondedToOtherAtom = getAllBonds(bondVector, otherAtom.atomIdentificationNumber);
+                vector<unsigned long> bondedToOtherAtom = getAllBonds(bondVector, otherAtom.id);
 
                 //find bond that bonds together two of the atoms in the intersection
                 Bond linkingBond = Bond(-1, -1, -1, false);
@@ -776,11 +776,11 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
                 //find atom bonded to the common atom that is not line atom or otherAtom
                 if(linkingBond.atom1 == -1 || linkingBond.atom2 == -1)
                 {
-                    unsigned long commonAtom = getCommonAtom(bondVector, otherAtom.atomIdentificationNumber, lineAtom.atomIdentificationNumber);
+                    unsigned long commonAtom = getCommonAtom(bondVector, otherAtom.id, lineAtom.id);
                     for(int i = 0; i < bondVector.size(); i++)
                     {
                         unsigned long opposite = getOppositeAtom(bondVector[i], commonAtom);
-                        if(opposite != -1 && opposite != otherAtom.atomIdentificationNumber && opposite != lineAtom.atomIdentificationNumber)
+                        if(opposite != -1 && opposite != otherAtom.id && opposite != lineAtom.id)
                         {
                             linkingBond = bondVector[i];
                             break;
@@ -807,7 +807,7 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
                 //determine which atom in linkingBond is vector head and tail
                 Atom vectorHead;
                 Atom vectorTail;
-                Bond temp = getBond(bondVector, lineAtom.atomIdentificationNumber, linkingBond.atom1);
+                Bond temp = getBond(bondVector, lineAtom.id, linkingBond.atom1);
                 if(temp.atom1 == -1 && temp.atom2 == -1)
                 {
                     // linkingBond.atom1 is not bonded to line atom and is the tail(start)
@@ -859,7 +859,7 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 	 	//run build on atom 1 in the molecule
 	 	lineAtom = molec[m].atoms[0];
 	 	//set the vectors with appropiate contents as if in Zmatrix 
-		setMoleculeVectors(molec, numBonded, lineAtom.atomIdentificationNumber, bondVector, angleVector, dihedralVector);
+		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
 		
 		// First atom at (0,0,0)
 		molec[m].atoms[0].x = 0.0;
@@ -868,9 +868,9 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 	
 		//run build on atom 2 in the molecule
 		lineAtom = molec[m].atoms[1];		  
-		setMoleculeVectors(molec, numBonded, lineAtom.atomIdentificationNumber, bondVector, angleVector, dihedralVector);
+		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
 	
-		int bondFound = hasBond(bondVector,lineAtom.atomIdentificationNumber);
+		int bondFound = hasBond(bondVector,lineAtom.id);
 		if(bondFound >= 0)
         {
 			Bond lineBond =  bondVector[bondFound];
@@ -887,15 +887,15 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 		
 		//run build on atom 3 in the molecule
 		lineAtom = molec[m].atoms[2];
-		setMoleculeVectors(molec, numBonded, lineAtom.atomIdentificationNumber, bondVector, angleVector, dihedralVector);
+		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
 	
-		int angleFound = hasAngle(angleVector,lineAtom.atomIdentificationNumber);
+		int angleFound = hasAngle(angleVector,lineAtom.id);
 		if(angleFound >=0 )
         {
-			int bondFound = hasBond(bondVector,lineAtom.atomIdentificationNumber);
+			int bondFound = hasBond(bondVector,lineAtom.id);
 			Bond lineBond =  bondVector[bondFound];
 			Angle lineAngle = angleVector[angleFound];
-			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.atomIdentificationNumber);
+			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.id);
 			double thetaRadians = degreesToRadians(lineAngle.magnitudeOfAngle);
 			
 			// Third atom in XY plane
@@ -930,14 +930,14 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 		for(int N = 3; N < molec[m].numOfAtoms; N++)
         {
 			lineAtom = molec[m].atoms[N];
-			setMoleculeVectors(molec, numBonded, lineAtom.atomIdentificationNumber, bondVector, angleVector, dihedralVector);
-			int bondFound = hasBond(bondVector,lineAtom.atomIdentificationNumber);
+			setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
+			int bondFound = hasBond(bondVector,lineAtom.id);
 			Bond lineBond =  bondVector[bondFound];
-			int angleFound = hasAngle(angleVector,lineAtom.atomIdentificationNumber);
+			int angleFound = hasAngle(angleVector,lineAtom.id);
 			Angle lineAngle = angleVector[angleFound];
 			double thetaRadians = degreesToRadians(lineAngle.magnitudeOfAngle);
 			// Dihedral angle is defined counterclockwise
-			int dihedralFound = hasDihedral(dihedralVector,lineAtom.atomIdentificationNumber);
+			int dihedralFound = hasDihedral(dihedralVector,lineAtom.id);
 			Dihedral lineDihedral = dihedralVector[dihedralFound];
 			double phiRadians = degreesToRadians(lineDihedral.distanceBetweenAtoms);
 			
@@ -952,9 +952,9 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			zbs = -lineBond.lengthOfBond * cos(thetaRadians);
 			
 			// Determine transformation (direction cosine) matrix
-			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.atomIdentificationNumber);
-			unsigned long AngleWith = getOppositeAtom(lineAngle, lineAtom.atomIdentificationNumber);
-			unsigned long DihedralWith = getOppositeAtom(lineDihedral, lineAtom.atomIdentificationNumber);
+			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.id);
+			unsigned long AngleWith = getOppositeAtom(lineAngle, lineAtom.id);
+			unsigned long DihedralWith = getOppositeAtom(lineDihedral, lineAtom.id);
 			ia[0] = molec[m].atoms[DihedralWith - 1].x;
 			ia[1] = molec[m].atoms[DihedralWith - 1].y;
 			ia[2] = molec[m].atoms[DihedralWith - 1].z;

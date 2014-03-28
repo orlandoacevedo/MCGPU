@@ -199,7 +199,7 @@ struct Atom
 {
 	char name;
 	double x, y, z, sigma, epsilon, charge;
-	unsigned long atomIdentificationNumber;
+	unsigned long id;
 	Atom(){
 		name = '0';
 		x = 0;
@@ -208,10 +208,10 @@ struct Atom
 		sigma = 0;
 		epsilon = 0;
 		charge = 0;
-		atomIdentificationNumber = 0;
+		id = 0;
 	}
 	
-	Atom(unsigned long inIDNumber, double inX, double inY, double inZ, double inSigma, double inEpsilon, double inCharge, char inName)
+	Atom(unsigned long inID, double inX, double inY, double inZ, double inSigma, double inEpsilon, double inCharge, char inName)
 	{
 		x = inX;
 		y = inY;
@@ -220,6 +220,7 @@ struct Atom
 		epsilon = inEpsilon;
 		charge = inCharge;
 		name = inName;
+        id = inID;
 	}
 	
 };
