@@ -13,10 +13,13 @@
 #include "Metropolis/Box.h"
 #include "Metropolis/DataTypes.h"
 
-Real calcSystemEnergy();
-Real calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
-int createMolBatch(int curentMol, int startIdx);
-Real calcBatchEnergy(int numMols, int molIdx);
-Real getEnergyFromDevice();
+namespace ParallelCalcs
+{
+	Real calcSystemEnergy();
+	Real calcMolecularEnergyContribution(int molIdx, int startIdx = 0);
+	int createMolBatch(int curentMol, int startIdx);
+	Real calcBatchEnergy(int numMols, int molIdx);
+	Real getEnergyFromDevice();
+}
 
 #endif

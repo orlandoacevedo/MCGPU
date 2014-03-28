@@ -10,12 +10,17 @@
 #ifndef BOX_H
 #define BOX_H
 
+#include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include "Utilitis/MathLibrary.h"
 #include "Utilities/Config_Scan.h"
 #include "Metropolis/DataTypes.h"
 #include "Utilities/StructLibrary.h"
 
 #define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
+
+using namespace std;
 
 class Box
 {
@@ -31,8 +36,8 @@ class Box
 		int atomCount, moleculeCount, energyCount, maxMolSize;
 
 	public:
-		Box(Config_Scan configScan){atoms=NULL;environment=NULL;molecules=NULL;energies=NULL;};
-		~Box(){FREE(atoms);FREE(environment);FREE(molecules);FREE(energies);};
+		Box(IOUtilities ioUtil);
+		~Box();
 		Atom *getAtoms(){return atoms;};
 		Environment *getEnvironment(){return environment;};
 		Molecule *getMolecules(){return molecules;};
@@ -41,6 +46,13 @@ class Box
 		int getMoleculeCount(){return moleculeCount;};
 		int getEnergyCount(){return energyCount;};
 		int getMaxMolSize(){return maxMolSize;};
+		int chooseMolecule();
+		int changeMolecule(int molIdx);
+		void keepMoleculeInBox(Molecule *molecule, Environment *enviro);
+		int Rollback(int moleno);
+		int saveChangedMole(int moleno);
+		int copyMolecule(Molecule *mole_dst, Molecule *mole_src);
+		
 };
 
 #endif

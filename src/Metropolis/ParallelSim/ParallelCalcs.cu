@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Real ParallelSim::calcSystemEnergy()
+Real ParallelCalcs::calcSystemEnergy()
 {
 	Real totalEnergy = 0;
 	
@@ -23,12 +23,12 @@ Real ParallelSim::calcSystemEnergy()
     return totalEnergy;
 }
 
-Real ParallelSim::calcMolecularEnergyContribution(int molIdx, int startIdx)
+Real ParallelCalcs::calcMolecularEnergyContribution(int molIdx, int startIdx)
 {
 	return calcBatchEnergy(createMolBatch(molIdx, startIdx), molIdx);
 }
 
-int ParallelSim::createMolBatch(int curentMol, int startIdx)
+int ParallelCalcs::createMolBatch(int curentMol, int startIdx)
 {
 	//initialize neighbor molecule slots to NO
 	cudaMemset(nbrMolsD, NO, moleculeCount * sizeof(int));
@@ -52,7 +52,7 @@ int ParallelSim::createMolBatch(int curentMol, int startIdx)
 	return batchSize;
 }
 
-Real ParallelSim::calcBatchEnergy(int numMols, int molIdx)
+Real ParallelCalcs::calcBatchEnergy(int numMols, int molIdx)
 {
 	if (numMols > 0)
 	{
@@ -72,7 +72,7 @@ Real ParallelSim::calcBatchEnergy(int numMols, int molIdx)
 	}
 }
 
-Real ParallelSim::getEnergyFromDevice()
+Real ParallelCalcs::getEnergyFromDevice()
 {
 	Real totalEnergy = 0;
 	
@@ -239,7 +239,7 @@ __device__ int getYFromIndex(int x, int idx)
     return idx - (x * x - x) / 2;
 }
 
-void ParallelSim::runParallel(int steps)
+void ParallelCalcs::runParallel(int steps)
 {	
     Real temperature = environment->temperature;
     Real kT = kBoltz * temperature;

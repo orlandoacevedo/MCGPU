@@ -28,7 +28,7 @@ class ParallelBox : Box
 
 	public:
 		//Constructor & Destructor
-		ParallelBox(Config_Scan configScan): Box(configScan);
+		ParallelBox(IOUtilities ioUtil): Box(ioUtil);
 		~ParallelBox();
 };
 

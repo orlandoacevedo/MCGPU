@@ -11,7 +11,7 @@
 using namespace std;
 
 //Constructor & Destructor
-ParallelBox::ParallelBox(Config_Scan configScan): Box(configScan)
+ParallelBox::ParallelBox(IOUtilities ioUtil): Box(ioUtil)
 {
 	//call Box constructor first
 	
