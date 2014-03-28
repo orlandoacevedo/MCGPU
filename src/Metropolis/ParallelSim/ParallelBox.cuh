@@ -19,18 +19,17 @@ class ParallelBox : Box
 	private:
 		Atom *atomsD;
 		Environment *environmentD;
-		Molecules *moleculesD, *transferMoleculesD;
+		Molecules *moleculesD, *transferMoleculesH;
+		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
 		Real *energiesD;
-
+		
+		void copyDataToDevice();	
+		void writeChangeToDevice(int changeIdx);
 
 	public:
 		//Constructor & Destructor
 		ParallelBox(Config_Scan configScan);
 		~ParallelBox();
-
-		//Utility
-		int copyBoxToHost();
-		int copyBoxToDevice();	
 };
 
 #endif

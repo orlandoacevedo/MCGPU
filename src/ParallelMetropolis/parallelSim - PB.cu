@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include <time.h>
 #include "parallelSim.cuh"
 
 #define NO 0

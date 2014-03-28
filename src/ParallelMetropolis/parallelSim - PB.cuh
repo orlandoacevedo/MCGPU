@@ -15,13 +15,6 @@
 #include "Utilities/Zmatrix_Scan.h"
 #include "Utilities/State_Scan.h"
 
-#define THREADS_PER_BLOCK 128
-#define PI 3.14159265
-// Linked-cell neighbor list constants
-#define NMAX 100000  /* Maximum number of atoms which can be simulated */
-#define NCLMAX 10000 /* Maximum number of linked-list cells */
-#define EMPTY -1
-
 // boltzman constant in kcal mol-1 K-1
 const double kBoltz = 0.00198717;
 
@@ -73,14 +66,6 @@ class ParallelSim
 		double getEnergyFromDevice();
 		double makePeriodicH(double x, double box);
         void runParallel(int steps);
-
-    public:
-        double wrapBox(double x, double box);
-    
-	Molecule* getMoleculeFromAtomIDHost(Atom a1, Molecule *molecules, Environment enviro);
- 	int hopGE3Host(int atom1, int atom2, Molecule molecule);
-    double getFValueHost(Atom atom1, Atom atom2, Molecule *molecules, Environment *enviro);
- 	
 };
  	
 #endif
