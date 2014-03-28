@@ -9,7 +9,6 @@
 #ifndef PARALLELBOX_H
 #define PARALLELBOX_H
 
-#include "Utilities/Config_Scan.h"
 #include "Metropolis/Box.h"
 #include "Metropolis/DataTypes.h"
 
@@ -19,7 +18,7 @@ class ParallelBox : Box
 	private:
 		Atom *atomsD;
 		Environment *environmentD;
-		Molecules *moleculesD, *transferMoleculesH;
+		Molecule *moleculesD, *transferMoleculesH;
 		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
 		Real *energiesD;
 		
@@ -28,7 +27,7 @@ class ParallelBox : Box
 
 	public:
 		//Constructor & Destructor
-		ParallelBox(IOUtilities ioUtil): Box(ioUtil);
+		ParallelBox(IOUtilities ioUtil);
 		~ParallelBox();
 };
 

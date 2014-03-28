@@ -16,7 +16,6 @@
 #include "SerialSim/SerialBox.h"
 #include "SerialSim/SerialCalcs.h"
 #include "ParallelSim/ParallelCalcs.h"
-#include "ParallelSim/ParallelCalcs.cuh"
 #include "Utilities/IOUtilities.h"
 
 
