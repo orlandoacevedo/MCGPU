@@ -414,9 +414,9 @@ int IOUtilities::ReadStateFile(char const* StateFile, Environment * destinationE
 
         for(int i=0;i<moleculePtr->numOfAtoms;i++)
         {
-        	inFile>>currentAtom.atomIdentificationNumber >> currentAtom.x >> currentAtom.y >> currentAtom.z>> currentAtom.sigma >> currentAtom.epsilon >> currentAtom.charge;
-        	assert(currentAtom.atomIdentificationNumber==moleculePtr->atoms[i].atomIdentificationNumber);
-        	//printf("id:%d,x:%f,y:%f\n",currentAtom.atomIdentificationNumber,currentAtom.x,currentAtom.y);
+        	inFile>>currentAtom.id >> currentAtom.x >> currentAtom.y >> currentAtom.z>> currentAtom.sigma >> currentAtom.epsilon >> currentAtom.charge;
+        	assert(currentAtom.id==moleculePtr->atoms[i].id);
+        	//printf("id:%d,x:%f,y:%f\n",currentAtom.id,currentAtom.x,currentAtom.y);
         	memcpy(&moleculePtr->atoms[i],&currentAtom,sizeof(Atom));
         }
 
@@ -510,7 +510,7 @@ int IOUtilities::WriteStateFile(char const* StateFile, Environment * sourceEnvir
         for(int j = 0; j < currentMol.numOfAtoms; j++)
         {
             Atom currentAtom = currentMol.atoms[j];
-            outFile << currentAtom.atomIdentificationNumber << " "
+            outFile << currentAtom.id << " "
                 << currentAtom.x << " " << currentAtom.y << " " << currentAtom.z
                 << " " << currentAtom.sigma << " " << currentAtom.epsilon  << " "
                 << currentAtom.charge << std::endl;
@@ -626,7 +626,7 @@ int IOUtilities::writePDB(char const* pdbFile, Environment sourceEnvironment, Mo
             outputFile << "ATOM";
             outputFile.setf(std::ios_base::right,std::ios_base::adjustfield);
             outputFile.width(5);
-            outputFile << currentAtom.atomIdentificationNumber + 1;
+            outputFile << currentAtom.id + 1;
             outputFile.width(3); // change from 5
             outputFile << currentAtom.name;
             outputFile.width(6); // change from 4
@@ -1003,7 +1003,7 @@ void IOUtilities::parseLine(string line, int numOfLines)
         if (oplsA.compare("-1") != 0)
         {
             lineAtom = getAtom(oplsA);
-            lineAtom.atomIdentificationNumber = atoi(atomID.c_str());
+            lineAtom.id = atoi(atomID.c_str());
             lineAtom.x = 0;
             lineAtom.y = 0;
             lineAtom.z = 0;
@@ -1017,7 +1017,7 @@ void IOUtilities::parseLine(string line, int numOfLines)
 
         if (bondWith.compare("0") != 0)
         {
-            lineBond.atom1 = lineAtom.atomIdentificationNumber;
+            lineBond.atom1 = lineAtom.id;
             lineBond.atom2 = atoi(bondWith.c_str());
             lineBond.lengthOfBond = atof(bondDistance.c_str());
             lineBond.canBeVaried = false;
@@ -1026,7 +1026,7 @@ void IOUtilities::parseLine(string line, int numOfLines)
 
         if (angleWith.compare("0") != 0)
         {
-            lineAngle.atom1 = lineAtom.atomIdentificationNumber;
+            lineAngle.atom1 = lineAtom.id;
             lineAngle.atom2 = atoi(angleWith.c_str());
             lineAngle.magnitudeOfAngle = atof(angleMeasure.c_str());
             lineAngle.canBeVaried = false;
@@ -1035,7 +1035,7 @@ void IOUtilities::parseLine(string line, int numOfLines)
 
         if (dihedralWith.compare("0") != 0)
         {
-            lineDihedral.atom1 = lineAtom.atomIdentificationNumber;
+            lineDihedral.atom1 = lineAtom.id;
             lineDihedral.atom2 = atoi(dihedralWith.c_str());
             lineDihedral.distanceBetweenAtoms = atof(dihedralMeasure.c_str());
             lineDihedral.canBeVaried = false;
@@ -1223,7 +1223,7 @@ vector<Hop> IOUtilities::calculateHops(Molecule molec)
     vector<Hop> newHops;
     int **graph;
     int size = molec.numOfAtoms;
-	 int startId = molec.atoms[0].atomIdentificationNumber;
+	 int startId = molec.atoms[0].id;
 
     buildAdjacencyMatrix(graph,molec);
 
@@ -1307,7 +1307,7 @@ int IOUtilities::findHopDistance(int atom1,int atom2,int size, int **graph)
 void IOUtilities::buildAdjacencyMatrix(int **&graph, Molecule molec)
 {
     int size = molec.numOfAtoms;
-	int startId = molec.atoms[0].atomIdentificationNumber; //the first atom ID in the molecule
+	int startId = molec.atoms[0].id; //the first atom ID in the molecule
 	int lastId = startId + molec.numOfAtoms -1; //the last atom ID in the molecule
     graph =  new int*[size]; //create colums
     for(int i=0; i<size; i++) //create rows
@@ -1424,9 +1424,9 @@ vector<Molecule> IOUtilities::buildMolecule(int startingID)
         //map unique IDs to atoms within structs based on startingID
         for(int i = 0; i < newMolecules[j].numOfAtoms; i++)
         {
-            int atomID = newMolecule.atoms[i].atomIdentificationNumber - 1;
+            int atomID = newMolecule.atoms[i].id - 1;
             //newMolecule.atoms[i].id = atomID + newMolecule.id;
-				newMolecule.atoms[i].atomIdentificationNumber = atomID + startingID;
+				newMolecule.atoms[i].id = atomID + startingID;
 
         }
         for (int i = 0; i < newMolecule.numOfBonds; i++)
@@ -1904,7 +1904,7 @@ void IOUtilities::pullInDataToConstructSimBox()
         
       for(int k=0;k<count[0];k++)
       {
-          atompool[offset*count[0]+k].atomIdentificationNumber=offset*count[0]+k;
+          atompool[offset*count[0]+k].id=offset*count[0]+k;
       }
         
       for(int k=0;k<count[1];k++)
