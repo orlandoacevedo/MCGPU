@@ -34,6 +34,7 @@ class Box
 		Hop *hops;
 		Real *energies;
 		int atomCount, moleculeCount, energyCount, maxMolSize;
+		Molecule changedMol;
 
 	public:
 		Box(IOUtilities ioUtil);
