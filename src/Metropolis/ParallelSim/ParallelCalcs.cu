@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Real ParallelCalcs::calcSystemEnergy(Box box)
+Real ParallelCalcs::calcSystemEnergy(Box *box)
 {
 	Real totalEnergy = 0;
 	
@@ -23,12 +23,12 @@ Real ParallelCalcs::calcSystemEnergy(Box box)
     return totalEnergy;
 }
 
-Real ParallelCalcs::calcMolecularEnergyContribution(Box box, int molIdx, int startIdx)
+Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int startIdx)
 {
 	return calcBatchEnergy(createMolBatch(box, molIdx, startIdx), molIdx);
 }
 
-int ParallelCalcs::createMolBatch(Box box, int currentMol, int startIdx)
+int ParallelCalcs::createMolBatch(Box *box, int currentMol, int startIdx)
 {
 	//initialize neighbor molecule slots to NO
 	cudaMemset(box->nbrMolsD, NO, box->moleculeCount * sizeof(int));
@@ -52,7 +52,7 @@ int ParallelCalcs::createMolBatch(Box box, int currentMol, int startIdx)
 	return batchSize;
 }
 
-Real ParallelCalcs::calcBatchEnergy(Box box, int numMols, int molIdx)
+Real ParallelCalcs::calcBatchEnergy(Box *box, int numMols, int molIdx)
 {
 	if (numMols > 0)
 	{
@@ -72,7 +72,7 @@ Real ParallelCalcs::calcBatchEnergy(Box box, int numMols, int molIdx)
 	}
 }
 
-Real ParallelCalcs::getEnergyFromDevice(Box box)
+Real ParallelCalcs::getEnergyFromDevice(Box *box)
 {
 	Real totalEnergy = 0;
 	
@@ -95,7 +95,7 @@ Real ParallelCalcs::getEnergyFromDevice(Box box)
 	return totalEnergy;
 }
 
-__global__ void checkMoleculeDistances(Molecule *molecules, int currentMol, int startIdx, int moleculeCount, Environment *enviro, int *inCutoff)
+__global__ void ParallelCalcs::checkMoleculeDistances(Molecule *molecules, int currentMol, int startIdx, int moleculeCount, Environment *enviro, int *inCutoff)
 {
 	int otherMol = blockIdx.x * blockDim.x + threadIdx.x;
 	
@@ -120,7 +120,7 @@ __global__ void checkMoleculeDistances(Molecule *molecules, int currentMol, int 
 	}
 }
 
-__global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
+__global__ void ParallelCalcs::calcInterAtomicEnergy(Molecule *molecules, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
 {
 	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x, segmentSize = maxMolSize * maxMolSize;
 	
@@ -155,7 +155,7 @@ __global__ void calcInterAtomicEnergy(Molecule *molecules, int currentMol, Envir
 	}
 }
 
-__global__ void aggregateEnergies(Real *energies, int energyCount, int interval, int batchSize)
+__global__ void ParallelCalcs::aggregateEnergies(Real *energies, int energyCount, int interval, int batchSize)
 {
 	int idx = batchSize * interval * (blockIdx.x * blockDim.x + threadIdx.x), i;
 	
@@ -169,7 +169,7 @@ __global__ void aggregateEnergies(Real *energies, int energyCount, int interval,
 	}
 }
 
-__device__ Real calc_lj(Atom atom1, Atom atom2, Real r2)
+__device__ Real ParallelCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
 {
     //store LJ constants locally
     Real sigma = calcBlending(atom1.sigma, atom2.sigma);
@@ -190,7 +190,7 @@ __device__ Real calc_lj(Atom atom1, Atom atom2, Real r2)
     }
 }
 
-__device__ Real calcCharge(Real charge1, Real charge2, Real r)
+__device__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
 {  
     if (r == 0.0)
     {
@@ -204,7 +204,7 @@ __device__ Real calcCharge(Real charge1, Real charge2, Real r)
     }
 }
 
-__device__ Real makePeriodic(Real x, Real box)
+__device__ Real ParallelCalcs::makePeriodic(Real x, Real box)
 {
     
     while(x < -0.5 * box)
@@ -221,12 +221,12 @@ __device__ Real makePeriodic(Real x, Real box)
 
 }
 
-__device__ Real calcBlending(Real d1, Real d2)
+__device__ Real ParallelCalcs::calcBlending(Real d1, Real d2)
 {
     return sqrt(d1 * d2);
 }
 
-__device__ int getXFromIndex(int idx)
+__device__ int ParallelCalcs::getXFromIndex(int idx)
 {
     int c = -2 * idx;
     int discriminant = 1 - 4 * c;
@@ -234,7 +234,7 @@ __device__ int getXFromIndex(int idx)
     return qv + 1;
 }
 
-__device__ int getYFromIndex(int x, int idx)
+__device__ int ParallelCalcs::getYFromIndex(int x, int idx)
 {
     return idx - (x * x - x) / 2;
 }

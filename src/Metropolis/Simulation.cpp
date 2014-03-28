@@ -58,7 +58,7 @@ void Simulation::run()
    if (oldEnergy == 0)
    {
       if (args.simulationMode == SimulationMode::Parallel) {
-         oldEnergy = ParallelCalcs::calcSystemEnergy();
+         oldEnergy = ParallelCalcs::calcSystemEnergy(box);
       }
       else {
          oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
@@ -70,7 +70,7 @@ void Simulation::run()
       int changeIdx = box->chooseMolecule();
       
       if (args.simulationMode == SimulationMode::Parallel) {
-         oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(changeIdx);
+         oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
       }
       else {
          oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
@@ -79,7 +79,7 @@ void Simulation::run()
       box->changeMolecule(changeIdx);
       
       if (args.simulationMode == SimulationMode::Parallel) {
-         newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(changeIdx);
+         newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
       }
       else {
          newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
