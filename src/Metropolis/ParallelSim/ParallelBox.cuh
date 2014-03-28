@@ -13,19 +13,18 @@
 #include "Metropolis/DataTypes.h"
 
 //DeviceMolecule struct needs to be moved to same location as other structs
-class ParallelBox : Box
+class ParallelBox : public Box
 {
 	private:
+		void copyDataToDevice();	
+		void writeChangeToDevice(int changeIdx);
+
+	public:
 		Atom *atomsD;
 		Environment *environmentD;
 		Molecule *moleculesD, *transferMoleculesH;
 		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
 		Real *energiesD;
-		
-		void copyDataToDevice();	
-		void writeChangeToDevice(int changeIdx);
-
-	public:
 		ParallelBox(IOUtilities ioUtil);
 		~ParallelBox();
 		virtual int changeMolecule(int molIdx);

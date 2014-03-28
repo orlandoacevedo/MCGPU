@@ -8,6 +8,14 @@
 #include "ParallelCalcs.h"
 #include "ParallelCalcs.cuh"
 
+#define NO 0
+#define YES 1
+
+#define MAX_WARP 32
+#define MOL_BLOCK 256
+#define BATCH_BLOCK 512
+#define AGG_BLOCK 512
+
 using namespace std;
 
 Real ParallelCalcs::calcSystemEnergy(Box *box)
@@ -25,10 +33,17 @@ Real ParallelCalcs::calcSystemEnergy(Box *box)
 
 Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int startIdx)
 {
-	return calcBatchEnergy(createMolBatch(box, molIdx, startIdx), molIdx);
+	ParallelBox *pBox = (ParallelBox*) box;
+	
+	if (pBox == NULL)
+	{
+		return 0;
+	}
+	
+	return calcBatchEnergy(pBox, createMolBatch(pBox, molIdx, startIdx), molIdx);
 }
 
-int ParallelCalcs::createMolBatch(Box *box, int currentMol, int startIdx)
+int ParallelCalcs::createMolBatch(ParallelBox *box, int currentMol, int startIdx)
 {
 	//initialize neighbor molecule slots to NO
 	cudaMemset(box->nbrMolsD, NO, box->moleculeCount * sizeof(int));
@@ -52,7 +67,7 @@ int ParallelCalcs::createMolBatch(Box *box, int currentMol, int startIdx)
 	return batchSize;
 }
 
-Real ParallelCalcs::calcBatchEnergy(Box *box, int numMols, int molIdx)
+Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 {
 	if (numMols > 0)
 	{
@@ -72,7 +87,7 @@ Real ParallelCalcs::calcBatchEnergy(Box *box, int numMols, int molIdx)
 	}
 }
 
-Real ParallelCalcs::getEnergyFromDevice(Box *box)
+Real ParallelCalcs::getEnergyFromDevice(ParallelBox *box)
 {
 	Real totalEnergy = 0;
 	

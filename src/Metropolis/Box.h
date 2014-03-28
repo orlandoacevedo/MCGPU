@@ -26,6 +26,9 @@ using namespace std;
 class Box
 {
 	protected:
+		Molecule changedMol;
+
+	public:
 		Atom *atoms;
 		Environment *environment;
 		Molecule *molecules;
@@ -35,9 +38,7 @@ class Box
 		Hop *hops;
 		Real *energies;
 		int atomCount, moleculeCount, energyCount, maxMolSize;
-		Molecule changedMol;
-
-	public:
+		
 		Box(IOUtilities ioUtil);
 		~Box();
 		Atom *getAtoms(){return atoms;};

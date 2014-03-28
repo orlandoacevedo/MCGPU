@@ -7,8 +7,8 @@
 	-> February 26, by Albert Wallace
    -> March 28, by Joshua Mosby
 */
-#include <stdio.h>
 
+#include <stdio.h>
 #include "Simulation.h"
 #include "SimulationArgs.h"
 #include "Box.h"

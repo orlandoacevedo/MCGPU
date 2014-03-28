@@ -15,6 +15,9 @@
 
 namespace ParallelCalcs
 {
+	int createMolBatch(ParallelBox *box, int currentMol, int startIdx);
+	Real calcBatchEnergy(ParallelBox *box, int numMols, int molIdx);
+	Real getEnergyFromDevice(ParallelBox *box);
 	__global__ void checkMoleculeDistances(Molecule *molecules, int currentMol, int startIdx, int numM, Environment *enviro, int *inCutoff);
 	__global__ void calcInterAtomicEnergy(Molecule *molecules, int curentMol, Environment *enviro, Real *energies, int numEnergies, int *molBatch, int maxMolSize);
 	__global__ void aggregateEnergies(Real *energies, int numEnergies, int interval, int batchSize);
