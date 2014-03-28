@@ -1645,7 +1645,7 @@ void IOUtilities::pullInDataToConstructSimBox()
 	   	exit(1);
 	}
 #ifdef IOUTIL_DEBUG
-   //std::cout << "DEBUG: value of integer storedNumOfMolecules before floating point error: " << storedNumOfMolecules << std::endl;
+   std::cout << "DEBUG: value of integer storedNumOfMolecules before floating point error: " << storedNumOfMolecules << std::endl;
 #endif
    int molecMod = storedNumOfMolecules % molecVec.size();
    if (molecMod != 0)
