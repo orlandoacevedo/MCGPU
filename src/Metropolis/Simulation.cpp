@@ -31,6 +31,7 @@ Simulation::Simulation(SimulationArgs simArgs)
    }
    args = simArgs;
    box = new Box(ioUtil);
+   simSteps = ioUtil.numOfSteps;
 }
 
 Simulation::~Simulation()
