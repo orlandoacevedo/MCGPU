@@ -26,6 +26,7 @@ all : metrosim_double
 
 metrosim_double : build
 	g++ src/Applications/Application.cpp $(Include) $(CxxFlags) -o obj/src/Applications/Application.o
+	g++ src/Metropolis/Box.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Box.o
 	g++ src/Applications/CommandParsing.cpp $(Include) $(CxxFlags) -o obj/src/Applications/CommandParsing.o
 	g++ src/Metropolis/Simulation.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Simulation.o
 	g++ src/Metropolis/SerialSim/SerialBox.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/SerialSim/SerialBox.o
@@ -40,6 +41,7 @@ metrosim_double : build
 
 metrosim_single : build
 	g++ src/Applications/Application.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Applications/Application.o
+	g++ src/Metropolis/Box.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Box.o
 	g++ src/Applications/CommandParsing.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Applications/CommandParsing.o
 	g++ src/Metropolis/Simulation.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Metropolis/Simulation.o
 	g++ src/Metropolis/SerialSim/SerialBox.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Metropolis/SerialSim/SerialBox.o

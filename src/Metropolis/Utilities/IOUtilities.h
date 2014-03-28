@@ -56,6 +56,7 @@ class IOUtilities
 
 	public: //all things are allowed to be public during testing
 					IOUtilities(std::string configPath); //this should be the constructor, which does very little on its own.
+					~IOUtilities();
 						///Calls the driver method after initializing *some* variables, and does nothing more.
 					bool readInConfig(); //this represents the first of the chain of calls to configuration methods. 
 							//(Does *not* call the second in the chain, or in other words does not continue environment setup.
