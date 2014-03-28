@@ -10,6 +10,9 @@
 #include "Metropolis/DataTypes.h"
 #include "Metropolis/Utilities/StructLibrary.h"
 
+namespace SerialCalcs
+{
+
 Real calcBlending(Real d1, Real d2);
 Real calcCharge(Real charge1, Real charge2, Real r);
 Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *environment);
@@ -18,5 +21,6 @@ Real calcMolecularEnergyContribution(Molecule *molecules, Environment *environme
 Real calcSystemEnergy(Molecule *molecules, Environment *environment);
 Real getFValue(int atom1, int atom2, int **table1);
 Real makePeriodic(Real x, Real box);
+}
 
 #endif
