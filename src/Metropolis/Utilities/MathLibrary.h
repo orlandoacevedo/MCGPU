@@ -50,7 +50,7 @@ using std::map;
 #define DOUBPREC .000001
 #define PI 3.14159265
 
-
+Real randomReal(const Real start, const Real end);
 
 /**
   Structure representing a geometic point.

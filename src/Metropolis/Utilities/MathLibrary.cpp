@@ -26,6 +26,11 @@ using std::stringstream;
 */
 stringstream output;
 
+Real randomReal(const Real start, const Real end)
+{
+	return (end-start) * (double(rand()) / RAND_MAX) + start;
+}
+
 Point createPoint(double X, double Y, double Z)
 {
     Point p;

@@ -12,6 +12,7 @@
 #include "Simulation.h"
 #include "SimulationArgs.h"
 #include "Box.h"
+#include "Metropolis/Utilities/MathLibrary.h"
 #include "SerialSim/SerialBox.h"
 #include "SerialSim/SerialCalcs.h"
 #include "ParallelSim/ParallelCalcs.h"

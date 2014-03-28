@@ -30,11 +30,6 @@ Box::~Box()
 	FREE(energies);
 }
 
-Real randomReal(const Real start, const Real end)
-{
-	return (end-start) * (double(rand()) / RAND_MAX) + start;
-}
-
 int Box::chooseMolecule()
 {
 	return (int) randomReal(0, environment->numOfMolecules);

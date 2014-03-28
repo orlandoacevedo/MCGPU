@@ -48,7 +48,6 @@ class Box
 		int getMoleculeCount(){return moleculeCount;};
 		int getEnergyCount(){return energyCount;};
 		int getMaxMolSize(){return maxMolSize;};
-		Real randomReal(const Real start, const Real end);
 		int chooseMolecule();
 		int changeMolecule(int molIdx);
 		void keepMoleculeInBox(Molecule *molecule, Environment *enviro);
