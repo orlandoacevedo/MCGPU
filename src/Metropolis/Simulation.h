@@ -18,12 +18,13 @@ const double kBoltz = 0.00198717;
 class Simulation
 {
 	public:
-		Simulation(SimulationArgs args);
+		Simulation(SimulationArgs simArgs);
 		~Simulation();
 		void run();
 		
 	private:
 		Box *box;
+      SimulationArgs args;
 };
 
 #endif
