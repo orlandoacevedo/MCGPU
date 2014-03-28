@@ -11,6 +11,7 @@
 #define BOX_H
 
 #include <stdlib.h>
+#include "Utilities/Config_Scan.h"
 #include "Metropolis/DataTypes.h"
 #include "Utilities/StructLibrary.h"
 
@@ -30,7 +31,7 @@ class Box
 		int atomCount, moleculeCount, energyCount, maxMolSize;
 
 	public:
-		Box(){atoms=NULL;environment=NULL;molecules=NULL;energies=NULL;};
+		Box(Config_Scan configScan){atoms=NULL;environment=NULL;molecules=NULL;energies=NULL;};
 		~Box(){FREE(atoms);FREE(environment);FREE(molecules);FREE(energies);};
 		Atom *getAtoms(){return atoms;};
 		Environment *getEnvironment(){return environment;};
