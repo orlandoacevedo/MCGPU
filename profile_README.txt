@@ -1,18 +1,32 @@
 This file contains instructions for how to profile the program
-Date: 3/24/14
+Date created: 3/27/14
+Date updated: 3/28/14
 Author: Josh Mosby
 
-NOTE: at the time of writing, there are still two code bases. This may change slightly
-when we have a single code base
+NOTE: The ./ command is not needed for the app_name
 
-For CUDA functions, use nvprof 
-nvprof actually runs the program, and thus requires all command line arguments
-	nvprof [nvprof options] executable_name [executable arguments]
-The ./ command is not needed for the executable_name
+For CUDA functions
+nvprof		- collects events/metrics for CUDA kernels
+		- actually runs the program, and thus needs full arguments
+	nvprof [options] app_name [app_options]
 
-For C/C++ functions, use gprof
-Whenever the program is run, a file called gmon.out is created with the metrics
-from the last run. Gprof does not run the program, it simply analyzes these metrics.
-Thus no command line arguments are needed
-	gprof [gprof options] executable_name gmon.out
-The ./ command is not needed for the executable_name
+For C/C++ functions
+gprof		- profiles serial functions
+		- Whenever the program is run, a file called gmon.out is created with the metrics from the last run
+		- Gprof does not run the program, it simply analyzes these metrics, thus no command line arguments are needed
+	gprof [options] app_name gmon.out
+
+
+Other tools
+CUDA-MEMCHECK 	- detects memory access errors in CUDA applications
+	      	- works with all SM architectures
+	      	- does not require any special compilation settings
+		- should support dynamic parallelism
+	cuda-memcheck [options] app_name [app_options]
+
+CUDA-RACECHECK 	- helps identify memory access race conditions in CUDA applications that use shared memory
+	       	- only looks at on-chip shared access memory (defined with the __shared__ flag)
+		- does not require any special compilation settigns
+		- only works on SM architectures 2.0 and above
+		- should support dynamic parallelism
+	cuda-memcheck --tool racecheck [memcheck-options] app_name [app_options]
