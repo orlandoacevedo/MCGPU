@@ -30,6 +30,11 @@ Box::~Box()
 	FREE(energies);
 }
 
+Real randomReal(const Real start, const Real end)
+{
+	return (end-start) * (double(rand()) / RAND_MAX) + start;
+}
+
 int Box::chooseMolecule()
 {
 	return (int) randomReal(0, environment->numOfMolecules);
@@ -37,8 +42,8 @@ int Box::chooseMolecule()
 
 int Box::changeMolecule(int molIdx)
 {
-	double maxTranslation = enviro->maxTranslation;
-	double maxRotation = enviro->maxRotation;
+	double maxTranslation = environment->maxTranslation;
+	double maxRotation = environment->maxRotation;
 		
 	saveChangedMole(molIdx);
 		
@@ -57,21 +62,21 @@ int Box::changeMolecule(int molIdx)
 	moveMolecule(molecules[molIdx], vertex, deltaX, deltaY, deltaZ,
 		degreesX, degreesY, degreesZ);
 
-	keepMoleculeInBox(&molecules[molIdx], enviro);
+	keepMoleculeInBox(&molecules[molIdx], environment);
 
 	return molIdx;
 }
 
-void Box::keepMoleculeInBox(Molecule *molecule, Environment *enviro)
+void Box::keepMoleculeInBox(Molecule *molecule, Environment *environment)
 {		
 		for (int j = 0; j < molecule->numOfAtoms; j++)
         {
 		    //X axis
-			wrapBox(molecule->atoms[j].x, enviro->x);
+			wrapBox(molecule->atoms[j].x, environment->x);
             //Y axis
-			wrapBox(molecule->atoms[j].y, enviro->y);
+			wrapBox(molecule->atoms[j].y, environment->y);
             //Z axis
-			wrapBox(molecule->atoms[j].z, enviro->z);
+			wrapBox(molecule->atoms[j].z, environment->z);
 		}
 }
 
@@ -111,7 +116,7 @@ int Box::copyMolecule(Molecule *mole_dst, Molecule *mole_src)
     mole_dst->numOfAngles = mole_src->numOfAngles;
     mole_dst->numOfDihedrals = mole_src->numOfDihedrals;
     mole_dst->numOfHops = mole_src->numOfHops;
-    mole_dst->id = mole_src->id;
+    mole_dst->moleculeIdentificationNumber = mole_src->moleculeIdentificationNumber;
     
     for(int i = 0; i < mole_src->numOfAtoms; i++)
     {
@@ -139,4 +144,19 @@ int Box::copyMolecule(Molecule *mole_dst, Molecule *mole_src)
     }
   
     return 0;  	
+}
+
+double Box::wrapBox(double x, double box)
+{
+
+    while(x > box)
+    {
+        x -= box;
+    }
+    while(x < 0)
+    {
+        x += box;
+    }
+
+    return x;
 }

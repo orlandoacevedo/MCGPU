@@ -11,12 +11,6 @@
 
 using namespace std;
 
-Real randomReal(const Real start, const Real end)
-{
-	return 0.0;
-}
-
-
 SerialBox::SerialBox(IOUtilities ioUtil) : Box(ioUtil)
 {
 	

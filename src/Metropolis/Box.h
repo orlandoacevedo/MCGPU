@@ -12,6 +12,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <cstdlib>
 #include <stdio.h>
 #include "Utilities/MathLibrary.h"
 #include "Metropolis/Utilities/IOUtilities.h"
@@ -47,12 +48,14 @@ class Box
 		int getMoleculeCount(){return moleculeCount;};
 		int getEnergyCount(){return energyCount;};
 		int getMaxMolSize(){return maxMolSize;};
+		Real randomReal(const Real start, const Real end);
 		int chooseMolecule();
 		int changeMolecule(int molIdx);
 		void keepMoleculeInBox(Molecule *molecule, Environment *enviro);
 		int Rollback(int moleno);
 		int saveChangedMole(int moleno);
 		int copyMolecule(Molecule *mole_dst, Molecule *mole_src);
+	 	double wrapBox(double x, double box);
 		
 };
 
