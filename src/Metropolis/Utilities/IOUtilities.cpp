@@ -363,7 +363,8 @@ bool IOUtilities::readInConfig()
 			currentLine++;
 		}
 	}
-	return true;
+	configFileSuccessfullyRead = true;
+	return configFileSuccessfullyRead;
 }
 
 
