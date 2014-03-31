@@ -22,7 +22,7 @@
 //Constructor & Destructor
 Simulation::Simulation(SimulationArgs simArgs)
 {
-   IOUtilities ioUtil = IOUtilities(args.configPath);
+   IOUtilities ioUtil = IOUtilities(simArgs.configPath);
 
    if (!ioUtil.readInConfig() )
    {
