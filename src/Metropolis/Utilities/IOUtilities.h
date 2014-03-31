@@ -344,6 +344,11 @@ class IOUtilities
 					Angle * anglepool;
 					Dihedral * dihedralpool;
 					Hop *      hoppool;
+					int numberOfAtomsInAtomPool;
+					int numberOfBondsInBondPool;
+					int numberOfAnglesInAnglePool;
+					int numberOfDihedralsInDihedralPool;
+					int numberOfHopsInHopPool;
 
 		  
 };

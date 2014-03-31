@@ -84,6 +84,12 @@ IOUtilities::IOUtilities(std::string configPathIn){
 	stateOutputPath = ""; //The path where we write the state output files after simulation
 	pdbOutputPath = ""; //The path where we write the pdb output files after simulation
 	cutoff = 0; //The nonbonded cutoff distance.
+	int numberOfAtomsInAtomPool = 0;
+	int numberOfBondsInBondPool = 0;
+	int numberOfAnglesInAnglePool = 0;
+	int numberOfDihedralsInDihedralPool = 0;
+	int numberOfHopsInHopPool = 0;
+	
 	
 	
 	//Do what the original constructors did in this space.
@@ -1868,7 +1874,12 @@ void IOUtilities::pullInDataToConstructSimBox()
 	std::cout << "DEBUG: Value of sizeof Atom times molecDiv times count is allegedly, as written, in variable bustedCalculation: " << bustedCalculation << std::endl;
 	#endif
    
-    
+    int numberOfAtomsInAtomPool = molecDiv*count[0];
+	int numberOfBondsInBondPool = molecDiv*count[1];
+	int numberOfAnglesInAnglePool = molecDiv*count[2];
+	int numberOfDihedralsInDihedralPool = molecDiv*count[3];
+	int numberOfHopsInHopPool = molecDiv*count[4];
+	
 #ifdef NEWMETHOD_ARRAY 
     atompool = new Atom[potentialArrayLengthOfAtomPool];
     bondpool = new Bond[molecDiv*count[1]];

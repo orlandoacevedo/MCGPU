@@ -6,17 +6,44 @@
 
 Box::Box(IOUtilities ioUtil)
 {
-	atoms = ioUtil.atompool;
-	molecules = ioUtil.molecules;
-	environment = ioUtil.currentEnvironment;
+	//environment = ioUtil.currentEnvironment;
+ 	environment = (Environment*) malloc(sizeof(Environment));
+ 	memcpy(environment, ioUtil.currentEnvironment, sizeof(Environment));
+ 	
+ 	//atoms = ioUtil.atompool;
+ 	atoms = (Atom*) malloc(environment->numOfAtoms * sizeof(Atom));
+ 	memcpy(atoms, ioUtil.atompool, environment->numOfAtom * sizeof(Atom));
+ 	
+ 	if (ioUtil.numberOfAtomsInAtomPool != environment->numOfAtoms)
+ 	{
+ 		std::cout << "Box::Box (constructor): Error in algorithm in IOUtil to calculate number of atoms, bonds, angles, dihedrals, and hops!"
+ 	}
+ 	
+	//replaces molecules = ioUtil.molecules;
+ 	molecules = (Molecule*) malloc(environment->numOfMolecules * sizeof(Molecule));
+ 	memcpy(molecules, ioUtil.molecules, environment->numOfMolecules * sizeof(Molecule));
+ 	
 	
-	bonds = ioUtil.bondpool;
-	angles = ioUtil.anglepool;
-	dihedrals = ioUtil.dihedralpool;
-	hops = ioUtil.hoppool;
+	//replaces bonds = ioUtil.bondpool;
+	bonds = (Bond*) malloc (ioUtil.numberOfBondsInBondPool * sizeof(Bond));
+	memcpy(bonds, ioUtil.bondpool, ioUtil.numberOfBondsInBondPool * sizeof(Bond));
+	
+	
+	//replaces angles = ioUtil.anglepool;
+	angles = (Angle*) malloc (ioUtil.numberOfAnglesInAnglePool * sizeof(Angle));
+	memcpy(angles, ioUtil.anglepool, ioUtil.numberOfAnglesInAnglePool * sizeof(Angle))
+	
+	
+	//dihedrals = ioUtil.dihedralpool;
+	dihedrals = (Dihedral*) malloc (ioUtil.numberOfDihedralsInDihedralPool * sizeof(Dihedral));
+	memcpy(dihedrals, ioUtil.dihedralpool, ioUtil.numberOfDihedralsInDihedralPool * sizeof(Dihedral));
+	
+	//hops = ioUtil.hoppool;
+	hops = (Hop*) malloc (ioUtil.numberOfHopsInHopPool * sizeof(Hop));
+	memcpy(hops, ioUtil.hoppool, ioUtil.numberOfHopsInHopPool * sizeof(Hop));
 
-	atomCount = environment->numOfAtoms;
-	moleculeCount = environment->numOfMolecules;
+	atomCount = environment->numOfAtoms; //you still need to do this
+	moleculeCount = environment->numOfMolecules; //you still need to do this
 
 	std::cout << "# of atoms: " << atomCount << std::endl;
 	std::cout << "# of molecules: " << moleculeCount << std::endl;
