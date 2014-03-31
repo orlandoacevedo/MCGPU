@@ -56,19 +56,19 @@ class IOUtilities
 
 	public: //all things are allowed to be public during testing
 					IOUtilities(std::string configPath); //this should be the constructor, which does very little on its own.
-					~IOUtilities();
+					~IOUtilities(); //standard destructor for most of the important variables
 						///Calls the driver method after initializing *some* variables, and does nothing more.
 					bool readInConfig(); //this represents the first of the chain of calls to configuration methods. 
 							//(Does *not* call the second in the chain, or in other words does not continue environment setup.
 							// Look for the driver method for proper order of execution after this.)
 					int ReadStateFile(char const* StateFile, Environment * destinationEnvironment, Molecule * destinationMoleculeCollection);
 					int WriteStateFile(char const* StateFile, Environment * sourceEnvironment, Molecule * sourceMoleculeCollection); 	
-					int writePDB(char const* pdbFile); //this is the old version from SimBox, probably not useful or usable
+					//int writePDB(char const* pdbFile); //this is the old version from SimBox, probably not useful or usable
 					int writePDB(char const* pdbFile, Environment sourceEnvironment, Molecule * sourceMoleculeCollection); //this is a new version, possibly required for this implementation with IOUtilities
 
 
 					void throwScanError(std::string message);
-					bool readInConfigAlreadyDone;
+					//bool readInConfigAlreadyDone; //no longer preventing people from re-reading the config file, etc.
 					bool criticalErrorEncountered;
 			
 			//From OPLS_Scan......
@@ -323,6 +323,7 @@ class IOUtilities
 					std::string stateOutputPath; //The path where we write the state output files after simulation
 					std::string pdbOutputPath; //The path where we write the pdb output files after simulation
 					unsigned int cutoff; //The nonbonded cutoff distance.
+					Table * tables;
     	
     	
 	//private: //major organization must occur here before things are allowed to be private
