@@ -12,7 +12,7 @@ Box::Box(IOUtilities ioUtil)
  	
  	//atoms = ioUtil.atompool;
  	atoms = (Atom*) malloc(environment->numOfAtoms * sizeof(Atom));
- 	memcpy(atoms, ioUtil.atompool, environment->numOfAtom * sizeof(Atom));
+ 	memcpy(atoms, ioUtil.atompool, environment->numOfAtoms * sizeof(Atom));
  	
  	if (ioUtil.numberOfAtomsInAtomPool != environment->numOfAtoms)
  	{
