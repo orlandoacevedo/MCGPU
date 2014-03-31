@@ -31,7 +31,7 @@ Box::Box(IOUtilities ioUtil)
 	
 	//replaces "angles = ioUtil.anglepool;
 	angles = (Angle*) malloc (ioUtil.numberOfAnglesInAnglePool * sizeof(Angle));
-	memcpy(angles, ioUtil.anglepool, ioUtil.numberOfAnglesInAnglePool * sizeof(Angle))
+	memcpy(angles, ioUtil.anglepool, ioUtil.numberOfAnglesInAnglePool * sizeof(Angle));
 	
 	
 	// replaces "dihedrals = ioUtil.dihedralpool;
