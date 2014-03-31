@@ -89,6 +89,7 @@ IOUtilities::IOUtilities(std::string configPathIn){
 	//Do what the original constructors did in this space.
 	startNewMolecule_ZM = false;
 	currentEnvironment = new Environment(); //The current working environment for the simulation
+	configFileSuccessfullyRead = false;
 	
 	
 	//End outside construction. Continue work.
@@ -140,6 +141,14 @@ IOUtilities::~IOUtilities()
 */
 bool IOUtilities::readInConfig()
 {
+	if (configFileSuccessfullyRead)
+	{
+		return configFileSuccessfullyRead;
+	}
+	if (criticalErrorEncountered)
+	{
+		return criticalErrorEncountered; 
+	}
 	bool isSafeToContinue = true;
 	std::ifstream configscanner(configPath.c_str());
 	if (! configscanner.is_open())
@@ -1858,16 +1867,23 @@ void IOUtilities::pullInDataToConstructSimBox()
 	#ifdef IOUTIL_DEBUG
 	std::cout << "DEBUG: Value of sizeof Atom times molecDiv times count is allegedly, as written, in variable bustedCalculation: " << bustedCalculation << std::endl;
 	#endif
-    //atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]); //old method of allocation
+   
+    
+#ifdef NEWMETHOD_ARRAY 
     atompool = new Atom[potentialArrayLengthOfAtomPool];
-	//bondpool     =(Bond *)malloc(sizeof(Bond)*molecDiv*count[1]);
     bondpool = new Bond[molecDiv*count[1]];
-    //anglepool    =(Angle *)malloc(sizeof(Angle)*molecDiv*count[2]);
     anglepool = new Angle[molecDiv*count[2]];
-    //dihedralpool =(Dihedral *)malloc(sizeof(Dihedral)*molecDiv*count[3]);
     dihedralpool = new Dihedral[molecDiv*count[3]];
-    //hoppool      =(Hop *)malloc(sizeof(Hop)*molecDiv*count[4]);
     hoppool = new Hop[molecDiv*count[4]];
+#else
+     atompool     =(Atom *)malloc(sizeof(Atom)*molecDiv*count[0]); //old method of allocation
+    bondpool     =(Bond *)malloc(sizeof(Bond)*molecDiv*count[1]);
+    anglepool    =(Angle *)malloc(sizeof(Angle)*molecDiv*count[2]);
+    dihedralpool =(Dihedral *)malloc(sizeof(Dihedral)*molecDiv*count[3]);
+    hoppool      =(Hop *)malloc(sizeof(Hop)*molecDiv*count[4]);
+#endif
+
+#ifdef NEWMETHOD_ARRAY
 	#ifdef IOUTIL_DEBUG
     std::cout << "DEBUG: Trying to reach this many atom spots in the atompool variable: _" << potentialArrayLengthOfAtomPool << std::endl;
 	#endif
@@ -1931,13 +1947,14 @@ void IOUtilities::pullInDataToConstructSimBox()
      		std::cout << "Debug: position in making space for hoppool has made it up to _" << positionInFillProcess << "_ HPslots." << std::endl;
      	}
 		#endif
-    }  
-    // memset(atompool,0,sizeof(Atom)*molecDiv*count[0]);
-//     memset(bondpool,0,sizeof(Bond)*molecDiv*count[1]);
-//     memset(anglepool,0,sizeof(Angle)*molecDiv*count[2]);
-//     memset(dihedralpool,0,sizeof(Dihedral)*molecDiv*count[3]);
-//     memset(hoppool,0,sizeof(Hop)*molecDiv*count[4]);
-
+    } 
+#else
+     memset(atompool,0,sizeof(Atom)*molecDiv*count[0]);
+	   memset(bondpool,0,sizeof(Bond)*molecDiv*count[1]);
+	   memset(anglepool,0,sizeof(Angle)*molecDiv*count[2]);
+	   memset(dihedralpool,0,sizeof(Dihedral)*molecDiv*count[3]);
+	   memset(hoppool,0,sizeof(Hop)*molecDiv*count[4]);
+#endif
 //############# Albert Stopped Here ######################
 
     //arrange first part of molecules

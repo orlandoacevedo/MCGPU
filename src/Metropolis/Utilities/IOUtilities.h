@@ -324,6 +324,7 @@ class IOUtilities
 					std::string pdbOutputPath; //The path where we write the pdb output files after simulation
 					unsigned int cutoff; //The nonbonded cutoff distance.
 					Table * tables;
+					bool configFileSuccessfullyRead;
     	
     	
 	//private: //major organization must occur here before things are allowed to be private
