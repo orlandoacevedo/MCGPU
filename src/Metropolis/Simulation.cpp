@@ -115,14 +115,12 @@ void Simulation::run()
       {
          accepted++;
          oldEnergy += newEnergyCont - oldEnergyCont;
-         std::cout << "ACCEPTED: New Energy: " << oldEnergy << std::endl;
       }
       else
       {
          rejected++;
          //restore previous configuration
          box->rollback(changeIdx);
-         std::cout << "REJECTED: Old Energy: " << oldEnergy << std::endl;
       }
    }
    currentEnergy = oldEnergy;
