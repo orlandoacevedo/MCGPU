@@ -37,6 +37,11 @@ Simulation::Simulation(SimulationArgs simArgs)
 		std::cerr << "Error: Unable to initialize simulation Box" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	else
+	{
+		std::cout << "Using seed: " << box->environment->randomseed << std::endl;
+		seed(box->environment->randomseed);
+	}
 }
 
 Simulation::~Simulation()

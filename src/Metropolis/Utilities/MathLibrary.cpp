@@ -26,6 +26,11 @@ using std::stringstream;
 */
 stringstream output;
 
+void seed(int seed)
+{
+	srand(seed);
+}
+
 Real randomReal(const Real start, const Real end)
 {
 	return (end-start) * (double(rand()) / RAND_MAX) + start;

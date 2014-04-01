@@ -25,6 +25,6 @@ pdbOutput.pdb
 #max rotation
 15.0
 #Random Seed Input
-0
+12345
 #Primary Atom Index
 5

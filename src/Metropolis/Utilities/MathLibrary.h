@@ -50,6 +50,7 @@ using std::map;
 #define DOUBPREC .000001
 #define PI 3.14159265
 
+void seed(int seed);
 Real randomReal(const Real start, const Real end);
 
 /**
