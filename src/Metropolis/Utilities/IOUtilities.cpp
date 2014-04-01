@@ -50,7 +50,7 @@
 
 	//if you want debugging output
 //#define IOUTIL_DEBUG
-
+//#define NEWMETHOD_ARRAY
 
 //_________________________________________________________________________________________________________________
 //_________________________________________________________________________________________________________________
@@ -84,12 +84,12 @@ IOUtilities::IOUtilities(std::string configPathIn){
 	stateOutputPath = ""; //The path where we write the state output files after simulation
 	pdbOutputPath = ""; //The path where we write the pdb output files after simulation
 	cutoff = 0; //The nonbonded cutoff distance.
-	int numberOfAtomsInAtomPool = 0;
-	int numberOfBondsInBondPool = 0;
-	int numberOfAnglesInAnglePool = 0;
-	int numberOfDihedralsInDihedralPool = 0;
-	int numberOfHopsInHopPool = 0;
-	
+	numberOfAtomsInAtomPool = -17;
+	numberOfBondsInBondPool = -17;
+	numberOfAnglesInAnglePool = -17;
+	numberOfDihedralsInDihedralPool = -17;
+	numberOfHopsInHopPool = -17;
+	changedmole = Molecule();
 	
 	
 	//Do what the original constructors did in this space.
@@ -122,20 +122,20 @@ IOUtilities::IOUtilities(std::string configPathIn){
 */
 IOUtilities::~IOUtilities()
 {
-  FREE(molecules);
-  FREE(currentEnvironment);
-  FREE(atompool);
-  FREE(bondpool);
-  FREE(anglepool);
-  FREE(dihedralpool);
-  FREE(hoppool);
+  // FREE(molecules);
+//   FREE(currentEnvironment);
+//   FREE(atompool);
+//   FREE(bondpool);
+//   FREE(anglepool);
+  //FREE(dihedralpool);
+//  FREE(hoppool);
  
-  //free memory of changedmole
-  FREE(changedmole.atoms);
-  FREE(changedmole.bonds);
-  FREE(changedmole.angles);
-  FREE(changedmole.dihedrals);
-  FREE(changedmole.hops);
+//   //free memory of changedmole
+//   FREE(changedmole.atoms);
+//   FREE(changedmole.bonds);
+//   FREE(changedmole.angles);
+//   FREE(changedmole.dihedrals);
+//   FREE(changedmole.hops);
 }
 
 /*
@@ -1875,11 +1875,14 @@ void IOUtilities::pullInDataToConstructSimBox()
 	std::cout << "DEBUG: Value of sizeof Atom times molecDiv times count is allegedly, as written, in variable bustedCalculation: " << bustedCalculation << std::endl;
 	#endif
    
-    int numberOfAtomsInAtomPool = molecDiv*count[0];
-	int numberOfBondsInBondPool = molecDiv*count[1];
-	int numberOfAnglesInAnglePool = molecDiv*count[2];
-	int numberOfDihedralsInDihedralPool = molecDiv*count[3];
-	int numberOfHopsInHopPool = molecDiv*count[4];
+    numberOfAtomsInAtomPool = molecDiv*count[0];
+    #ifdef IOUTIL_DEBUG
+	std::cout << "DEBUG:010100101189998819991197253: " << numberOfAtomsInAtomPool <<"::::::" << molecDiv*count[0] << std::endl;
+	#endif
+	numberOfBondsInBondPool = molecDiv*count[1];
+	numberOfAnglesInAnglePool = molecDiv*count[2];
+	numberOfDihedralsInDihedralPool = molecDiv*count[3];
+	numberOfHopsInHopPool = molecDiv*count[4];
 	
 #ifdef NEWMETHOD_ARRAY 
     atompool = new Atom[potentialArrayLengthOfAtomPool];
@@ -2105,6 +2108,10 @@ void IOUtilities::pullInDataToConstructSimBox()
 	ss << "Molecules Created into an Array" << std::endl;
 	#ifdef IOUTIL_DEBUG
 	std::cout << "Total atom count by this point: " << currentEnvironment->numOfAtoms << std::endl;
+	if (numberOfAtomsInAtomPool != currentEnvironment->numOfAtoms)
+ 	{
+ 		std::cout << "IOUtil::do all the things: Error in algorithm to calculate number of atoms, bonds, angles, dihedrals, and hops!" <<std::endl;
+ 	}
 	#endif
     writeToLog(ss, DEFAULT);
      

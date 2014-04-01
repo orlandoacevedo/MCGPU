@@ -2,3 +2,6 @@ bin/
 obj/
 *.P
 *.o
+src/Metropolis/Utilities/utilMk
+
+src/Metropolis/Utilities/utilMkI

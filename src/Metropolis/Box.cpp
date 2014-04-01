@@ -4,43 +4,51 @@
 
 #include "Box.h"
 
+#define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
+
 Box::Box(IOUtilities ioUtil)
 {
+	
 	//environment = ioUtil.currentEnvironment;
- 	environment = (Environment*) malloc(sizeof(Environment));
- 	memcpy(environment, ioUtil.currentEnvironment, sizeof(Environment));
- 	
+ 	environment = (Environment*)malloc(sizeof(Environment));
+ 	memmove(environment, ioUtil.currentEnvironment, sizeof(Environment));
+
  	//atoms = ioUtil.atompool;
- 	atoms = (Atom*) malloc(environment->numOfAtoms * sizeof(Atom));
- 	memcpy(atoms, ioUtil.atompool, environment->numOfAtoms * sizeof(Atom));
- 	
+ 	atoms = (Atom*)malloc(environment->numOfAtoms * sizeof(Atom));
+ 	memmove(atoms, ioUtil.atompool, environment->numOfAtoms * sizeof(Atom));
+
  	if (ioUtil.numberOfAtomsInAtomPool != environment->numOfAtoms)
  	{
- 		std::cout << "Box::Box (constructor): Error in algorithm in IOUtil to calculate number of atoms, bonds, angles, dihedrals, and hops!";
+ 		std::cout << "Box::Box: value of ioUtil.numberOfAtomsInAtomPool: " << ioUtil.numberOfAtomsInAtomPool << std::endl;
+ 		std::cout << "Box::Box: value of environment->numOfAtoms: " << environment->numOfAtoms << std::endl;
+ 		std::cout << "Box::Box (constructor): Error in algorithm in IOUtil to calculate number of atoms, bonds, angles, dihedrals, and hops!"<< std::endl;
  	}
  	
 	//replaces "molecules = ioUtil.molecules;
  	molecules = (Molecule*) malloc(environment->numOfMolecules * sizeof(Molecule));
- 	memcpy(molecules, ioUtil.molecules, environment->numOfMolecules * sizeof(Molecule));
+ 	memmove(molecules, ioUtil.molecules, environment->numOfMolecules * sizeof(Molecule));
  	
 	
 	//replaces "bonds = ioUtil.bondpool;
 	bonds = (Bond*) malloc (ioUtil.numberOfBondsInBondPool * sizeof(Bond));
-	memcpy(bonds, ioUtil.bondpool, ioUtil.numberOfBondsInBondPool * sizeof(Bond));
-	
-	
+	memmove(bonds, ioUtil.bondpool, ioUtil.numberOfBondsInBondPool * sizeof(Bond));
+
 	//replaces "angles = ioUtil.anglepool;
 	angles = (Angle*) malloc (ioUtil.numberOfAnglesInAnglePool * sizeof(Angle));
-	memcpy(angles, ioUtil.anglepool, ioUtil.numberOfAnglesInAnglePool * sizeof(Angle));
-	
+	memmove(angles, ioUtil.anglepool, ioUtil.numberOfAnglesInAnglePool * sizeof(Angle));
+
 	
 	// replaces "dihedrals = ioUtil.dihedralpool;
 	dihedrals = (Dihedral*) malloc (ioUtil.numberOfDihedralsInDihedralPool * sizeof(Dihedral));
-	memcpy(dihedrals, ioUtil.dihedralpool, ioUtil.numberOfDihedralsInDihedralPool * sizeof(Dihedral));
+	memmove(dihedrals, ioUtil.dihedralpool, ioUtil.numberOfDihedralsInDihedralPool * sizeof(Dihedral));
+	
+
 	
 	//replaces "hops = ioUtil.hoppool;"
 	hops = (Hop*) malloc (ioUtil.numberOfHopsInHopPool * sizeof(Hop));
-	memcpy(hops, ioUtil.hoppool, ioUtil.numberOfHopsInHopPool * sizeof(Hop));
+	memmove(hops, ioUtil.hoppool, ioUtil.numberOfHopsInHopPool * sizeof(Hop));
+	
+
 
 	atomCount = environment->numOfAtoms; //you still need to do this
 	moleculeCount = environment->numOfMolecules; //you still need to do this
@@ -51,10 +59,11 @@ Box::Box(IOUtilities ioUtil)
 
 Box::~Box()
 {
-	FREE(atoms);
-	FREE(environment);
-	FREE(molecules);
-	FREE(energies);
+	//these disabled during testing/debugging of seg faults. enable with safe testing at own risk!
+	//FREE(atoms);
+	//FREE(environment);
+	//FREE(molecules);
+	//FREE(energies);
 }
 
 int Box::chooseMolecule()
