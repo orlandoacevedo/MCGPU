@@ -7,6 +7,10 @@
 
 #include "ParallelCalcs.h"
 #include "ParallelCalcs.cuh"
+#include "ParallelBox.cuh"
+#include <string>
+#include "Metropolis/Utilities/FileUtilities.h"
+#include "Metropolis/Box.h"
 
 #define NO 0
 #define YES 1
@@ -17,6 +21,18 @@
 #define AGG_BLOCK 512
 
 using namespace std;
+
+Box* ParallelCalcs::createBox(string configpath, long* steps)
+{
+	ParallelBox* box = new ParallelBox();
+	if (!loadBoxData(configpath, box, steps))
+	{
+		std::cerr << "Error: Cannot create ParallelBox from config: " << configpath << std::endl;
+		return NULL;
+	}
+	box->copyDataToDevice();
+	return (Box*) box;
+}
 
 Real ParallelCalcs::calcSystemEnergy(Box *box)
 {

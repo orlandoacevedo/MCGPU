@@ -16,7 +16,7 @@
 class SerialBox : public Box
 {
 	public:
-		SerialBox(IOUtilities ioUtil);
+		SerialBox();
 		~SerialBox();
 
 		int molecTypenum;

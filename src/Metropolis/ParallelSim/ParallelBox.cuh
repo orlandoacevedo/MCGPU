@@ -16,7 +16,6 @@
 class ParallelBox : public Box
 {
 	private:
-		void copyDataToDevice();	
 		void writeChangeToDevice(int changeIdx);
 
 	public:
@@ -25,10 +24,11 @@ class ParallelBox : public Box
 		Molecule *moleculesD, *transferMoleculesH;
 		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
 		Real *energiesD;
-		ParallelBox(IOUtilities ioUtil);
+		ParallelBox();
 		~ParallelBox();
 		virtual int changeMolecule(int molIdx);
 		virtual int rollback(int moleno);
+		void copyDataToDevice();	
 };
 
 #endif

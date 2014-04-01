@@ -694,7 +694,7 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
 
                 // Move newAtom bond distance away from other atom in y direction.
                 lineAtom.x = otherAtom.x;
-                lineAtom.y = otherAtom.y + lineBond.lengthOfBond;
+                lineAtom.y = otherAtom.y + lineBond.distance;
                 lineAtom.z = otherAtom.z;
     		}
     		  
@@ -714,7 +714,7 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
                 Atom commonAtom = getAtom(atomVector, commonID);
 
                 double currentAngle = getAngle(lineAtom, commonAtom, otherAtom); 
-                double angleChange = lineAngle.magnitudeOfAngle - currentAngle;
+                double angleChange = lineAngle.value - currentAngle;
 
                 lineAtom = rotateAtomInPlane(lineAtom, commonAtom, otherAtom, angleChange);
     		}
@@ -802,7 +802,7 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
                 //find the angle between the planes.
                 double initialAngle = getAngle(rotatePlane, nonMovingPlane);
                 //find the angle needed to rotate.
-                double toRotate = initialAngle - lineDihedral.distanceBetweenAtoms;
+                double toRotate = initialAngle - lineDihedral.value;
                 //rotate lineAtom needed degrees about linkbond.
                 //determine which atom in linkingBond is vector head and tail
                 Atom vectorHead;
@@ -876,7 +876,7 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			Bond lineBond =  bondVector[bondFound];
 	
 			// Second atom on x-axis
-			molec[m].atoms[1].x = lineBond.lengthOfBond;
+			molec[m].atoms[1].x = lineBond.distance;
 			molec[m].atoms[1].y = 0.0;
 			molec[m].atoms[1].z = 0.0;
 		}
@@ -896,17 +896,17 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			Bond lineBond =  bondVector[bondFound];
 			Angle lineAngle = angleVector[angleFound];
 			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.id);
-			double thetaRadians = degreesToRadians(lineAngle.magnitudeOfAngle);
+			double thetaRadians = degreesToRadians(lineAngle.value);
 			
 			// Third atom in XY plane
 			if(BondedTo == 1)
             {
-				molec[m].atoms[2].x = lineBond.lengthOfBond * cos(thetaRadians);
+				molec[m].atoms[2].x = lineBond.distance * cos(thetaRadians);
             }
 			else if(BondedTo == 2)
             {
-				molec[m].atoms[2].x = molec[m].atoms[1].x - lineBond.lengthOfBond * cos(thetaRadians);
-			molec[m].atoms[2].y = lineBond.lengthOfBond * sin(thetaRadians);
+				molec[m].atoms[2].x = molec[m].atoms[1].x - lineBond.distance * cos(thetaRadians);
+			molec[m].atoms[2].y = lineBond.distance * sin(thetaRadians);
 			molec[m].atoms[2].z = 0.0;
             }
 		}
@@ -935,11 +935,11 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			Bond lineBond =  bondVector[bondFound];
 			int angleFound = hasAngle(angleVector,lineAtom.id);
 			Angle lineAngle = angleVector[angleFound];
-			double thetaRadians = degreesToRadians(lineAngle.magnitudeOfAngle);
+			double thetaRadians = degreesToRadians(lineAngle.value);
 			// Dihedral angle is defined counterclockwise
 			int dihedralFound = hasDihedral(dihedralVector,lineAtom.id);
 			Dihedral lineDihedral = dihedralVector[dihedralFound];
-			double phiRadians = degreesToRadians(lineDihedral.distanceBetweenAtoms);
+			double phiRadians = degreesToRadians(lineDihedral.value);
 			
 			// x|y|z in the local system
 			// xbs = bndlgth * sin(ang) * cos(dih)
@@ -947,9 +947,9 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			// zbs = -bndlgth * cos(ang)
 
 			sinval = sin(thetaRadians);
-			xbs = lineBond.lengthOfBond * sinval * cos(phiRadians);
-			ybs = lineBond.lengthOfBond * sinval * sin(phiRadians);
-			zbs = -lineBond.lengthOfBond * cos(thetaRadians);
+			xbs = lineBond.distance * sinval * cos(phiRadians);
+			ybs = lineBond.distance * sinval * sin(phiRadians);
+			zbs = -lineBond.distance * cos(thetaRadians);
 			
 			// Determine transformation (direction cosine) matrix
 			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.id);

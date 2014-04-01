@@ -5,10 +5,23 @@
 */
 
 #include <math.h>
+#include <string>
 #include "Metropolis/DataTypes.h"
+#include "Metropolis/Utilities/FileUtilities.h"
 #include "SerialCalcs.h"
 
 using namespace std;
+
+Box* SerialCalcs::createBox(std::string configpath, long* steps)
+{
+	SerialBox* box = new SerialBox();
+	if (!loadBoxData(configpath, box, steps))
+	{
+		std::cerr << "Error: Cannot create SerialBox from config: " << configpath << std::endl;
+		return NULL;
+	}
+	return (Box*) box;
+} 
 
 Real SerialCalcs::calcBlending(Real d1, Real d2)
 {

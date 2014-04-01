@@ -1,14 +1,16 @@
 /*
-	New Simulation to replace linearSim and parallelSim
+   New Simulation to replace linearSim and parallelSim
 
-	Author: Nathan Coleman
-	Last Changed: February 21, 2014
-	
-	-> February 26, by Albert Wallace
+   Author: Nathan Coleman
+   Last Changed: February 21, 2014
+   
+   -> February 26, by Albert Wallace
    -> March 28, by Joshua Mosby
 */
 
 #include <stdio.h>
+#include <string>
+#include <iostream>
 #include "Simulation.h"
 #include "SimulationArgs.h"
 #include "Box.h"
@@ -16,22 +18,25 @@
 #include "SerialSim/SerialBox.h"
 #include "SerialSim/SerialCalcs.h"
 #include "ParallelSim/ParallelCalcs.h"
-#include "Utilities/IOUtilities.h"
+#include "Utilities/FileUtilities.h"
 
 
 //Constructor & Destructor
 Simulation::Simulation(SimulationArgs simArgs)
 {
-   IOUtilities ioUtil = IOUtilities(simArgs.configPath);
-
-   if (!ioUtil.readInConfig() )
-   {
-      fprintf(stderr, "Terminating Simulation...\n\n");
-      exit(1);
-   }
    args = simArgs;
-   box = new Box(ioUtil);
-   simSteps = ioUtil.numOfSteps;
+   std::string configpath(simArgs.configPath);
+
+   if (simArgs.simulationMode == SimulationMode::Parallel)
+      box = ParallelCalcs::createBox(configpath, &simSteps);
+   else
+      box = SerialCalcs::createBox(configpath, &simSteps);
+
+   if (box == NULL)
+   {
+      std::cerr << "Error: Unable to initialize simulation Box" << std::endl;
+      exit(EXIT_FAILURE);
+   }
 }
 
 Simulation::~Simulation()
@@ -110,15 +115,21 @@ void Simulation::run()
       {
          accepted++;
          oldEnergy += newEnergyCont - oldEnergyCont;
+         std::cout << "ACCEPTED: New Energy: " << oldEnergy << std::endl;
       }
       else
       {
          rejected++;
          //restore previous configuration
          box->rollback(changeIdx);
+         std::cout << "REJECTED: Old Energy: " << oldEnergy << std::endl;
       }
    }
    currentEnergy = oldEnergy;
+   
+   std::cout << std::endl << std::endl;
+   std::cout << "Finished running " << simSteps << " steps" << std::endl;
+   std::cout << "FINAL ENERGY: " << currentEnergy << std::endl;
 }
 
 

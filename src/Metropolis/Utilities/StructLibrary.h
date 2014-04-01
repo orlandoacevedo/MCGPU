@@ -9,6 +9,7 @@
 #ifndef STRUCTLIBRARY_H
 #define STRUCTLIBRARY_H
 
+#include <iostream>
 #include <string>
 #include "../DataTypes.h" //use this statement on OS X, maybe for individual testing
 //#include "Metropolis/DataTypes.h" //use this statement on Linux (?), or whenever the makefile is being applied
@@ -33,7 +34,7 @@ struct Table
     
     Table(int **table) //constructor with parameters
 	{
-	hopTable = table;
+	   hopTable = table;
 	}
 };
 
@@ -55,26 +56,26 @@ struct Bond
     /*!
        The length of the bond.
     */
-    double lengthOfBond;
+    double distance;
     /*!
        Bool indicating if the bond can be varied.
     */
-    bool canBeVaried;
+    bool variable;
     
     Bond()
-    	{
+	{
     	atom1 = 0;
     	atom2 = 0;
-    	lengthOfBond = 0;
-    	canBeVaried = true;
-    	}
+    	distance = 0;
+    	variable = true;
+	}
     	
-    Bond(int atom1, int atom2, double distance, bool variable)
+    Bond(int atom1, int atom2, double dist, bool varied)
 	{
-    atom1 = atom1;
-    atom2 = atom2;
-    lengthOfBond = distance;
-    canBeVaried = variable;
+        atom1 = atom1;
+        atom2 = atom2;
+        distance = dist;
+        variable = varied;
 	}
 
 };
@@ -101,20 +102,20 @@ struct Angle
     /*!
     the angle between the atoms; used to be "value"
     */
-    double magnitudeOfAngle; 
+    double value; 
     
     /*!
     if the angle is variable
     */
-    bool canBeVaried;
+    bool variable;
     
     Angle()
-    	{
+	{
     	atom1 = 0;
     	atom2 = 0;
-    	magnitudeOfAngle = 0;
-    	canBeVaried = true;
-    	}
+    	value = 0;
+    	variable = true;
+	}
 };
 
 /**
@@ -137,20 +138,20 @@ struct Dihedral
     /**
     the distance between the atoms; used to be "value"
     */
-    double distanceBetweenAtoms; 
+    double value; 
     
     /**
     if the distance between atoms is variable
     */
-    bool canBeVaried; 
+    bool variable; 
     
     Dihedral()
-    	{
+	{
     	atom1 = 0;
     	atom2 = 0;
-    	distanceBetweenAtoms = 0;
-    	canBeVaried = true;
-    	}
+    	value = 0;
+    	variable = true;
+	}
 };
 
 
@@ -174,17 +175,19 @@ struct Hop
     */
 	int hop;
 	
-	Hop() {
+	Hop()
+    {
 		atom1 = 0;
 		atom2 = 0;
 		hop = 0;
 	}
-	Hop(int atom1InAsInt, int atom2InAsInt, int numNodesBetweenStartAndFinish)
-	{
-		atom1 = atom1InAsInt;
-		atom2 = atom2InAsInt;
-		hop = numNodesBetweenStartAndFinish;
-	}
+
+    Hop(int atom1In, int atom2In, int hopsIn)
+    {
+        atom1 = atom1In;
+        atom2 = atom2In;
+        hop = hopsIn;
+    }
 };
 
 /**
@@ -249,6 +252,25 @@ struct Environment
 		randomseed = 0;
 	}
 
+    Environment(Environment* environment)
+    {
+        if (!environment)
+        {
+            std::cerr << "Error: Environment(): Copy constructor given NULL argument" << std::endl;
+        }
+
+        x = environment->x;
+        y = environment->y;
+        z = environment->z;
+        cutoff = environment->cutoff;
+        temp = environment->temp;
+        maxTranslation = environment->maxTranslation;
+        maxRotation = environment->maxRotation;
+        numOfAtoms = environment->numOfAtoms;
+        numOfMolecules = environment->numOfMolecules;
+        primaryAtomIndex = environment->primaryAtomIndex;
+        randomseed = environment->randomseed;
+    }
 };
 
 struct Molecule
@@ -260,7 +282,7 @@ struct Molecule
 	/*
 	The identification number for a given molecule. Previously referred to as simply "ID".
 	*/
-	int moleculeIdentificationNumber;
+	int id;
 	/*
 	The array representing the collection of atoms in the molecule.
 	*/
@@ -301,9 +323,9 @@ struct Molecule
     /*
     Constructor(s) for the molecule
     */
-    Molecule(int id, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
+    Molecule(int idIn, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
     	{
-		moleculeIdentificationNumber = id;
+		id = idIn;
 
 		atoms = atomsIn;
 		angles = anglesIn;
@@ -319,7 +341,7 @@ struct Molecule
 		}
 		
 	Molecule() {
-		moleculeIdentificationNumber = 0;
+		id = 0;
 
 		atoms = new Atom();
 		angles = new Angle();
@@ -349,6 +371,8 @@ Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real 
 
 //Molecule
 Molecule createMolecule(int id, Atom *atoms, int atomCount);
+Molecule createMolecule(int id, Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals,
+                        int atomCount, int angleCount, int bondCount, int dihedralCount);
 void copyMolecule(Molecule *destination, Molecule *source);
 void printMolecule(Molecule *molecule);
 

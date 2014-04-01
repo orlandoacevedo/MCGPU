@@ -11,7 +11,7 @@
 
 using namespace std;
 
-SerialBox::SerialBox(IOUtilities ioUtil) : Box(ioUtil)
+SerialBox::SerialBox() : Box()
 {
 	
 }

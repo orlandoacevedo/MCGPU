@@ -32,15 +32,15 @@ metrosim_double : build
 	g++ src/Metropolis/Box.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Box.o
 	g++ src/Metropolis/SerialSim/SerialBox.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/SerialSim/SerialBox.o
 	g++ src/Metropolis/SerialSim/SerialCalcs.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/SerialSim/SerialCalcs.o
-	g++ src/Metropolis/Utilities/IOUtilities.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/IOUtilities.o
 	g++ src/Metropolis/Utilities/StructLibrary.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/StructLibrary.o
 	g++ src/Metropolis/Utilities/MathLibrary.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/MathLibrary.o
+	g++ src/Metropolis/Utilities/FileUtilities.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/FileUtilities.o
 	nvcc src/Metropolis/Utilities/DeviceQuery.cu $(Include) $(CuFlags) -o obj/src/Metropolis/Utilities/DeviceQuery.o
 	nvcc src/Metropolis/ParallelSim/ParallelBox.cu $(Include) $(CuFlags) -o obj/src/Metropolis/ParallelSim/ParallelBox.o
 	nvcc src/Metropolis/ParallelSim/ParallelCalcs.cu $(Include) $(CuFlags) -o obj/src/Metropolis/ParallelSim/ParallelCalcs.o
 	nvcc -o bin/$(AppName) $(LCuFlags) obj/src/Applications/Application.o obj/src/Applications/CommandParsing.o \
 								  obj/src/Metropolis/Simulation.o obj/src/Metropolis/SerialSim/SerialBox.o \
-								  obj/src/Metropolis/Utilities/IOUtilities.o obj/src/Metropolis/Utilities/StructLibrary.o \
+								  obj/src/Metropolis/Utilities/FileUtilities.o obj/src/Metropolis/Utilities/StructLibrary.o \
 								  obj/src/Metropolis/Utilities/MathLibrary.o obj/src/Metropolis/Utilities/DeviceQuery.o \
 								  obj/src/Metropolis/Box.o obj/src/Metropolis/SerialSim/SerialCalcs.o \
 								  obj/src/Metropolis/ParallelSim/ParallelBox.o obj/src/Metropolis/ParallelSim/ParallelCalcs.o
@@ -56,12 +56,13 @@ metrosim_single : build
 	g++ src/Metropolis/Utilities/IOUtilities.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/IOUtilities.o
 	g++ src/Metropolis/Utilities/StructLibrary.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/StructLibrary.o
 	g++ src/Metropolis/Utilities/MathLibrary.cpp $(Single) $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/MathLibrary.o
+	g++ src/Metropolis/Utilities/FileUtilities.cpp $(Include) $(CxxFlags) -o obj/src/Metropolis/Utilities/FileUtilities.o
 	nvcc src/Metropolis/Utilities/DeviceQuery.cu $(Single) $(Include) $(CuFlags) -o obj/src/Metropolis/Utilities/DeviceQuery.o
 	nvcc src/Metropolis/ParallelSim/ParallelBox.cu $(Single) $(Include) $(CuFlags) -o obj/src/Metropolis/ParallelSim/ParallelBox.o
 	nvcc src/Metropolis/ParallelSim/ParallelCalcs.cu $(Single) $(Include) $(CuFlags) -o obj/src/Metropolis/ParallelSim/ParallelCalcs.o
 	nvcc -o bin/$(AppName) $(Single) $(LCuFlags) obj/src/Applications/Application.o obj/src/Applications/CommandParsing.o \
 								  obj/src/Metropolis/Simulation.o obj/src/Metropolis/SerialSim/SerialBox.o \
-								  obj/src/Metropolis/Utilities/IOUtilities.o obj/src/Metropolis/Utilities/StructLibrary.o \
+								  obj/src/Metropolis/Utilities/FileUtilities.o obj/src/Metropolis/Utilities/StructLibrary.o \
 								  obj/src/Metropolis/Utilities/MathLibrary.o obj/src/Metropolis/Utilities/DeviceQuery.o
 								  obj/src/Metropolis/Box.o obj/src/Metropolis/SerialSim/SerialCalcs.o \
 								  obj/src/Metropolis/ParallelSim/ParallelBox.o obj/src/Metropolis/ParallelSim/ParallelCalcs.o

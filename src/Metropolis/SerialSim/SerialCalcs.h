@@ -7,11 +7,15 @@
 #ifndef SERIALCALCS_H
 #define SERIALCALCS_H
 
+#include <string>
+#include "Metropolis/Box.h"
+#include "SerialBox.h"
 #include "Metropolis/DataTypes.h"
 #include "Metropolis/Utilities/StructLibrary.h"
 
 namespace SerialCalcs
 {
+	Box* createBox(std::string configpath, long* steps);
 	Real calcBlending(Real d1, Real d2);
 	Real calcCharge(Real charge1, Real charge2, Real r);
 	Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *environment);

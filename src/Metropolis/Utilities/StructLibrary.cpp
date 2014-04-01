@@ -84,6 +84,25 @@ Molecule createMolecule(Atom *atoms, int numOfAtoms)
 	return molecule;
 }
 
+Molecule createMolecule(int id, Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals, 
+                        int atomCount, int angleCount, int bondCount, int dihedralCount)
+{
+    Molecule molecule;
+    molecule.id = id;
+
+    molecule.atoms = atoms;
+    molecule.angles = angles;
+    molecule.bonds = bonds;
+    molecule.dihedrals = dihedrals;
+
+    molecule.numOfAtoms = atomCount;
+    molecule.numOfAngles = angleCount;
+    molecule.numOfBonds = bondCount;
+    molecule.numOfDihedrals = dihedralCount;
+
+    return molecule;
+}
+
 void copyMolecule(Molecule *destination, Molecule *source){}
 
 void printMolecule(Molecule *molecule){}

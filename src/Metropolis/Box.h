@@ -15,7 +15,6 @@
 #include <cstdlib>
 #include <stdio.h>
 #include "Utilities/MathLibrary.h"
-#include "Metropolis/Utilities/IOUtilities.h"
 #include "Metropolis/DataTypes.h"
 #include "Utilities/StructLibrary.h"
 
@@ -29,17 +28,18 @@ class Box
 		Molecule changedMol;
 
 	public:
-		Atom *atoms;
 		Environment *environment;
+		Atom *atoms;
 		Molecule *molecules;
 		Bond *bonds;
 		Angle *angles;
 		Dihedral *dihedrals;
 		Hop *hops;
 		Real *energies;
-		int atomCount, moleculeCount, energyCount, maxMolSize;
+		int atomCount, moleculeCount, bondCount, angleCount, dihedralCount, hopCount;
+		int energyCount, maxMolSize;
 		
-		Box(IOUtilities ioUtil);
+		Box();
 		~Box();
 		Atom *getAtoms(){return atoms;};
 		Environment *getEnvironment(){return environment;};

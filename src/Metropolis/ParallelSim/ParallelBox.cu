@@ -11,16 +11,13 @@
 using namespace std;
 
 //Constructor & Destructor
-ParallelBox::ParallelBox(IOUtilities ioUtil): Box(ioUtil)
+ParallelBox::ParallelBox(): Box()
 {
-	//call Box constructor first
-	
-	copyDataToDevice();
 }
 
 ParallelBox::~ParallelBox()
 {
-	//free device memory
+	// TODO: free device memory
 }
 
 int ParallelBox::changeMolecule(int molIdx)
