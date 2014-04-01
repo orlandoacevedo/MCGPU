@@ -101,14 +101,9 @@ double LinearSim::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 			if (atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
 			{
 				//calculate difference in coordinates
-				double deltaX = atom1.x - atom2.x;
-				double deltaY = atom1.y - atom2.y;
-				double deltaZ = atom1.z - atom2.z;
-			  
-				//calculate distance between atoms
-				deltaX = box->makePeriodic(deltaX, enviro->x);
-				deltaY = box->makePeriodic(deltaY, enviro->y);
-				deltaZ = box->makePeriodic(deltaZ, enviro->z);
+				double deltaX = box->makePeriodic(atom1.x - atom2.x, enviro->x);
+				double deltaY = box->makePeriodic(atom1.y - atom2.y, enviro->y);
+				double deltaZ = box->makePeriodic(atom1.z - atom2.z, enviro->z);
 				
 				double r2 = (deltaX * deltaX) +
 					 (deltaY * deltaY) + 
