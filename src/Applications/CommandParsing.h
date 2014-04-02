@@ -18,6 +18,8 @@
 #define APP_NAME "metrosim"		///< The executable name of the application.
 #endif
 
+#define DEFAULT_STATUS_INTERVAL 100
+
 namespace metrosim
 {
 
@@ -62,7 +64,7 @@ namespace metrosim
 		bool doubleFlag;
 
 		/// Default constructor
-		CommandParameters() :	statusInterval(0),
+		CommandParameters() :	statusInterval(DEFAULT_STATUS_INTERVAL),
 								argCount(0),
 								argList(NULL),
 								helpFlag(false),

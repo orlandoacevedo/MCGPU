@@ -82,7 +82,7 @@ void Simulation::run()
 	
 	for(int move = 0; move < simSteps; move++)
 	{
-		if (move % OUT_INTERVAL == 0)
+		if (args.statusInterval > 0 && move % args.statusInterval == 0)
 		{
 			std::cout << "Step " << move << ":\r\n--Current Energy: " << oldEnergy << std::endl;
 		}

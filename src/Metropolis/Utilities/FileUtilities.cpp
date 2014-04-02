@@ -68,7 +68,7 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, Box* box)
    if (molecMod != 0)
    {
        enviro->numOfMolecules += molecVec.size() - molecMod;
-       cout << "Number of molecules not divisible by specified z-matrix. Changing number of molecules to: " << enviro->numOfMolecules << endl;
+       //std::cout << "Number of molecules not divisible by specified z-matrix. Changing number of molecules to: " << enviro->numOfMolecules << endl;
     }
 
     box->moleculeCount = enviro->numOfMolecules;
@@ -96,7 +96,7 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, Box* box)
   		count[3]+=molec1.numOfDihedrals;
   		count[4]+=molec1.numOfHops;
   		
-  		cout << "before table building. Number of atom "<< molec1.numOfAtoms<<endl;
+  		//std::cout << "before table building. Number of atom "<< molec1.numOfAtoms << std::endl;
   		
   		Hop *myHop = molec1.hops;
   		int **table;
@@ -115,22 +115,22 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, Box* box)
 		for(int k2 = 0; k2<molec1.numOfHops;k2++)
         {
 			int atom1 = myHop->atom1;
-			cout << "atom1: "<< atom1-currentAtomCount <<endl;
+			//std::cout << "atom1: "<< atom1-currentAtomCount << std::endl;
 			int atom2 = myHop->atom2;
-			cout << "atom2: "<< atom2-currentAtomCount<<endl;
-			cout << "hop: " << myHop->hop <<endl;
+			//std::cout << "atom2: "<< atom2-currentAtomCount << std::endl;
+			//std::cout << "hop: " << myHop->hop << std::endl;
 			table[atom1-currentAtomCount][atom2-currentAtomCount] = myHop->hop;
 			table[atom2-currentAtomCount][atom1-currentAtomCount] = myHop->hop;
 			myHop++;
 		}
 	  
-	   cout << "after table building"<<endl;
+	   //std::cout << "after table building" << std::endl;
 	   //memset(table,0,sizeof(table));
 	   //int table[molec1.numOfAtoms][molec1.numOfAtoms];
 	   //cout << " this is " << j <<endl;
 	   tables[j] = Table(table); //createTable is in metroUtil
 	   currentAtomCount += molec1.numOfAtoms;
-	   cout << "after table creation. Current atom cout: "<< currentAtomCount<<endl;
+	   //std::cout << "after table creation. Current atom cout: "<< currentAtomCount << std::endl;
     }
 
     box->atomCount = molecDiv * count[0];
@@ -139,12 +139,12 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, Box* box)
     box->dihedralCount = molecDiv * count[3];
     box->hopCount = molecDiv * count[4];
 
-    std::cout << "Molecule Count: " << box->moleculeCount << std::endl;
-    std::cout << "Atom Count: " << box->atomCount << std::endl;
-    std::cout << "Bond Count: " << box->bondCount << std::endl;
-    std::cout << "Angle Count: " << box->angleCount << std::endl;
-    std::cout << "Dihedral Count: " << box->dihedralCount << std::endl;
-    std::cout << "Hop Count: " << box->hopCount << std::endl;
+    //std::cout << "Molecule Count: " << box->moleculeCount << std::endl;
+    //std::cout << "Atom Count: " << box->atomCount << std::endl;
+    //std::cout << "Bond Count: " << box->bondCount << std::endl;
+    //std::cout << "Angle Count: " << box->angleCount << std::endl;
+    //std::cout << "Dihedral Count: " << box->dihedralCount << std::endl;
+    //std::cout << "Hop Count: " << box->hopCount << std::endl;
      
     box->atoms 	   = (Atom *)malloc(sizeof(Atom)*box->atomCount);
     box->bonds     = (Bond *)malloc(sizeof(Bond)*box->bondCount);
@@ -266,18 +266,18 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, Box* box)
     }
      
     enviro->numOfAtoms = count[0]*molecDiv;
-	std::cout << "Molecules Created into an Array" << std::endl;
+	//std::cout << "Molecules Created into an Array" << std::endl;
      
     // TODO: Right now we can only read from a zmatrix file and not a state file
     // In the future we need to make it possible.
     
-    std::cout << "Assigning Molecule Positions..." << std::endl;
+    //std::cout << "Assigning Molecule Positions..." << std::endl;
     if (!generatefccBox(box)) //generate fcc lattice box
     {
     	std::cerr << "Error: buildBoxData(): Could not generate FCC box" << std::endl;
     	return false;
     }
-    std::cout << "Finished Assigning Molecule Positions" << std::endl;
+    //std::cout << "Finished Assigning Molecule Positions" << std::endl;
 
     return true;
 }
