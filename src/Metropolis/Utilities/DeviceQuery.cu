@@ -37,6 +37,7 @@ bool openDeviceContext(struct DeviceContext* context, int major, int minor, int 
 	}
 
 	cudaSetDevice(device);
+	cudaDeviceReset();
 
 	fprintf(stdout, "Currently using CUDA capable device %d\n", device);
 
