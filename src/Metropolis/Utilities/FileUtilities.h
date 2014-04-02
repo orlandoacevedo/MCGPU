@@ -18,6 +18,9 @@
 #define Z_MATRIX 4
 #define GEOM 5
 
+#define TRIMMED_CHARS " \n\r\t"
+#define COMMENT_DELIM ';'
+
 class ConfigScanner
 {
     private:
@@ -385,5 +388,9 @@ bool generatefccBox(Box* box);
 
 void writeToLog(string text,int stamp);
 void writeToLog(stringstream& ss, int stamp);
+
+static inline std::string& rtrim(std::string& s);
+static inline std::string& ltrim(std::string& s);
+static inline std::string& trim(std::string& s);
 
 #endif

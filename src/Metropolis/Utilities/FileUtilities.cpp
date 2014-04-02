@@ -418,7 +418,7 @@ bool ConfigScanner::readInConfig(string configpath)
         while (configscanner.good())
         {
             getline(configscanner,line);
-			
+			trim(line);
             //assigns attributes based on line number
             switch(currentLine)
             {
@@ -1545,4 +1545,23 @@ void writeToLog(stringstream& ss, int stamp)
     writeToLog(ss.str(),stamp);
 	ss.str(""); // clears the string steam...
 	ss.clear();
+}
+
+static inline std::string& rtrim(std::string& s)
+{
+    s.erase(s.find_last_not_of(TRIMMED_CHARS) + 1);
+    return s;
+}
+
+static inline std::string& ltrim(std::string& s)
+{
+    std::size_t len = s.find_first_not_of(TRIMMED_CHARS);
+    if (len != std::string::npos)
+        s.erase(0, len);
+    return s;
+}
+
+static inline std::string& trim(std::string& s)
+{
+    return ltrim(rtrim(s));
 }
