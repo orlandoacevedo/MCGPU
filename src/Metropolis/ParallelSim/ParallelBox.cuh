@@ -11,24 +11,27 @@
 
 #include "Metropolis/Box.h"
 #include "Metropolis/DataTypes.h"
+#include "Metropolis/Utilities/Coalesced_Structs.h"
 
 //DeviceMolecule struct needs to be moved to same location as other structs
 class ParallelBox : public Box
 {
 	private:
 		void writeChangeToDevice(int changeIdx);
+		Real *xD, *yD, *zD, *sigmaD, *epsilonD, *chargeD;
+		int *atomsIdxD, *numOfAtomsD;
 
 	public:
-		Atom *atomsD;
+		AtomData *atomsH, *atomsD;
 		Environment *environmentD;
-		Molecule *moleculesD, *transferMoleculesH;
+		MoleculeData *moleculesH, *moleculesD;
 		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
 		Real *energiesD;
 		ParallelBox();
 		~ParallelBox();
 		virtual int changeMolecule(int molIdx);
 		virtual int rollback(int moleno);
-		void copyDataToDevice();	
+		void copyDataToDevice();
 };
 
 #endif

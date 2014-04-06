@@ -64,7 +64,7 @@ int ParallelCalcs::createMolBatch(ParallelBox *box, int currentMol, int startIdx
 	//initialize neighbor molecule slots to NO
 	cudaMemset(box->nbrMolsD, NO, box->moleculeCount * sizeof(int));
 	
-	checkMoleculeDistances<<<box->moleculeCount / MOL_BLOCK + 1, MOL_BLOCK>>>(box->moleculesD, currentMol, startIdx, box->moleculeCount, box->environmentD, box->nbrMolsD);
+	checkMoleculeDistances<<<box->moleculeCount / MOL_BLOCK + 1, MOL_BLOCK>>>(box->moleculesD, box->atomsD, currentMol, startIdx, box->environmentD, box->nbrMolsD);
 	
 	cudaMemcpy(box->nbrMolsH, box->nbrMolsD, box->moleculeCount * sizeof(int), cudaMemcpyDeviceToHost);
 	
@@ -87,15 +87,16 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 {
 	if (numMols > 0)
 	{
+		int validEnergies = numMols * box->maxMolSize * box->maxMolSize;
 		//initialize energies to 0
 		cudaMemset(box->energiesD, 0, sizeof(Real));
 		
 		cudaMemcpy(box->molBatchD, box->molBatchH, box->moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
 		
 		calcInterAtomicEnergy<<<box->energyCount / BATCH_BLOCK + 1, BATCH_BLOCK>>>
-		(box->moleculesD, molIdx, box->environmentD, box->energiesD, box->energyCount, box->molBatchD, box->maxMolSize);
+		(box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->molBatchD, box->maxMolSize);
 		
-		return getEnergyFromDevice(box);
+		return getEnergyFromDevice(box, validEnergies);
 	}
 	else
 	{
@@ -103,21 +104,21 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 	}
 }
 
-Real ParallelCalcs::getEnergyFromDevice(ParallelBox *box)
+Real ParallelCalcs::getEnergyFromDevice(ParallelBox *box, int validEnergies)
 {
 	Real totalEnergy = 0;
 	
 	//a batch size of 3 seems to offer the best tradeoff
 	int batchSize = 3, blockSize = AGG_BLOCK;
-	int numBaseThreads = box->energyCount / (batchSize);
-	for (int i = 1; i < box->energyCount; i *= batchSize)
+	int numBaseThreads = validEnergies / (batchSize);
+	for (int i = 1; i < validEnergies; i *= batchSize)
 	{
 		if (blockSize > MAX_WARP && numBaseThreads / i + 1 < blockSize)
 		{
 			blockSize /= 2;
 		}
 		aggregateEnergies<<<numBaseThreads / (i * blockSize) + 1, blockSize>>>
-		(box->energiesD, box->energyCount, i, batchSize);
+		(box->energiesD, validEnergies, i, batchSize);
 	}
 	
 	cudaMemcpy(&totalEnergy, box->energiesD, sizeof(Real), cudaMemcpyDeviceToHost);
@@ -126,19 +127,19 @@ Real ParallelCalcs::getEnergyFromDevice(ParallelBox *box)
 	return totalEnergy;
 }
 
-__global__ void ParallelCalcs::checkMoleculeDistances(Molecule *molecules, int currentMol, int startIdx, int moleculeCount, Environment *enviro, int *inCutoff)
+__global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff)
 {
 	int otherMol = blockIdx.x * blockDim.x + threadIdx.x;
 	
-	if (otherMol < moleculeCount  && otherMol >= startIdx && otherMol != currentMol)
+	if (otherMol < molecules->moleculeCount && otherMol >= startIdx && otherMol != currentMol)
 	{
-		Atom atom1 = molecules[currentMol].atoms[enviro->primaryAtomIndex];
-		Atom atom2 = molecules[otherMol].atoms[enviro->primaryAtomIndex];
+		int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
+		int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;
 			
 		//calculate difference in coordinates
-		Real deltaX = makePeriodic(atom1.x - atom2.x, enviro->x);
-		Real deltaY = makePeriodic(atom1.y - atom2.y, enviro->y);
-		Real deltaZ = makePeriodic(atom1.z - atom2.z, enviro->z);
+		Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
+		Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
+		Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
 	  
 		Real r2 = (deltaX * deltaX) +
 					(deltaY * deltaY) + 
@@ -151,34 +152,35 @@ __global__ void ParallelCalcs::checkMoleculeDistances(Molecule *molecules, int c
 	}
 }
 
-__global__ void ParallelCalcs::calcInterAtomicEnergy(Molecule *molecules, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
+__global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
 {
 	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x, segmentSize = maxMolSize * maxMolSize;
 	
 	if (energyIdx < energyCount and molBatch[energyIdx / segmentSize] != -1)
 	{
-		Molecule mol1 = molecules[currentMol], mol2 = molecules[molBatch[energyIdx / segmentSize]];
+		int otherMol = molBatch[energyIdx / segmentSize];
 		int x = (energyIdx % segmentSize) / maxMolSize, y = (energyIdx % segmentSize) % maxMolSize;
 		
-		if (x < mol1.numOfAtoms && y < mol2.numOfAtoms)
+		if (x < molecules->numOfAtoms[currentMol] && y < molecules->numOfAtoms[otherMol])
 		{
-			Atom atom1 = mol1.atoms[x], atom2 = mol2.atoms[y];
+			int atom1 = molecules->atomsIdx[currentMol] + x;
+			int atom2 = molecules->atomsIdx[otherMol] + y;
 		
-			if (atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
+			if (atoms->sigma[atom1] >= 0 && atoms->epsilon[atom1] >= 0 && atoms->sigma[atom2] >= 0 && atoms->epsilon[atom2] >= 0)
 			{
 				Real totalEnergy = 0;
 			  
 				//calculate distance between atoms
-				Real deltaX = makePeriodic(atom1.x - atom2.x, enviro->x);
-				Real deltaY = makePeriodic(atom1.y - atom2.y, enviro->y);
-				Real deltaZ = makePeriodic(atom1.z - atom2.z, enviro->z);
+				Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
+				Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
+				Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
 				
 				Real r2 = (deltaX * deltaX) +
 					 (deltaY * deltaY) + 
 					 (deltaZ * deltaZ);
 				
-				totalEnergy += calc_lj(atom1, atom2, r2);
-				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+				totalEnergy += calc_lj(atoms, atom1, atom2, r2);
+				totalEnergy += calcCharge(atoms->charge[atom1], atoms->charge[atom2], sqrt(r2));
 				
 				energies[energyIdx] = totalEnergy;
 			}
@@ -200,11 +202,11 @@ __global__ void ParallelCalcs::aggregateEnergies(Real *energies, int energyCount
 	}
 }
 
-__device__ Real ParallelCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
+__device__ Real ParallelCalcs::calc_lj(AtomData *atoms, int atom1, int atom2, Real r2)
 {
     //store LJ constants locally
-    Real sigma = calcBlending(atom1.sigma, atom2.sigma);
-    Real epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+    Real sigma = calcBlending(atoms->sigma[atom1], atoms->sigma[atom2]);
+    Real epsilon = calcBlending(atoms->epsilon[atom1], atoms->epsilon[atom2]);
     
     if (r2 == 0.0)
     {
