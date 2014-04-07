@@ -1,8 +1,6 @@
-#include <thrust/device_vector.h>
-#include <thrust/sequence.h>
 #include <thrust/copy.h>
-#include <thrust/count.h>
 #include <thrust/remove.h>
+#include <thrust/device_ptr.h>
 #include <iostream>
 #include <iterator>
 #include <string>
@@ -37,7 +35,7 @@ int main(void)
     int* d_A;
 
     cudaMalloc(&d_A, sizeof(int) * N);
-    cudaMemcpy(d_A, h_A, N, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A, h_A, N * sizeof(int), cudaMemcpyHostToDevice);
 
     thrust::device_ptr<int> d_thrust_A(d_A);
     print_range("Original", d_thrust_A, d_thrust_A + N);
@@ -45,7 +43,7 @@ int main(void)
     // we can also compact sequences with the remove functions, which do the opposite of copy
     thrust::device_ptr<int> d_thrust_end = thrust::remove_if(d_thrust_A, d_thrust_A + N, is_negative());
     
-    size_t length = d_thrust_A - d_thrust_end;
+    size_t length = d_thrust_end - d_thrust_A;
     std::cout << std::endl << "Size: " << length << std::endl;
     
     print_range("values", d_thrust_A, d_thrust_end);
