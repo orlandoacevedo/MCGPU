@@ -382,6 +382,28 @@ class ZmatrixScanner
         vector<Molecule> buildMolecule(int startingID);
 };
 
+
+class StateScanner
+{
+  private:
+    string filename;
+
+  private:
+    StateScanner(string file);
+    ~StateScanner();
+
+    Environment readInEnvironment(string filename);
+    vector<Molecule> readInMolecules(string filename);
+    Angle getAngleFromLine(string line);
+    Atom getAtomFromLine(string line);
+    Bond getBondFromLine(string line);
+    Dihedral getDihedralFromLine(string line);
+    Environment getEnvironmentFromLine(string line);
+    Hop getHopFromLine(string line);
+
+    void outputState();
+};
+
 bool loadBoxData(string configpath, Box* box, long* steps);
 bool buildBoxData(ZmatrixScanner* zMatrixScan, Box* box);
 bool generatefccBox(Box* box);
