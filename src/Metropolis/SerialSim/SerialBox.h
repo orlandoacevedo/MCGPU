@@ -10,7 +10,6 @@
 #ifndef SERIALBOX_H
 #define SERIALBOX_H
 
-#include "Metropolis/Utilities/IOUtilities.h"
 #include "Metropolis/Box.h"
 
 class SerialBox : public Box

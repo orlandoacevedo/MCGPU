@@ -59,9 +59,9 @@ void Simulation::run()
 	//declare variables common to both parallel and serial
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
-	double oldEnergy = 0, currentEnergy = 0;
-	double newEnergyCont, oldEnergyCont;
-	double  kT = kBoltz * enviro->temp;
+	Real oldEnergy = 0, currentEnergy = 0;
+	Real newEnergyCont, oldEnergyCont;
+	Real  kT = kBoltz * enviro->temp;
 	int accepted = 0;
 	int rejected = 0;
 	
@@ -117,7 +117,7 @@ void Simulation::run()
 		}
 		else
 		{
-			double x = exp(-(newEnergyCont - oldEnergyCont) / kT);
+			Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
 			
 			if(x >= randomReal(0.0, 1.0))
 			{

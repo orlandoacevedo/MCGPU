@@ -95,10 +95,10 @@ void ParallelBox::copyDataToDevice()
 	}
 	
 	energyCount = moleculesH->moleculeCount * maxMolSize * maxMolSize;
-	cudaMalloc(&(energiesD), energyCount * sizeof(double));
+	cudaMalloc(&(energiesD), energyCount * sizeof(Real));
 	
 	//initialize energies
-	cudaMemset(energiesD, 0, sizeof(double));
+	cudaMemset(energiesD, 0, sizeof(Real));
 	
 	//copy data to device
 	cudaMemcpy(environmentD, environment, sizeof(Environment), cudaMemcpyHostToDevice);

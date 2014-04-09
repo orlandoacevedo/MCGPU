@@ -297,12 +297,12 @@ bool generatefccBox(Box* box)
 		return false;
 	}
 	
-	double cells, dcells, cellL, halfcellL;
+	Real cells, dcells, cellL, halfcellL;
 	Environment* enviro = box->environment;
 	Molecule* molecules = box->molecules;
 	
 	//Determine the number of unit cells in each coordinate direction
-	dcells = pow(0.25 * (double) enviro->numOfMolecules, 1.0/3.0);
+	dcells = pow(0.25 * (Real) enviro->numOfMolecules, 1.0/3.0);
 	cells = (int)(dcells + 0.5);
 		
 	//Check if numOfMolecules is a non-fcc number of molecules
@@ -313,7 +313,7 @@ bool generatefccBox(Box* box)
     }
 			
 	//Determine length of unit cell
-	cellL = enviro->x/ (double) cells;
+	cellL = enviro->x/ (Real) cells;
 	halfcellL = 0.5 * cellL;
 	
 	//Construct the unit cell
@@ -728,7 +728,7 @@ void OplsScanner::addLineToTable(string line, int numOfLines)
 {
     string hashNum;
     int secCol;
-    double charge,sigma,epsilon;
+    Real charge,sigma,epsilon;
     string name, extra;
     stringstream ss(line);
 
@@ -751,7 +751,7 @@ void OplsScanner::addLineToTable(string line, int numOfLines)
     }
     else if(format == 2)
     {
-        double v0,v1,v2,v3;
+        Real v0,v1,v2,v3;
         ss >> hashNum >> v0 >> v1 >> v2 >> v3 ;
         Fourier vValues = {v0,v1,v2,v3};
         pair<map<string,Fourier>::iterator,bool> ret2;
@@ -771,11 +771,11 @@ void OplsScanner::addLineToTable(string line, int numOfLines)
 int OplsScanner::checkFormat(string line)
 {   	 
     int hashNum, secCol;
-    double charge,sigma,epsilon;
+    Real charge,sigma,epsilon;
     string name, extra;
     stringstream iss(line);
 
-    double v1,v2,v3,v4;
+    Real v1,v2,v3,v4;
     stringstream issw(line);
 
     //see if format is the V values for the diherdral format
@@ -859,7 +859,7 @@ Atom OplsScanner::getAtom(string hashNum)
 	}
 }
 
-double OplsScanner::getSigma(string hashNum)
+Real OplsScanner::getSigma(string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -873,7 +873,7 @@ double OplsScanner::getSigma(string hashNum)
     }
 }
 
-double OplsScanner::getEpsilon(string hashNum)
+Real OplsScanner::getEpsilon(string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -887,7 +887,7 @@ double OplsScanner::getEpsilon(string hashNum)
     }
 }
 
-double OplsScanner::getCharge(string hashNum)
+Real OplsScanner::getCharge(string hashNum)
 {
     if(oplsTable.count(hashNum)>0 )
     {
@@ -1107,7 +1107,7 @@ int ZmatrixScanner::checkFormat(string line)
     stringstream iss2(line);
     string atomType, someLine;
     int atomID, oplsA, oplsB, bondWith, angleWith,dihedralWith,extra;
-    double bondDistance, angleMeasure, dihedralMeasure;	 
+    Real bondDistance, angleMeasure, dihedralMeasure;	 
 
     // check if it is the normal 11 line format
     if( iss >> atomID >> atomType >> 
@@ -1856,7 +1856,7 @@ Environment StateScanner::getEnvironmentFromLine(string line)
     strcpy(charLine, line.c_str());
     tokens = strtok(charLine, " ");
     int numOfAtoms, tokenNumber = 0;
-    double x,y,z,cutoff;
+    Real x,y,z,cutoff;
 
     while(tokens != NULL)
     {

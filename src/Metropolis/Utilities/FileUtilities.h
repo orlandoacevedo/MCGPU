@@ -214,21 +214,21 @@ class OplsScanner
 		@param hashNum -  the hash number (1st col) in Z matrix file
         @return - the sigma value of the atom that is the value associated with the hasNum key.
 		*/
-		double getSigma(string hashNum);
+		Real getSigma(string hashNum);
 		
 		/**
 		Returns the epsilon value based on the hashNum (1st col) in Z matrix file
 		@param hashNum - the hash number (1st col) in Z matrix file
         @return - the epsilon value of the atom that is the value associated with the hashNum key.
 		*/
-		double getEpsilon(string hashNum);
+		Real getEpsilon(string hashNum);
 		
 		/**
 		Returns the charge value based on the hashNum (1st col) in Z matrix file
 		@param hashNum -  the hash number (1st col) in Z matrix file
         @return - the charge value of the atom that is the value associated with the hashNum key.
 		*/
-		double getCharge(string hashNum);
+		Real getCharge(string hashNum);
 		
 		/**
 		Returns the V values value based on the hashNum (1st col) in Z matrix file

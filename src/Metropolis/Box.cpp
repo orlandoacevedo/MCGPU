@@ -3,6 +3,7 @@
 */
 
 #include "Box.h"
+#include "Metropolis/Utilities/MathLibrary.h"
 
 Box::Box()
 {
@@ -42,8 +43,8 @@ int Box::chooseMolecule()
 
 int Box::changeMolecule(int molIdx)
 {
-	double maxTranslation = environment->maxTranslation;
-	double maxRotation = environment->maxRotation;
+	Real maxTranslation = environment->maxTranslation;
+	Real maxRotation = environment->maxRotation;
 		
 	saveChangedMole(molIdx);
 		
@@ -51,13 +52,13 @@ int Box::changeMolecule(int molIdx)
 	int atomIndex = randomReal(0, molecules[molIdx].numOfAtoms);
 	Atom vertex = molecules[molIdx].atoms[atomIndex];
 
-	const double deltaX = randomReal(-maxTranslation, maxTranslation);
-	const double deltaY = randomReal(-maxTranslation, maxTranslation);
-	const double deltaZ = randomReal(-maxTranslation, maxTranslation);
+	const Real deltaX = randomReal(-maxTranslation, maxTranslation);
+	const Real deltaY = randomReal(-maxTranslation, maxTranslation);
+	const Real deltaZ = randomReal(-maxTranslation, maxTranslation);
 
-	const double degreesX = randomReal(-maxRotation, maxRotation);
-	const double degreesY = randomReal(-maxRotation, maxRotation);
-	const double degreesZ = randomReal(-maxRotation, maxRotation); 
+	const Real degreesX = randomReal(-maxRotation, maxRotation);
+	const Real degreesY = randomReal(-maxRotation, maxRotation);
+	const Real degreesZ = randomReal(-maxRotation, maxRotation); 
 
 	moveMolecule(molecules[molIdx], vertex, deltaX, deltaY, deltaZ,
 		degreesX, degreesY, degreesZ);
@@ -146,7 +147,7 @@ int Box::copyMolecule(Molecule *mole_dst, Molecule *mole_src)
     return 0;  	
 }
 
-double Box::wrapBox(double x, double box)
+Real Box::wrapBox(Real x, Real box)
 {
 
     while(x > box)
