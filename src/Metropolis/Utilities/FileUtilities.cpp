@@ -74,6 +74,13 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, Box* box)
     box->moleculeCount = enviro->numOfMolecules;
     box->molecules = (Molecule *)malloc(sizeof(Molecule) * box->moleculeCount);
     
+    if(box->moleculeCount < 1 || molecVec.size() < 1)
+    {
+    	std::cerr << "The simulation environment should have at least 1 molecule. (The current count? " << box->moleculeCount <<")." << std::endl;
+    	return false;
+    }
+    
+    
     int molecDiv = enviro->numOfMolecules / molecVec.size();
     int molecTypenum=molecVec.size();
     
@@ -395,20 +402,21 @@ ConfigScanner::ConfigScanner()
 
 bool ConfigScanner::readInConfig(string configpath)
 {
+	bool isSafeToContinue = true;
 	enviro = Environment();
 	numOfSteps = 0;
 
 	configPath = configpath;
-	if (configpath.empty())
+	if (configPath.empty())
 	{
 		std::cerr << "Configuration File path is empty" << std::endl;
 		return false;
 	}
 
-    ifstream configscanner(configpath.c_str());
+    ifstream configscanner(configPath.c_str());
     if (!configscanner.is_open())
     {
-        std::cerr << "Unable to open configuration file (" << configpath << ")" << std::endl;
+        std::cerr << "Unable to open configuration file (" << configPath << ")" << std::endl;
         return false;
     }
     else
@@ -429,7 +437,7 @@ bool ConfigScanner::readInConfig(string configpath)
                     }
 					else
 					{
-						std::cerr << "Error: Config File: Missing environment X value." << std::endl;
+						throwScanError("Error: Config File: Missing environment X value.");
 						return false;
 					}
                     break;
@@ -440,7 +448,7 @@ bool ConfigScanner::readInConfig(string configpath)
                     }
 					else
 					{
-						std::cerr << "Error: Config File: Missing environment Y value." << std::endl;
+						throwScanError("Error: Config File: Missing environment Y value.");
 						return false;
 					}
                     break;
@@ -518,16 +526,26 @@ bool ConfigScanner::readInConfig(string configpath)
 					}
 					else
 					{
-						throwScanError("Configuration file not well formed. Missing z-matrix path value.");
-						return false;
+						throwScanError("INFO: Configuration file not well formed. Missing z-matrix path value. Attempting to rely on prior state information...");
+						isSafeToContinue = false; //now that it is false, check if there is a state file
 					}
-                    break;
+					break;
                 case 18:
                     if(line.length() > 0)
 					{
                         statePath = line;
                     }
-                    break;
+                    else if (isSafeToContinue == false)
+					{
+						throwScanError("Configuration file not well formed. Missing value pointing to prior state file path. Cannot safely continue with program execution.");
+						return false; //preferable to simply exiting, as we want to give the program a chance to do...whatever?
+					}
+					else
+					{	
+						throwScanError("INFO: Value pointing to prior state file path not found in main config file. Environment setup defaulting to clean simulation.");
+						isSafeToContinue = true;
+					}
+					break;
                 case 20:
                     if(line.length() > 0){
                         stateOutputPath = line;
@@ -574,6 +592,11 @@ bool ConfigScanner::readInConfig(string configpath)
                     if(line.length() > 0){
 						enviro.randomseed=atoi(line.c_str());
                     }
+                    else
+					{
+						throwScanError("Configuration file not well formed. Missing random seed value.");
+						return false;
+					}
                 	break;
                 case 30:
                     if(line.length() > 0){
@@ -913,7 +936,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
 	oplsScanner = scanner;
 	startNewMolecule = false;
 
-	if (filename.empty())
+	if (fileName.empty())
 	{
 		std::cerr << "Error: readInZmatrix(): Given filename is NULL" << std::endl;
 		return false;
@@ -1156,6 +1179,7 @@ void ZmatrixScanner::handleZAdditions(string line, int cmdFormat)
     if(line.find("AUTO")!=string::npos)
     {
 	     //Do stuff for AUTO
+	     //but what is AUTO-related stuff?
     }
     else
     {
@@ -1481,6 +1505,7 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
 
     return vector<Molecule>(newMolecules,newMolecules+sizeof(newMolecules)/sizeof(Molecule) );
 }
+
 
 // ============================================================================
 // ========================= State Scanner ====================================
