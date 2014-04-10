@@ -1,8 +1,8 @@
 /*
-	Contains calculations for ParallelBox
-	Same functions as SerialCalcs with function qualifiers and CUDA code
+	Contains calculations for ParallelCalcs
+	Functions similar to those in SerialCalcs with function qualifiers and CUDA code
 
-	Author: Nathan Coleman
+	Author: Seth Denney
 */
 
 #include "ParallelCalcs.h"
@@ -12,8 +12,7 @@
 #include "Metropolis/Utilities/FileUtilities.h"
 #include "Metropolis/Box.h"
 
-#define NO 0
-#define YES 1
+#define NO -1
 
 #define MAX_WARP 32
 #define MOL_BLOCK 256
@@ -34,6 +33,10 @@ Box* ParallelCalcs::createBox(string configpath, long* steps)
 	return (Box*) box;
 }
 
+/**
+Calculates the system energy using
+consecutive calls to calcMolecularEnergyContribution.
+*/
 Real ParallelCalcs::calcSystemEnergy(Box *box)
 {
 	Real totalEnergy = 0;
@@ -41,12 +44,16 @@ Real ParallelCalcs::calcSystemEnergy(Box *box)
 	//for each molecule
 	for (int mol = 0; mol < box->moleculeCount; mol++)
 	{
-		totalEnergy += calcMolecularEnergyContribution(box, mol, mol);
+		totalEnergy += calcMolecularEnergyContribution(box, mol, mol + 1);
 	}
 
     return totalEnergy;
 }
 
+/**
+Calculates the inter-molecular energy contribution of
+a given molecule using a batch method.
+*/
 Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int startIdx)
 {
 	ParallelBox *pBox = (ParallelBox*) box;
@@ -59,6 +66,11 @@ Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int st
 	return calcBatchEnergy(pBox, createMolBatch(pBox, molIdx, startIdx), molIdx);
 }
 
+/**
+Creates a batch of molecule IDs within the cutoff
+distance of the chosen molecule, and returns the
+batch size.
+*/
 int ParallelCalcs::createMolBatch(ParallelBox *box, int currentMol, int startIdx)
 {
 	//initialize neighbor molecule slots to NO
@@ -74,7 +86,7 @@ int ParallelCalcs::createMolBatch(ParallelBox *box, int currentMol, int startIdx
 	
 	for (int i = startIdx; i < box->moleculeCount; i++)
 	{
-		if (box->nbrMolsH[i] == YES)
+		if (box->nbrMolsH[i] != NO)
 		{
 			box->molBatchH[batchSize++] = i;
 		}
@@ -83,6 +95,11 @@ int ParallelCalcs::createMolBatch(ParallelBox *box, int currentMol, int startIdx
 	return batchSize;
 }
 
+/**
+Given a box with a filled-in molecule batch, calculate
+the inter-molecular energy contribution of a given
+molecule, with every molecule specified in the batch.
+*/
 Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 {
 	if (numMols > 0)
@@ -104,6 +121,11 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 	}
 }
 
+/**
+Given a number of energies, uses a parallel energy
+aggregation algorithm to reset all energies in the
+device energies array, and returns the energy sum.
+*/
 Real ParallelCalcs::getEnergyFromDevice(ParallelBox *box, int validEnergies)
 {
 	Real totalEnergy = 0;
@@ -127,6 +149,14 @@ Real ParallelCalcs::getEnergyFromDevice(ParallelBox *box, int validEnergies)
 	return totalEnergy;
 }
 
+/**
+Each thread of this kernel checks the distance between
+the chosen molecule (constant across threads) and one
+other molecule. If within cutoff, store index of neighbor
+molecule in the 'inCutoff' array. This array will be
+compacted to form the molecule batch for the energy
+calculations.
+*/
 __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff)
 {
 	int otherMol = blockIdx.x * blockDim.x + threadIdx.x;
@@ -147,11 +177,16 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 
 		if (r2 < enviro->cutoff * enviro->cutoff)
 		{
-			inCutoff[otherMol] = YES;
+			inCutoff[otherMol] = otherMol;
 		}
 	}
 }
 
+/**
+Each thread in this kernel calculates the inter-atomic
+energy between one pair of atoms in the molecule pair
+(the chosen molecule, a neighbor molecule from the batch).
+*/
 __global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
 {
 	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x, segmentSize = maxMolSize * maxMolSize;
@@ -188,6 +223,14 @@ __global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, At
 	}
 }
 
+/**
+This kernel performs parallel energy aggregation,
+and also performs the service of resetting energies
+after they have been aggregated. For example, after
+any given aggregation pass, the sum of all elements
+in the energies array will not have changed, but there
+will be fewer, larger energies left in the array.
+*/
 __global__ void ParallelCalcs::aggregateEnergies(Real *energies, int energyCount, int interval, int batchSize)
 {
 	int idx = batchSize * interval * (blockIdx.x * blockDim.x + threadIdx.x), i;
@@ -202,6 +245,9 @@ __global__ void ParallelCalcs::aggregateEnergies(Real *energies, int energyCount
 	}
 }
 
+/**
+Calculates the LJ energy between two atoms.
+*/
 __device__ Real ParallelCalcs::calc_lj(AtomData *atoms, int atom1, int atom2, Real r2)
 {
     //store LJ constants locally
@@ -223,6 +269,9 @@ __device__ Real ParallelCalcs::calc_lj(AtomData *atoms, int atom1, int atom2, Re
     }
 }
 
+/**
+Calculates the charge energy between two atoms.
+*/
 __device__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
 {  
     if (r == 0.0)
@@ -237,17 +286,20 @@ __device__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
     }
 }
 
-__device__ Real ParallelCalcs::makePeriodic(Real x, Real box)
+/**
+.
+*/
+__device__ Real ParallelCalcs::makePeriodic(Real x, Real boxDim)
 {
     
-    while(x < -0.5 * box)
+    while(x < -0.5 * boxDim)
     {
-        x += box;
+        x += boxDim;
     }
 
-    while(x > 0.5 * box)
+    while(x > 0.5 * boxDim)
     {
-        x -= box;
+        x -= boxDim;
     }
 
     return x;

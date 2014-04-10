@@ -23,7 +23,7 @@ namespace ParallelCalcs
 	__global__ void aggregateEnergies(Real *energies, int numEnergies, int interval, int batchSize);
 	__device__ Real calc_lj(AtomData *atoms, int atom1, int atom2, Real r2);
 	__device__ Real calcCharge(Real charge1, Real charge2, Real r);
-	__device__ Real makePeriodic(Real x, Real box);
+	__device__ Real makePeriodic(Real x, Real boxDim);
 	__device__ Real calcBlending(Real d1, Real d2);
 	__device__ int getXFromIndex(int idx);
 	__device__ int getYFromIndex(int x, int idx);
