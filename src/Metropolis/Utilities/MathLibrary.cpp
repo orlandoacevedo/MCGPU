@@ -1,5 +1,3 @@
-//#include "MathLibrary.cuh"
-
 //using namespace std;
 
 /*!\file
@@ -33,7 +31,7 @@ void seed(int seed)
 
 Real randomReal(const Real start, const Real end)
 {
-	return (end-start) * (double(rand()) / RAND_MAX) + start;
+	return (end-start) * ((Real)rand() / RAND_MAX) + start;
 }
 
 Point createPoint(double X, double Y, double Z)

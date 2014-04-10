@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <time.h>
 #include "Simulation.h"
 #include "SimulationArgs.h"
 #include "Box.h"
@@ -59,11 +60,14 @@ void Simulation::run()
 	//declare variables common to both parallel and serial
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
-	double oldEnergy = 0, currentEnergy = 0;
-	double newEnergyCont, oldEnergyCont;
-	double  kT = kBoltz * enviro->temp;
+	Real oldEnergy = 0, currentEnergy = 0;
+	Real newEnergyCont, oldEnergyCont;
+	Real  kT = kBoltz * enviro->temp;
 	int accepted = 0;
 	int rejected = 0;
+
+	clock_t startTime, endTime;
+    startTime = clock();
 	
 	//calculate old energy
 	if (oldEnergy == 0)
@@ -117,7 +121,7 @@ void Simulation::run()
 		}
 		else
 		{
-			double x = exp(-(newEnergyCont - oldEnergyCont) / kT);
+			Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
 			
 			if(x >= randomReal(0.0, 1.0))
 			{
@@ -141,12 +145,17 @@ void Simulation::run()
 			box->rollback(changeIdx);
 		}
 	}
+
+	endTime = clock();
+    double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;
+
 	std::cout << "Step " << simSteps << ":\r\n--Current Energy: " << oldEnergy << std::endl;
 	
 	currentEnergy = oldEnergy;
 	
 	std::cout << std::endl << "Finished running " << simSteps << " steps" << std::endl;
 	std::cout << "Final Energy: " << currentEnergy << std::endl;
+	std::cout << "Run Time: " << diffTime << " seconds" << std::endl;
 	std::cout << "Accepted Moves: " << accepted << std::endl;
 	std::cout << "Rejected Moves: " << rejected << std::endl;
 	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;

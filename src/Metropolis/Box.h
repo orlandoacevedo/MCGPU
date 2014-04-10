@@ -55,7 +55,7 @@ class Box
 		virtual int rollback(int moleno);
 		int saveChangedMole(int moleno);
 		int copyMolecule(Molecule *mole_dst, Molecule *mole_src);
-	 	double wrapBox(double x, double box);
+	 	Real wrapBox(Real x, Real box);
 		
 };
 

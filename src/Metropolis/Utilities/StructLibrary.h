@@ -11,10 +11,7 @@
 
 #include <iostream>
 #include <string>
-#include "../DataTypes.h" //use this statement on OS X, maybe for individual testing
-//#include "Metropolis/DataTypes.h" //use this statement on Linux (?), or whenever the makefile is being applied
-			///this should be included to allow all DOUBLE *and* FLOAT value types to be dynamically determined; ...
-			/// ...redefine each DOUBLE *and* FLOAT using the new type defined in the DataTypes file.
+#include "Metropolis/DataTypes.h"
 
 
 //Forward declaration so that each can be used in methods below
@@ -56,7 +53,7 @@ struct Bond
     /*!
        The length of the bond.
     */
-    double distance;
+    Real distance;
     /*!
        Bool indicating if the bond can be varied.
     */
@@ -70,7 +67,7 @@ struct Bond
     	variable = true;
 	}
     	
-    Bond(int atom1, int atom2, double dist, bool varied)
+    Bond(int atom1, int atom2, Real dist, bool varied)
 	{
         atom1 = atom1;
         atom2 = atom2;
@@ -102,7 +99,7 @@ struct Angle
     /*!
     the angle between the atoms; used to be "value"
     */
-    double value; 
+    Real value; 
     
     /*!
     if the angle is variable
@@ -138,7 +135,7 @@ struct Dihedral
     /**
     the distance between the atoms; used to be "value"
     */
-    double value; 
+    Real value; 
     
     /**
     if the distance between atoms is variable
@@ -195,13 +192,13 @@ struct Hop
 */
 struct Fourier
 {
-    double vValues[4];
+    Real vValues[4];
 };
 
 struct Atom
 {
 	char name;
-	double x, y, z, sigma, epsilon, charge;
+	Real x, y, z, sigma, epsilon, charge;
 	unsigned long id;
 	Atom(){
 		name = '0';
@@ -214,7 +211,7 @@ struct Atom
 		id = 0;
 	}
 	
-	Atom(unsigned long inID, double inX, double inY, double inZ, double inSigma, double inEpsilon, double inCharge, char inName)
+	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma, Real inEpsilon, Real inCharge, char inName)
 	{
 		x = inX;
 		y = inY;
