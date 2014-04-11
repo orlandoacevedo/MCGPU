@@ -13,7 +13,7 @@ using namespace std;
 //Constructor & Destructor
 ParallelBox::ParallelBox(): Box()
 {
-	
+	//Is anything really needed here?
 }
 
 ParallelBox::~ParallelBox()
@@ -29,16 +29,17 @@ int ParallelBox::changeMolecule(int molIdx)
 	return molIdx;
 }
 
-int ParallelBox::rollback(int moleno)
+int ParallelBox::rollback(int molIdx)
 {
-	Box::rollback(moleno);
-	writeChangeToDevice(moleno);
+	Box::rollback(molIdx);
+	writeChangeToDevice(molIdx);
 	
-	return moleno;
+	return molIdx;
 }
 
 void ParallelBox::copyDataToDevice()
 {
+	//create AtomData on host, and fill atomic data arrays on device
 	atomsH = new AtomData(atoms, atomCount);
 	cudaMalloc(&xD, atomCount * sizeof(Real));
 	cudaMalloc(&yD, atomCount * sizeof(Real));
@@ -53,6 +54,7 @@ void ParallelBox::copyDataToDevice()
 	cudaMemcpy(epsilonD, atomsH->epsilon, atomCount * sizeof(Real), cudaMemcpyHostToDevice);
 	cudaMemcpy(chargeD, atomsH->charge, atomCount * sizeof(Real), cudaMemcpyHostToDevice);
 	
+	//create device AtomData struct with pointers to filled-in atomic data arrays
 	AtomData *tempAD = (AtomData*) malloc(sizeof(AtomData));
 	tempAD->x = xD;
 	tempAD->y = yD;
@@ -64,12 +66,14 @@ void ParallelBox::copyDataToDevice()
 	cudaMalloc(&atomsD, sizeof(AtomData));
 	cudaMemcpy(atomsD, tempAD, sizeof(AtomData), cudaMemcpyHostToDevice);
 	
+	//create MoleculeData on host, and fill molecular data arrays on device
 	moleculesH = new MoleculeData(molecules, moleculeCount);
 	cudaMalloc(&atomsIdxD, moleculeCount * sizeof(int));
 	cudaMalloc(&numOfAtomsD, moleculeCount * sizeof(int));
 	cudaMemcpy(atomsIdxD, moleculesH->atomsIdx, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(numOfAtomsD, moleculesH->numOfAtoms, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
 	
+	//create device MoleculeData struct with pointers to filled-in molecular data arrays
 	MoleculeData *tempMD = (MoleculeData*) malloc(sizeof(MoleculeData));
 	tempMD->atomsIdx = atomsIdxD;
 	tempMD->numOfAtoms = numOfAtomsD;
@@ -77,10 +81,9 @@ void ParallelBox::copyDataToDevice()
 	cudaMalloc(&moleculesD, sizeof(MoleculeData));
 	cudaMemcpy(moleculesD, tempMD, sizeof(MoleculeData), cudaMemcpyHostToDevice);
 	
+	//data structures for neighbor batch in energy calculation
 	nbrMolsH = (int*) malloc(moleculeCount * sizeof(int));
 	molBatchH = (int*) malloc(moleculeCount * sizeof(int));
-	
-	cudaMalloc(&(environmentD), sizeof(Environment));
 	cudaMalloc(&(nbrMolsD), moleculeCount * sizeof(int));
 	cudaMalloc(&(molBatchD), moleculeCount * sizeof(int));
 	
@@ -94,20 +97,22 @@ void ParallelBox::copyDataToDevice()
 		}
 	}
 	
+	//energies array on device has one segment for each molecule
+	//where each segment has the maximum number of
+	//possible interatomic energies for one pair of molecules
 	energyCount = moleculesH->moleculeCount * maxMolSize * maxMolSize;
 	cudaMalloc(&(energiesD), energyCount * sizeof(Real));
 	
-	//initialize energies
-	cudaMemset(energiesD, 0, sizeof(Real));
+	//initialize energies to 0
+	cudaMemset(energiesD, 0, energyCount * sizeof(Real));
 	
-	//copy data to device
+	//copy Environment to device
+	cudaMalloc(&(environmentD), sizeof(Environment));
 	cudaMemcpy(environmentD, environment, sizeof(Environment), cudaMemcpyHostToDevice);
 }
 
 void ParallelBox::writeChangeToDevice(int changeIdx)
 {
-	//This is temporary until we convert the host data structures as well.
-	//TEMP START
 	//update AtomData atomsH (MoleculeData will not change)
 	int startIdx = moleculesH->atomsIdx[changeIdx];
 	for (int i = 0; i < molecules[changeIdx].numOfAtoms; i++)
@@ -115,17 +120,12 @@ void ParallelBox::writeChangeToDevice(int changeIdx)
 		atomsH->x[startIdx + i] = molecules[changeIdx].atoms[i].x;
 		atomsH->y[startIdx + i] = molecules[changeIdx].atoms[i].y;
 		atomsH->z[startIdx + i] = molecules[changeIdx].atoms[i].z;
-		//atomsH->sigma[startIdx + i] = molecules[changeIdx].atoms[i].sigma;
-		//atomsH->epsilon[startIdx + i] = molecules[changeIdx].atoms[i].epsilon;
-		//atomsH->charge[startIdx + i] = molecules[changeIdx].atoms[i].charge;
+		//sigma, epsilon, and charge will not change, so there is no need to update those arrays
 	}
-	//TEMP FINISH
 
 	//copy changed atom data to device
 	cudaMemcpy(xD + startIdx, atomsH->x + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
 	cudaMemcpy(yD + startIdx, atomsH->y + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
 	cudaMemcpy(zD + startIdx, atomsH->z + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
-	//cudaMemcpy(sigmaD + startIdx, atomsH->sigma + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
-	//cudaMemcpy(epsilonD + startIdx, atomsH->epsilon + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
-	//cudaMemcpy(chargeD + startIdx, atomsH->charge + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
+	//sigma, epsilon, and charge will not change, so there is no need to update those arrays
 }

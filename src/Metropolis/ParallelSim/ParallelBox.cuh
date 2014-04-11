@@ -13,13 +13,17 @@
 #include "Metropolis/DataTypes.h"
 #include "Metropolis/Utilities/Coalesced_Structs.h"
 
-//DeviceMolecule struct needs to be moved to same location as other structs
 class ParallelBox : public Box
 {
 	private:
-		void writeChangeToDevice(int changeIdx);
 		Real *xD, *yD, *zD, *sigmaD, *epsilonD, *chargeD;
 		int *atomsIdxD, *numOfAtomsD;
+		
+		/// Copies a specified molecule and all of its atoms
+		///   over to the device. Called after changing a
+		///   molecule in the simulation.
+		/// @param changeIdx The index of the changed molecule.
+		void writeChangeToDevice(int changeIdx);
 
 	public:
 		AtomData *atomsH, *atomsD;
@@ -27,10 +31,39 @@ class ParallelBox : public Box
 		MoleculeData *moleculesH, *moleculesD;
 		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
 		Real *energiesD;
+		
 		ParallelBox();
 		~ParallelBox();
+		
+		/// Changes a specified molecule in a random way.
+		///   This method overrides the virtual method of the
+		///   same name in the parent class, Box, to add a
+		///   call to writeChangeToDevice() after the change.
+		/// @param molIdx The index of the molecule to be
+		///   changed.
+		/// @return Returns the index of the changed molecule.
 		virtual int changeMolecule(int molIdx);
-		virtual int rollback(int moleno);
+		
+		/// Rolls back the previous changes to the specified
+		///   molecule. This method overrides the virtual method
+		///   of the same name in the parent class, Box, to add a
+		///   call to writeChangeToDevice() after the rollback.
+		/// @param molIdx The index of the molecule that was
+		///   changed.
+		/// @return Returns the index of the changed molecule.
+		/// @note This method should ideally not take in any
+		///   parameters, as only one molecule change is pending
+		///   at any time. Box should store the index of the
+		///   changed molecule.
+		virtual int rollback(int molIdx);
+		
+		/// Allocates and copies over all Box and ParallelBox data
+		///   to the device as needed for the simulation.
+		/// @note This functionality logically belongs in the
+		///   constructor for ParallelBox, but, at the time of
+		///   instantiation, the Box does not yet have all of the
+		///   necessary data to copy over, and so it is a separate
+		///   method for now.
 		void copyDataToDevice();
 };
 
