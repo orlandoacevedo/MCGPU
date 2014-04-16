@@ -28,12 +28,9 @@ bool loadBoxData(string configpath, Box* box, long* steps)
 		return false;
 	}
 
-
-	
     *steps = config_scanner.getSteps();
 	box->environment = new Environment(config_scanner.getEnviro());
-	
-	
+
 	OplsScanner opls_scanner = OplsScanner();
 	if (!opls_scanner.readInOpls(config_scanner.getOplsusaparPath()))
 	{
@@ -41,22 +38,15 @@ bool loadBoxData(string configpath, Box* box, long* steps)
 		return false;
 	}
 
-	
 	ZmatrixScanner zmatrix_scanner = ZmatrixScanner();
-	if (config_scanner.doSetupFromZMatrixFile())
+	if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
 	{
-	//do the pre-setup from the zmatrix file, which means we need to do 
-		if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
-		{
-			std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;
-			return false;
-		}
+		std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;
+		return false;
 	}
-	
-	StateScanner statefile_scanner = StateScanner(config_scanner.getStatePath());
 
 	// Fill the box with config stuff.
-	if (!buildBoxData(&zmatrix_scanner, &statefile_scanner, box, config_scanner.doSetupFromStateFile()))
+	if (!buildBoxData(&zmatrix_scanner, box, false))
 	{
 		std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
 		return false;
@@ -72,19 +62,17 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, StateScanner* stateScan, Box* box
    int atomCount = 0;
 	
 	Environment* enviro;
-	 vector<Molecule> molecVec;
 	if (usePrevState)
 	{
-	 	enviro = stateScan -> readInEnvironment();
-		molecVec = stateScan -> readInMolecules();
+	
 	}
 	else if (!usePrevState)
 	{
 		enviro = box-> environment;
-		molecVec = zMatrixScan->buildMolecule(atomCount);
 	}
-   
+   Environment* enviro = box->environment;
 	
+   vector<Molecule> molecVec = zMatrixScan->buildMolecule(atomCount);
    int molecMod = enviro->numOfMolecules % molecVec.size();
    if (molecMod != 0)
    {
@@ -419,14 +407,11 @@ ConfigScanner::ConfigScanner()
 {
 	enviro = Environment();
 	numOfSteps = 0;
-	useStatefileSetup = false;
-	useZMatrixSetup = false;
 }
-
 
 bool ConfigScanner::readInConfig(string configpath)
 {
-	isSafeToContinue = true;
+	bool isSafeToContinue = true;
 	enviro = Environment();
 	numOfSteps = 0;
 
@@ -547,36 +532,26 @@ bool ConfigScanner::readInConfig(string configpath)
 					if(line.length() > 0)
 					{
 						zmatrixPath = line;
-						useZMatrixSetup = true;
-						useStatefileSetup = true;
 					}
 					else
 					{
 						throwScanError("INFO: Configuration file not well formed. Missing z-matrix path value. Attempting to rely on prior state information...");
 						isSafeToContinue = false; //now that it is false, check if there is a state file
-						useZMatrixSetup = false;
-						useStatefileSetup = true;
 					}
 					break;
                 case 18:
                     if(line.length() > 0)
 					{
                         statePath = line;
-                        useZMatrixSetup = false; //we will go ahead and use the statefile, since the path was provided
-                        useStatefileSetup = true;
                     }
                     else if (isSafeToContinue == false)
 					{
 						throwScanError("Configuration file not well formed. Missing value pointing to prior state file path. Cannot safely continue with program execution.");
-						useStatefileSetup = false; //we can't even hope to find the state file, so don't use it
-						useZMatrixSetup = false;
 						return false; //preferable to simply exiting, as we want to give the program a chance to do...whatever?
 					}
 					else
 					{	
 						throwScanError("INFO: Value pointing to prior state file path not found in main config file. Environment setup defaulting to clean simulation.");
-						useZMatrixSetup = true; //revert to using the Zmatrix file for all setup
-						useStatefileSetup = false;
 						isSafeToContinue = true;
 					}
 					break;
@@ -1545,9 +1520,9 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
 // ========================= State Scanner ====================================
 // ============================================================================
 
-StateScanner::StateScanner(string filename)
+StateScanner::StateScanner()
 {
-	universal_filename = filename;
+
 }
 
 StateScanner::~StateScanner()
@@ -1555,10 +1530,8 @@ StateScanner::~StateScanner()
 
 }
 
-Environment StateScanner::readInEnvironment()
+Environment StateScanner::readInEnvironment(string filename)
 {
-	std::filename = universal_filename;
-	
     ifstream inFile;
     inFile.open(filename.c_str());
     string line;
@@ -1573,10 +1546,8 @@ Environment StateScanner::readInEnvironment()
     return environment;
 }
 
-vector<Molecule> StateScanner::readInMolecules()
+vector<Molecule> StateScanner::readInMolecules(string filename)
 {
-	std::filename = universal_filename;
-	
     vector<Molecule> molecules;
     ifstream inFile(filename.c_str());
     string line;

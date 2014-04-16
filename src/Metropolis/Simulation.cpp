@@ -65,6 +65,8 @@ void Simulation::run()
 	Real  kT = kBoltz * enviro->temp;
 	int accepted = 0;
 	int rejected = 0;
+	//also, an object required to output a state file at the end of the simulation
+	StateScanner statescan = StateScanner();
 
 	clock_t startTime, endTime;
     startTime = clock();
@@ -84,11 +86,37 @@ void Simulation::run()
 	
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
+	//determine where we want the state file to go
+	std::string stateOutputPath = "";
+	if (args.statePath.length > 0)
+	{
+		stateOutputPath.append(args.statePath);
+	}
+	
+	if (args.simulationName.length > 0)
+	{
+		stateOutputPath.append(args.simulationName);
+	}
+	else
+	{
+		stateOutputPath.append("untitled_run_S");
+	}
+	
+	std::string stateOutputPathFull = "";
 	for(int move = 0; move < simSteps; move++)
 	{
 		if (args.statusInterval > 0 && move % args.statusInterval == 0)
 		{
-			std::cout << "Step " << move << ":\r\n--Current Energy: " << oldEnergy << std::endl;
+			std::cout << "Step " << move << ":\r\n--Current Energy: " << oldEnergy << std::endl;	
+		}
+		
+		if (args.statusInterval > 0 && move % args.statusInterval == 0)
+		{
+			stateOutputPathFull = stateOutputPath;
+			stateOutputPathFull.append(std::to_string(move)); //add the step number to the name of the output file
+			stateOutputPathFull.append(".state");
+			std::cout << "Saving state file " << stateOutputPathFull << std::endl;
+			statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), stateOutputPathFull);	
 		}
 		
 		int changeIdx = box->chooseMolecule();
