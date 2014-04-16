@@ -1,4 +1,4 @@
-#######################################
+##############################################################################
 # MCGPU Makefile
 # Version 2.0
 # 
@@ -16,6 +16,39 @@
 #				 store the generated output files.
 # make clean   : Deletes the object and bin directories from the project
 #			     folder, removing all generated files.
+#
+##############################
+# Makefile Defined Variables #
+##############################
+#
+# BUILD=debug    : Builds the program in debug mode
+# BUILD=release  : Builds the program in release mode
+#
+# PRECISION=single : All floating point numbers use single-precision
+# PRECISION=double : All floating point numbers use double-precision
+#
+# CUDA_PATH=path/to/dir  : The relative path to the cuda install directory
+#						   on the current machine
+#
+# CUDA_INCLUDE_PATH=path/to/dir  : The relative path to the cuda header files
+#								   installed on the current machine
+#
+# CUDA_BIN_PATH=path/to/dir  : The relative path to the cuda bin directory
+#							   installed on the current machine
+#
+# CUDA_LIB_PATH=path/to/dir  : The relative path to the cuda library directory
+#							   installed on the current machine. NOTE: If 64
+#							   bit libraries are installed, this field will
+#							   need to be updated to point to the 64 bit libs
+# SHELL=path/to/file  : The relative path to the shell executable program on
+#						the current machine. This shell program will allow the
+#						makefile to execute system commands
+#
+##############################################################################
+
+#########################
+# Environment Variables #
+#########################
 
 # The location of the shell script program that will execute scripts from
 # the makefile. This is specified as per GNU Makefile conventions.
