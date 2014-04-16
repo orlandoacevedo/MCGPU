@@ -134,6 +134,10 @@ namespace metrosim
 	/// Outputs the help documentation to the standard output stream and
 	/// displays how to use the application.
 	void printHelpScreen();
+
+	/// Outputs the current program version and build information to the
+	/// standard output stream.
+	void printVersionInformation();
 }
 
 #endif

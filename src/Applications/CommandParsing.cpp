@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <errno.h>
+#include <iostream>
+#include <string>
 
 #include "CommandParsing.h"
 #include "Metropolis/SimulationArgs.h"
@@ -262,5 +264,21 @@ namespace metrosim
 	{
 		const char* usage = "\nUsage  : %s: <config_file> [-i interval] [-sp] [-fd] [-hQ]\n\n";
 		fprintf(stdout, usage, APP_NAME);
+	}
+
+	void printVersionInformation()
+	{
+		std::cout << APP_NAME << ": MCGPU Monte Carlo Simulator" << std::endl;
+		#ifdef DEBUG
+		std::cout << "Current Build: Debug" << std::endl;
+		#else
+		std::cout << "Current Build: Release" << std::endl;
+		#endif
+		#ifdef DOUBLE_PRECISION
+		std::cout << "Floating-point Precision: Double" << std::endl;
+		#else
+		std::cout << "Floating-point Precision: Single" << std::endl;
+		#endif
+		std::cout << "Minimum Required CUDA Version: " << MIN_MAJOR_VER << "." << MIN_MINOR_VER << std::endl;
 	}
 }

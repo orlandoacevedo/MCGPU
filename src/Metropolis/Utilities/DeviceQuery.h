@@ -10,8 +10,8 @@
 #define DEVICE_QUERY_H
 
 #define DEVICE_ANY -1
-#define MIN_MAJOR_VER 3
-#define MIN_MINOR_VER 5
+#define MIN_MAJOR_VER 2
+#define MIN_MINOR_VER 1
 
 struct DeviceContext
 {
