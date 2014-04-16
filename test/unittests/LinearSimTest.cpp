@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
-#include "LinearMetropolis/linearSim.h"
 
-TEST(LinearSimTest,CalcBlendingSanding)
+TEST(LinearSimTest,CalcBlending)
 {
-	ASSERT_EQ(0,0) << "Sanity check for CalcBlending";
+	bool world = true;
+	EXPECT_TRUE(world);
 }

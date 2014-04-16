@@ -58,9 +58,3 @@ int metrosim::run(int argc, char** argv)
 
 	exit(EXIT_SUCCESS);
 }
-
-int main(int argc, char** argv)
-{
-	metrosim::run(argc, argv);
-	
-}
