@@ -1,7 +1,11 @@
 bin/
 obj/
-*.P
+*.dep
 *.o
+gmon.out
+*.log
+
+
 src/Metropolis/Utilities/utilMk
 
 src/Metropolis/Utilities/utilMkI
