@@ -27,8 +27,14 @@
 # PRECISION=single : All floating point numbers use single-precision
 # PRECISION=double : All floating point numbers use double-precision
 #
+# LOCAL_INSTALL=1  : Sets the default directory for the CUDA installation
+#					 path to '/usr/local/cuda'
+# LOCAL_INSTALL=0  : Sets the default directory for the CUDA installation
+#					 path to 'opt/asn/apps/cuda_5.5'. This is the directory 
+#					 used by the ASC machines that we test on.
+#
 # CUDA_PATH=path/to/dir  : The relative path to the cuda install directory
-#						   on the current machine
+#						   on the current machine.
 #
 # CUDA_INCLUDE_PATH=path/to/dir  : The relative path to the cuda header files
 #								   installed on the current machine
@@ -110,7 +116,11 @@ UnitTestName := metrotest
 #
 # This should only be used if the cuda installation is not in the default
 # directory.
-CUDA_PATH ?= /opt/asn/apps/cuda_5.5
+ifeq ($(LOCAL_INSTALL),1)
+	CUDA_PATH ?= /usr/local/cuda
+else
+	CUDA_PATH ?= /opt/asn/apps/cuda_5.5
+endif
 
 # The path to the cuda include directory where the CUDA header files are found
 CUDA_INCLUDE_PATH ?= $(CUDA_PATH)/include
@@ -125,7 +135,11 @@ CUDA_BIN_PATH ?= $(CUDA_PATH)/bin
 #
 # NOTE: If the 64-bit cuda installation was used, this value may have to be
 # set to point to the 'lib64' directory instead of the 'lib' directory.
-CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
+ifeq ($(LOCAL_INSTALL),1)
+	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib
+else
+	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
+endif
 
 ##############################
 # Compiler Specific Settings #
