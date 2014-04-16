@@ -110,7 +110,7 @@ UnitTestName := metrotest
 #
 # This should only be used if the cuda installation is not in the default
 # directory.
-CUDA_PATH ?= /usr/local/cuda
+CUDA_PATH ?= /opt/asn/apps/cuda_5.5
 
 # The path to the cuda include directory where the CUDA header files are found
 CUDA_INCLUDE_PATH ?= $(CUDA_PATH)/include
@@ -125,7 +125,7 @@ CUDA_BIN_PATH ?= $(CUDA_PATH)/bin
 #
 # NOTE: If the 64-bit cuda installation was used, this value may have to be
 # set to point to the 'lib64' directory instead of the 'lib' directory.
-CUDA_LIB_PATH ?= $(CUDA_PATH)/lib
+CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
 
 ##############################
 # Compiler Specific Settings #
