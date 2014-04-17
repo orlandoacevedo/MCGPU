@@ -61,15 +61,6 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, StateScanner* stateScan, Box* box
    int moleculeIndex = 0;
    int atomCount = 0;
 	
-	Environment* enviro;
-	if (usePrevState)
-	{
-	
-	}
-	else if (!usePrevState)
-	{
-		enviro = box-> environment;
-	}
    Environment* enviro = box->environment;
 	
    vector<Molecule> molecVec = zMatrixScan->buildMolecule(atomCount);

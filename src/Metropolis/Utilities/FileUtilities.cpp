@@ -56,7 +56,7 @@ bool loadBoxData(string configpath, Box* box, long* steps)
 	StateScanner statefile_scanner = StateScanner(config_scanner.getStatePath());
 
 	// Fill the box with config stuff.
-	if (!buildBoxData(&zmatrix_scanner, &statefile_scanner, box, config_scanner.doSetupFromStateFile()))
+	if (!buildBoxData(&zmatrix_scanner, &statefile_scanner, box, config_scanner.doSetupFromStateFile()), config_scanner.doSetupFromZMatrixFile())
 	{
 		std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
 		return false;
@@ -65,7 +65,7 @@ bool loadBoxData(string configpath, Box* box, long* steps)
 	return true;
 }
 
-bool buildBoxData(ZmatrixScanner* zMatrixScan, StateScanner* stateScan, Box* box, bool usePrevState)
+bool buildBoxData(ZmatrixScanner* zMatrixScan, StateScanner* stateScan, Box* box, bool usePrevState, bool useZMatrix)
 {
 	//Convert molecule vectors into an array
    int moleculeIndex = 0;
@@ -73,17 +73,35 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, StateScanner* stateScan, Box* box
 	
 	Environment* enviro;
 	 vector<Molecule> molecVec;
-	if (usePrevState)
+	if (usePrevState) //try to use the state file first
 	{
-	 	enviro = stateScan -> readInEnvironment();
+	 	enviro = &stateScan -> readInEnvironment();
 		molecVec = stateScan -> readInMolecules();
 	}
-	else if (!usePrevState)
+	else if (!usePrevState) //then try to do the zmatrix file
 	{
 		enviro = box-> environment;
 		molecVec = zMatrixScan->buildMolecule(atomCount);
 	}
    
+	if (molecVec.size() < 1) //if the vector of molecules has no contents...
+	{
+		if (usePrevState and useZMatrix) //...and we tried the state file, we now try the zmatrix file, if possible.
+		{
+			enviro = box-> environment;
+			molecVec = zMatrixScan->buildMolecule(atomCount);
+			if(molecVec.size() < 1)
+			{
+				std::cerr << "Error: buildBoxData(): Could not load molecule data, even after fallback to zmatrix file." << std::endl;
+			}
+		}
+		else //if we couldn't fall back to the state file, or the state file is no viable option...
+		{
+			std::cerr << "Error: buildBoxData(): Could not load molecule data." << std::endl;
+			return false
+		}
+	}
+	
 	
    int molecMod = enviro->numOfMolecules % molecVec.size();
    if (molecMod != 0)
@@ -1557,7 +1575,7 @@ StateScanner::~StateScanner()
 
 Environment StateScanner::readInEnvironment()
 {
-	std::filename = universal_filename;
+	std::string filename = universal_filename;
 	
     ifstream inFile;
     inFile.open(filename.c_str());
@@ -1575,7 +1593,7 @@ Environment StateScanner::readInEnvironment()
 
 vector<Molecule> StateScanner::readInMolecules()
 {
-	std::filename = universal_filename;
+	std::string filename = universal_filename;
 	
     vector<Molecule> molecules;
     ifstream inFile(filename.c_str());
