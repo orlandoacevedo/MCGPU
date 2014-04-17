@@ -126,17 +126,17 @@ class ConfigScanner
         /**
           @return - returns the random seed used in the simulation.
         */        
-        unsigned int getrandomseed() {return enviro.randomseed;};
+        unsigned int getrandomseed() {return enviro.randomseed;}
         
         /**
         	@return - returns whether or not we should use the state file for setup, with preference over the zmatrix file
         */
-        bool doSetupFromStateFile() {return useStatefileSetup;};
+        bool doSetupFromStateFile() {return useStatefileSetup;}
 
 		/**
 			@return - return whether or not we should use the ZMatrix file for setup, in the event the state file isn't found
 		*/
-		bool doSetupFromZMatrixFile() {return useZMatrixSetup;};
+		bool doSetupFromZMatrixFile() {return useZMatrixSetup;}
         
 
 };
