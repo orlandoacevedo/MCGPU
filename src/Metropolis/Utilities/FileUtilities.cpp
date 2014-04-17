@@ -45,7 +45,7 @@ bool loadBoxData(string configpath, Box* box, long* steps)
 	ZmatrixScanner zmatrix_scanner = ZmatrixScanner();
 	if (config_scanner.doSetupFromZMatrixFile())
 	{
-	//do the pre-setup from the zmatrix file, which means we need to do 
+	//do the pre-setup from the zmatrix file. Note that this is only one of the steps.
 		if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
 		{
 			std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;

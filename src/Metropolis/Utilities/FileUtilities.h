@@ -131,12 +131,12 @@ class ConfigScanner
         /**
         	@return - returns whether or not we should use the state file for setup, with preference over the zmatrix file
         */
-        bool ConfigScanner::doSetupFromStateFile() {return useStatefileSetup;};
+        bool doSetupFromStateFile() {return useStatefileSetup;};
 
 		/**
 			@return - return whether or not we should use the ZMatrix file for setup, in the event the state file isn't found
 		*/
-		bool ConfigScanner:doSetupFromZMatrixFile() {return useZMatrixSetup;};
+		bool doSetupFromZMatrixFile() {return useZMatrixSetup;};
         
 
 };
