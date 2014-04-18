@@ -30,6 +30,7 @@ class Simulation
 		long simSteps;
 
 		void saveState(const std::string& simName, int simStep);
+		const std::string currentDateTime();
 };
 
 #endif

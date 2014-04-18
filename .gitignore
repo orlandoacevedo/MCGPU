@@ -5,6 +5,7 @@ obj/
 gmon.out
 *.log
 *.state
+*.results
 
 OutputLog
 
