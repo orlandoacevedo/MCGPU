@@ -7,18 +7,27 @@
 #include <math.h>
 #include <string>
 #include "Metropolis/DataTypes.h"
+#include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/FileUtilities.h"
 #include "SerialCalcs.h"
 
 using namespace std;
 
-Box* SerialCalcs::createBox(std::string configpath, long* steps)
+Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long* steps)
 {
 	SerialBox* box = new SerialBox();
-	if (!loadBoxData(configpath, box, steps))
+	if (!loadBoxData(inputPath, inputType, box, steps))
 	{
-		std::cerr << "Error: Cannot create SerialBox from config: " << configpath << std::endl;
-		return NULL;
+		if (inputType != InputFile::Unknown)
+		{
+			std::cerr << "Error: Could not build from file: " << inputPath << std::endl;
+			return NULL;
+		}
+		else
+		{
+			std::cerr << "Error: Can not build environment with unknown file: " << inputPath << std::endl;
+			return NULL;
+		}
 	}
 	return (Box*) box;
 } 

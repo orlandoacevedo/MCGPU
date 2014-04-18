@@ -91,19 +91,29 @@ int Box::saveChangedMole(int moleno)
 	Molecule *mole_src = &molecules[moleno];
 
 	//free memory of changedMol before allocate memory
-	FREE(changedMol.atoms);
-	FREE(changedMol.bonds);
-	FREE(changedMol.angles);
-	FREE(changedMol.dihedrals);
-	FREE(changedMol.hops);
+	delete[] changedMol.atoms;
+	delete[] changedMol.bonds;
+	delete[] changedMol.angles;
+	delete[] changedMol.dihedrals;
+	delete[] changedMol.hops;
+	// FREE(changedMol.atoms);
+	// FREE(changedMol.bonds);
+	// FREE(changedMol.angles);
+	// FREE(changedMol.dihedrals);
+	// FREE(changedMol.hops);
 
 	memcpy(&changedMol,mole_src,sizeof(changedMol));
 
-	changedMol.atoms = (Atom *)malloc(sizeof(Atom) * mole_src->numOfAtoms);
-	changedMol.bonds = (Bond *)malloc(sizeof(Bond) * mole_src->numOfBonds);
-	changedMol.angles = (Angle *)malloc(sizeof(Angle) * mole_src->numOfAngles);
-	changedMol.dihedrals = (Dihedral *)malloc(sizeof(Dihedral) * mole_src->numOfDihedrals);
-	changedMol.hops = (Hop *)malloc(sizeof(Hop) * mole_src->numOfHops);
+	changedMol.atoms = new Atom[mole_src->numOfAtoms];
+	changedMol.bonds = new Bond[mole_src->numOfBonds];
+	changedMol.angles = new Angle[mole_src->numOfAngles];
+	changedMol.dihedrals = new Dihedral[mole_src->numOfDihedrals];
+	changedMol.hops = new Hop[mole_src->numOfHops];
+	// changedMol.atoms = (Atom *)malloc(sizeof(Atom) * mole_src->numOfAtoms);
+	// changedMol.bonds = (Bond *)malloc(sizeof(Bond) * mole_src->numOfBonds);
+	// changedMol.angles = (Angle *)malloc(sizeof(Angle) * mole_src->numOfAngles);
+	// changedMol.dihedrals = (Dihedral *)malloc(sizeof(Dihedral) * mole_src->numOfDihedrals);
+	// changedMol.hops = (Hop *)malloc(sizeof(Hop) * mole_src->numOfHops);
 
 	copyMolecule(&changedMol,mole_src);
 

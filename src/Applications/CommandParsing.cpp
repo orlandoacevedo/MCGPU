@@ -7,20 +7,21 @@
 /// @date Created 2/23/2014
 /// @date Updated 2/26/2014 -> further shoehorning done by Albert Wallace on 27 February
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+
 #include <getopt.h>
-#include <errno.h>
 #include <iostream>
 #include <string>
 
 #include "CommandParsing.h"
 #include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/DeviceQuery.h"
+#include "Metropolis/Utilities/Parsing.h"
 
-namespace metrosim
-{
+using std::string;
+
+#define LONG_VERSION 300
+#define LONG_NAME 400
+
 
 	//bool metrosim::getCommands(int argc, char** argv, SimulationArgs* args) //RBAl
 	bool getCommands(int argc, char** argv, SimulationArgs* args)
@@ -49,18 +50,22 @@ namespace metrosim
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:spfdhQ";
+		const char* short_options = ":i:I:n:sphQ";
 
 		// The long options recognized by the program
-		struct option long_options[] = {
+		struct option long_options[] = 
+		{
 			{"status_interval", 	required_argument, 	0, 	'i'},
+			{"state_interval",		required_argument,	0,	'I'},
+			{"steps",				required_argument,	0,	'n'},
 			{"serial", 				no_argument, 		0, 	's'},
 			{"parallel", 			no_argument, 		0, 	'p'},
-			{"single_precision",  	no_argument, 		0, 	'f'},
-			{"double_precision", 	no_argument, 		0, 	'd'},
 			{"help", 				no_argument, 		0, 	'h'},
 			{"list_devices",		no_argument,		0,	'Q'},
-			{0, 0, 0, 0} };
+			{"version",				no_argument,		0,	LONG_VERSION},
+			{"name",				required_argument,	0,	LONG_NAME},
+			{0, 0, 0, 0} 
+		};
 
 		// Iterate over all command-line arguments and match any option entries.
 		while ((getopt_ret = getopt_long(argc, argv, short_options, long_options, &long_index)) != -1)
@@ -68,15 +73,61 @@ namespace metrosim
  			// Switch the returned option value
 			switch (getopt_ret)
 			{
-				case 0:		/* long option */
+				case 0:		/* long options */
 					if (long_options[long_index].flag != 0)
 						break;
-					/* Handle long options that are not automatically handled */
+					/* handle other long options without return values */
+					break;
+				case LONG_VERSION:
+					printVersionInformation();
+					return false;
+					break;
+				case LONG_NAME:
+					if (!fromString<string>(optarg, params->simulationName))
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --name: Invalid simulation name" << std::endl;
+						return false;
+					}
 					break;
 				case 'i':	/* status interval */
 					params->statusFlag = true;
-					if (!parseStatusInterval(&(params->statusInterval), optarg))
+					if (!fromString<int>(optarg, params->statusInterval))
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --status_interval (-i): Invalid status interval" << std::endl;
 						return false;
+					}
+					if (params->statusInterval < 0)
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --status_interval (-i): Status Interval must be non-negative" << std::endl;
+						return false;
+					}
+					break;
+				case 'I':	/* state interval */
+					params->stateFlag = true;
+					if (!fromString<int>(optarg, params->stateInterval))
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --state_interval (-I): Invalid state interval" << std::endl;
+						return false;
+					}
+					break;
+				case 'n':	/* simulation steps */
+					params->stepFlag = true;
+					if (!fromString<int>(optarg, params->stepCount))
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --steps (-n): Invalid step count" << std::endl;
+						return false;
+					}
+					if (params->stepCount <= 0)
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --steps (-n): Step count must be greater than zero" << std::endl;
+						return false;
+					}
 					break;
 				case 's':	/* run serial */
 					params->serialFlag = true;
@@ -84,46 +135,44 @@ namespace metrosim
 				case 'p':	/* run parallel */
 					params->parallelFlag = true;
 					break;
-				case 'f':	/* use floats */
-					params->floatFlag = true;
-					break;
-				case 'd':	/* use doubles */
-					params->doubleFlag = true;
-					break;
 				case 'h':	/* print help */
-					params->helpFlag = true;
+					printHelpScreen();
+					return false;
 					break;
 				case 'Q':	/* list all devices */
-					params->listDevicesFlag = true;
+					printDeviceInformation();
+					return false;
 					break;
 				case ':':	/* missing argument */
 					if (sizeof(argv[optind-1]) > 2 && argv[optind-1][0] == '-' && argv[optind-1][1] == '-')
 					{
-						fprintf(stderr, "%s: A required argument is missing for %s\n", APP_NAME, argv[optind-1]);
+						std::cerr << APP_NAME << ": A required argument is missing for ";
+						std::cerr << argv[optind-1] << std::endl;
 					}
 					else
 					{
-						fprintf(stderr, "%s: A required argument is missing for -%c\n", APP_NAME, optopt);
+						std::cerr << APP_NAME << ": A required argument is missing for ";
+						std::cerr << "-" << (char) optopt << std::endl;
 					}
 					return false;
 					break;
 				case '?':	/* unknown option */
 					if (optopt)
 					{
-						fprintf(stderr, "%s: Unknown option -%c\n", APP_NAME, optopt);
+						std::cerr << APP_NAME << ": Unknown option -" << (char) optopt << std::endl;
 					}
 					else if ((optind - 1) < argc)
 					{
-						fprintf(stderr, "%s: Unknown option %s\n", APP_NAME, argv[optind-1]);
+						std::cerr << APP_NAME << ": Unknown option " << argv[optind-1] << std::endl;
 					}
 					else
 					{
-						fprintf(stderr, "%s: Unknown option not recognized\n", APP_NAME);
+						std::cerr << APP_NAME << ": Unknown option not recognized" << std::endl;
 					}
 					return false;
 					break;
 				default:	/* unknown error */
-					fprintf(stderr, "%s: Fatal error occurred while parsing command-line\n", APP_NAME);
+					std::cerr << APP_NAME << ": Fatal error occurred while parsing commnd-line" << std::endl;
 					return false;
 					break;
 			}
@@ -139,45 +188,27 @@ namespace metrosim
 	//bool metrosim::parseCommandLine(CommandParameters* params, SimulationArgs* args) //RBAl
 	bool parseCommandLine(CommandParameters* params, SimulationArgs* args)
 	{
-		if (params->helpFlag)		/* print help screen and exit */
-		{
-			printHelpScreen();
-			return false;
-		}
-
-		if (params->listDevicesFlag)	/* query device information and print */
-		{
-			printDeviceInformation();
-			return false;
-		}
-
 		if (params->argCount < 1)
 		{
-			fprintf(stderr, "%s: input config file not specified.\n", APP_NAME);
+			std::cerr << APP_NAME << ": Input file not specified" << std::endl;
 			return false;
 		}
 		
 		if (params->argCount > 1)
 		{
-			fprintf(stderr, "%s: too many input files specified.\n", APP_NAME);
+			std::cerr << APP_NAME << ": Too many input files specified" << std::endl;
 			return false;
 		}
 
 		if (params->argList == NULL)
 		{
-			fprintf(stderr, "%s: must specify a valid config file path.\n", APP_NAME);
+			std::cerr << APP_NAME << ": Must specify a valid file path" << std::endl;
 			return false;
 		}
 
 		if (params->serialFlag && params->parallelFlag) /* conflicting flags */
 		{
-			fprintf(stderr, "%s: cannot specify both GPU and CPU modes.\n", APP_NAME);
-			return false;
-		}
-
-		if (params->floatFlag && params->doubleFlag)	/* conflicting flags */
-		{
-			fprintf(stderr, "%s: cannot specify both float and double precisions.\n", APP_NAME);
+			std::cerr << APP_NAME << ": Cannot specify both GPU and CPU modes" << std::endl;
 			return false;
 		}
 
@@ -193,77 +224,53 @@ namespace metrosim
 			args->simulationMode = SimulationMode::Serial;
 		}
 
-		if (params->floatFlag)		/* float flag set */
+		if (!parseInputFile(params->argList[0], args->filePath, args->fileType))
 		{
-			args->precisionMode = PrecisionMode::Single;
-		}
-		else if (params->doubleFlag) /* double flag set */
-		{
-			args->precisionMode = PrecisionMode::Double;
-		}
-
-		if (!parseConfigPath(&(args->configPath), params->argList[0]))
-		{
+			std::cerr << APP_NAME << ": Must specify a config or state file" << std::endl;
 			return false;
 		}
 
 		args->statusInterval = params->statusInterval;
+		args->stateInterval = params->stateInterval;
+		args->stepCount = params->stepCount;
+		args->simulationName = params->simulationName;
 
 		return true;
 	}
 
-	//bool metrosim::parseConfigPath(char** dest, char* arg)  //RBAl
-	bool parseConfigPath(char** dest, char* arg)
+	bool parseInputFile(char* filename, string& name, InputFileType& type)
 	{
-		if (arg == NULL || arg[0] == '\0')
+		if (!filename)
+			return false;
+		if (!fromString<string>(filename, name))
+			return false;
+		if (name.empty())
 		{
-			fprintf(stderr, "%s: config filepath must be a valid filename.\n", APP_NAME);
+			std::cerr << APP_NAME << ": Input file must be a valid path" << std::endl;
 			return false;
 		}
 
-		*dest = arg;
-		return true;
-	}
-
-	//bool metrosim::parseStatusInterval(int* dest, char* arg) //RBAl
-	bool parseStatusInterval(int* dest, char* arg)
-	{
-		if (arg == NULL) /* argument is invalid */
+		std::string extension = getExtension(name);
+		if (extension == "config")
 		{
-			fprintf(stderr, "%s: a valid status interval must be specified.\n", APP_NAME);
-			return false;
+			type = InputFile::Configuration;
+			return true;
+		}
+		else if (extension == "state")
+		{
+			type = InputFile::State;
+			return true;
 		}
 
-		char* temp;
-
-		// Parse the string to an integer value
-		int interval = strtol(arg, &temp, 10);
-
-		if (temp == arg || *temp != '\0') /* could not parse argument */
-		{
-			fprintf(stderr, "%s: status interval must be a valid non-negative integer.\n", APP_NAME);
-			return false;
-		}
-		else if (interval < 0)	/* less than zero */
-		{
-			fprintf(stderr, "%s: status interval must be greater than or equal to zero.\n", APP_NAME);
-			return false;
-		}
-		else if (errno)			/* integer out of range */
-		{
-			fprintf(stderr, "%s: status interval out of range.\n", APP_NAME);
-			return false;
-		}
-
-		*dest = interval;
-		return true;
+		type = InputFile::Unknown;
+		return false;
 	}
 
 	//void metrosim::printHelpScreen() //RBAl
 	void printHelpScreen()
 	{
-		const char* usage = "\nUsage  : %s: <config_file> [-i interval] [-sp] [-fd] [-hQ]\n\n";
-		fprintf(stdout, usage, APP_NAME);
+		std::cout << "Usage: " << APP_NAME << ": ";
+		std::cout << "<config_file> [-i interval] [-sp] [-fd] [-hQ]" << std::endl << std::endl;
 	}
 
 	void printVersionInformation()
@@ -281,4 +288,3 @@ namespace metrosim
 		#endif
 		std::cout << "Minimum Required CUDA Version: " << MIN_MAJOR_VER << "." << MIN_MINOR_VER << std::endl;
 	}
-}

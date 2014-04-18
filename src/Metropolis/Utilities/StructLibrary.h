@@ -340,19 +340,18 @@ struct Molecule
 	Molecule() {
 		id = 0;
 
-		atoms = new Atom();
-		angles = new Angle();
-		bonds = new Bond();
-		dihedrals = new Dihedral();
-		hops = new Hop();
+		atoms = new Atom[0];
+		angles = new Angle[0];
+		bonds = new Bond[0];
+		dihedrals = new Dihedral[0];
+		hops = new Hop[0];
 
 		numOfAtoms = 0;
 		numOfAngles = 0;
 		numOfBonds = 0;
 		numOfDihedrals = 0;
 		numOfHops = 0; 	
-		}
-    
+		}    
 };
 
 

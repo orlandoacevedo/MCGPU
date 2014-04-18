@@ -10,18 +10,14 @@
 #ifndef METROSIM_COMMAND_PARSING_H
 #define METROSIM_COMMAND_PARSING_H
 
-#include <stdlib.h>
+#include <string>
 #include "Metropolis/SimulationArgs.h"
-
 
 #ifndef APP_NAME
 #define APP_NAME "metrosim"		///< The executable name of the application.
 #endif
 
 #define DEFAULT_STATUS_INTERVAL 100
-
-namespace metrosim
-{
 
 	/// Contains the intermediate values and flags read in from the command
 	/// line.
@@ -36,8 +32,22 @@ namespace metrosim
 		///     at the beginning and end of the simulation.
 		int statusInterval;
 
+		/// The number of simulation steps between state file saves.
+		/// @note This interval must be a non-negative number, and specifying
+		///    an interval of 0 means a single state file should be saved
+		///    at the very end of the simulation (which is the default
+		///    behavior with no interval specified).
+		int stateInterval;
+
+		/// The number of simulation steps to execute in the current run.
+		/// This must be a valid integer number greater than zero.
+		int stepCount;
+
 		/// Declares whether the help option was specified.
 		bool helpFlag;
+
+		/// Declares whether the version option was specified.
+		bool versionFlag;
 
 		/// Declares whether the query device option was specified.
 		bool listDevicesFlag;
@@ -48,8 +58,17 @@ namespace metrosim
 		/// The list of non-option arguments given by the user.
 		char** argList;
 
-		/// Declares whether the status option was specified.
+		/// The optional name of the simulation run.
+		std::string simulationName;
+
+		/// Declares whether the status interval option was specified.
 		bool statusFlag;
+
+		/// Declare whether the state interval option was specified
+		bool stateFlag;
+
+		/// Declares whether the steps option was specified.
+		bool stepFlag;
 
 		/// Declares whether the serial execution option was specified.
 		bool serialFlag;
@@ -57,23 +76,19 @@ namespace metrosim
 		/// Declares whether the parallel execution option was specified.
 		bool parallelFlag;
 
-		/// Declares whether the single-precision option was specified.
-		bool floatFlag;
-
-		/// Declares whether the double-precision option was specified.
-		bool doubleFlag;
-
 		/// Default constructor
 		CommandParameters() :	statusInterval(DEFAULT_STATUS_INTERVAL),
+								stateInterval(0),
+								stepCount(0),
 								argCount(0),
 								argList(NULL),
 								helpFlag(false),
+								versionFlag(false),
 								listDevicesFlag(false),
 								statusFlag(false), 
+								stepFlag(false),
 								serialFlag(false),
-								parallelFlag(false), 
-								floatFlag(false), 
-								doubleFlag(false) {}
+								parallelFlag(false) {}
 	};
 
 	/// Goes through each argument specified from the command line and checks
@@ -113,23 +128,7 @@ namespace metrosim
 	///     and the program will terminate. This complies with GNU conventions.
 	bool parseCommandLine(CommandParameters* params, SimulationArgs* args);
 
-	/// Attempts to parse a config filepath from a command line argument.
-	///
-	/// @param[out] dest The destination location that will store the
-	///     parsed config filepath.
-	/// @param[in] arg The command line argument to parse.
-	/// @returns True if no errors occurred; false if an error occurred while
-	///     parsing the config filepath.
-	bool parseConfigPath(char** dest, char* arg);
-
-	/// Attempts to parse a status interval from a command line argument.
-	///
-	/// @param[out] dest The destination location that will store the parsed
-	///     status interval.
-	/// @param[in] arg The command line argument to parse.
-	/// @returns True if no errors occurred; false if an error occurred while
-	///     parsing the status interval.
-	bool parseStatusInterval(int* dest, char* arg);
+	bool parseInputFile(char* filename, std::string& name, InputFileType& type);
 
 	/// Outputs the help documentation to the standard output stream and
 	/// displays how to use the application.
@@ -138,6 +137,5 @@ namespace metrosim
 	/// Outputs the current program version and build information to the
 	/// standard output stream.
 	void printVersionInformation();
-}
 
 #endif

@@ -8,6 +8,7 @@
 #include <string>
 #include "Metropolis/Utilities/FileUtilities.h"
 #include "Metropolis/Box.h"
+#include "Metropolis/SimulationArgs.h"
 
 #define NO -1
 
@@ -18,13 +19,21 @@
 
 using namespace std;
 
-Box* ParallelCalcs::createBox(string configpath, long* steps)
+Box* ParallelCalcs::createBox(string inputPath, InputFileType inputType, long* steps)
 {
 	ParallelBox* box = new ParallelBox();
-	if (!loadBoxData(configpath, box, steps))
+	if (!loadBoxData(inputPath, inputType, box, steps))
 	{
-		cerr << "Error: Cannot create ParallelBox from config: " << configpath << endl;
-		return NULL;
+		if (inputType != InputFile::Unknown)
+		{
+			std::cerr << "Error: Could not build from file: " << inputPath << std::endl;
+			return NULL;
+		}
+		else
+		{
+			std::cerr << "Error: Can not build environment with unknown file: " << inputPath << std::endl;
+			return NULL;
+		}
 	}
 	box->copyDataToDevice();
 	return (Box*) box;

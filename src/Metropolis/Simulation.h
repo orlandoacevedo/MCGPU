@@ -28,6 +28,8 @@ class Simulation
 		Box *box;
 		SimulationArgs args;
 		long simSteps;
+
+		void saveState(const std::string& simName, int simStep);
 };
 
 #endif

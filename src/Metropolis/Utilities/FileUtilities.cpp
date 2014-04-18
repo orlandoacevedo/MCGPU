@@ -8,12 +8,15 @@
 #include <sstream>
 #include "StructLibrary.h"
 #include "Metropolis/Box.h"
+#include "Metropolis/SimulationArgs.h"
 
 using std::string;
 using std::ifstream;
 
+#define DEFAULT_STEP_COUNT 100
 
-bool loadBoxData(string configpath, Box* box, long* steps)
+
+bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* steps)
 {
 	if (box == NULL)
 	{
@@ -21,91 +24,211 @@ bool loadBoxData(string configpath, Box* box, long* steps)
 		return false;
 	}
 
-	ConfigScanner config_scanner = ConfigScanner();
-	if (!config_scanner.readInConfig(configpath))
-	{
-		std::cerr << "Error: loadBoxData(): Could not read config file" << std::endl;
-		return false;
-	}
+    Environment* enviro;
+    vector<Molecule> moleculeVector;
 
+    if (inputType == InputFile::Configuration)
+    {
+        ConfigScanner config_scanner = ConfigScanner();
+        if (!config_scanner.readInConfig(inputPath))
+        {
+            std::cerr << "Error: loadBoxData(): Could not read config file" << std::endl;
+            return false;
+        }
 
-	
-    *steps = config_scanner.getSteps();
-	box->environment = new Environment(config_scanner.getEnviro());
-	
-	
-	OplsScanner opls_scanner = OplsScanner();
-	if (!opls_scanner.readInOpls(config_scanner.getOplsusaparPath()))
-	{
-		std::cerr << "Error: loadBoxData(): Could not read OPLS file" << std::endl;
-		return false;
-	}
+        OplsScanner opls_scanner = OplsScanner();
+        if (!opls_scanner.readInOpls(config_scanner.getOplsusaparPath()))
+        {
+            std::cerr << "Error: loadBoxData(): Could not read OPLS file" << std::endl;
+            return false;
+        }
 
-	
-	ZmatrixScanner zmatrix_scanner = ZmatrixScanner();
-	if (config_scanner.doSetupFromZMatrixFile())
-	{
-	//do the pre-setup from the zmatrix file. Note that this is only one of the steps.
-		if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
-		{
-			std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;
-			return false;
-		}
-	}
-	
-	StateScanner statefile_scanner = StateScanner(config_scanner.getStatePath());
+        ZmatrixScanner zmatrix_scanner = ZmatrixScanner();        
+        if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
+        {
+            std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;
+            return false;
+        }
 
-	// Fill the box with config stuff.
-	if (!buildBoxData(&zmatrix_scanner, &statefile_scanner, box, config_scanner.doSetupFromStateFile()), config_scanner.doSetupFromZMatrixFile())
-	{
-		std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
-		return false;
-	}
+        moleculeVector = zmatrix_scanner.buildMolecule(0);        
+        enviro = config_scanner.getEnviro();
+        *steps = config_scanner.getSteps();
 
-	return true;
+        box->environment = new Environment(enviro);
+
+        if (!buildBoxData(enviro, moleculeVector, box))
+        {
+            std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
+            return false;
+        }
+
+        return true;
+    }
+    else if (inputType == InputFile::State)
+    {
+        StateScanner state_scanner = StateScanner(inputPath);
+        enviro = state_scanner.readInEnvironment();
+
+        if (enviro == NULL)
+        {
+            std::cerr << "Error: Unable to read environment from State File" << std::endl;
+            return false;
+        }
+        moleculeVector = state_scanner.readInMolecules();
+
+        if (moleculeVector.size() == 0)
+        {
+            std::cerr << "Error: Unable to read molecule data from State file" << std::endl;
+            return false;
+        }
+
+        *steps = DEFAULT_STEP_COUNT;
+
+        box->environment = new Environment(enviro);
+
+        if (!fillBoxData(enviro, moleculeVector, box))
+        {
+            std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
+            return false;
+        }
+
+        return true;
+    }
+
+    std::cout << "Error: Could not recognize input file type" << std::endl;
+
+	return false;
 }
 
-bool buildBoxData(ZmatrixScanner* zMatrixScan, StateScanner* stateScan, Box* box, bool usePrevState, bool useZMatrix)
+bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
 {
-	//Convert molecule vectors into an array
-   int moleculeIndex = 0;
-   int atomCount = 0;
-	
-	Environment* enviro;
-	 vector<Molecule> molecVec;
-	if (usePrevState) //try to use the state file first
-	{
-	 	enviro = &stateScan -> readInEnvironment();
-		molecVec = stateScan -> readInMolecules();
-	}
-	else if (!usePrevState) //then try to do the zmatrix file
-	{
-		enviro = box-> environment;
-		molecVec = zMatrixScan->buildMolecule(atomCount);
-	}
+    if (!enviro || !box || molecVec.size() < 1) //if the vector of molecules has no contents...
+    {
+        std::cerr << "Error: fillBoxData(): Could not fill molecule data." << std::endl;
+        return false;
+    }
+
+    int count[5];//sum up number of atoms,bonds,angles,dihedrals,hops
+    memset(count,0,sizeof(count));
+
+    box->moleculeCount = 0;
+    box->atomCount = 0;
+    box->bondCount = 0;
+    box->angleCount = 0;
+    box->dihedralCount = 0;
+    box->hopCount = 0;
+
+    for (int i = 0; i < molecVec.size(); ++i)
+    {
+        Molecule mol = molecVec[i];
+        box->moleculeCount += 1;
+        box->atomCount += mol.numOfAtoms;
+        box->bondCount += mol.numOfBonds;
+        box->angleCount += mol.numOfAngles;
+        box->dihedralCount += mol.numOfDihedrals;
+        box->hopCount += mol.numOfHops;
+    }
+
+    box->molecules = (Molecule *)malloc(sizeof(Molecule) * box->moleculeCount);
+    box->atoms     = (Atom *)malloc(sizeof(Atom)*box->atomCount);
+    box->bonds     = (Bond *)malloc(sizeof(Bond)*box->bondCount);
+    box->angles    = (Angle *)malloc(sizeof(Angle)*box->angleCount);
+    box->dihedrals = (Dihedral *)malloc(sizeof(Dihedral)*box->dihedralCount);
+    box->hops      = (Hop *)malloc(sizeof(Hop)*box->hopCount);
+
+    memset(box->atoms,0,sizeof(Atom)*box->atomCount);
+    memset(box->bonds,0,sizeof(Bond)*box->bondCount);
+    memset(box->angles,0,sizeof(Angle)*box->angleCount);
+    memset(box->dihedrals,0,sizeof(Dihedral)*box->dihedralCount);
+    memset(box->hops,0,sizeof(Hop)*box->hopCount);
+
+    for(int j = 0; j < molecVec.size(); j++)
+    {
+          //Copy data from vector to molecule
+        Molecule molec1 = molecVec[j];   
+
+        box->molecules[j].atoms = (Atom *)(box->atoms+count[0]);
+        box->molecules[j].bonds = (Bond *)(box->bonds+count[1]);
+        box->molecules[j].angles = (Angle *)(box->angles+count[2]);
+        box->molecules[j].dihedrals = (Dihedral *)(box->dihedrals+count[3]);
+        box->molecules[j].hops = (Hop *)(box->hops+count[4]);
+
+        box->molecules[j].id = molec1.id;
+        box->molecules[j].numOfAtoms = molec1.numOfAtoms;
+        box->molecules[j].numOfBonds = molec1.numOfBonds;
+        box->molecules[j].numOfDihedrals = molec1.numOfDihedrals;
+        box->molecules[j].numOfAngles = molec1.numOfAngles;
+        box->molecules[j].numOfHops = molec1.numOfHops;
+
+        count[0]+=molec1.numOfAtoms;
+        count[1]+=molec1.numOfBonds;
+        count[2]+=molec1.numOfAngles;
+        count[3]+=molec1.numOfDihedrals;
+        count[4]+=molec1.numOfHops;
+
+        //get the atoms from the vector molecule
+        for(int k = 0; k < molec1.numOfAtoms; k++)
+        {
+            box->molecules[j].atoms[k] = molec1.atoms[k];
+        }               
+           
+        //assign bonds
+        for(int k = 0; k < molec1.numOfBonds; k++)
+        {
+            box->molecules[j].bonds[k] = molec1.bonds[k];
+        }
+
+        //assign angles
+        for(int k = 0; k < molec1.numOfAngles; k++)
+        {
+            box->molecules[j].angles[k] = molec1.angles[k];
+        }
+
+        //assign dihedrals
+        for(int k = 0; k < molec1.numOfDihedrals; k++)
+        {
+            box->molecules[j].dihedrals[k] = molec1.dihedrals[k];
+        }
+
+        //assign hops zx add
+        for(int k = 0; k < molec1.numOfHops; k++)
+        {
+            box->molecules[j].hops[k] = molec1.hops[k];
+        }
+    }
+
+    enviro->numOfAtoms = box->atomCount;
+
+    return true;
+}
+
+bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
+{
+    // for (int i = 0; i < molecVec.size(); ++i)
+    // {
+    //     Molecule mol = molecVec[i];
+    //     std::cout << "Molecule " << i << "::" << std::endl;
+    //     for (int j = 0; j < mol.numOfAtoms; ++j)
+    //     {
+    //         Atom atom = mol.atoms[j];
+    //         std::cout << atom.id << " " << atom.x << " " << atom.y << " "
+    //             << atom.z << std::endl;
+    //     }
+    // }
+
+    //Convert molecule vectors into an array
+    int moleculeIndex = 0;
+    int atomCount = 0;
    
-	if (molecVec.size() < 1) //if the vector of molecules has no contents...
-	{
-		if (usePrevState and useZMatrix) //...and we tried the state file, we now try the zmatrix file, if possible.
-		{
-			enviro = box-> environment;
-			molecVec = zMatrixScan->buildMolecule(atomCount);
-			if(molecVec.size() < 1)
-			{
-				std::cerr << "Error: buildBoxData(): Could not load molecule data, even after fallback to zmatrix file." << std::endl;
-			}
-		}
-		else //if we couldn't fall back to the state file, or the state file is no viable option...
-		{
-			std::cerr << "Error: buildBoxData(): Could not load molecule data." << std::endl;
-			return false
-		}
-	}
+    if (!enviro || !box || molecVec.size() < 1) //if the vector of molecules has no contents...
+    {
+        std::cerr << "Error: buildBoxData(): Could not load molecule data." << std::endl;
+        return false;
+    }
 	
-	
-   int molecMod = enviro->numOfMolecules % molecVec.size();
-   if (molecMod != 0)
-   {
+    int molecMod = enviro->numOfMolecules % molecVec.size();
+    if (molecMod != 0)
+    {
        enviro->numOfMolecules += molecVec.size() - molecMod;
        //std::cout << "Number of molecules not divisible by specified z-matrix. Changing number of molecules to: " << enviro->numOfMolecules << endl;
     }
@@ -131,7 +254,7 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, StateScanner* stateScan, Box* box
 	Table* tables = new Table[molecVec.size()];
     memset(count,0,sizeof(count));
 	int currentAtomCount = 0;
-	
+
     for(int j = 0; j < molecVec.size(); j++)
     {
   		Molecule molec1 = molecVec[j];   
@@ -311,13 +434,8 @@ bool buildBoxData(ZmatrixScanner* zMatrixScan, StateScanner* stateScan, Box* box
         }
     }
      
-    enviro->numOfAtoms = count[0]*molecDiv;
-	//std::cout << "Molecules Created into an Array" << std::endl;
-     
-    // TODO: Right now we can only read from a zmatrix file and not a state file
-    // In the future we need to make it possible.
-    
-    //std::cout << "Assigning Molecule Positions..." << std::endl;
+    enviro->numOfAtoms = count[0]*molecDiv;     
+
     if (!generatefccBox(box)) //generate fcc lattice box
     {
     	std::cerr << "Error: buildBoxData(): Could not generate FCC box" << std::endl;
@@ -976,6 +1094,7 @@ ZmatrixScanner::ZmatrixScanner()
 {
     oplsScanner = NULL;
     startNewMolecule = false;
+    previousFormat = 0;
 }
 
 ZmatrixScanner::~ZmatrixScanner()
@@ -1144,6 +1263,7 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
     {
         startNewMolecule = true;
     }
+    
     if (previousFormat >= 3 && format == -1)
     {
         handleZAdditions(line, previousFormat);
@@ -1573,14 +1693,14 @@ StateScanner::~StateScanner()
 
 }
 
-Environment StateScanner::readInEnvironment()
+Environment* StateScanner::readInEnvironment()
 {
 	std::string filename = universal_filename;
 	
     ifstream inFile;
     inFile.open(filename.c_str());
     string line;
-    Environment environment;
+    Environment* environment;
 
     if(inFile.is_open())
     {
@@ -1613,12 +1733,14 @@ vector<Molecule> StateScanner::readInMolecules()
         
         Molecule currentMol;
         int section = 0; // 0 = id, 1 = atom, 2 = bond, 3 = dihedral, 4 = hop, 5 = angle
+        int molNum = 0;
         while(inFile.good())
         {
             //printf("bonds: %d\nangles: %d\natoms: %d\ndihedrals: %d\n\n",
               //      bonds.size(), angles.size(), atoms.size(), dihedrals.size());
             getline(inFile, line);
             string hold = line.substr(0, 2);
+
             switch(section)
             {
                 case 0: // id
@@ -1675,6 +1797,7 @@ vector<Molecule> StateScanner::readInMolecules()
                     if(hold.compare("==") == 0)
                     {
                         section = 0;
+                        molNum++;
                         
                         //convert all vectors to arrays
                         Bond *bondArray = (Bond *) malloc(sizeof(Bond) * bonds.size());
@@ -1731,7 +1854,6 @@ vector<Molecule> StateScanner::readInMolecules()
                         bonds.clear();
                         angles.clear();
                         hops.clear();
-
                     }
                     else
                     {
@@ -1753,10 +1875,10 @@ Angle StateScanner::getAngleFromLine(string line)
 {
     Angle angle = Angle();
     char *tokens;
-    char *charLine = (char *)malloc(sizeof(char) * line.size());
+    char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
     strcpy(charLine, line.c_str());
     tokens = strtok(charLine, " ");
-    strcpy(charLine, line.c_str());
+    //strcpy(charLine, line.c_str());
     int tokenNumber = 0;
 
     while(tokens != NULL)
@@ -1783,6 +1905,8 @@ Angle StateScanner::getAngleFromLine(string line)
        tokenNumber++;
     }
 
+    free (charLine);
+
     return angle;
 }
 
@@ -1790,7 +1914,7 @@ Atom StateScanner::getAtomFromLine(string line)
 {
     Atom atom = createAtom(-1,-1,-1,-1,-1,-1);
     char *tokens;
-    char *charLine = (char *) malloc(sizeof(char) * line.size());
+    char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
     strcpy(charLine, line.c_str());
     tokens = strtok(charLine, " ");
     int tokenNumber = 0;
@@ -1826,6 +1950,8 @@ Atom StateScanner::getAtomFromLine(string line)
         tokenNumber++;
     }
 
+    free (charLine);
+
     return atom;
 }
 
@@ -1833,10 +1959,10 @@ Bond StateScanner::getBondFromLine(string line)
 {
     Bond bond = Bond();
     char *tokens;
-    char *charLine = (char *)malloc(sizeof(char) * line.size());
+    char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
     strcpy(charLine, line.c_str());
     tokens = strtok(charLine, " ");
-    strcpy(charLine, line.c_str());
+    //strcpy(charLine, line.c_str());
     int tokenNumber = 0;
 
     while(tokens != NULL)
@@ -1864,6 +1990,8 @@ Bond StateScanner::getBondFromLine(string line)
         tokenNumber++;
     }
 
+    free (charLine);
+
     return bond;
 }
 
@@ -1872,7 +2000,7 @@ Dihedral StateScanner::getDihedralFromLine(string line)
     Dihedral dihedral = Dihedral();
 
     char *tokens;
-    char *charLine = (char *)malloc(sizeof(char) * line.size());
+    char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
     strcpy(charLine, line.c_str());
     tokens = strtok(charLine, " ");
     int tokenNumber = 0;
@@ -1901,14 +2029,16 @@ Dihedral StateScanner::getDihedralFromLine(string line)
         tokenNumber++;
     }
 
+    free (charLine);
+
     return dihedral;
 }
 
-Environment StateScanner::getEnvironmentFromLine(string line)
+Environment* StateScanner::getEnvironmentFromLine(string line)
 {
-    Environment environment;
+    Environment* environment = new Environment();
     char *tokens;
-    char *charLine = (char *) malloc(sizeof(char) * line.size());
+    char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
     strcpy(charLine, line.c_str());
     tokens = strtok(charLine, " ");
     int numOfAtoms, tokenNumber = 0;
@@ -1919,27 +2049,44 @@ Environment StateScanner::getEnvironmentFromLine(string line)
         switch(tokenNumber)
         {
             case 0:
-                environment.x = atof(tokens);
+                environment->x = atof(tokens);
                 break;
             case 1:
-                environment.y = atof(tokens);
+                environment->y = atof(tokens);
                 break;
             case 2:
-                environment.z = atof(tokens);
+                environment->z = atof(tokens);
                 break;
             case 3:
-                environment.numOfAtoms = atof(tokens);
+                environment->numOfMolecules = atoi(tokens);
                 break;
             case 4:
-                environment.temp = atof(tokens);
+                environment->numOfAtoms = atoi(tokens);
                 break;
             case 5:
-                environment.cutoff = atof(tokens);
+                environment->temp = atof(tokens);
+                break;
+            case 6:
+                environment->cutoff = atof(tokens);
+                break;
+            case 7:
+                environment->maxTranslation = atof(tokens);
+                break;
+            case 8:
+                environment->maxRotation = atof(tokens);
+                break;
+            case 9:
+                environment->primaryAtomIndex = atoi(tokens);
+                break;
+            case 10:
+                environment->randomseed = atoi(tokens);
                 break;
         }
         tokens = strtok(NULL, " ");
         tokenNumber++;
     }
+
+    free (charLine);
 
     return environment;
 }
@@ -1948,7 +2095,7 @@ Hop StateScanner::getHopFromLine(string line)
 {
     Hop hop = Hop();
     char *tokens;
-    char *charLine = (char *)malloc(sizeof(char) * line.size());
+    char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
     strcpy(charLine, line.c_str());
     tokens = strtok(charLine, " ");
     int tokenNumber = 0;
@@ -1972,6 +2119,8 @@ Hop StateScanner::getHopFromLine(string line)
         tokenNumber++;
     }
 
+    free (charLine);
+
     return hop;
 }
 
@@ -1979,10 +2128,13 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
 {
     ofstream outFile;
     outFile.open(filename.c_str());
-    outFile << environment->x << " " << environment->y 
-        << " " << environment->z << " " << environment->numOfAtoms
-        << " " << environment->temp << " " << 
-        environment->cutoff << std::endl;
+    outFile << environment->x << " " << environment->y << " " 
+        << environment->z << " " << environment->numOfMolecules << " "
+        << environment->numOfAtoms << " " << environment->temp << " "
+        << environment->cutoff << " " << environment->maxTranslation << " "
+        << environment->maxRotation << " " << environment->primaryAtomIndex << " "
+        << environment->randomseed
+        << std::endl;
     outFile << std::endl; //blank line
 
     for(int i=0; i<numOfMolecules; i++)

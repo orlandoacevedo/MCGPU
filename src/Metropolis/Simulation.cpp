@@ -8,14 +8,15 @@
 	-> March 28, by Joshua Mosby
 */
 
-#include <stdio.h>
 #include <string>
 #include <iostream>
 #include <time.h>
+
 #include "Simulation.h"
 #include "SimulationArgs.h"
 #include "Box.h"
 #include "Metropolis/Utilities/MathLibrary.h"
+#include "Metropolis/Utilities/Parsing.h"
 #include "SerialSim/SerialBox.h"
 #include "SerialSim/SerialCalcs.h"
 #include "ParallelSim/ParallelCalcs.h"
@@ -26,12 +27,11 @@
 Simulation::Simulation(SimulationArgs simArgs)
 {
 	args = simArgs;
-	std::string configpath(simArgs.configPath);
 
 	if (simArgs.simulationMode == SimulationMode::Parallel)
-		box = ParallelCalcs::createBox(configpath, &simSteps);
+		box = ParallelCalcs::createBox(args.filePath, args.fileType, &simSteps);
 	else
-		box = SerialCalcs::createBox(configpath, &simSteps);
+		box = SerialCalcs::createBox(args.filePath, args.fileType, &simSteps);
 
 	if (box == NULL)
 	{
@@ -43,6 +43,9 @@ Simulation::Simulation(SimulationArgs simArgs)
 		std::cout << "Using seed: " << box->environment->randomseed << std::endl;
 		seed(box->environment->randomseed);
 	}
+
+	if (args.stepCount > 0)
+		simSteps = args.stepCount;
 }
 
 Simulation::~Simulation()
@@ -57,16 +60,16 @@ Simulation::~Simulation()
 //Utility
 void Simulation::run()
 {
+	std::cout << "Simulation Name: " << args.simulationName << std::endl;
 	//declare variables common to both parallel and serial
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
+	
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont, oldEnergyCont;
 	Real  kT = kBoltz * enviro->temp;
 	int accepted = 0;
 	int rejected = 0;
-	//also, an object required to output a state file at the end of the simulation
-	StateScanner statescan = StateScanner();
 
 	clock_t startTime, endTime;
     startTime = clock();
@@ -87,36 +90,26 @@ void Simulation::run()
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
 	//determine where we want the state file to go
-	std::string stateOutputPath = "";
-	if (args.statePath.length > 0)
+	std::string baseStateFile = "";	
+	if (!args.simulationName.empty())
 	{
-		stateOutputPath.append(args.statePath);
-	}
-	
-	if (args.simulationName.length > 0)
-	{
-		stateOutputPath.append(args.simulationName);
+		baseStateFile.append(args.simulationName);
 	}
 	else
 	{
-		stateOutputPath.append("untitled_run_S");
+		baseStateFile.append("untitled");
 	}
 	
-	std::string stateOutputPathFull = "";
 	for(int move = 0; move < simSteps; move++)
 	{
 		if (args.statusInterval > 0 && move % args.statusInterval == 0)
 		{
-			std::cout << "Step " << move << ":\r\n--Current Energy: " << oldEnergy << std::endl;	
+			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;	
 		}
 		
-		if (args.statusInterval > 0 && move % args.statusInterval == 0)
+		if (args.stateInterval > 0 && move > 0 && move % args.stateInterval == 0)
 		{
-			stateOutputPathFull = stateOutputPath;
-			stateOutputPathFull.append(std::to_string(move)); //add the step number to the name of the output file
-			stateOutputPathFull.append(".state");
-			std::cout << "Saving state file " << stateOutputPathFull << std::endl;
-			statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), stateOutputPathFull);	
+			saveState(baseStateFile, move);
 		}
 		
 		int changeIdx = box->chooseMolecule();
@@ -178,8 +171,13 @@ void Simulation::run()
     double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;
 
 	std::cout << "Step " << simSteps << ":\r\n--Current Energy: " << oldEnergy << std::endl;
-	
 	currentEnergy = oldEnergy;
+
+	// Save the final state of the simulation
+	if (args.stateInterval >= 0)
+	{
+		saveState(baseStateFile, simSteps);
+	}
 	
 	std::cout << std::endl << "Finished running " << simSteps << " steps" << std::endl;
 	std::cout << "Final Energy: " << currentEnergy << std::endl;
@@ -189,4 +187,20 @@ void Simulation::run()
 	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;
 }
 
+void Simulation::saveState(const std::string& baseFileName, int simStep)
+{
+	StateScanner statescan = StateScanner("");
+	std::string stateOutputPath = baseFileName;
+	std::string stepCount;
 
+	if (!toString<int>(simStep, stepCount))
+		return;
+
+	stateOutputPath.append("_");
+	stateOutputPath.append(stepCount); //add the step number to the name of the output file
+	stateOutputPath.append(".state");
+
+	std::cout << "Saving state file " << stateOutputPath << std::endl;
+
+	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), stateOutputPath);
+}

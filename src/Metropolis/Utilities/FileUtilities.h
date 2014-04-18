@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include <sstream>
+#include "Metropolis/SimulationArgs.h"
 #include "StructLibrary.h"
 #include "MathLibrary.h"
 #include "Metropolis/Box.h"
@@ -404,14 +405,14 @@ class StateScanner
     std::string universal_filename;
 
   public:
-    StateScanner();
+    StateScanner(std::string filename);
     ~StateScanner();
 
     /*
       @param filename - the name of the state file
       @return - the environment recorded in the state file.
     */
-    Environment readInEnvironment();
+    Environment* readInEnvironment();
 
     /**
       @pararm filename - the name of the state file
@@ -465,7 +466,7 @@ class StateScanner
       @param line - the line to be parsed
       @return - Environment read from the line
     */
-    Environment getEnvironmentFromLine(string line);
+    Environment* getEnvironmentFromLine(string line);
 
     /**
       expected input line:
@@ -502,8 +503,9 @@ class StateScanner
     void outputState(Environment *environment, Molecule *molecules, int numOfMolecules, string filename);
 };
 
-bool loadBoxData(string configpath, Box* box, long* steps);
-bool buildBoxData(ZmatrixScanner* zMatrixScan, Box* box);
+bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* steps);
+bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box);
+bool fillBoxData(Environment* enviro, vector<Molecule>& moleVec, Box* box);
 bool generatefccBox(Box* box);
 
 void writeToLog(string text,int stamp);

@@ -11,6 +11,7 @@
 #include <string>
 #include "Metropolis/Box.h"
 #include "Metropolis/DataTypes.h"
+#include "Metropolis/SimulationArgs.h"
 
 namespace ParallelCalcs
 {
@@ -20,7 +21,7 @@ namespace ParallelCalcs
 	/// @return Returns a pointer to the filled-in Box.
 	/// @note This functionality should ideally reside in Box, but it was
 	///   placed here due to time constraints. TODO for future group.
-	Box* createBox(std::string configpath, long* steps);
+	Box* createBox(std::string inputPath, InputFileType inputType, long* steps);
 	
 	/// Calculates the system energy using consecutive calls to
 	///   calcMolecularEnergyContribution.

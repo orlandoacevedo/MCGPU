@@ -11,11 +11,12 @@
 #include "Metropolis/Box.h"
 #include "SerialBox.h"
 #include "Metropolis/DataTypes.h"
+#include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/StructLibrary.h"
 
 namespace SerialCalcs
 {
-	Box* createBox(std::string configpath, long* steps);
+	Box* createBox(std::string inputPath, InputFileType inputType, long* steps);
 	Real calcBlending(Real d1, Real d2);
 	Real calcCharge(Real charge1, Real charge2, Real r);
 	Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *environment);

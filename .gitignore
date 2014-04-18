@@ -4,6 +4,9 @@ obj/
 *.o
 gmon.out
 *.log
+*.state
+
+OutputLog
 
 
 src/Metropolis/Utilities/utilMk
