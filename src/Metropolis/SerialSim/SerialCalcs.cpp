@@ -1,8 +1,6 @@
-/*
-	Contains calculations for SerialBox
-
-	Author: Nathan Coleman
-*/
+/// @file SerialCalcs.cu
+///
+/// Contains the methods required to calculate energies serially.
 
 #include <math.h>
 #include <string>
@@ -30,47 +28,6 @@ Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long
 		}
 	}
 	return (Box*) box;
-} 
-
-Real SerialCalcs::calcBlending(Real d1, Real d2)
-{
-    return sqrt(d1 * d2);
-}
-
-Real SerialCalcs::calcCharge(Real charge1, Real charge2, Real r)
-{  
-    if (r == 0.0)
-    {
-        return 0.0;
-    }
-    else
-    {
-    	// conversion factor below for units in kcal/mol
-    	const Real e = 332.06;
-        return (charge1 * charge2 * e) / r;
-    }
-}
-
-Real SerialCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
-{
-    //store LJ constants locally
-    Real sigma = calcBlending(atom1.sigma, atom2.sigma);
-    Real epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
-    
-    if (r2 == 0.0)
-    {
-        return 0.0;
-    }
-    else
-    {
-    	//calculate terms
-    	const Real sig2OverR2 = pow(sigma, 2) / r2;
-		const Real sig6OverR6 = pow(sig2OverR2, 3);
-    	const Real sig12OverR12 = pow(sig6OverR6, 2);
-    	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-        return energy;
-    }
-
 }
 
 Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
@@ -141,17 +98,9 @@ Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 				Real r2 = (deltaX * deltaX) +
 					 (deltaY * deltaY) + 
 					 (deltaZ * deltaZ);
-					
-				//gets the fValue if in the same molecule
-				Real fvalue = 1.0;
-				//if(mol1 == mol2)
-				//{
-				//	int ** hopTab1 = tables[mol1 % molecTypenum].hopTable;
-				//	fvalue = getFValue(i, j, hopTab1);
-				//}
 				
-				totalEnergy += calc_lj(atom1, atom2, r2) * fvalue;
-				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2)) * fvalue;
+				totalEnergy += calc_lj(atom1, atom2, r2);
+				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
 			}
 		}
 		
@@ -159,7 +108,43 @@ Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 	return totalEnergy;
 }
 
-Real SerialCalcs::makePeriodic(Real x, Real box)
+Real SerialCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
+{
+    //store LJ constants locally
+    Real sigma = calcBlending(atom1.sigma, atom2.sigma);
+    Real epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+    
+    if (r2 == 0.0)
+    {
+        return 0.0;
+    }
+    else
+    {
+    	//calculate terms
+    	const Real sig2OverR2 = pow(sigma, 2) / r2;
+		const Real sig6OverR6 = pow(sig2OverR2, 3);
+    	const Real sig12OverR12 = pow(sig6OverR6, 2);
+    	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+        return energy;
+    }
+
+}
+
+Real SerialCalcs::calcCharge(Real charge1, Real charge2, Real r)
+{  
+    if (r == 0.0)
+    {
+        return 0.0;
+    }
+    else
+    {
+    	// conversion factor below for units in kcal/mol
+    	const Real e = 332.06;
+        return (charge1 * charge2 * e) / r;
+    }
+}
+
+Real SerialCalcs::makePeriodic(Real x, Real boxDim)
 {
     
     while(x < -0.5 * box)
@@ -174,4 +159,9 @@ Real SerialCalcs::makePeriodic(Real x, Real box)
 
     return x;
 
+} 
+
+Real SerialCalcs::calcBlending(Real d1, Real d2)
+{
+    return sqrt(d1 * d2);
 }

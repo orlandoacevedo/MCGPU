@@ -1,11 +1,7 @@
-/*
-	New version of SimBox
-	Minimized to include only Atoms and Molecules
-
-	Author: Nathan Coleman
-	Last Changed: February 21, 2014
-	-> February 26, by Albert Wallace
-*/
+/// @file SerialBox.h
+///
+/// Represents a simulation box, holding environment and molecule data.
+///   Subclass of Box.
 
 #ifndef SERIALBOX_H
 #define SERIALBOX_H

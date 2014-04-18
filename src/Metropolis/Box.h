@@ -1,11 +1,7 @@
-/*
-	SuperClass to the SerialBox and ParallelBox classes.
-
-	Author: Nathan Coleman, Tavis Maclellan
-	Last Changed by author: February 26, 2014
-	
-	-> other changes: February 26 (after authors), by Albert Wallace
-*/
+/// @file Box.h
+///
+/// Represents a simulation box, holding environment and molecule data.
+///   Superclass to SerialBoxx and ParallelBox.
 
 #ifndef BOX_H
 #define BOX_H
@@ -35,27 +31,54 @@ class Box
 		Angle *angles;
 		Dihedral *dihedrals;
 		Hop *hops;
-		Real *energies;
 		int atomCount, moleculeCount, bondCount, angleCount, dihedralCount, hopCount;
-		int energyCount, maxMolSize;
 		
 		Box();
 		~Box();
 		Atom *getAtoms(){return atoms;};
-		Environment *getEnvironment(){return environment;};
-		Molecule *getMolecules(){return molecules;};
-		Real *getEnergies(){return energies;};
 		int getAtomCount(){return atomCount;};
+		Molecule *getMolecules(){return molecules;};
 		int getMoleculeCount(){return moleculeCount;};
-		int getEnergyCount(){return energyCount;};
-		int getMaxMolSize(){return maxMolSize;};
+		Environment *getEnvironment(){return environment;};
+		
+		/// Chooses a random molecule to be changed for a given
+		///   simulation step.
+		/// @return Returns the index of the chosen molecule.
 		int chooseMolecule();
+		
+		/// Changes a given molecule (specifically its Atoms)
+		///   in a random way, constrained by maxTranslation
+		///   and maxRotation.
+		/// @param molIdx The index of the molecule to be changed.
+		/// @return Returns the index of the changed molecule.
+		/// @note This method is virtual to be overridden by an subclass.
 		virtual int changeMolecule(int molIdx);
-		void keepMoleculeInBox(Molecule *molecule, Environment *enviro);
-		virtual int rollback(int moleno);
-		int saveChangedMole(int moleno);
-		int copyMolecule(Molecule *mole_dst, Molecule *mole_src);
-	 	Real wrapBox(Real x, Real box);
+		
+		/// Makes each of the molecule's positional attributes
+		///   periodic within the dimensions of the environment.
+		/// @param molecule The index of the molecule to be fixed.
+		void keepMoleculeInBox(int molIdx);
+		
+		/// Rolls back the previous molecule change.
+		/// @param molIdx The index of the molecule to be reverted.
+		/// @return Returns the index of the reverted molecule.
+		/// @note This method is virtual to be overridden by an subclass.
+		virtual int rollback(int molIdx);
+		
+		/// Saves the unchanged version of a molecule to be changed.
+		/// @param molIdx The index of the molecule to be saved.
+		void saveChangedMol(int molIdx);
+		
+		/// Copies the data of one molecule to another.
+		/// @param mol_dst A pointer to the destination molecule.
+		/// @param mol_src A pointer to the source molecule.
+		void copyMolecule(Molecule *mol_dst, Molecule *mol_src);
+		
+		/// Makes a position periodic within a specified range.
+		/// @param x The position to be made periodic.
+		/// @param boxDim The magnitude of the periodic range.
+		/// @return Returns the periodic position.
+	 	Real wrapBox(Real x, Real boxDim);
 		
 };
 

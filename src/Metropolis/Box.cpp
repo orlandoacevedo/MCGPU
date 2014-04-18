@@ -1,6 +1,6 @@
-/*
-	SuperClass to the SerialBox and ParallelBox classes.
-*/
+/// @file Box.cpp
+///
+/// Represents a simulation box, holding environment and molecule data.
 
 #include "Box.h"
 #include "Metropolis/Utilities/MathLibrary.h"
@@ -46,7 +46,7 @@ int Box::changeMolecule(int molIdx)
 	Real maxTranslation = environment->maxTranslation;
 	Real maxRotation = environment->maxRotation;
 		
-	saveChangedMole(molIdx);
+	saveChangedMol(molIdx);
 		
 	//Pick an atom in the molecule about which to rotate
 	int atomIndex = randomReal(0, molecules[molIdx].numOfAtoms);
@@ -63,32 +63,32 @@ int Box::changeMolecule(int molIdx)
 	moveMolecule(molecules[molIdx], vertex, deltaX, deltaY, deltaZ,
 		degreesX, degreesY, degreesZ);
 
-	keepMoleculeInBox(&molecules[molIdx], environment);
+	keepMoleculeInBox(molIdx);
 
 	return molIdx;
 }
 
-void Box::keepMoleculeInBox(Molecule *molecule, Environment *environment)
+void Box::keepMoleculeInBox(int molIdx)
 {		
-		for (int j = 0; j < molecule->numOfAtoms; j++)
+		for (int j = 0; j < molecules[molIdx]numOfAtoms; j++)
         {
 		    //X axis
-			wrapBox(molecule->atoms[j].x, environment->x);
+			wrapBox(molecules[molIdx]atoms[j].x, environment->x);
             //Y axis
-			wrapBox(molecule->atoms[j].y, environment->y);
+			wrapBox(molecules[molIdx]atoms[j].y, environment->y);
             //Z axis
-			wrapBox(molecule->atoms[j].z, environment->z);
+			wrapBox(molecules[molIdx]atoms[j].z, environment->z);
 		}
 }
 
-int Box::rollback(int moleno)
+int Box::rollback(int molIdx)
 {
-	return copyMolecule(&molecules[moleno],&changedMol);
+	return copyMolecule(&molecules[molIdx],&changedMol);
 }
 
-int Box::saveChangedMole(int moleno)
+void Box::saveChangedMol(int molIdx)
 {
-	Molecule *mole_src = &molecules[moleno];
+	Molecule *mole_src = &molecules[molIdx];
 
 	//free memory of changedMol before allocate memory
 	delete[] changedMol.atoms;
@@ -96,11 +96,6 @@ int Box::saveChangedMole(int moleno)
 	delete[] changedMol.angles;
 	delete[] changedMol.dihedrals;
 	delete[] changedMol.hops;
-	// FREE(changedMol.atoms);
-	// FREE(changedMol.bonds);
-	// FREE(changedMol.angles);
-	// FREE(changedMol.dihedrals);
-	// FREE(changedMol.hops);
 
 	memcpy(&changedMol,mole_src,sizeof(changedMol));
 
@@ -108,19 +103,12 @@ int Box::saveChangedMole(int moleno)
 	changedMol.bonds = new Bond[mole_src->numOfBonds];
 	changedMol.angles = new Angle[mole_src->numOfAngles];
 	changedMol.dihedrals = new Dihedral[mole_src->numOfDihedrals];
-	changedMol.hops = new Hop[mole_src->numOfHops];
-	// changedMol.atoms = (Atom *)malloc(sizeof(Atom) * mole_src->numOfAtoms);
-	// changedMol.bonds = (Bond *)malloc(sizeof(Bond) * mole_src->numOfBonds);
-	// changedMol.angles = (Angle *)malloc(sizeof(Angle) * mole_src->numOfAngles);
-	// changedMol.dihedrals = (Dihedral *)malloc(sizeof(Dihedral) * mole_src->numOfDihedrals);
-	// changedMol.hops = (Hop *)malloc(sizeof(Hop) * mole_src->numOfHops);
+	changedMol.hops = new Hop[mole_src->numOfHops];]
 
 	copyMolecule(&changedMol,mole_src);
-
-	return 0;
 }
 
-int Box::copyMolecule(Molecule *mole_dst, Molecule *mole_src)
+void Box::copyMolecule(Molecule *mol_dst, Molecule *mol_src)
 {
     mole_dst->numOfAtoms = mole_src->numOfAtoms;
     mole_dst->numOfBonds = mole_src->numOfBonds;
@@ -153,20 +141,18 @@ int Box::copyMolecule(Molecule *mole_dst, Molecule *mole_src)
     {
         mole_dst->hops[i] = mole_src->hops[i];
     }
-  
-    return 0;  	
 }
 
-Real Box::wrapBox(Real x, Real box)
+Real Box::wrapBox(Real x, Real boxDim)
 {
 
-    while(x > box)
+    while(x > boxDim)
     {
-        x -= box;
+        x -= boxDim;
     }
     while(x < 0)
     {
-        x += box;
+        x += boxDim;
     }
 
     return x;

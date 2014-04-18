@@ -1,11 +1,7 @@
-/*
-	New version of SimBox
-
-	Author: Nathan Coleman
-	Last Changed: February 21, 2014
-	
-	-> February 26, 27, by Albert Wallace
-*/
+/// @file SerialBox.cpp
+///
+/// Represents a simulation box, holding environment and molecule data.
+///   Subclass of Box.
 
 #include "SerialBox.h"
 

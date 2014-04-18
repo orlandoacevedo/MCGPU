@@ -1,10 +1,8 @@
-/*
-	New version of SimBox
-	Minimized to include only Atoms and Molecules
-
-	Author: Nathan Coleman
-	Last Changed: February 21, 2014
-*/
+/// @file ParallelBox.cuh
+///
+/// ParallelBox is a subclass of Box, implementing
+///   methods related to managing data between the
+///   host and device.
 
 #ifndef PARALLELBOX_H
 #define PARALLELBOX_H
