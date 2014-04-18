@@ -52,6 +52,13 @@
 		/// Declares whether the query device option was specified.
 		bool listDevicesFlag;
 
+		/// Specifies whether the user has chosen a device, or to
+		/// use the default device.
+		bool deviceFlag;
+
+		/// Specifies which device to use when running in parallel.
+		int deviceIndex;
+
 		/// The number of non-option arguments given by the user.
 		int argCount;
 
@@ -85,6 +92,8 @@
 								helpFlag(false),
 								versionFlag(false),
 								listDevicesFlag(false),
+								deviceIndex(0),
+								deviceFlag(false),
 								statusFlag(false), 
 								stepFlag(false),
 								serialFlag(false),

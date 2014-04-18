@@ -28,7 +28,7 @@ int metrosim::run(int argc, char** argv)
 	DeviceContext context = DeviceContext();
 	if (args.simulationMode == SimulationMode::Parallel)
 	{
-		if (!openDeviceContext(&context, MIN_MAJOR_VER, MIN_MINOR_VER, DEVICE_ANY))
+		if (!openDeviceContext(&context, MIN_MAJOR_VER, MIN_MINOR_VER, args.deviceIndex))
 		{
 			exit(EXIT_FAILURE);
 		}

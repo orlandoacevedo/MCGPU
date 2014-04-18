@@ -68,6 +68,11 @@ struct SimulationArgs
 	/// CPU or the GPU.
 	SimulationModeType simulationMode;
 
+	/// If executing in parallel, the index of the graphics card being
+	/// used to run the simulation. Set to DEVICE_ANY if running 
+	/// using the CPU.
+	int deviceIndex;
+
 	/// The number of simulation steps to execute in the current run.
 	int stepCount;
 

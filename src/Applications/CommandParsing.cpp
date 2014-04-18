@@ -49,7 +49,7 @@ using std::string;
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:I:n:sphQV";
+		const char* short_options = ":i:I:n:d:sphQV";
 
 		// The long options recognized by the program
 		struct option long_options[] = 
@@ -61,6 +61,7 @@ using std::string;
 			{"parallel", 			no_argument, 		0, 	'p'},
 			{"help", 				no_argument, 		0, 	'h'},
 			{"list-devices",		no_argument,		0,	'Q'},
+			{"device",				required_argument,	0,	'd'},
 			{"version",				no_argument,		0,	'V'},
 			{"name",				required_argument,	0,	LONG_NAME},
 			{0, 0, 0, 0} 
@@ -141,6 +142,21 @@ using std::string;
 				case 'Q':	/* list all devices */
 					printDeviceInformation();
 					return false;
+					break;
+				case 'd':
+					params->deviceFlag = true;
+					if (!fromString<int>(optarg, params->deviceIndex))
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --device (-d): Device index must be a valid integer" << std::endl;
+						return false;
+					}
+					if (params->deviceIndex < 0)
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --device (-d): Device index cannot be a negative index" << std::endl;
+						return false;
+					}
 					break;
 				case ':':	/* missing argument */
 					if (sizeof(argv[optind-1]) > 2 && argv[optind-1][0] == '-' && argv[optind-1][1] == '-')
@@ -234,6 +250,18 @@ using std::string;
 		args->stepCount = params->stepCount;
 		args->simulationName = params->simulationName;
 
+		if (!params->parallelFlag && params->deviceFlag)
+		{
+			std::cerr << APP_NAME << ": Cannot use graphics device in serial simulation" << std::endl;
+			return false;
+		}
+
+		// Set the user selected device index.
+		if (params->deviceFlag)
+			args->deviceIndex = params->deviceIndex;
+		else
+			args->deviceIndex = DEVICE_ANY;
+
 		return true;
 	}
 
@@ -310,6 +338,12 @@ using std::string;
 		cout << "\tConstant Memory\t: The total amount of constant memory on the device\n";
 		cout << "\tWarp Size\t: The number of threads in a warp.\n";
 		cout << "\n";
+		cout << "--device <index>\t(-d)\n";
+		cout << "\tWhen running the simulation on the GPU, this option specifies which\n"
+				"\tavailable graphics device to use if multiple are installed on the\n"
+				"\thost system. If this option is not specified, or if an index of -1\n"
+				"\tis given, then the simulation will attempt to find the best device.\n\n";
+		cout <<	"\tThis flag must be accompanied with the --parallel flag.\n\n";
 
 		cout << "Simulation Run Parameters\n"
 			  "==========================\n";
