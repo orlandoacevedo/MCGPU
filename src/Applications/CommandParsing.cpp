@@ -341,9 +341,9 @@ using std::string;
 		cout << "--device <index>\t(-d)\n";
 		cout << "\tWhen running the simulation on the GPU, this option specifies which\n"
 				"\tavailable graphics device to use if multiple are installed on the\n"
-				"\thost system. If this option is not specified, or if an index of -1\n"
-				"\tis given, then the simulation will attempt to find the best device.\n\n";
-		cout <<	"\tThis flag must be accompanied with the --parallel flag.\n\n";
+				"\thost system. If this option is not specified then the simulation\n"
+				"\twill attempt to find the best device. Additionally, this flag must\n"
+				"\tbe accompanied with the --parallel flag.\n\n";
 
 		cout << "Simulation Run Parameters\n"
 			  "==========================\n";
