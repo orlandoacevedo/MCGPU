@@ -19,7 +19,6 @@
 
 using std::string;
 
-#define LONG_VERSION 300
 #define LONG_NAME 400
 
 
@@ -50,19 +49,19 @@ using std::string;
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:I:n:sphQ";
+		const char* short_options = ":i:I:n:sphQV";
 
 		// The long options recognized by the program
 		struct option long_options[] = 
 		{
-			{"status_interval", 	required_argument, 	0, 	'i'},
-			{"state_interval",		required_argument,	0,	'I'},
+			{"status-interval", 	required_argument, 	0, 	'i'},
+			{"state-interval",		required_argument,	0,	'I'},
 			{"steps",				required_argument,	0,	'n'},
 			{"serial", 				no_argument, 		0, 	's'},
 			{"parallel", 			no_argument, 		0, 	'p'},
 			{"help", 				no_argument, 		0, 	'h'},
-			{"list_devices",		no_argument,		0,	'Q'},
-			{"version",				no_argument,		0,	LONG_VERSION},
+			{"list-devices",		no_argument,		0,	'Q'},
+			{"version",				no_argument,		0,	'V'},
 			{"name",				required_argument,	0,	LONG_NAME},
 			{0, 0, 0, 0} 
 		};
@@ -78,7 +77,7 @@ using std::string;
 						break;
 					/* handle other long options without return values */
 					break;
-				case LONG_VERSION:
+				case 'V':
 					printVersionInformation();
 					return false;
 					break;
@@ -269,8 +268,86 @@ using std::string;
 	//void metrosim::printHelpScreen() //RBAl
 	void printHelpScreen()
 	{
-		std::cout << "Usage: " << APP_NAME << ": ";
-		std::cout << "<config_file> [-i interval] [-sp] [-fd] [-hQ]" << std::endl << std::endl;
+		using std::endl;
+		using std::cout;
+
+		cout << endl;
+		cout << "Usage: " << APP_NAME << " <inputfile> [options]" << endl << endl;
+
+		cout << "Input File Types\n"
+			  "=================\n";
+		cout << "The file extension of the input file will determine what phase of the\n"
+			  "simulation to execute:\n";
+		cout << "\t.config\t: Create a fresh simulation using the given set of\n"
+			  "\t\t  configuration settings and parameters.\n";
+		cout << "\t.state\t: Resume a previous simulation that was saved.\n";
+		cout << "\n";
+
+		cout << "GPU Operation Flags\n"
+			  "====================\n";
+		cout << "This tool can execute a given simulation on both the CPU and the GPU.\n"
+			  "The following flags can query the current availability of GPU devices\n"
+			  "and control how the simulation will execute on the GPU.\n\n";
+		cout << "--parallel\t(-p)\n";
+		cout << "\tRun the simulation in parallel by executing steps on a CUDA\n"
+			  "\tcapable device. The program will terminate if no available devices\n"
+			  "\tare found or if the tool's minimum specifications are not met.\n"
+			  "\tIf you specify this flag you cannot also specify the --serial\n"
+			  "\tflag.\n\n";
+		cout << "--serial\t(-s)\n";
+		cout << "\tRun the simulation in serial on the host CPU. If you specify this\n"
+			  "\tflag you cannot also specify the --parallel flag.\n\n";
+		cout << "--list-devices\t(-Q)\n";
+		cout << "\tQueries the host machine for available CUDA capable devices. The\n"
+			  "\tentries will contain the following information about each\n"
+			  "\tavailable device:\n\n";
+		cout << "\tDevice Index\t: The index of the device on the host system\n";
+		cout << "\tDevice Name\t: The name of the available device.\n";
+		cout << "\tClock Rate\t: The clock rate of the device in kilohertz\n";
+		cout << "\tCompute Capability : The major and minor version of the device.\n";
+		cout << "\tProcessor Count\t: The number of multiprocessors on the device.\n";
+		cout << "\tGlobal Memory\t: The total amount of global memory on the device.\n";
+		cout << "\tConstant Memory\t: The total amount of constant memory on the device\n";
+		cout << "\tWarp Size\t: The number of threads in a warp.\n";
+		cout << "\n";
+
+		cout << "Simulation Run Parameters\n"
+			  "==========================\n";
+		cout << "These options define simulation settings and parameters that specify\n"
+				"how to the run will execute.\n\n";
+		cout << "--name <title>\n";
+		cout << "\tSpecifies the name of the simulation that will be run. This name\n"
+				"\twill be used as the basename for saved state files, as well as\n"
+				"\tthe title of the simulation results.\n\n";
+		cout << "--steps <count>\t\t(-n)\n";
+		cout << "\tSpecifies how many simulation steps to execute in the Monte\n"
+				"\tCarlo Metropolis algorithm. This value must a valid integer\n"
+				"\tthat is greater than zero.\n\n";
+		cout << "--status-interval <interval>\t(-i)\n";
+		cout << "\tSpecifies the number of simulation steps between status updates.\n"
+				"\tThese status updates will periodically be printed out that list\n"
+				"\tthe current step number and the current total system energy.\n"
+				"\tThis interval must be a valid non-negative integer value. An\n"
+				"\tinterval of 0 (zero) means that status updates should only\n"
+				"\tprint out at the beginning and the end of the simulation.\n\n";
+		cout <<"--state-interval <interval>\t(-I)\n";
+		cout << "\tSpecifies the number of simulation steps between state file\n"
+				"\tsnapshots of the current simulation run. The program will\n"
+				"\tperiodically save the simulation to a state file (*.state)\n"
+				"\tthat can be resumed later by the user. This provides checkpoints\n"
+				"\tjust in case a long running simulation is interrupted.\n\n";
+		cout << "\tThe filename for the saved state files will be the simulation\n"
+				"\tname with the current step number appended at the end:\n\n";
+		cout << "\t\t<simulation-name>_<step-num>.state\n\n";
+
+		cout << "Generic Tool Options\n"
+			  "=====================\n";
+		cout << "\n";
+		cout << "--help\t\t(-h)\n";
+		cout << "\tPrint this help information to the standard output stream.\n\n";
+		cout << "--version\t(-V)\n";
+		cout << "\tPrint version information of this tool to the standard output\n"
+			  "\tstream.\n\n";
 	}
 
 	void printVersionInformation()

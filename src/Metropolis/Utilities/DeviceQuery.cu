@@ -83,8 +83,8 @@ void printDeviceInformation()
 	{
 		cudaDeviceProp info;
 		cudaGetDeviceProperties(&info, i);
-
-		fprintf(stdout, "Device %d: %s\n", i, info.name);
+		fprintf(stdout, "Device Index: %d\n", i);
+		fprintf(stdout, "Device Name: %s\n", info.name);
 		fprintf(stdout, "Clock Rate: %d\n", info.clockRate);
 		fprintf(stdout, "Compute Capability: %d.%d\n", info.major, info.minor);
 		fprintf(stdout, "Processor Count: %d\n", info.multiProcessorCount);
