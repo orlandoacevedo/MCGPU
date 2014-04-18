@@ -10,7 +10,9 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <time.h>
+#include <stdio.h>
 
 #include "Simulation.h"
 #include "SimulationArgs.h"
@@ -21,6 +23,9 @@
 #include "SerialSim/SerialCalcs.h"
 #include "ParallelSim/ParallelCalcs.h"
 #include "Utilities/FileUtilities.h"
+
+#define RESULTS_FILE_DEFAULT "run"
+#define RESULTS_FILE_EXT ".results"
 
 
 //Constructor & Destructor
@@ -185,6 +190,37 @@ void Simulation::run()
 	std::cout << "Accepted Moves: " << accepted << std::endl;
 	std::cout << "Rejected Moves: " << rejected << std::endl;
 	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;
+
+	std::string resultsName;
+	if (args.simulationName.empty())
+		resultsName = RESULTS_FILE_DEFAULT;
+	else
+		resultsName = args.simulationName;
+	resultsName.append(RESULTS_FILE_EXT);
+
+	// Save the simulation results.
+	std::ofstream resultsFile;
+	resultsFile.open(resultsName.c_str());
+
+	resultsFile << "######### MCGPU Results File #############" << std::endl << std::endl;
+	resultsFile << "Timestamp = " << currentDateTime() << std::endl;
+	if (!args.simulationName.empty())
+		resultsFile << "Simulation-Name = " << args.simulationName << std::endl;
+
+	if (args.simulationMode == SimulationMode::Parallel)
+		resultsFile << "Simulation-Mode = GPU" << std::endl;
+	else
+		resultsFile << "Simulation-Mode = CPU" << std::endl;
+	resultsFile << std::endl;
+	resultsFile << "Steps = " << simSteps << std::endl;
+	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl;
+	resultsFile << "Final-Energy = " << currentEnergy << std::endl;
+	resultsFile << "Run-Time = " << diffTime << " seconds" << std::endl;
+	resultsFile << "Accepted-Moves = " << accepted << std::endl;
+	resultsFile << "Rejected-Moves = " << rejected << std::endl;
+	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;
+
+	resultsFile.close();
 }
 
 void Simulation::saveState(const std::string& baseFileName, int simStep)
@@ -203,4 +239,17 @@ void Simulation::saveState(const std::string& baseFileName, int simStep)
 	std::cout << "Saving state file " << stateOutputPath << std::endl;
 
 	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), stateOutputPath);
+}
+
+const std::string Simulation::currentDateTime()
+{
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+
+    return buf;
 }
