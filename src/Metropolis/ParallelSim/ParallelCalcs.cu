@@ -19,10 +19,10 @@
 
 using namespace std;
 
-Box* ParallelCalcs::createBox(string inputPath, InputFileType inputType, long* steps)
+Box* ParallelCalcs::createBox(string inputPath, InputFileType inputType, long* startStep, long* steps)
 {
 	ParallelBox* box = new ParallelBox();
-	if (!loadBoxData(inputPath, inputType, box, steps))
+	if (!loadBoxData(inputPath, inputType, box, startStep, steps))
 	{
 		if (inputType != InputFile::Unknown)
 		{
@@ -111,7 +111,7 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 		cudaMemcpy(box->molBatchD, box->molBatchH, box->moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
 		
 		//calculate interatomic energies between changed molecule and all molecules in batch
-		calcInterAtomicEnergy<<<box->energyCount / BATCH_BLOCK + 1, BATCH_BLOCK>>>
+		calcInterAtomicEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
 		(box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->molBatchD, box->maxMolSize);
 		
 		return getEnergyFromDevice(box, validEnergies);

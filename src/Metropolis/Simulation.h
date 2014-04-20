@@ -28,6 +28,7 @@ class Simulation
 		Box *box;
 		SimulationArgs args;
 		long simSteps;
+		long stepStart;
 
 		void saveState(const std::string& simName, int simStep);
 		const std::string currentDateTime();

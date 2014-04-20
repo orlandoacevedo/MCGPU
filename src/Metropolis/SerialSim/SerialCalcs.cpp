@@ -11,10 +11,10 @@
 
 using namespace std;
 
-Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long* steps)
+Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long* startStep, long* steps)
 {
 	SerialBox* box = new SerialBox();
-	if (!loadBoxData(inputPath, inputType, box, steps))
+	if (!loadBoxData(inputPath, inputType, box, startStep, steps))
 	{
 		if (inputType != InputFile::Unknown)
 		{
@@ -147,14 +147,14 @@ Real SerialCalcs::calcCharge(Real charge1, Real charge2, Real r)
 Real SerialCalcs::makePeriodic(Real x, Real boxDim)
 {
     
-    while(x < -0.5 * box)
+    while(x < -0.5 * boxDim)
     {
-        x += box;
+        x += boxDim;
     }
 
-    while(x > 0.5 * box)
+    while(x > 0.5 * boxDim)
     {
-        x -= box;
+        x -= boxDim;
     }
 
     return x;

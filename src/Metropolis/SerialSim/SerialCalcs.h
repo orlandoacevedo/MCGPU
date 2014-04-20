@@ -21,7 +21,7 @@ namespace SerialCalcs
 	/// @note This functionality should ideally reside in SerialBox,
 	///   but it was placed here due to time constraints.
 	///   TODO for future group.
-	Box* createBox(std::string inputPath, InputFileType inputType, long* steps);
+	Box* createBox(std::string inputPath, InputFileType inputType, long* startStep, long* steps);
 	
 	/// Calculates the system energy using consecutive calls to
 	///   calcMolecularEnergyContribution.

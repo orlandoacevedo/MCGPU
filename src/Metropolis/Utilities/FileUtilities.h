@@ -421,6 +421,11 @@ class StateScanner
     vector<Molecule> readInMolecules();
 
     /**
+      @return - the starting step number in the state file
+    */
+    long readInStepNumber();
+
+    /**
       expected input line:
       "atom1 atom2 value [0|1]"
       0 represents not variable
@@ -500,10 +505,10 @@ class StateScanner
       @param numOfMolecules - the number of molecules to be written out
       @param fileName - the name of the file to be written
     */
-    void outputState(Environment *environment, Molecule *molecules, int numOfMolecules, string filename);
+    void outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename);
 };
 
-bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* steps);
+bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps);
 bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box);
 bool fillBoxData(Environment* enviro, vector<Molecule>& moleVec, Box* box);
 bool generatefccBox(Box* box);

@@ -6,6 +6,7 @@
 #include <exception>
 #include <stdexcept>
 #include <sstream>
+#include "Parsing.h"
 #include "StructLibrary.h"
 #include "Metropolis/Box.h"
 #include "Metropolis/SimulationArgs.h"
@@ -16,7 +17,7 @@ using std::ifstream;
 #define DEFAULT_STEP_COUNT 100
 
 
-bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* steps)
+bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps)
 {
 	if (box == NULL)
 	{
@@ -53,6 +54,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* step
         moleculeVector = zmatrix_scanner.buildMolecule(0);        
         enviro = config_scanner.getEnviro();
         *steps = config_scanner.getSteps();
+        *startStep = 0;
 
         box->environment = new Environment(enviro);
 
@@ -83,6 +85,13 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* step
         }
 
         *steps = DEFAULT_STEP_COUNT;
+        *startStep = state_scanner.readInStepNumber();
+
+        if (*startStep < 0)
+        {
+            std::cerr << "Error: State file does not have a starting step number" << std::endl;
+            return false;
+        }
 
         box->environment = new Environment(enviro);
 
@@ -1711,6 +1720,27 @@ Environment* StateScanner::readInEnvironment()
     return environment;
 }
 
+long StateScanner::readInStepNumber()
+{
+    std::string filename = universal_filename;
+
+    long startingStep = 0;
+    ifstream inFile(filename.c_str());
+    string line;
+
+    if (inFile.is_open())
+    {
+        getline(inFile, line); // Environment
+        getline(inFile, line); // Step number
+
+        if (!fromString<long>(line, startingStep))
+            return -1;
+        return startingStep;
+    }
+
+    return -1;
+}
+
 vector<Molecule> StateScanner::readInMolecules()
 {
 	std::string filename = universal_filename;
@@ -1729,6 +1759,7 @@ vector<Molecule> StateScanner::readInMolecules()
 
         //the third line starts the first molecule
         getline(inFile, line); // envrionment
+        getline(inFile, line); // step number
         getline(inFile, line); //blank
         
         Molecule currentMol;
@@ -2124,7 +2155,7 @@ Hop StateScanner::getHopFromLine(string line)
     return hop;
 }
 
-void StateScanner::outputState(Environment *environment, Molecule *molecules, int numOfMolecules, string filename)
+void StateScanner::outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename)
 {
     ofstream outFile;
     outFile.open(filename.c_str());
@@ -2135,6 +2166,7 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
         << environment->maxRotation << " " << environment->primaryAtomIndex << " "
         << environment->randomseed
         << std::endl;
+    outFile << step << std::endl;  // The current simulation step
     outFile << std::endl; //blank line
 
     for(int i=0; i<numOfMolecules; i++)

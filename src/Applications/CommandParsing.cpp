@@ -370,6 +370,12 @@ using std::string;
 				"\tperiodically save the simulation to a state file (*.state)\n"
 				"\tthat can be resumed later by the user. This provides checkpoints\n"
 				"\tjust in case a long running simulation is interrupted.\n\n";
+		cout << "\tSpecifying a state interval of zero, or not specifying the\n"
+				"\toption at all, means that only a final state file should be\n"
+				"\twritten at the end of the simulation run. An interval greater\n"
+				"\tthan zero means that multiple state files shouls be written\n"
+				"\tat the specified intervals. Finally, a state interval less than\n"
+				"\tzero means that no state files should be written at all.\n\n";
 		cout << "\tThe filename for the saved state files will be the simulation\n"
 				"\tname with the current step number appended at the end:\n\n";
 		cout << "\t\t<simulation-name>_<step-num>.state\n\n";

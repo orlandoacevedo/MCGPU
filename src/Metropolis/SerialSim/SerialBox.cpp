@@ -21,5 +21,4 @@ SerialBox::~SerialBox()
 	FREE(environment);
 	FREE(hops);
 	FREE(molecules);
-	FREE(energies);
 }

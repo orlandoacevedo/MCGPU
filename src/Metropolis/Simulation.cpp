@@ -33,10 +33,12 @@ Simulation::Simulation(SimulationArgs simArgs)
 {
 	args = simArgs;
 
+	stepStart = 0;
+
 	if (simArgs.simulationMode == SimulationMode::Parallel)
-		box = ParallelCalcs::createBox(args.filePath, args.fileType, &simSteps);
+		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
 	else
-		box = SerialCalcs::createBox(args.filePath, args.fileType, &simSteps);
+		box = SerialCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
 
 	if (box == NULL)
 	{
@@ -105,16 +107,18 @@ void Simulation::run()
 		baseStateFile.append("untitled");
 	}
 	
-	for(int move = 0; move < simSteps; move++)
+	for(int move = stepStart; move < (stepStart + simSteps); move++)
 	{
-		if (args.statusInterval > 0 && move % args.statusInterval == 0)
+		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
 		{
 			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;	
 		}
 		
-		if (args.stateInterval > 0 && move > 0 && move % args.stateInterval == 0)
+		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0)
 		{
+			std::cout << std::endl;
 			saveState(baseStateFile, move);
+			std::cout << std::endl;
 		}
 		
 		int changeIdx = box->chooseMolecule();
@@ -175,13 +179,13 @@ void Simulation::run()
 	endTime = clock();
     double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;
 
-	std::cout << "Step " << simSteps << ":\r\n--Current Energy: " << oldEnergy << std::endl;
+	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << oldEnergy << std::endl;
 	currentEnergy = oldEnergy;
 
 	// Save the final state of the simulation
 	if (args.stateInterval >= 0)
 	{
-		saveState(baseStateFile, simSteps);
+		saveState(baseStateFile, (stepStart + simSteps));
 	}
 	
 	std::cout << std::endl << "Finished running " << simSteps << " steps" << std::endl;
@@ -212,6 +216,7 @@ void Simulation::run()
 	else
 		resultsFile << "Simulation-Mode = CPU" << std::endl;
 	resultsFile << std::endl;
+	resultsFile << "Starting-Step = " << stepStart << std::endl;
 	resultsFile << "Steps = " << simSteps << std::endl;
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl;
 	resultsFile << "Final-Energy = " << currentEnergy << std::endl;
@@ -238,7 +243,7 @@ void Simulation::saveState(const std::string& baseFileName, int simStep)
 
 	std::cout << "Saving state file " << stateOutputPath << std::endl;
 
-	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), stateOutputPath);
+	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath);
 }
 
 const std::string Simulation::currentDateTime()
