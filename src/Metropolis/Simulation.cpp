@@ -208,7 +208,8 @@ void Simulation::run()
 	std::ofstream resultsFile;
 	resultsFile.open(resultsName.c_str());
 
-	resultsFile << "######### MCGPU Results File #############" << std::endl << std::endl;
+	resultsFile << "######### MCGPU Results File #############" << std::endl;
+	resultsFile << "[Information]" << std::endl;
 	resultsFile << "Timestamp = " << currentDateTime() << std::endl;
 	if (!args.simulationName.empty())
 		resultsFile << "Simulation-Name = " << args.simulationName << std::endl;
@@ -217,10 +218,10 @@ void Simulation::run()
 		resultsFile << "Simulation-Mode = GPU" << std::endl;
 	else
 		resultsFile << "Simulation-Mode = CPU" << std::endl;
-	resultsFile << std::endl;
 	resultsFile << "Starting-Step = " << stepStart << std::endl;
 	resultsFile << "Steps = " << simSteps << std::endl;
-	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl;
+	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;
+	resultsFile << "[Results]" << std::endl;
 	resultsFile << "Final-Energy = " << currentEnergy << std::endl;
 	resultsFile << "Run-Time = " << diffTime << " seconds" << std::endl;
 	resultsFile << "Accepted-Moves = " << accepted << std::endl;
