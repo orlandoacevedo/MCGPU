@@ -508,12 +508,92 @@ class StateScanner
     void outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename);
 };
 
+/**
+*	Properly sets up the box for use in the simulation.
+*	Builds the environment based on either the configuration file or the state file,
+*	as determined elsewhere.
+*
+* @param: inputPath: the path to either the config file OR the state file, depending on logic path chosen
+* @param: inputType: Whether we are running from the config file + zmatrix combo, or from the state file
+* @param: box: the generic box into which all the environment information
+*		is to be stored; can be modified as necessary for serial or parallel use later.
+* @param: startStep: 
+* @param: steps: 
+*
+* @returns: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
+*		for which you should do halt the simulation
+*/
 bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps);
+
+
+/*************************
+*Builds data for the simulation box/environment from the Zmatrix and config files, if
+* so desired. Note: this doesn't fully enable the box to be used for the simulation; the geometry
+* information must be set up. There's a call to generatefcc box at the end of the method, 
+* at which point the box will actually be "generated"/ready.
+*
+* @param: enviro: the environment stored in the configuration file
+* @param: molecVec: the array of molecules, partly created from the Zmatrix file
+* @param: box: the box in which all the data is to be stored and the environment set up
+*
+* @return: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
+*		for which you should do halt the simulation
+*/
 bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box);
+
+/*************************
+*	Uses data from a given state file to reconstruct a box/environment, as the box looked
+* at the time of the statefile's capture during a prior simulation run.
+*	Includes geometry information, etc, so the box will be ready for use in the current 
+* simulation immediately after the data has been copied over to the box.
+*
+* @param: enviro: the Environment data from the statefile
+* @param: molecVec: the vector array of molecules, copied from the statefile
+* @param: box: the box for which data will be built, into which the data will go
+*
+* @return: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
+*		for which you should do halt the simulation
+*/
 bool fillBoxData(Environment* enviro, vector<Molecule>& moleVec, Box* box);
+
+/*************************
+*	Once the box has been filled with environment data, takes the data and 
+*	sets up the geometry and other aspects necessary to successfully run a simulation.
+* Data must be loaded by either buildBoxData or fillBoxData, depending on if you are
+* loading a clean simulation, or loading from the state file.
+*	
+* @param: box: the box to be used for simulation, with all data pre-loaded	
+*
+*	@return: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
+*		for which you should do halt the simulation
+*/
 bool generatefccBox(Box* box);
 
+/*************************
+*This method allows for writing to a given log file, with some measure of automation.
+* These functions are namespace-less and class-less.
+* Said string contains almost all of the text you wish to be written to the file.
+* Opening and closing of the file will be done on the fly, and a closed file should be guaranteed once this method reaches its end.
+* If stringstream is needed, you may call the overloaded version below, which relies on this version of the method.
+*@param: text: the text to be written to the output file. Type: string.
+*@param: stamp: under which category we log this text: start of simulation [START], end of simulation [END],
+*		error while handling the OPLS files [OPLS] Zmatrix files [Z_MATRIX] or geometric config files [GEO], or generic [DEFAULT].
+*
+*@returns: [none]
+*/
 void writeToLog(string text,int stamp);
+
+/**
+*This method allows for writing to a given log file, with some measure of automation
+* This overloaded version allows for a stringstream, instead of a normal string, to be input.
+* Said string contains almost all of the text you wish to be written to the file.
+* Opening and closing of the file will be done on the fly, and should be guaranteed once this method reaches its end.
+*@param: ss: the text to be written to the output file. Type: Reference to a Stringsteam
+*@param: stamp: under which category we log this text: start of simulation [START], end of simulation [END],
+*		error while handling the OPLS files [OPLS] Zmatrix files [Z_MATRIX] or geometric config files [GEO], or generic [DEFAULT].
+*
+*@returns: [none]
+*/
 void writeToLog(stringstream& ss, int stamp);
 
 static inline std::string& rtrim(std::string& s);
