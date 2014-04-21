@@ -29,8 +29,7 @@ class ParallelBox : public Box
 		MoleculeData *moleculesH, *moleculesD;
 		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
 		Real *energiesD;
-
-		int maxMolSize;
+		int energyCount, maxMolSize;
 		
 		ParallelBox();
 		~ParallelBox();

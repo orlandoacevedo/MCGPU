@@ -97,7 +97,7 @@ void ParallelBox::copyDataToDevice()
 	//energies array on device has one segment for each molecule
 	//where each segment has the maximum number of
 	//possible interatomic energies for one pair of molecules
-	int energyCount = moleculesH->moleculeCount * maxMolSize * maxMolSize;
+	energyCount = moleculesH->moleculeCount * maxMolSize * maxMolSize;
 	cudaMalloc(&(energiesD), energyCount * sizeof(Real));
 	
 	//initialize energies to 0
