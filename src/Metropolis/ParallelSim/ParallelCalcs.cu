@@ -1,6 +1,12 @@
-/// @file ParallelCalcs.cu
-///
-/// Contains the methods required to calculate energies in parallel.
+/*
+	Contains the methods required to calculate energies in parallel.
+
+	Created: February 21, 2014
+	
+	-> February 26, by Albert Wallace
+	-> March 28, by Joshua Mosby
+	-> April 21, by Nathan Coleman
+*/
 
 #include "ParallelCalcs.h"
 #include "ParallelCalcs.cuh"

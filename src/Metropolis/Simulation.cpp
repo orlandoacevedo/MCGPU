@@ -1,11 +1,13 @@
 /*
-	New Simulation to replace linearSim and parallelSim
+	Driver for the simulation. Takes in a SimulationArgs object and creates the
+	the necessary Box type, state file output path, etc.
 
 	Author: Nathan Coleman
-	Last Changed: February 21, 2014
+	Created: February 21, 2014
 	
 	-> February 26, by Albert Wallace
 	-> March 28, by Joshua Mosby
+	-> April 21, by Nathan Coleman
 */
 
 #include <string>

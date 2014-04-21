@@ -1,6 +1,12 @@
-/// @file SerialCalcs.h
-///
-/// Header declaring SerialCalcs methods.
+/*
+	Contains the methods required to calculate energies serially.
+
+	Created: February 21, 2014
+	
+	-> February 26, by Albert Wallace
+	-> March 28, by Joshua Mosby
+	-> April 21, by Nathan Coleman
+*/
 
 #ifndef SERIALCALCS_H
 #define SERIALCALCS_H
