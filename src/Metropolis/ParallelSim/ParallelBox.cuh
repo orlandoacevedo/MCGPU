@@ -1,8 +1,13 @@
-/// @file ParallelBox.cuh
-///
-/// ParallelBox is a subclass of Box, implementing
-///   methods related to managing data between the
-///   host and device.
+/*
+	Implements methods related to managing data between the host and device.
+	Subclass of Box.
+
+	Created: February 21, 2014
+	
+	-> February 26, by Albert Wallace
+	-> March 28, by Joshua Mosby
+	-> April 21, by Nathan Coleman
+*/
 
 #ifndef PARALLELBOX_H
 #define PARALLELBOX_H

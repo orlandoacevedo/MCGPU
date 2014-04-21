@@ -1,6 +1,12 @@
-/// @file ParallelCalcs.cuh
-///
-/// Header declaring ParallelCalcs methods accessed from Cuda compiled code.
+/*
+	Contains the methods required to calculate energies in parallel.
+
+	Created: February 21, 2014
+	
+	-> February 26, by Albert Wallace
+	-> March 28, by Joshua Mosby
+	-> April 21, by Nathan Coleman
+*/
 
 #ifndef PARALLELCALCS_CUH
 #define PARALLELCALCS_CUH
