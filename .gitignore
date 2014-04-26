@@ -1,0 +1,17 @@
+bin/
+obj/
+*.dep
+*.o
+gmon.out
+*.log
+*.state
+*.results
+
+OutputLog
+
+
+src/Metropolis/Utilities/utilMk
+
+src/Metropolis/Utilities/utilMkI
+
+src/Metropolis/Utilities/math.h.old

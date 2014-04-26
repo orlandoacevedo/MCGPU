@@ -1,0 +1,6 @@
+set terminal png
+set output 'graph.png'
+set title "Serial/Parallel Time Comparison: 400 molecules on 40A3 box"
+set xlabel "Time Steps"
+set ylabel "Time (s)"
+plot 'graphing/simResults.txt' using 1:2 w lp title 'Serial','graphing/simResults.txt' using 1:3 w lp title 'Parallel' 

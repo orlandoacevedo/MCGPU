@@ -1,0 +1,18 @@
+     TIP3P Water
+   1  O   111  111    0     .000000   0     .000000   0     .000000        0    
+   2  DU   -1   -1    1    1.000000   0     .000000   0     .000000        0    
+   3  DU   -1   -1    2    1.000000   1   90.000000   0     .000000        0    
+   4  HO  112  112    1     .957200   2  127.740000   3   90.000000        0    
+   5  HO  112  112    1     .957200   4  104.520000   2  180.000000        0    
+                    Geometry Variations Follow                                  
+                    Variable Bonds follow         (I4 or I4-I4)                 
+                    Additional Bonds follow       (2I4)                         
+                    Harmonic Constraints follow                                 
+                    Variable Bond Angles follow   (I4 or I4-I4)                 
+                    Additional Bond Angles follow (3I4)                         
+                    Variable Dihedrals follow     (3I4,F12.6)                   
+                    Additional Dihedrals follow   (6I4)                         
+                    Domain Definitions follow     (4I4)                         
+                    Conformational Search                                       
+                    Final blank line                                            
+                                                                                
