@@ -10,11 +10,10 @@ GPU Comp Chem
  * Linux Operating System
     * Tested on: SUSE Linux Enterprise Server 11 SP2
  * NVIDIA Developer Toolkit
-    * Download from http://developer.nvidia.com/cuda-downloads based on your
-    * OS and follow the instructions given to install.
+    * Download from http://developer.nvidia.com/cuda-downloads based on your OS and follow the instructions given to install.
     * Tested with: CUDA 4.2
 
-Note: If you are using the Alabama Supercomputer Center (ASC), configure based on the instructions received when you set up your account.
+*Note*: If you are using the Alabama Supercomputer Center (ASC), configure based on the instructions received when you set up your account.
 
 ##Build
 ```
