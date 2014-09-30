@@ -909,9 +909,9 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			else if(BondedTo == 2)
             {
 				molec[m].atoms[2].x = molec[m].atoms[1].x - lineBond.distance * cos(thetaRadians);
+            }
 			molec[m].atoms[2].y = lineBond.distance * sin(thetaRadians);
 			molec[m].atoms[2].z = 0.0;
-            }
 		}
 		else
         {
