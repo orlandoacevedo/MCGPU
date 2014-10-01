@@ -29,7 +29,6 @@
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
 
-
 //Constructor & Destructor
 Simulation::Simulation(SimulationArgs simArgs)
 {
@@ -114,6 +113,7 @@ void Simulation::run()
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
 		{
 			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;	
+
 		}
 		
 		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0)
@@ -229,6 +229,8 @@ void Simulation::run()
 	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;
 
 	resultsFile.close();
+	writePDB(enviro, molecules);
+
 }
 
 void Simulation::saveState(const std::string& baseFileName, int simStep)
@@ -249,6 +251,59 @@ void Simulation::saveState(const std::string& baseFileName, int simStep)
 	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath);
 }
 
+int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection)
+{
+	//determine PDB file path
+	std::string pdbName;
+	if (args.simulationName.empty())
+		pdbName = RESULTS_FILE_DEFAULT;
+	else
+		pdbName = args.simulationName;
+	pdbName.append(".pdb");
+	
+	
+	std::ofstream pdbFile;
+	
+	pdbFile.open(pdbName.c_str());
+
+	
+	int numOfMolecules = sourceEnvironment.numOfMolecules;
+	pdbFile << "REMARK Created by MCGPU" << std::endl;
+	
+	for (int i = 0; i < numOfMolecules; i++)
+	{
+		Molecule currentMol = sourceMoleculeCollection[i];    	
+        for (int j = 0; j < currentMol.numOfAtoms; j++)
+        {
+			Atom currentAtom = currentMol.atoms[j];
+			pdbFile.setf(std::ios_base::left,std::ios_base::adjustfield);
+			pdbFile.width(6);
+			pdbFile << "ATOM";
+			pdbFile.setf(std::ios_base::right,std::ios_base::adjustfield);
+			pdbFile.width(5);
+			pdbFile << currentAtom.id + 1;
+			pdbFile.width(3); // change from 5
+			pdbFile << currentAtom.name;
+			pdbFile.width(6); // change from 4
+			pdbFile << "UNK";
+			pdbFile.width(6);
+			pdbFile << i + 1;
+			pdbFile.setf(std::ios_base::fixed, std::ios_base::floatfield);
+			pdbFile.precision(3);
+			pdbFile.width(12);
+			pdbFile << currentAtom.x;
+			pdbFile.width(8);
+			pdbFile << currentAtom.y;
+			pdbFile.width(8);
+			pdbFile << currentAtom.z << std::endl;
+        }
+        pdbFile << "TER" << std::endl;
+    }
+    pdbFile << "END" << std::endl;
+    pdbFile.close();
+
+	return 0;
+}
 const std::string Simulation::currentDateTime()
 {
     time_t     now = time(0);

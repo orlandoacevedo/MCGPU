@@ -33,6 +33,7 @@ class Simulation
 		long simSteps;
 		long stepStart;
 
+		int writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection);
 		void saveState(const std::string& simName, int simStep);
 		const std::string currentDateTime();
 };
