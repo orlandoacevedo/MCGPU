@@ -27,7 +27,19 @@ make
 ```
 cd /path/to/MCGPU/
 cd bin/
-./linearSim demoConfiguration.txt
+./metrosim ./water.config -s --name <job name>
+```
+
+###To Run a Simulation on the Alabama Supercomputer Center in debug mode:
+```
+gpu_interactive
+
+What architecture GPU do you want [any,t10,fermi,kepler]: <kepler>
+Do you want to use X-windows [y/n]: <n>
+
+cd /path/to/MCGPU/
+cd bin/
+./metrosim ./water.config -p --name <job name>
 ```
 
 ###To Run a Simulation on the Alabama Supercomputer Center:
@@ -35,7 +47,6 @@ cd bin/
 cd /path/to/MCGPU/
 run_gpu demo_script.txt
 ```
-
 Choose a batch job queue:
 ```
 Queue                 CPU    Mem # CPUs
