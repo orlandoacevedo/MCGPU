@@ -1,17 +1,16 @@
-GPU Comp Chem
-=============
+Computational Chemistry: Monte Carlo Simulations on CPU and GPU 
+===============================================================
 
 ##Requirements
 ###Required Hardware:
- * NVIDIA card with compute Compute Capability 2.0
- * Tested on: NVIDIA Tesla M2070
+ * Nvidia graphics card with compute Compute Capability 2.0 (or greater)
+    * Tested on Nvidia Tesla M2070
 
 ###Required Software:
  * Linux Operating System
-    * Tested on: SUSE Linux Enterprise Server 11 SP2
- * NVIDIA Developer Toolkit
-    * Download from http://developer.nvidia.com/cuda-downloads based on your OS and follow the instructions given to install.
-    * Tested with: CUDA 4.2
+    * Tested on Ubuntu 14.04 LTS, SUSE Linux Enterprise Server 11 SP2
+ * [Nvidia Developer Toolkit](http://developer.nvidia.com/cuda-downloads)
+    * Tested with CUDA 4.2, 6.5
 
 *Note*: If you are using the Alabama Supercomputer Center (ASC), configure based on the instructions received when you set up your account.
 
@@ -27,20 +26,9 @@ make
 ```
 cd /path/to/MCGPU/
 cd bin/
-./metrosim ./water.config -s --name <job name>
+./metrosim ./[configuration file] [options]
 ```
-
-###To Run a Simulation on the Alabama Supercomputer Center in debug mode:
-```
-gpu_interactive
-
-What architecture GPU do you want [any,t10,fermi,kepler]: <kepler>
-Do you want to use X-windows [y/n]: <n>
-
-cd /path/to/MCGPU/
-cd bin/
-./metrosim ./water.config -p --name <job name>
-```
+Where [configuration file] is a .config file containing configuration information, and [options] are command-line options. An example demo.config can be found in the resources folder. See below for specific .config file documentation and all command-line options available.
 
 ###To Run a Simulation on the Alabama Supercomputer Center:
 ```
@@ -56,7 +44,7 @@ medium-serial    90:00:00   16gb      1
 large-serial    240:00:00  120gb      1 
 class             2:00:00   64gb   1-64 
 daytime           4:00:00   16gb    1-4 
-express          01:00:00  500mb      1    
+express          01:00:00  500mb      1
 ```
 
 ```
@@ -71,7 +59,32 @@ You standard out for your job will be written to
 <jobname>.o<job number>
 ```
 
+###To Run a Simulation on the Alabama Supercomputer Center in debug mode:
+```
+gpu_interactive
+
+What architecture GPU do you want [any,t10,fermi,kepler]: <kepler>
+Do you want to use X-windows [y/n]: <n>
+
+cd /path/to/MCGPU/
+cd bin/
+./metrosim ./[configuration file]
+```
+
 For more information, see the Alabama Supercomputer Center manual.
+
+##Available Command-line Options
+ * --serial: Run simulation serially (on CPU; default)
+ * --parallel: Run simulation in parallel (on GPU; requries CUDA)
+ * --list-devices: List available CUDA-capable devices (requires CUDA)
+ * --device <index>: Specify what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
+ * --name <title>: Specifies the name of the simulation that will be run.
+ * --steps <count>: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
+ 
+To view documentation for all command-line flags available, use the --help flag:
+```
+./metrosim --help
+```
 
 ##Configuration File
 Configuration files are used to configure a simulation. 
