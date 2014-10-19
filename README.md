@@ -28,7 +28,7 @@ cd /path/to/MCGPU/
 cd bin/
 ./metrosim ./[configuration file] [options]
 ```
-Where [configuration file] is a .config file containing configuration information, and [options] are command-line options. An example demo.config can be found in the resources folder. See below for specific .config file documentation and all command-line options available.
+Where `[configuration file]` is a .config file containing configuration information, and `[options]` are command-line options. An example demo.config can be found in the resources folder. See below for specific .config file documentation and all command-line options available.
 
 ###To Run a Simulation on the Alabama Supercomputer Center:
 ```
@@ -74,12 +74,12 @@ cd bin/
 For more information, see the Alabama Supercomputer Center manual.
 
 ##Available Command-line Options
- * --serial: Run simulation serially (on CPU; default)
- * --parallel: Run simulation in parallel (on GPU; requries CUDA)
- * --list-devices: List available CUDA-capable devices (requires CUDA)
- * --device <index>: Specify what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
- * --name <title>: Specifies the name of the simulation that will be run.
- * --steps <count>: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
+ * `--serial`: Run simulation serially (on CPU; default)
+ * `--parallel`: Run simulation in parallel (on GPU; requries CUDA)
+ * `--list-devices`: List available CUDA-capable devices (requires CUDA)
+ * `--device <index>`: Specify what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
+ * `--name <title>`: Specifies the name of the simulation that will be run.
+ * `--steps <count>`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
  
 To view documentation for all command-line flags available, use the --help flag:
 ```
