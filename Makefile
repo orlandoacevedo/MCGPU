@@ -67,7 +67,7 @@ SHELL = /bin/sh
 # The relative path to the directory containing the source files
 SourceDir := src
 
-# The relative path to the directory containing the testing source files
+# The relative path to the directory containing the unit tests
 TestDir := test
 
 # The relative path to the object directory
@@ -214,7 +214,7 @@ UnitTestDir := $(TestDir)/unittests
 
 # The relative path to the Google Test module that contains the source
 # code and libraries for the Google Test framework.
-GTestDir := $(TestDir)/gtest-1.7.0
+GTestDir := gtest
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
