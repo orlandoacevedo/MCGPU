@@ -21,6 +21,11 @@ cd MCGPU/
 make
 ```
 
+*Note*: To build in debug mode, use BUILD=debug:
+```
+make BUILD=debug
+```
+
 ##Run
 ###To Run a Simulation on a local machine:
 ```
