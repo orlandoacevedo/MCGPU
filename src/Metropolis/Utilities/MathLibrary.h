@@ -162,7 +162,7 @@ Atom getAtom(vector<Atom> atoms, unsigned long atomID);
   @return - the bond containing a1 and a2
           - Bond(-1,-1,false) if a suitable bond has not been found
  */
-Bond getBond(vector<Bond> bonds, unsigned long a1, unsigned long a2);
+Bond getBond(const vector<Bond>& bonds, unsigned long a1, unsigned long a2);
 
 /**
   Returns a vector of all of the atoms bonded to atom id

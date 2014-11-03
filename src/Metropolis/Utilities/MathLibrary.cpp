@@ -69,11 +69,12 @@ Atom getAtom(vector<Atom> atoms, unsigned long atomID)
     return createAtom(-1,-1,-1,-1);
 }
 
-Bond getBond(vector<Bond> bonds, unsigned long a1, unsigned long a2)
+Bond getBond(const vector<Bond>& bonds, unsigned long a1, unsigned long a2)
 {
     for(int i = 0; i < bonds.size(); i++)
     {
-        if(getOppositeAtom(bonds[i], a1) == a2)
+        //if(getOppositeAtom(bonds[i], a1) == a2)
+        if (bonds[i].atom1 == a1 && bonds[i].atom2 == a2)
         {
             return bonds[i];
         }
