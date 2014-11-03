@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include <string>
-#include "Metropolis/DataTypes.h"
+#include "../DataTypes.h"
 
 
 //Forward declaration so that each can be used in methods below
@@ -67,10 +67,10 @@ struct Bond
     	variable = true;
 	}
     	
-    Bond(int atom1, int atom2, Real dist, bool varied)
+    Bond(int a1, int a2, Real dist, bool varied)
 	{
-        atom1 = atom1;
-        atom2 = atom2;
+        atom1 = a1;
+        atom2 = a2;
         distance = dist;
         variable = varied;
 	}
@@ -113,6 +113,15 @@ struct Angle
     	value = 0;
     	variable = true;
 	}
+	
+	
+    Angle(int a1, int a2, Real val, bool varied)
+	{
+    	atom1 = a1;
+    	atom2 = a2;
+    	value = val;
+    	variable = varied;
+	}
 };
 
 /**
@@ -148,6 +157,15 @@ struct Dihedral
     	atom2 = 0;
     	value = 0;
     	variable = true;
+	}
+	
+	
+    Dihedral(int a1, int a2, Real val, bool varied)
+	{
+    	atom1 = a1;
+    	atom2 = a2;
+    	value = val;
+    	variable = varied;
 	}
 };
 
@@ -211,7 +229,7 @@ struct Atom
 		id = 0;
 	}
 	
-	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma, Real inEpsilon, Real inCharge, char inName)
+	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, char inName = 0)
 	{
 		x = inX;
 		y = inY;
@@ -222,7 +240,6 @@ struct Atom
 		name = inName;
         id = inID;
 	}
-	
 };
 
 struct Environment
