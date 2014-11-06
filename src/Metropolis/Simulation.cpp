@@ -65,7 +65,6 @@ Simulation::~Simulation()
 	}
 }
 
-//Utility
 void Simulation::run()
 {
 	std::cout << "Simulation Name: " << args.simulationName << std::endl;
@@ -82,7 +81,7 @@ void Simulation::run()
 	clock_t startTime, endTime;
     startTime = clock();
 	
-	//calculate old energy
+	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
 	{
 		if (args.simulationMode == SimulationMode::Parallel)
@@ -108,8 +107,10 @@ void Simulation::run()
 		baseStateFile.append("untitled");
 	}
 	
-	for(int move = stepStart; move < (stepStart + simSteps); move++)
+	//Loop for each individual step
+	for (int move = stepStart; move < (stepStart + simSteps); move++)
 	{
+		//provide printouts at each pre-determined interval (not at each step)
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
 		{
 			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;	
@@ -123,8 +124,10 @@ void Simulation::run()
 			std::cout << std::endl;
 		}
 		
+		//Randomly select index of a molecule for changing
 		int changeIdx = box->chooseMolecule();
 		
+		//Calculate the current/original/old energy contribution for the current molecule
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
 			oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
@@ -133,9 +136,11 @@ void Simulation::run()
 		{
 			oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
 		}
-			
+		
+		//Actually translate the molecule at the preselected index	
 		box->changeMolecule(changeIdx);
 		
+		//Calculate the new energy after translation
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
 			newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
@@ -145,12 +150,14 @@ void Simulation::run()
 			newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
 		}
 		
+		//Compare new energy and old energy to decide if we should accept or not
 		bool accept = false;
-		
+		//Always accept decrease in energy
 		if(newEnergyCont < oldEnergyCont)
 		{
 			accept = true;
 		}
+		//Use statistics+random number to determine weather to accept increase in energy
 		else
 		{
 			Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
