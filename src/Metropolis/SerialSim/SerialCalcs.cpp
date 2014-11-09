@@ -77,8 +77,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 			if (r2 < cutoffSQ)
 			{
 				Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
-				#pragma omp atomic
 				//this addition needs to be atomic since multiple threads will be modifying totalEnergy
+				#pragma omp atomic
 				totalEnergy += tempEnergy;
 			}
 		}
