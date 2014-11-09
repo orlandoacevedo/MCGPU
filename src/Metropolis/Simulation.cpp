@@ -15,6 +15,7 @@
 #include <fstream>
 #include <time.h>
 #include <stdio.h>
+#include <omp.h>
 
 #include "Simulation.h"
 #include "SimulationArgs.h"
@@ -28,7 +29,6 @@
 
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
-#define THREAD_COUNT 4
 
 //Constructor & Destructor
 Simulation::Simulation(SimulationArgs simArgs)
@@ -36,6 +36,13 @@ Simulation::Simulation(SimulationArgs simArgs)
 	args = simArgs;
 
 	stepStart = 0;
+	
+	int processorCount = omp_get_num_procs();
+	//we seem to get the best performance if we use half as many threads as there are 'logical' processors.
+	threadsToSpawn = max(processorCount / 2, 1);
+	std:cout processorCount << " OpenMP Processors Detected; using" << threadsToSpawn << " threads." << endl;
+	omp_set_num_threads(threadsToSpawn);
+	//std::cout << "Sysconf Processors Detected: " << sysconf(_SC_NPROCESSORS_ONLN) << endl;
 
 	if (simArgs.simulationMode == SimulationMode::Parallel)
 		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
@@ -187,7 +194,9 @@ void Simulation::run()
 	}
 
 	endTime = clock();
-    double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * THREAD_COUNT);
+	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
+	//However, it is a good enough estimation witout adding unnecessary complexity.
+    double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 
 	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << oldEnergy << std::endl;
 	currentEnergy = oldEnergy;

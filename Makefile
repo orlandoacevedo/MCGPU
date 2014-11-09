@@ -169,7 +169,7 @@ LibPaths := $(CUDA_LIB_PATH)
 # to finish linking in the final executable. These library files must
 # be located in the CUDA_LIB_PATH directory, else the device code cannot
 # be compiled.
-CudaLibFlags := -lcuda -lcudart
+CudaLibFlags := -lcudart
 
 # The target device architecture flags specified when compiling and linking
 # the CUDA device code

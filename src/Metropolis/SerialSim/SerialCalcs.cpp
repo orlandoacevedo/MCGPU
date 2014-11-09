@@ -54,7 +54,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
     Real totalEnergy = 0;
 	
 	//for every other molecule
-	#pragma omp parallel for num_threads(4)
+	#pragma omp parallel for //num_threads(4) <- this is set in Simulation.cpp
 	for (int otherMol = startIdx; otherMol < environment->numOfMolecules; otherMol++)
 	{
 		if (otherMol != currentMol)
@@ -78,6 +78,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 			{
 				Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
 				#pragma omp atomic
+				//this addition needs to be atomic since multiple threads will be modifying totalEnergy
 				totalEnergy += tempEnergy;
 			}
 		}
@@ -108,9 +109,8 @@ Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 					 (deltaY * deltaY) + 
 					 (deltaZ * deltaZ);
 				
-				Real thisEnergy = calc_lj(atom1, atom2, r2);
-				thisEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
-				totalEnergy += thisEnergy;
+				totalEnergy += calc_lj(atom1, atom2, r2);
+				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
 			}
 		}
 		
