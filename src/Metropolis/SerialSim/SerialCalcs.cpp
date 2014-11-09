@@ -54,6 +54,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
     Real totalEnergy = 0;
 	
 	//for every other molecule
+	#pragma omp parallel for num_threads(4)
 	for (int otherMol = startIdx; otherMol < environment->numOfMolecules; otherMol++)
 	{
 		if (otherMol != currentMol)
@@ -75,7 +76,9 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 
 			if (r2 < cutoffSQ)
 			{
-				totalEnergy += calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
+				Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
+				#pragma omp atomic
+				totalEnergy += tempEnergy;
 			}
 		}
 	}
@@ -89,7 +92,7 @@ Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 	for (int i = 0; i < molecules[mol1].numOfAtoms; i++)
 	{
 		Atom atom1 = molecules[mol1].atoms[i];
-	
+		
 		for (int j = 0; j < molecules[mol2].numOfAtoms; j++)
 		{
 			Atom atom2 = molecules[mol2].atoms[j];
@@ -105,8 +108,9 @@ Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 					 (deltaY * deltaY) + 
 					 (deltaZ * deltaZ);
 				
-				totalEnergy += calc_lj(atom1, atom2, r2);
-				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+				Real thisEnergy = calc_lj(atom1, atom2, r2);
+				thisEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+				totalEnergy += thisEnergy;
 			}
 		}
 		

@@ -28,6 +28,7 @@
 
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
+#define THREAD_COUNT 4
 
 //Constructor & Destructor
 Simulation::Simulation(SimulationArgs simArgs)
@@ -186,7 +187,7 @@ void Simulation::run()
 	}
 
 	endTime = clock();
-    double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;
+    double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * THREAD_COUNT);
 
 	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << oldEnergy << std::endl;
 	currentEnergy = oldEnergy;

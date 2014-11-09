@@ -169,7 +169,7 @@ LibPaths := $(CUDA_LIB_PATH)
 # to finish linking in the final executable. These library files must
 # be located in the CUDA_LIB_PATH directory, else the device code cannot
 # be compiled.
-CudaLibFlags := -lcudart
+CudaLibFlags := -lcuda -lcudart
 
 # The target device architecture flags specified when compiling and linking
 # the CUDA device code
@@ -184,10 +184,10 @@ CxxFlags := -c
 CuFlags := -c -rdc=true $(CudaArchitecture)
 
 # Linker specific flags for the C++ compiler
-LCxxFlags :=
+LCxxFlags := 
 
 # Linker specific flags for the CUDA compiler
-LCuFlags := -rdc=true $(CudaArchitecture)
+LCuFlags := -rdc=true $(CudaArchitecture) -lgomp
 
 # The debug compiler flags that add symbol and profiling hooks to the
 # executable for C++ code
@@ -199,7 +199,7 @@ CuDebugFlags := -g -G -pg
 
 # The release build compiler flags that add optimization flags and remove
 # all symbol and relocation table information from the executable.
-CxxReleaseFlags := -O3 -s
+CxxReleaseFlags := -O3 -s -fopenmp
 
 # The release build comiler flags that add optimization flags to the
 # executable.
