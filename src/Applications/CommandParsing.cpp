@@ -49,7 +49,7 @@ using std::string;
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:I:n:d:sphQV";
+		const char* short_options = ":i:I:n:i:d:sphQV";
 
 		// The long options recognized by the program
 		struct option long_options[] = 
@@ -57,6 +57,7 @@ using std::string;
 			{"status-interval", 	required_argument, 	0, 	'i'},
 			{"state-interval",		required_argument,	0,	'I'},
 			{"steps",				required_argument,	0,	'n'},
+			{"threads",				required_argument,	0,	't'},
 			{"serial", 				no_argument, 		0, 	's'},
 			{"parallel", 			no_argument, 		0, 	'p'},
 			{"help", 				no_argument, 		0, 	'h'},
@@ -126,6 +127,21 @@ using std::string;
 					{
 						std::cerr << APP_NAME << ": ";
 						std::cerr << " --steps (-n): Step count must be greater than zero" << std::endl;
+						return false;
+					}
+					break;
+				case 't':	/* thread count */
+					params->threadFlag = true;
+					if (!fromString<int>(optarg, params->threadCount))
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --threads (-t): Invalid thread count" << std::endl;
+						return false;
+					}
+					if (params->threadCount <= 0)
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --threads (-t): Thread count must be greater than zero" << std::endl;
 						return false;
 					}
 					break;
@@ -248,6 +264,7 @@ using std::string;
 		args->statusInterval = params->statusInterval;
 		args->stateInterval = params->stateInterval;
 		args->stepCount = params->stepCount;
+		args->threadCount = params->threadCount;
 		args->simulationName = params->simulationName;
 
 		if (!params->parallelFlag && params->deviceFlag)
@@ -310,6 +327,14 @@ using std::string;
 			  "\t\t  configuration settings and parameters.\n";
 		cout << "\t.state\t: Resume a previous simulation that was saved.\n";
 		cout << "\n";
+		
+		cout << "CPU Operation Flags\n"
+			  "====================\n";
+		cout << "--threads <count>\t\t(-t)\n";
+		cout << "\tSpecifies how many threads are launched when calculating molecular\n"
+				"\tinteraction. This value must a valid integer that is greater than\n"
+				"\tzero. If value specified is greater than the device capabilities,\n"
+				"\tthe number used will be the device maximum.\n\n";
 
 		cout << "GPU Operation Flags\n"
 			  "====================\n";

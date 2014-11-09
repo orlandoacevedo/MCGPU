@@ -40,7 +40,12 @@ Simulation::Simulation(SimulationArgs simArgs)
 	int processorCount = omp_get_num_procs();
 	//we seem to get the best performance if we use half as many threads as there are 'logical' processors.
 	threadsToSpawn = max(processorCount / 2, 1);
-	std:cout processorCount << " OpenMP Processors Detected; using" << threadsToSpawn << " threads." << endl;
+	if (simArgs.threadCount > 0) {
+		threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
+	}
+	
+	
+	std:cout << processorCount << " OpenMP Processors Detected; using " << threadsToSpawn << " threads." << endl;
 	omp_set_num_threads(threadsToSpawn);
 	//std::cout << "Sysconf Processors Detected: " << sysconf(_SC_NPROCESSORS_ONLN) << endl;
 
