@@ -46,7 +46,7 @@ Simulation::Simulation(SimulationArgs simArgs)
 	}
 	
 	
-	std:cout << processorCount << " OpenMP Processors Detected; using " << threadsToSpawn << " threads." << endl;
+	std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
 	omp_set_num_threads(threadsToSpawn);
 	omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
 	//std::cout << "Sysconf Processors Detected: " << sysconf(_SC_NPROCESSORS_ONLN) << endl;
@@ -238,10 +238,12 @@ void Simulation::run()
 	if (!args.simulationName.empty())
 		resultsFile << "Simulation-Name = " << args.simulationName << std::endl;
 
-	if (args.simulationMode == SimulationMode::Parallel)
+	if (args.simulationMode == SimulationMode::Parallel) {
 		resultsFile << "Simulation-Mode = GPU" << std::endl;
-	else
+	} else {
 		resultsFile << "Simulation-Mode = CPU" << std::endl;
+		resultsFile << "Threads-Used = " << threadsToSpawn << std::endl;
+	}
 	resultsFile << "Starting-Step = " << stepStart << std::endl;
 	resultsFile << "Steps = " << simSteps << std::endl;
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;
