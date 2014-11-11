@@ -15,6 +15,8 @@
 #include "Metropolis/Utilities/FileUtilities.h"
 #include "Metropolis/Box.h"
 #include "Metropolis/SimulationArgs.h"
+#include <thrust/reduce.h>
+#include <thrust/device_ptr.h>
 
 #define NO -1
 
@@ -130,29 +132,12 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 
 Real ParallelCalcs::getEnergyFromDevice(ParallelBox *box, int validEnergies)
 {
-	Real totalEnergy = 0;
+	//Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
+	thrust::device_ptr<Real> devEnergiesD = thrust::device_pointer_cast(&box->energiesD[0]);
+	Real totalEnergy = thrust::reduce(devEnergiesD, devEnergiesD + validEnergies * sizeof(Real), (Real) 0, thrust::plus<Real>());
 	
-	//a batch size of 3 seems to offer the best tradeoff between parallelization and locality
-	int batchSize = 3, blockSize = AGG_BLOCK;
-	int numBaseThreads = validEnergies / (batchSize);
-	for (int i = 1; i < validEnergies; i *= batchSize)
-	{
-		//there is no need for giant blocks when only a few threads are being run
-		if (blockSize > MAX_WARP && numBaseThreads / i + 1 < blockSize)
-		{
-			blockSize /= 2;
-		}
-		
-		//do the next aggregation pass
-		aggregateEnergies<<<numBaseThreads / (i * blockSize) + 1, blockSize>>>
-		(box->energiesD, validEnergies, i, batchSize);
-	}
-	
-	//the total energy will be stored in the first index of box->energiesD
-	cudaMemcpy(&totalEnergy, box->energiesD, sizeof(Real), cudaMemcpyDeviceToHost);
-	
-	//reset final energy to 0, resulting in a clear energies array for the next calculation
-	cudaMemset(box->energiesD, 0, sizeof(Real));
+	//reset all energies to 0
+	cudaMemset(box->energiesD, 0, box->energyCount * sizeof(Real));
 	
 	return totalEnergy;
 }
@@ -187,7 +172,8 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 
 __global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
 {
-	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x, segmentSize = maxMolSize * maxMolSize;
+	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x;
+	int segmentSize = maxMolSize * maxMolSize;
 	
 	//check validity of thread
 	if (energyIdx < energyCount and molBatch[energyIdx / segmentSize] != NO)
@@ -196,7 +182,8 @@ __global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, At
 		int otherMol = molBatch[energyIdx / segmentSize];
 		
 		//get atom pair for this thread
-		int x = (energyIdx % segmentSize) / maxMolSize, y = (energyIdx % segmentSize) % maxMolSize;
+		int x = (energyIdx % segmentSize) / maxMolSize;
+		int y = (energyIdx % segmentSize) % maxMolSize;
 		
 		//check validity of atom pair
 		if (x < molecules->numOfAtoms[currentMol] && y < molecules->numOfAtoms[otherMol])
@@ -226,23 +213,6 @@ __global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, At
 				//store energy
 				energies[energyIdx] = totalEnergy;
 			}
-		}
-	}
-}
-
-__global__ void ParallelCalcs::aggregateEnergies(Real *energies, int energyCount, int interval, int batchSize)
-{
-	//calculate starting index for this thread
-	int idx = batchSize * interval * (blockIdx.x * blockDim.x + threadIdx.x), i;
-	
-	for (i = 1; i < batchSize; i++)
-	{
-		//make strides of size 'interval'
-		if (idx + i * interval < energyCount)
-		{
-			//add energy, and then reset it
-			energies[idx] += energies[idx + i * interval];
-			energies[idx + i * interval] = 0;
 		}
 	}
 }
