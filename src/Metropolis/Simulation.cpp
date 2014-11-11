@@ -15,6 +15,7 @@
 #include <fstream>
 #include <time.h>
 #include <stdio.h>
+#include <omp.h>
 
 #include "Simulation.h"
 #include "SimulationArgs.h"
@@ -35,6 +36,20 @@ Simulation::Simulation(SimulationArgs simArgs)
 	args = simArgs;
 
 	stepStart = 0;
+	
+	int processorCount = omp_get_num_procs();
+	//We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
+	//We could do performance tuning to get more information on what the ideal number might be.
+	threadsToSpawn = max(processorCount / 2, 1);
+	if (simArgs.threadCount > 0) {
+		threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
+	}
+	
+	
+	std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
+	omp_set_num_threads(threadsToSpawn);
+	omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
+	//std::cout << "Sysconf Processors Detected: " << sysconf(_SC_NPROCESSORS_ONLN) << endl;
 
 	if (simArgs.simulationMode == SimulationMode::Parallel)
 		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
@@ -186,7 +201,9 @@ void Simulation::run()
 	}
 
 	endTime = clock();
-    double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;
+	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
+	//However, it is a good enough estimation witout adding unnecessary complexity.
+    double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 
 	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << oldEnergy << std::endl;
 	currentEnergy = oldEnergy;
@@ -221,10 +238,12 @@ void Simulation::run()
 	if (!args.simulationName.empty())
 		resultsFile << "Simulation-Name = " << args.simulationName << std::endl;
 
-	if (args.simulationMode == SimulationMode::Parallel)
+	if (args.simulationMode == SimulationMode::Parallel) {
 		resultsFile << "Simulation-Mode = GPU" << std::endl;
-	else
+	} else {
 		resultsFile << "Simulation-Mode = CPU" << std::endl;
+		resultsFile << "Threads-Used = " << threadsToSpawn << std::endl;
+	}
 	resultsFile << "Starting-Step = " << stepStart << std::endl;
 	resultsFile << "Steps = " << simSteps << std::endl;
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;

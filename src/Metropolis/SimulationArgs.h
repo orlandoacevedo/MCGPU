@@ -76,6 +76,9 @@ struct SimulationArgs
 	/// The number of simulation steps to execute in the current run.
 	int stepCount;
 
+	/// The number of threads to use in the current run.
+	int threadCount;
+
 	/// The number of simulation steps between status updates printed to
 	/// the console. A value of 0 means that status updates are only
 	/// printed at the beginning and the end of the simulation.

@@ -79,10 +79,11 @@ cd bin/
 For more information, see the Alabama Supercomputer Center manual.
 
 ##Available Command-line Options
- * `--serial`: Run simulation serially (on CPU; default)
- * `--parallel`: Run simulation in parallel (on GPU; requries CUDA)
- * `--list-devices`: List available CUDA-capable devices (requires CUDA)
- * `--device <index>`: Specify what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
+ * `--serial`: Runs simulation serially (on CPU; default)
+ * `--parallel`: Runs simulation in parallel (on GPU; requries CUDA)
+ * `--list-devices`: Lists available CUDA-capable devices (requires CUDA)
+ * `--device <index>`: Specifies what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
+ * `--threads <count>`: Specifies number of threads to use when running on CPU (serial only)
  * `--name <title>`: Specifies the name of the simulation that will be run.
  * `--steps <count>`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
  

@@ -42,6 +42,10 @@
 		/// The number of simulation steps to execute in the current run.
 		/// This must be a valid integer number greater than zero.
 		int stepCount;
+		
+		/// The number of threads to launch in serial mode.
+		/// This must be a valid integer number greater than zero.
+		int threadCount;
 
 		/// Declares whether the help option was specified.
 		bool helpFlag;
@@ -77,6 +81,9 @@
 		/// Declares whether the steps option was specified.
 		bool stepFlag;
 
+		/// Declares whether the thread count option was specified.
+		bool threadFlag;
+
 		/// Declares whether the serial execution option was specified.
 		bool serialFlag;
 
@@ -87,6 +94,7 @@
 		CommandParameters() :	statusInterval(DEFAULT_STATUS_INTERVAL),
 								stateInterval(0),
 								stepCount(0),
+								threadCount(0),
 								argCount(0),
 								argList(NULL),
 								helpFlag(false),
@@ -96,6 +104,7 @@
 								deviceFlag(false),
 								statusFlag(false), 
 								stepFlag(false),
+								threadFlag(false),
 								serialFlag(false),
 								parallelFlag(false) {}
 	};
