@@ -37,19 +37,25 @@ Simulation::Simulation(SimulationArgs simArgs)
 
 	stepStart = 0;
 	
-	int processorCount = omp_get_num_procs();
-	//We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
-	//We could do performance tuning to get more information on what the ideal number might be.
-	threadsToSpawn = max(processorCount / 2, 1);
-	if (simArgs.threadCount > 0) {
-		threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
+	if (args.simulationMode == SimulationMode::Parallel) {
+		//we need to set this to 1 in parallel mode because it is irrelevant BUT is used in the 
+		//runtime calculation. See summary equation for explanation.
+		threadsToSpawn = 1;
+	} else {
+		int processorCount = omp_get_num_procs();
+		//We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
+		//We could do performance tuning to get more information on what the ideal number might be.
+		threadsToSpawn = max(processorCount / 2, 1);
+		if (simArgs.threadCount > 0) {
+			threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
+		}
+		
+		
+		std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
+		omp_set_num_threads(threadsToSpawn);
+		omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
+		//std::cout << "Sysconf Processors Detected: " << sysconf(_SC_NPROCESSORS_ONLN) << endl;
 	}
-	
-	
-	std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
-	omp_set_num_threads(threadsToSpawn);
-	omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
-	//std::cout << "Sysconf Processors Detected: " << sysconf(_SC_NPROCESSORS_ONLN) << endl;
 
 	if (simArgs.simulationMode == SimulationMode::Parallel)
 		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
