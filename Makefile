@@ -355,7 +355,7 @@ $(AppName) : $(Objects) $(ProgramMain) | dirtree
 	$(NVCC) $^ $(Includes) $(Defines) $(Libraries) -o $(AppDir)/$@ $(LCuFlags)
 
 $(UnitTestName) : $(Objects) $(UnitTestingObjects) $(BuildDir)/cuda_link.o $(ObjDir)/gtest_main.a | dirtree
-	g++ $^ $(GTestFlags) $(Includes) $(Defines) $(Libraries) -o $(AppDir)/$@ $(CudaLibFlags)
+	g++ $^ $(GTestFlags) $(Includes) $(Defines) $(Libraries) -o $(AppDir)/$@ $(CudaLibFlags) -fopenmp
 
 dirtree :
 	@mkdir -p $(ObjFolders) $(BinDir) $(ObjDir) $(AppDir) $(BuildDir)
