@@ -16,6 +16,9 @@
 #include <time.h>
 #include <stdio.h>
 #include <omp.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdlib.h>
 
 #include "Simulation.h"
 #include "SimulationArgs.h"
@@ -93,8 +96,25 @@ void Simulation::run()
 	int accepted = 0;
 	int rejected = 0;
 
+	string directory = get_current_dir_name();
+	
+	std::string mc ("MCGPU");
+	std::size_t found = directory.find(mc);
+	
+	if (found != std::string::npos) {
+		directory = directory.substr(0,found+6);
+	}
+	std::string MCGPU = directory;
+
+	MCGPU.append("bin/pdbFiles");
+	
+	mkdir(MCGPU.data(), 0777);
+
 	clock_t startTime, endTime;
-    startTime = clock();
+	int pdbSequenceNum = 0;
+	startTime = clock();
+
+	
 	
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
@@ -129,7 +149,9 @@ void Simulation::run()
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
 		{
 			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;	
-
+			//Make printing at each step optional
+			//writePDB(enviro, molecules, pdbSequenceNum, MCGPU);
+			//pdbSequenceNum++;					
 		}
 		
 		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0)
@@ -199,7 +221,7 @@ void Simulation::run()
 			box->rollback(changeIdx);
 		}
 	}
-
+	writePDB(enviro, molecules, pdbSequenceNum, MCGPU);
 	endTime = clock();
 	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
 	//However, it is a good enough estimation witout adding unnecessary complexity.
@@ -255,7 +277,7 @@ void Simulation::run()
 	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;
 
 	resultsFile.close();
-	writePDB(enviro, molecules);
+
 
 }
 
@@ -277,21 +299,21 @@ void Simulation::saveState(const std::string& baseFileName, int simStep)
 	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath);
 }
 
-int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection)
+int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection, int sequenceNum, string location)
 {
 	//determine PDB file path
-	std::string pdbName;
+	string pdbName = location;
+	pdbName.append("/");
+	string numAsString = static_cast<ostringstream*>( &(ostringstream() << sequenceNum) )->str();
 	if (args.simulationName.empty())
-		pdbName = RESULTS_FILE_DEFAULT;
+		pdbName.append(RESULTS_FILE_DEFAULT);
 	else
-		pdbName = args.simulationName;
+		pdbName.append(args.simulationName);
+	pdbName.append(numAsString);
 	pdbName.append(".pdb");
 	
-	
-	std::ofstream pdbFile;
-	
+	std::ofstream pdbFile;	
 	pdbFile.open(pdbName.c_str());
-
 	
 	int numOfMolecules = sourceEnvironment.numOfMolecules;
 	pdbFile << "REMARK Created by MCGPU" << std::endl;
@@ -325,7 +347,7 @@ int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMolecul
         }
         pdbFile << "TER" << std::endl;
     }
-    pdbFile << "END" << std::endl;
+   // pdbFile << "END" << std::endl;
     pdbFile.close();
 
 	return 0;
