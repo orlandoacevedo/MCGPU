@@ -86,7 +86,8 @@ For more information, see the Alabama Supercomputer Center manual.
  * `--threads <count>`: Specifies number of threads to use when running on CPU (serial only)
  * `--name <title>`: Specifies the name of the simulation that will be run.
  * `--steps <count>`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
- 
+ * `--silent`: Disables real time energy printouts
+
 To view documentation for all command-line flags available, use the --help flag:
 ```
 ./metrosim --help
