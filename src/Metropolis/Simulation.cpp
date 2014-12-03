@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "Simulation.h"
 #include "SimulationArgs.h"
