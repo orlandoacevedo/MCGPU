@@ -6,8 +6,18 @@
 // Implementation details: See gtest/samples for GTest syntax and usage
 TEST(IOTests, ConfigScan)
 {
-  
-    string configPath = "bin/configurationTest.txt"; 
+    
+    string directory = get_current_dir_name();
+    std::string mc ("MCGPU");
+    std::size_t found = directory.find(mc);
+	
+    if (found != std::string::npos) {
+        directory = directory.substr(0,found+6);
+    }
+    std::string MCGPU = directory; 
+    
+    string configPath = MCGPU;
+    configPath.append("stuff/configurationTest.txt"); 
     string oplsPath = "path/to/opls/file";
     string zMatrixPath = "path/to/zMatrix/file";
     string stateInputPath = "path/to/state/input";
