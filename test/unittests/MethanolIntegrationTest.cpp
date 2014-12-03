@@ -63,13 +63,14 @@ TEST(DISABLED_MethanolTest, FrontToEndIntegrationTest)
 		<< "12345\n"
 		<< "#Primary Atom Index\n"
 		<< "1";
+		
 	configFile << cfg.str();
 	configFile.close();
 	
     std::stringstream ss;    
 	ss << MCGPU << "/bin/metrosim "
        << " " // don't forget a space between the path and the arguments
-       << MCGPU << "/test/unittests/Integration/MethanolTest/MethanolTest.config -s --name methanolCPU";
+       << MCGPU << "/test/unittests/Integration/MethanolTest/MethanolTest.config -s --name methanolCPU -k";
 	
 	
     // Launch MCGPU application in serial, expect output files in /MCGPU/ directory   
