@@ -69,7 +69,7 @@ TEST(WaterTest, FrontToEndIntegrationTest)
     std::stringstream ss;    
 	ss << MCGPU << "/bin/metrosim "
        << " " // don't forget a space between the path and the arguments
-       << MCGPU << "/test/unittests/Integration/WaterTest/WaterTest.config -s --name waterCPU";
+       << MCGPU << "/test/unittests/Integration/WaterTest/WaterTest.config -s --name waterCPU -k";
 	
 	
     // Launch MCGPU application in serial, expect output files in /MCGPU/ directory   

@@ -12,7 +12,7 @@
 
 // Descr: evident
 // Implementation details: See gtest/samples for GTest syntax and usage
-TEST(DISABLED_IndoleTest, FrontToEndIntegrationTest)
+TEST(IndoleTest, FrontToEndIntegrationTest)
 {
 	string directory = get_current_dir_name();
 	
@@ -69,7 +69,7 @@ TEST(DISABLED_IndoleTest, FrontToEndIntegrationTest)
     std::stringstream ss;    
 	ss << MCGPU << "/bin/metrosim "
        << " " // don't forget a space between the path and the arguments
-       << MCGPU << "/test/unittests/Integration/IndoleTest/IndoleTest.config -s --name indoleCPU";
+       << MCGPU << "/test/unittests/Integration/IndoleTest/IndoleTest.config -s --name indoleCPU -k";
 	
 	
     // Launch MCGPU application in serial, expect output files in /MCGPU/ directory   
