@@ -12,7 +12,7 @@
 
 // Descr: evident
 // Implementation details: See gtest/samples for GTest syntax and usage
-TEST(DISABLED_MethanolTest, FrontToEndIntegrationTest)
+TEST(MethanolTest, FrontToEndIntegrationTest)
 {
 	string directory = get_current_dir_name();
 	
@@ -46,13 +46,13 @@ TEST(DISABLED_MethanolTest, FrontToEndIntegrationTest)
 		<< "#number of molecues\n"
 		<< "256\n"
 		<< "#path to opls.par file\n"
-		<< MCGPU << "resources/bossFiles/oplsaa.par\n"
+		<< MCGPU << "/resources/bossFiles/oplsaa.par\n"
 		<< "#path to z matrix file\n"
-		<< MCGPU << "test/unittests/Integration/MethanolTest/meoh.z\n"
+		<< MCGPU << "/test/unittests/Integration/MethanolTest/meoh.z\n"
 		<< "#path to state input\n"
-		<< MCGPU << "test/unittests/Integration/MethanolTest\n"
+		<< "\n"
 		<< "#path to state output\n"
-		<< MCGPU << "test/unittests/Integration/MethanolTest\n"
+		<< MCGPU << "/test/unittests/Integration/MethanolTest\n"
 		<< "#pdb output path\n"
 		<< "methanoltest.pdb\n"
 		<< "#cutoff distance in angstroms\n"
@@ -79,7 +79,9 @@ TEST(DISABLED_MethanolTest, FrontToEndIntegrationTest)
 	double expected = -1800;
 	double energyResult = -1;
 	
-	std::ifstream infile( std::string(MCGPU + "bin/methanolCPU.results").c_str() );
+	std::ifstream infile( std::string(MCGPU + "/methanolCPU.results").c_str() );
+	std::cout << std::string(MCGPU + "/bin/methanolCPU.results").c_str() << endl;
+	
 	
 	for( std::string line; getline( infile, line ); )
 	{
