@@ -12,7 +12,7 @@
 
 // Descr: evident
 // Implementation details: See gtest/samples for GTest syntax and usage
-TEST(DISABLED_WaterTest, FrontToEndIntegrationTest)
+TEST(WaterTest, FrontToEndIntegrationTest)
 {
 	string directory = get_current_dir_name();
 	

@@ -46,7 +46,7 @@ TEST(MethanolTest, FrontToEndIntegrationTest)
 		<< "#number of molecues\n"
 		<< "256\n"
 		<< "#path to opls.par file\n"
-		<< MCGPU << "/resources/bossFiles/oplsaa.par\n"
+		<< MCGPU << "resources/bossFiles/oplsaa.par\n"
 		<< "#path to z matrix file\n"
 		<< MCGPU << "/test/unittests/Integration/MethanolTest/meoh.z\n"
 		<< "#path to state input\n"
@@ -79,8 +79,7 @@ TEST(MethanolTest, FrontToEndIntegrationTest)
 	double expected = -1800;
 	double energyResult = -1;
 	
-	std::ifstream infile( std::string(MCGPU + "/methanolCPU.results").c_str() );
-	std::cout << std::string(MCGPU + "/bin/methanolCPU.results").c_str() << endl;
+	std::ifstream infile( std::string(MCGPU + "/bin/methanolCPU.results").c_str() );
 	
 	
 	for( std::string line; getline( infile, line ); )
@@ -98,9 +97,9 @@ TEST(MethanolTest, FrontToEndIntegrationTest)
 	
 	// Clean up
 	remove(configFilePath.c_str());
-	remove(  std::string(MCGPU + "/methanolCPU.pdb").c_str()  );
-	remove(  std::string(MCGPU + "/methanolCPU.results").c_str()  );
-	remove(  std::string(MCGPU + "/methanolCPU_100000.state").c_str()  );
+	remove(  std::string(MCGPU + "/bin/methanolCPU.pdb").c_str()  );
+	remove(  std::string(MCGPU + "/bin/methanolCPU.results").c_str()  );
+	remove(  std::string(MCGPU + "/bin/methanolCPU_100000.state").c_str()  );
 	
 	EXPECT_NEAR(expected, energyResult, 100 );
 }

@@ -4,7 +4,7 @@
 
 // Descr: evident
 // Implementation details: See gtest/samples for GTest syntax and usage
-TEST(DISABLED_IOTests, ConfigScan)
+TEST(IOTests, ConfigScan)
 {
     
     string directory = get_current_dir_name();
