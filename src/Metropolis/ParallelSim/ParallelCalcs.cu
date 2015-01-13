@@ -15,6 +15,10 @@
 #include "Metropolis/Utilities/FileUtilities.h"
 #include "Metropolis/Box.h"
 #include "Metropolis/SimulationArgs.h"
+#include <thrust/reduce.h>
+#include <thrust/count.h>
+#include <thrust/remove.h>
+#include <thrust/device_ptr.h>
 
 #define NO -1
 
@@ -71,90 +75,43 @@ Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int st
 	return calcBatchEnergy(pBox, createMolBatch(pBox, molIdx, startIdx), molIdx);
 }
 
+struct isThisTrue {
+	__device__ bool operator()(const int &x) {
+	  return x != NO;
+	}
+};
+
 int ParallelCalcs::createMolBatch(ParallelBox *box, int currentMol, int startIdx)
 {
 	//initialize neighbor molecule slots to NO
 	cudaMemset(box->nbrMolsD, NO, box->moleculeCount * sizeof(int));
 	
-	//check molecule distances in parallel, conditionally filling in box->nbrMolsD
+	//check molecule distances in parallel, conditionally replacing NO with index value in box->nbrMolsD
 	checkMoleculeDistances<<<box->moleculeCount / MOL_BLOCK + 1, MOL_BLOCK>>>(box->moleculesD, box->atomsD, currentMol, startIdx, box->environmentD, box->nbrMolsD);
 	
-	//get sparse neighbor list
-	cudaMemcpy(box->nbrMolsH, box->nbrMolsD, box->moleculeCount * sizeof(int), cudaMemcpyDeviceToHost);
+	thrust::device_ptr<int> neighborMoleculesOnDevice = thrust::device_pointer_cast(&box->nbrMolsD[0]);
+	thrust::device_ptr<int> moleculesInBatchOnDevice = thrust::device_pointer_cast(&box->molBatchD[0]);
 	
-	//innitialize neighbor batch to NO
-	memset(box->molBatchH, NO, box->moleculeCount * sizeof(int));
+	//copy over neighbor molecules that don't have NO as their index value
+	thrust::device_ptr<int> lastElementFound = thrust::copy_if(neighborMoleculesOnDevice, neighborMoleculesOnDevice + box->moleculeCount, moleculesInBatchOnDevice, isThisTrue());
 	
-	//sparse list compaction to create batch of valid neighbor molecules to send to GPU
-	//NOTE: It is possible that this can be done more efficiently on the GPU, without ever involving the CPU.
-	//      We tested the thrust library's implementation (included with Cuda), but it was slower than using the CPU.
-	//      Perhaps look into writing our own Parallel Stream Compaction kernel? (Looking at you, future group!)
-	int batchSize = 0;
-	for (int i = startIdx; i < box->moleculeCount; i++)
-	{
-		if (box->nbrMolsH[i] != NO)
-		{
-			box->molBatchH[batchSize++] = i;
-		}
-	}
-	
-	return batchSize;
+	return lastElementFound - moleculesInBatchOnDevice;
 }
 
 Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 {
-	if (numMols > 0)
-	{
-		//There will only be as many energy segments filled in as there are molecules in the batch.
-		int validEnergies = numMols * box->maxMolSize * box->maxMolSize;
-		
-		//initialize first energy to 0
-		//All other energies will have been reset from the previous aggregation run.
-		//Technically, this should already be 0, but this is a safeguard against implementation changes.
-		cudaMemset(box->energiesD, 0, sizeof(Real));
-		
-		//copy neighbor batch to device
-		cudaMemcpy(box->molBatchD, box->molBatchH, box->moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
-		
-		//calculate interatomic energies between changed molecule and all molecules in batch
-		calcInterAtomicEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
-		(box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->molBatchD, box->maxMolSize);
-		
-		return getEnergyFromDevice(box, validEnergies);
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-Real ParallelCalcs::getEnergyFromDevice(ParallelBox *box, int validEnergies)
-{
-	Real totalEnergy = 0;
+	if (numMols <= 0) return 0;
 	
-	//a batch size of 3 seems to offer the best tradeoff between parallelization and locality
-	int batchSize = 3, blockSize = AGG_BLOCK;
-	int numBaseThreads = validEnergies / (batchSize);
-	for (int i = 1; i < validEnergies; i *= batchSize)
-	{
-		//there is no need for giant blocks when only a few threads are being run
-		if (blockSize > MAX_WARP && numBaseThreads / i + 1 < blockSize)
-		{
-			blockSize /= 2;
-		}
-		
-		//do the next aggregation pass
-		aggregateEnergies<<<numBaseThreads / (i * blockSize) + 1, blockSize>>>
-		(box->energiesD, validEnergies, i, batchSize);
-	}
+	//There will only be as many energy segments filled in as there are molecules in the batch.
+	int validEnergies = numMols * box->maxMolSize * box->maxMolSize;
 	
-	//the total energy will be stored in the first index of box->energiesD
-	cudaMemcpy(&totalEnergy, box->energiesD, sizeof(Real), cudaMemcpyDeviceToHost);
+	//calculate interatomic energies between changed molecule and all molecules in batch
+	calcInterAtomicEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
+	(box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->molBatchD, box->maxMolSize);
 	
-	//reset final energy to 0, resulting in a clear energies array for the next calculation
-	cudaMemset(box->energiesD, 0, sizeof(Real));
-	
-	return totalEnergy;
+	//Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
+	thrust::device_ptr<Real> energiesOnDevice = thrust::device_pointer_cast(&box->energiesD[0]);
+	return thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
 }
 
 __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff)
@@ -187,7 +144,8 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 
 __global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
 {
-	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x, segmentSize = maxMolSize * maxMolSize;
+	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x;
+	int segmentSize = maxMolSize * maxMolSize;
 	
 	//check validity of thread
 	if (energyIdx < energyCount and molBatch[energyIdx / segmentSize] != NO)
@@ -196,7 +154,8 @@ __global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, At
 		int otherMol = molBatch[energyIdx / segmentSize];
 		
 		//get atom pair for this thread
-		int x = (energyIdx % segmentSize) / maxMolSize, y = (energyIdx % segmentSize) % maxMolSize;
+		int x = (energyIdx % segmentSize) / maxMolSize;
+		int y = (energyIdx % segmentSize) % maxMolSize;
 		
 		//check validity of atom pair
 		if (x < molecules->numOfAtoms[currentMol] && y < molecules->numOfAtoms[otherMol])
@@ -226,23 +185,6 @@ __global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, At
 				//store energy
 				energies[energyIdx] = totalEnergy;
 			}
-		}
-	}
-}
-
-__global__ void ParallelCalcs::aggregateEnergies(Real *energies, int energyCount, int interval, int batchSize)
-{
-	//calculate starting index for this thread
-	int idx = batchSize * interval * (blockIdx.x * blockDim.x + threadIdx.x), i;
-	
-	for (i = 1; i < batchSize; i++)
-	{
-		//make strides of size 'interval'
-		if (idx + i * interval < energyCount)
-		{
-			//add energy, and then reset it
-			energies[idx] += energies[idx + i * interval];
-			energies[idx + i * interval] = 0;
 		}
 	}
 }
