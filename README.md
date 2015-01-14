@@ -1,5 +1,5 @@
-MCGPU (Monte Carlo on Graphics Processing Units)
 Computational Chemistry: Highly Parallel Monte Carlo Simulations on CPUs and GPUs 
+MCGPU (Monte Carlo on Graphics Processing Units)
 ===============================================================
 
 ##Requirements
