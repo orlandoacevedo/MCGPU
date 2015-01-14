@@ -263,13 +263,13 @@ else
 endif
 
 # Check for the PRECISION definition being set to single or double. If this
-# define is not set by the user, then the build will default to single
+# define is not set by the user, then the build will default to double
 # precision. If the user specifies an option other than 'single' or 'double'
-# then the build will default to single precision.
-ifeq ($(PRECISION),double)
-	Definitions += DOUBLE_PRECISION
+# then the build will default to double precision.
+ifeq ($(PRECISION),single)
+        Definitions += SINGLE_PRECISION
 else
-	Definitions += SINGLE_PRECISION
+        Definitions += DOUBLE_PRECISION
 endif
 
 ######################
