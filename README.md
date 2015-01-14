@@ -1,16 +1,18 @@
-Computational Chemistry: Monte Carlo Simulations on CPU and GPU 
+MCGPU (Monte Carlo on Graphics Processing Units)
+Computational Chemistry: Highly Parallel Monte Carlo Simulations on CPUs and GPUs 
 ===============================================================
 
 ##Requirements
 ###Required Hardware:
  * Nvidia graphics card with compute Compute Capability 2.0 (or greater)
-    * Tested on Nvidia Tesla M2070
+    * Tested on Nvidia Fermi M2070, Kepler K20m
 
 ###Required Software:
  * Linux Operating System
     * Tested on Ubuntu 14.04 LTS, SUSE Linux Enterprise Server 11 SP2
  * [Nvidia Developer Toolkit](http://developer.nvidia.com/cuda-downloads)
-    * Tested with CUDA 4.2, 6.5
+    * Tested with CUDA 5.5, 6.5
+ * [OpenMp](http://www.openmp.org)
 
 *Note*: If you are using the Alabama Supercomputer Center (ASC), configure based on the instructions received when you set up your account.
 
@@ -56,7 +58,7 @@ express          01:00:00  500mb      1
 Enter Queue Name (default <cr>: small-serial) <must be a serial queue>
 Enter Time Limit (default <cr>: 40:00:00 HH:MM:SS) <enter time limit>
 Enter memory limit (default <cr>: 500mb) <enter required memory>
-Enter GPU architecture [t10/fermi/any] (default <cr>: any) <fermi>
+Enter GPU architecture [t10/fermi/kepler/any] (default <cr>: any) <kepler>
 ```
 
 You standard out for your job will be written to 
@@ -79,11 +81,11 @@ cd bin/
 For more information, see the Alabama Supercomputer Center manual.
 
 ##Available Command-line Options
- * `--serial`: Runs simulation serially (on CPU; default)
- * `--parallel`: Runs simulation in parallel (on GPU; requries CUDA)
+ * `--serial`: Runs simulation on CPU (default)
+ * `--parallel`: Runs simulation on GPU (requries CUDA)
  * `--list-devices`: Lists available CUDA-capable devices (requires CUDA)
  * `--device <index>`: Specifies what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
- * `--threads <count>`: Specifies number of threads to use when running on CPU (serial only)
+ * `--threads <count>`: Specifies number of threads to use when running on a multiprocessor CPU (--serial only)
  * `--name <title>`: Specifies the name of the simulation that will be run.
  * `--steps <count>`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
  * `--silent`: Disables real time energy printouts
@@ -94,7 +96,7 @@ To view documentation for all command-line flags available, use the --help flag:
 ```
 
 ##Configuration File
-Configuration files are used to configure a simulation. 
+Configuration files are used to configure a simulation. Command-line options override values given in this file.
 Line numbers are important
 
 ```
