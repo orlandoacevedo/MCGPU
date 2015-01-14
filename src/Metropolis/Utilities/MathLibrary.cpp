@@ -69,7 +69,7 @@ Atom getAtom(vector<Atom> atoms, unsigned long atomID)
     return createAtom(-1,-1,-1,-1);
 }
 
-Bond getBond(const vector<Bond> bonds, unsigned long a1, unsigned long a2)
+Bond getBond(const vector<Bond>& bonds, unsigned long a1, unsigned long a2)
 {
     for(int i = 0; i < bonds.size(); i++)
     {
@@ -910,7 +910,7 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			else if(BondedTo == 2)
             {
 				molec[m].atoms[2].x = molec[m].atoms[1].x - lineBond.distance * cos(thetaRadians);
-            }
+			}
 			molec[m].atoms[2].y = lineBond.distance * sin(thetaRadians);
 			molec[m].atoms[2].z = 0.0;
 		}
