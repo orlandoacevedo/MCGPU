@@ -1,8 +1,8 @@
 #ifndef GEOMETRICTEST_H
 #define GEOMETRICTEST_H
 
-#include "../src/geometricUtil.h"
-#include "../src/metroUtil.h"
+#include "../geometricUtil.h"
+#include "../metroUtil.h"
 #include <assert.h>
 #include <iostream>
 #include <cstdlib>

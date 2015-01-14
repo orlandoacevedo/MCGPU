@@ -49,7 +49,7 @@ using std::string;
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:I:n:d:sphQV";
+		const char* short_options = ":i:I:n:i:d:sphQVkt";
 
 		// The long options recognized by the program
 		struct option long_options[] = 
@@ -57,12 +57,14 @@ using std::string;
 			{"status-interval", 	required_argument, 	0, 	'i'},
 			{"state-interval",		required_argument,	0,	'I'},
 			{"steps",				required_argument,	0,	'n'},
+			{"threads",				required_argument,	0,	't'},
 			{"serial", 				no_argument, 		0, 	's'},
 			{"parallel", 			no_argument, 		0, 	'p'},
 			{"help", 				no_argument, 		0, 	'h'},
 			{"list-devices",		no_argument,		0,	'Q'},
 			{"device",				required_argument,	0,	'd'},
 			{"version",				no_argument,		0,	'V'},
+			{"silent",				no_argument,		0,	'k'},
 			{"name",				required_argument,	0,	LONG_NAME},
 			{0, 0, 0, 0} 
 		};
@@ -129,11 +131,29 @@ using std::string;
 						return false;
 					}
 					break;
+				case 't':	/* thread count */
+					params->threadFlag = true;
+					if (!fromString<int>(optarg, params->threadCount))
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --threads (-t): Invalid thread count" << std::endl;
+						return false;
+					}
+					if (params->threadCount <= 0)
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --threads (-t): Thread count must be greater than zero" << std::endl;
+						return false;
+					}
+					break;
 				case 's':	/* run serial */
 					params->serialFlag = true;
 					break;
 				case 'p':	/* run parallel */
 					params->parallelFlag = true;
+					break;
+				case 'k': 	/* Silence cout */
+					params->silentOutputFlag = true;
 					break;
 				case 'h':	/* print help */
 					printHelpScreen();
@@ -187,7 +207,7 @@ using std::string;
 					return false;
 					break;
 				default:	/* unknown error */
-					std::cerr << APP_NAME << ": Fatal error occurred while parsing commnd-line" << std::endl;
+					std::cerr << APP_NAME << ": Fatal error occurred while parsing command-line" << std::endl;
 					return false;
 					break;
 			}
@@ -248,7 +268,9 @@ using std::string;
 		args->statusInterval = params->statusInterval;
 		args->stateInterval = params->stateInterval;
 		args->stepCount = params->stepCount;
+		args->threadCount = params->threadCount;
 		args->simulationName = params->simulationName;
+		args->silencedOutput = params->silentOutputFlag;
 
 		if (!params->parallelFlag && params->deviceFlag)
 		{
@@ -310,6 +332,14 @@ using std::string;
 			  "\t\t  configuration settings and parameters.\n";
 		cout << "\t.state\t: Resume a previous simulation that was saved.\n";
 		cout << "\n";
+		
+		cout << "CPU Operation Flags\n"
+			  "====================\n";
+		cout << "--threads <count>\t\t(-t)\n";
+		cout << "\tSpecifies how many threads are launched when calculating molecular\n"
+				"\tinteraction. This value must a valid integer that is greater than\n"
+				"\tzero. If value specified is greater than the device capabilities,\n"
+				"\tthe number used will be the device maximum.\n\n";
 
 		cout << "GPU Operation Flags\n"
 			  "====================\n";
@@ -325,6 +355,8 @@ using std::string;
 		cout << "--serial\t(-s)\n";
 		cout << "\tRun the simulation in serial on the host CPU. If you specify this\n"
 			  "\tflag you cannot also specify the --parallel flag.\n\n";
+		cout << "--silent\t(-k)\n";
+		cout << "\tRun the simulation without printing to std::cout.\n\n";
 		cout << "--list-devices\t(-Q)\n";
 		cout << "\tQueries the host machine for available CUDA capable devices. The\n"
 			  "\tentries will contain the following information about each\n"

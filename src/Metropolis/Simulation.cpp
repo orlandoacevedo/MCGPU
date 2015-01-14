@@ -15,6 +15,11 @@
 #include <fstream>
 #include <time.h>
 #include <stdio.h>
+#include <omp.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "Simulation.h"
 #include "SimulationArgs.h"
@@ -29,13 +34,32 @@
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
 
-
 //Constructor & Destructor
 Simulation::Simulation(SimulationArgs simArgs)
 {
 	args = simArgs;
 
 	stepStart = 0;
+	
+	if (args.simulationMode == SimulationMode::Parallel) {
+		//we need to set this to 1 in parallel mode because it is irrelevant BUT is used in the 
+		//runtime calculation. See summary equation for explanation.
+		threadsToSpawn = 1;
+	} else {
+		int processorCount = omp_get_num_procs();
+		//We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
+		//We could do performance tuning to get more information on what the ideal number might be.
+		threadsToSpawn = max(processorCount / 2, 1);
+		if (simArgs.threadCount > 0) {
+			threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
+		}
+		
+		
+		std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
+		omp_set_num_threads(threadsToSpawn);
+		omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
+		//std::cout << "Sysconf Processors Detected: " << sysconf(_SC_NPROCESSORS_ONLN) << endl;
+	}
 
 	if (simArgs.simulationMode == SimulationMode::Parallel)
 		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
@@ -66,7 +90,6 @@ Simulation::~Simulation()
 	}
 }
 
-//Utility
 void Simulation::run()
 {
 	std::cout << "Simulation Name: " << args.simulationName << std::endl;
@@ -80,10 +103,27 @@ void Simulation::run()
 	int accepted = 0;
 	int rejected = 0;
 
-	clock_t startTime, endTime;
-    startTime = clock();
+	string directory = get_current_dir_name();
 	
-	//calculate old energy
+	std::string mc ("MCGPU");
+	std::size_t found = directory.find(mc);
+	
+	if (found != std::string::npos) {
+		directory = directory.substr(0,found+6);
+	}
+	std::string MCGPU = directory;
+
+	MCGPU.append("bin/pdbFiles");
+	
+	mkdir(MCGPU.data(), 0777);
+
+	clock_t startTime, endTime;
+	int pdbSequenceNum = 0;
+	startTime = clock();
+
+	
+	
+	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
 	{
 		if (args.simulationMode == SimulationMode::Parallel)
@@ -109,11 +149,16 @@ void Simulation::run()
 		baseStateFile.append("untitled");
 	}
 	
-	for(int move = stepStart; move < (stepStart + simSteps); move++)
+	//Loop for each individual step
+	for (int move = stepStart; move < (stepStart + simSteps); move++)
 	{
+		//provide printouts at each pre-determined interval (not at each step)
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
 		{
 			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;	
+			//Make printing at each step optional
+			//writePDB(enviro, molecules, pdbSequenceNum, MCGPU);
+			//pdbSequenceNum++;					
 		}
 		
 		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0)
@@ -123,8 +168,10 @@ void Simulation::run()
 			std::cout << std::endl;
 		}
 		
+		//Randomly select index of a molecule for changing
 		int changeIdx = box->chooseMolecule();
 		
+		//Calculate the current/original/old energy contribution for the current molecule
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
 			oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
@@ -133,9 +180,11 @@ void Simulation::run()
 		{
 			oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
 		}
-			
+		
+		//Actually translate the molecule at the preselected index	
 		box->changeMolecule(changeIdx);
 		
+		//Calculate the new energy after translation
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
 			newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
@@ -145,12 +194,14 @@ void Simulation::run()
 			newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
 		}
 		
+		//Compare new energy and old energy to decide if we should accept or not
 		bool accept = false;
-		
+		//Always accept decrease in energy
 		if(newEnergyCont < oldEnergyCont)
 		{
 			accept = true;
 		}
+		//Use statistics+random number to determine weather to accept increase in energy
 		else
 		{
 			Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
@@ -177,9 +228,11 @@ void Simulation::run()
 			box->rollback(changeIdx);
 		}
 	}
-
+	writePDB(enviro, molecules, pdbSequenceNum, MCGPU);
 	endTime = clock();
-    double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;
+	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
+	//However, it is a good enough estimation witout adding unnecessary complexity.
+    double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 
 	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << oldEnergy << std::endl;
 	currentEnergy = oldEnergy;
@@ -214,10 +267,12 @@ void Simulation::run()
 	if (!args.simulationName.empty())
 		resultsFile << "Simulation-Name = " << args.simulationName << std::endl;
 
-	if (args.simulationMode == SimulationMode::Parallel)
+	if (args.simulationMode == SimulationMode::Parallel) {
 		resultsFile << "Simulation-Mode = GPU" << std::endl;
-	else
+	} else {
 		resultsFile << "Simulation-Mode = CPU" << std::endl;
+		resultsFile << "Threads-Used = " << threadsToSpawn << std::endl;
+	}
 	resultsFile << "Starting-Step = " << stepStart << std::endl;
 	resultsFile << "Steps = " << simSteps << std::endl;
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;
@@ -229,6 +284,8 @@ void Simulation::run()
 	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;
 
 	resultsFile.close();
+
+
 }
 
 void Simulation::saveState(const std::string& baseFileName, int simStep)
@@ -249,6 +306,59 @@ void Simulation::saveState(const std::string& baseFileName, int simStep)
 	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath);
 }
 
+int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection, int sequenceNum, string location)
+{
+	//determine PDB file path
+	string pdbName = location;
+	pdbName.append("/");
+	string numAsString = static_cast<ostringstream*>( &(ostringstream() << sequenceNum) )->str();
+	if (args.simulationName.empty())
+		pdbName.append(RESULTS_FILE_DEFAULT);
+	else
+		pdbName.append(args.simulationName);
+	pdbName.append(numAsString);
+	pdbName.append(".pdb");
+	
+	std::ofstream pdbFile;	
+	pdbFile.open(pdbName.c_str());
+	
+	int numOfMolecules = sourceEnvironment.numOfMolecules;
+	pdbFile << "REMARK Created by MCGPU" << std::endl;
+	
+	for (int i = 0; i < numOfMolecules; i++)
+	{
+		Molecule currentMol = sourceMoleculeCollection[i];    	
+        for (int j = 0; j < currentMol.numOfAtoms; j++)
+        {
+			Atom currentAtom = currentMol.atoms[j];
+			pdbFile.setf(std::ios_base::left,std::ios_base::adjustfield);
+			pdbFile.width(6);
+			pdbFile << "ATOM";
+			pdbFile.setf(std::ios_base::right,std::ios_base::adjustfield);
+			pdbFile.width(5);
+			pdbFile << currentAtom.id + 1;
+			pdbFile.width(3); // change from 5
+			pdbFile << currentAtom.name;
+			pdbFile.width(6); // change from 4
+			pdbFile << "UNK";
+			pdbFile.width(6);
+			pdbFile << i + 1;
+			pdbFile.setf(std::ios_base::fixed, std::ios_base::floatfield);
+			pdbFile.precision(3);
+			pdbFile.width(12);
+			pdbFile << currentAtom.x;
+			pdbFile.width(8);
+			pdbFile << currentAtom.y;
+			pdbFile.width(8);
+			pdbFile << currentAtom.z << std::endl;
+        }
+        pdbFile << "TER" << std::endl;
+    }
+   // pdbFile << "END" << std::endl;
+    pdbFile.close();
+
+	return 0;
+}
 const std::string Simulation::currentDateTime()
 {
     time_t     now = time(0);

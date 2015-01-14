@@ -32,7 +32,9 @@ class Simulation
 		SimulationArgs args;
 		long simSteps;
 		long stepStart;
+		int threadsToSpawn;
 
+		int writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection, int sequenceNum, string location);
 		void saveState(const std::string& simName, int simStep);
 		const std::string currentDateTime();
 };

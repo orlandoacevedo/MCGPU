@@ -76,6 +76,13 @@ struct SimulationArgs
 	/// The number of simulation steps to execute in the current run.
 	int stepCount;
 
+	/// The number of threads to use in the current run.
+	int threadCount;
+	
+	/// Whether or not program prints to cout 
+	///		(silenced for integration tests)
+	bool silencedOutput;
+
 	/// The number of simulation steps between status updates printed to
 	/// the console. A value of 0 means that status updates are only
 	/// printed at the beginning and the end of the simulation.
@@ -87,6 +94,8 @@ struct SimulationArgs
 	///    at the very end of the simulation (which is the default
 	///    behavior with no interval specified).
 	int stateInterval;
+	
+	
 };
 
 #endif

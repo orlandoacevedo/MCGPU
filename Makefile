@@ -67,7 +67,7 @@ SHELL = /bin/sh
 # The relative path to the directory containing the source files
 SourceDir := src
 
-# The relative path to the directory containing the testing source files
+# The relative path to the directory containing the unit tests
 TestDir := test
 
 # The relative path to the object directory
@@ -184,10 +184,10 @@ CxxFlags := -c
 CuFlags := -c -rdc=true $(CudaArchitecture)
 
 # Linker specific flags for the C++ compiler
-LCxxFlags :=
+LCxxFlags := 
 
 # Linker specific flags for the CUDA compiler
-LCuFlags := -rdc=true $(CudaArchitecture)
+LCuFlags := -rdc=true $(CudaArchitecture) -lgomp
 
 # The debug compiler flags that add symbol and profiling hooks to the
 # executable for C++ code
@@ -199,7 +199,7 @@ CuDebugFlags := -g -G -pg
 
 # The release build compiler flags that add optimization flags and remove
 # all symbol and relocation table information from the executable.
-CxxReleaseFlags := -O3 -s
+CxxReleaseFlags := -O3 -s -fopenmp
 
 # The release build comiler flags that add optimization flags to the
 # executable.
@@ -214,7 +214,7 @@ UnitTestDir := $(TestDir)/unittests
 
 # The relative path to the Google Test module that contains the source
 # code and libraries for the Google Test framework.
-GTestDir := $(TestDir)/gtest-1.7.0
+GTestDir := gtest
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -355,7 +355,7 @@ $(AppName) : $(Objects) $(ProgramMain) | dirtree
 	$(NVCC) $^ $(Includes) $(Defines) $(Libraries) -o $(AppDir)/$@ $(LCuFlags)
 
 $(UnitTestName) : $(Objects) $(UnitTestingObjects) $(BuildDir)/cuda_link.o $(ObjDir)/gtest_main.a | dirtree
-	g++ $^ $(GTestFlags) $(Includes) $(Defines) $(Libraries) -o $(AppDir)/$@ $(CudaLibFlags)
+	g++ $^ $(GTestFlags) $(Includes) $(Defines) $(Libraries) -o $(AppDir)/$@ $(CudaLibFlags) -fopenmp
 
 dirtree :
 	@mkdir -p $(ObjFolders) $(BinDir) $(ObjDir) $(AppDir) $(BuildDir)
