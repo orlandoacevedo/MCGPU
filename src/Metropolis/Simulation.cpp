@@ -157,7 +157,7 @@ void Simulation::run()
 		{
 			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;	
 			//Make printing at each step optional
-			//writePDB(enviro, molecules, pdbSequenceNum, MCGPU);
+			//writePDB(enviro, molecules);
 			//pdbSequenceNum++;					
 		}
 		
@@ -228,7 +228,7 @@ void Simulation::run()
 			box->rollback(changeIdx);
 		}
 	}
-	writePDB(enviro, molecules, pdbSequenceNum, MCGPU);
+	writePDB(enviro, molecules);
 	endTime = clock();
 	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
 	//However, it is a good enough estimation witout adding unnecessary complexity.
@@ -306,22 +306,20 @@ void Simulation::saveState(const std::string& baseFileName, int simStep)
 	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath);
 }
 
-int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection, int sequenceNum, string location)
+int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection)
 {
-	//determine PDB file path
-	string pdbName = location;
-	pdbName.append("/");
-	string numAsString = static_cast<ostringstream*>( &(ostringstream() << sequenceNum) )->str();
-	if (args.simulationName.empty())
-		pdbName.append(RESULTS_FILE_DEFAULT);
-	else
-		pdbName.append(args.simulationName);
-	pdbName.append(numAsString);
-	pdbName.append(".pdb");
-	
-	std::ofstream pdbFile;	
-	pdbFile.open(pdbName.c_str());
-	
+        //determine PDB file path
+        std::string pdbName;
+        if (args.simulationName.empty())
+                pdbName = RESULTS_FILE_DEFAULT;
+        else
+                pdbName = args.simulationName;
+        pdbName.append(".pdb");
+
+        std::ofstream pdbFile;
+
+        pdbFile.open(pdbName.c_str());
+
 	int numOfMolecules = sourceEnvironment.numOfMolecules;
 	pdbFile << "REMARK Created by MCGPU" << std::endl;
 	
@@ -354,11 +352,12 @@ int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMolecul
         }
         pdbFile << "TER" << std::endl;
     }
-   // pdbFile << "END" << std::endl;
+    pdbFile << "END" << std::endl;
     pdbFile.close();
 
 	return 0;
 }
+
 const std::string Simulation::currentDateTime()
 {
     time_t     now = time(0);
