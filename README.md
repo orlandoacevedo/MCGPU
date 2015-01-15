@@ -132,4 +132,4 @@ Line numbers are important
 [30]    <primary atom index to be used during cutoff as integer index of z-matrix atom in molecule>
 ```
 
-**Contributing Authors**: Scott Aldige, Matt Campbell, William Champion, Matthew Hardwick, Andrew Lewis, Alexander Luchs, Robert Sanek, Riley Spahn, Kalan Stowe, Ashley Tolbert, Seth Wooten, Xiao (David) Zhang, and Orlando Acevedo
+**Contributing Authors**: Scott Aldige, Matt Campbell, William Champion, Nathan Coleman, Seth Denney, Matthew Hardwick, Andrew Lewis, Alexander Luchs, Tavis Maclellan, Joshua Mosby, Robert Sanek, Riley Spahn, Kalan Stowe, Ashley Tolbert, Albert Wallace, Seth Wooten, Xiao (David) Zhang, and Orlando Acevedo*
