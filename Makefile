@@ -141,6 +141,15 @@ else
 	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
 endif
 
+# The path to the gcc compiler for cuda. This location can change depending on the 
+# compatible gcc version (preferable to use gcc-4.4.7).
+
+ifeq ($(MAC),1) 
+	CUDA_GCC_PATH ?= /usr/gcc-4.4.7/bin
+else
+	CUDA_GCC_PATH ?= NULL
+endif
+
 ##############################
 # Compiler Specific Settings #
 ##############################
@@ -186,8 +195,12 @@ CuFlags := -c -rdc=true $(CudaArchitecture)
 # Linker specific flags for the C++ compiler
 LCxxFlags := 
 
-# Linker specific flags for the CUDA compiler
-LCuFlags := -rdc=true $(CudaArchitecture) -lgomp
+# Linker specific flags for the CUDA compiler. CUDA GCC path is specified on Macintosh. 
+ifeq ($(CUDA_GCC_PATH),NULL)
+	LCuFlags := -rdc=true $(CudaArchitecture) -lgomp
+else
+	LCuFlags := --compiler-bindir=$(CUDA_GCC_PATH) -rdc=true $(CudaArchitecture) -lgomp
+endif
 
 # The debug compiler flags that add symbol and profiling hooks to the
 # executable for C++ code

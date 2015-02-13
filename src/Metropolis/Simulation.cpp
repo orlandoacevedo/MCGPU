@@ -103,7 +103,7 @@ void Simulation::run()
 	int accepted = 0;
 	int rejected = 0;
 
-	string directory = get_current_dir_name();
+	string directory = getcwd(NULL, 0);
 	
 	std::string mc ("MCGPU");
 	std::size_t found = directory.find(mc);
