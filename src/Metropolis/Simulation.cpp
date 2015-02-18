@@ -132,7 +132,8 @@ void Simulation::run()
 		}
 		else
 		{
-			oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
+			//oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
+			oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro);
 		}
 	}
 	
