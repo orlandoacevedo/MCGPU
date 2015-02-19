@@ -33,6 +33,10 @@
 #					 path to 'opt/asn/apps/cuda_5.5'. This is the directory 
 #					 used by the ASC machines that we test on.
 #
+# MAC=1  : Sets up compilation for Mac OS X environment. Sets the default directory for the CUDA_GCC installation
+#					 path to ‘/opt/local/bin’
+# MAC=0  : Sets up compilation for Linux. This is set by default. 
+#
 # CUDA_PATH=path/to/dir  : The relative path to the cuda install directory
 #						   on the current machine.
 #
@@ -46,6 +50,9 @@
 #							   installed on the current machine. NOTE: If 64
 #							   bit libraries are installed, this field will
 #							   need to be updated to point to the 64 bit libs
+#
+# CUDA_GCC_PATH=path/to/dir  : The path to the compatible GCC compiler for CUDA. 
+#
 # SHELL=path/to/file  : The relative path to the shell executable program on
 #						the current machine. This shell program will allow the
 #						makefile to execute system commands
@@ -110,6 +117,16 @@ UnitTestName := metrotest
 # CUDA Location Settings #
 ##########################
 
+# The path to the gcc compiler for cuda. This location can change depending on the 
+# compatible gcc version (preferable to use gcc-4.4.7).
+
+ifeq ($(MAC),1) 
+	CUDA_GCC_PATH ?= /opt/local/bin
+	LOCAL_INSTALL=1
+else
+	CUDA_GCC_PATH ?= NULL
+endif
+
 # Sets the directory where the main cuda libraries and include folders
 # are installed. The user can override this value by specifying
 # 'CUDA_PATH=/path/to/dir' in the GNU make command to build the program.
@@ -141,14 +158,7 @@ else
 	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
 endif
 
-# The path to the gcc compiler for cuda. This location can change depending on the 
-# compatible gcc version (preferable to use gcc-4.4.7).
 
-ifeq ($(MAC),1) 
-	CUDA_GCC_PATH ?= /usr/gcc-4.4.7/bin
-else
-	CUDA_GCC_PATH ?= NULL
-endif
 
 ##############################
 # Compiler Specific Settings #
