@@ -6,6 +6,7 @@
 	-> February 26, by Albert Wallace
 	-> March 28, by Joshua Mosby
 	-> April 21, by Nathan Coleman
+	-> February 25, 2015 by Jared Brown
 */
 
 #include <math.h>
