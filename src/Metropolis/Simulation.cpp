@@ -132,6 +132,7 @@ void Simulation::run()
 		}
 		else
 		{
+			// ***** TODO: add cmd line arg to switch between nlc and reg
 			//oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
 			oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro);
 		}

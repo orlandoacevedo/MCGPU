@@ -213,80 +213,8 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 										
 										// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 										if (rr < rrCut)
-										{
-											
-											
-											
-											
-											
-											
-											Atom xAtom, yAtom;
-											
-				        					for (int atomIn1_i = 0; atomIn1_i < molecules[i].numOfAtoms; atomIn1_i++)
-				        					{		
-												xAtom = molecules[i].atoms[atomIn1_i];
-								
-												for (int atomIn2_i = 0; atomIn2_i < molecules[j].numOfAtoms; atomIn2_i++)
-												{
-													yAtom = molecules[j].atoms[atomIn2_i];
-									
-													if (xAtom.sigma < 0 || xAtom.epsilon < 0 || yAtom.sigma < 0 || yAtom.epsilon < 0)
-													{
-														continue;
-													}
-										
-													if(xAtom.id > yAtom.id)
-													{
-														continue;
-													}
-				        												
-													//store LJ constants locally and define terms in kcal/mol
-													const double e = 332.06;
-													double sigma = calcBlending(xAtom.sigma, yAtom.sigma);
-													double epsilon = calcBlending(xAtom.epsilon, yAtom.epsilon);
-									
-													//calculate difference in coordinates
-													double deltaX = xAtom.x - yAtom.x;
-													double deltaY = xAtom.y - yAtom.y;
-													double deltaZ = xAtom.z - yAtom.z;
-												
-													//calculate distance between atoms
-													deltaX = makePeriodic(deltaX, enviro->x);
-													deltaY = makePeriodic(deltaY, enviro->y);
-													deltaZ = makePeriodic(deltaZ, enviro->z);
-										
-													double r2 = (deltaX * deltaX) +
-											 		 	 		(deltaY * deltaY) + 
-											 		 			(deltaZ * deltaZ);
-														  
-													if (r2 == 0.0)
-													{
-														continue;
-													}							
-
-													//calculate LJ energies
-													double sig2OverR2 = (sigma * sigma) / r2;
-													double sig6OverR6 = sig2OverR2 * sig2OverR2 * sig2OverR2;
-													double sig12OverR12 = sig6OverR6 * sig6OverR6;
-													lj_energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-
-													//calculate Coulombic energies
-													double r = sqrt(r2);
-													charge_energy = (xAtom.charge * yAtom.charge * e) / r;
-										
-													double subtotal = (lj_energy + charge_energy) * fValue;
-													totalEnergy += subtotal;							
-												} /* Endfor atomIn2_i */
-											} /* Endfor atomIn_1 */
-											
-											
-											
-											
-											
-											
-											
-											
-											//Real tempEnergy = calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
+										{	
+											totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
 											
 										} /* Endif rr < rrCut */
 									} /* Endif i<j */
@@ -300,7 +228,10 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 			} /* Endfor central cell, c */
 		}
 	}
-	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
+	// *****FIX: Issue with IntraMolEnergy_NLC returning huge values
+	//return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
+	
+	return totalEnergy;
 }
 
 /**
@@ -354,11 +285,11 @@ Real SerialCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecule
 						
 				//gets the fValue in the same molecule
 				fValue = 1.0;
+				
+				// TODO: update getFValue and figure out hops for current box
 				//int ** hopTab1 = box->tables[mol1_i % box->molecTypenum].hopTable;
 				//fValue = box->getFValue(atomIn1_i,atomIn2_i,hopTab1);
 				
-				//taken from old box->getFValue function that no longer exists
-				//this needs to be improved
 			
 						
 				Real subtotal = (lj_energy + charge_energy) * fValue;
