@@ -19,6 +19,7 @@ using std::ifstream;
 
 bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps)
 {
+	//cout << "LOADING BOX DATA...." << endl;
 	if (box == NULL)
 	{
 		std::cerr << "Error: loadBoxData(): Box is NULL" << std::endl;
@@ -30,6 +31,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 
     if (inputType == InputFile::Configuration)
     {
+
         ConfigScanner config_scanner = ConfigScanner();
         if (!config_scanner.readInConfig(inputPath))
         {
@@ -37,6 +39,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             return false;
         }
 
+	//cout << "RAEDING IN OPLS..." << endl;
         OplsScanner opls_scanner = OplsScanner();
         if (!opls_scanner.readInOpls(config_scanner.getOplsusaparPath()))
         {
@@ -44,6 +47,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             return false;
         }
 
+	//cout << "READING IN ZMATRIX..." << endl;
         ZmatrixScanner zmatrix_scanner = ZmatrixScanner();        
         if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
         {
@@ -51,6 +55,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             return false;
         }
 
+	//cout << "READ-INS HAVE FINISHED!" << endl;
         moleculeVector = zmatrix_scanner.buildMolecule(0);        
         enviro = config_scanner.getEnviro();
         *steps = config_scanner.getSteps();
@@ -58,12 +63,14 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 
         box->environment = new Environment(enviro);
 
+	//cout << "BUILDING BOX DATA..." << endl;
         if (!buildBoxData(enviro, moleculeVector, box))
         {
             std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
             return false;
         }
 
+	//cout << "DONE BUILDING BOX DATA" << endl;
         return true;
     }
     else if (inputType == InputFile::State)
@@ -105,6 +112,8 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
     }
 
     std::cout << "Error: Could not recognize input file type" << std::endl;
+
+    //cout << "BOX DATA HAS BEEN LOADED!" << endl;
 
 	return false;
 }
@@ -780,7 +789,82 @@ bool ConfigScanner::readInConfig(string configpath)
                 case 30:
                     if(line.length() > 0){
 						// Convert to a zero-based index
-						enviro.primaryAtomIndex=atoi(line.c_str()) - 1;
+					
+    						char *indexVector;
+    						char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
+    						strcpy(charLine, line.c_str());
+    						indexVector = strtok(charLine, ",");
+
+   
+    						//int tokenNumber = 0;
+
+    						//while(tokens != NULL)
+    						//{
+       						//	switch(tokenNumber)
+       						//	{
+          
+       						//	}
+
+       						//	tokens = strtok(NULL, " ");
+       						//	tokenNumber++;
+    						//}
+
+    						//free (charLine);
+
+
+						//cout << "Size of indexVector: " << strlen(indexVector)  << endl;
+						//const char* indexVector = (const char*)strtok((char*)line.c_str(), 					
+						for (int i = 0; indexVector ; i++)
+						{
+						    //cout << "indexVector: " << indexVector << endl;
+						    //cout << "indexVector element " << (indexVector) << " being converted to int" << endl;
+
+						    std::string sIndexVector = indexVector;
+						    char* c;
+						    if ((c=strchr(indexVector, '['))!=NULL)
+						    {
+							//cout << "BRACKETS DETECTED" << endl;
+							indexVector = (indexVector + 1);
+							//delete c;
+							//cout << "DELETED c" << endl;	
+							//strtok(NULL, ",");
+							while ((c=strchr(indexVector, ']'))==NULL)
+							{
+							   // cout << "Inside the while loop" << endl;
+							    int currentPrimaryIndex = atoi(indexVector);
+							    (*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
+							    (*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
+							    indexVector = strtok(NULL, ",");
+							}
+							*c = '\0';
+							int currentPrimaryIndex = atoi(indexVector);
+						        (*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
+							(*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);	
+							//cout << "CONTINUING..." << endl; 
+							indexVector =strtok(NULL, ",");
+							continue;
+						    }
+
+						    int currentPrimaryIndex = atoi(indexVector);
+						    //cout << "Integer has been converted to: " << currentPrimaryIndex << endl;
+						    (*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
+						    //(*(enviro.primaryAtomIndexArray))[i] = new std::vector<int>;
+						    //cout << "Allocated new memory to element in array" << endl;
+						    (*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
+						    indexVector = strtok(NULL, ",");
+						}
+						free (charLine);
+
+						for (int i = 0; i < (*(enviro.primaryAtomIndexArray)).size(); i++)
+						{
+						    for (int j = 0; j < (*(*(enviro.primaryAtomIndexArray))[i]).size(); j++)
+						    {
+							//cout << "Primary index at " << i << "-" << j << " is " << (*(*(enviro.primaryAtomIndexArray))[i])[j] << endl;
+						    }
+						}
+						
+						//exit(0);
+						//enviro.primaryAtomIndex=atoi(line.c_str()) - 1;
                     }
 					else
 					{
@@ -917,9 +1001,9 @@ void OplsScanner::addLineToTable(string line, int numOfLines)
     if(format == 1)
     {      	
         ss >> hashNum >> secCol >> name >> charge >> sigma >> epsilon;
-        char *atomtype = (char*)name.c_str(); 
+	char *atomType = (char *)name.c_str();
          
-        Atom temp = createAtom(0, -1, -1, -1, sigma, epsilon, charge, *atomtype);
+        Atom temp = createAtom(0, -1, -1, -1, sigma, epsilon, charge, *atomType);
         pair<map<string,Atom>::iterator,bool> ret;
         ret = oplsTable.insert( pair<string,Atom>(hashNum,temp) );
 
@@ -1125,6 +1209,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
     stringstream output;
     int numOfLines=0;
 
+    //cout << "***OPENING ZMATRIX FILE***" << endl;
     ifstream zmatrixScanner(fileName.c_str());
     if( !zmatrixScanner.is_open() )
     {
@@ -1136,6 +1221,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
         string line; 
         while( zmatrixScanner.good() )
         {
+	    //cout << "SETTING THINGS UP..." << endl;
             numOfLines++;
             getline(zmatrixScanner,line);
 
@@ -1154,20 +1240,33 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
 
             if (startNewMolecule)
             {
+		//cout << "ABOUT TO START ALLOCATING SOME MEMORY" << endl;
                 Atom* atomArray;
                 Bond* bondArray;
                 Angle* angleArray;
                 Dihedral* dihedralArray;
                 
-                atomArray = (Atom*) malloc(sizeof(Atom) * atomVector.size());
+                //Atom *garbageAtom = new Atom;
+
+		//cout << "START OF THE PROBLEM" << endl;
+		double atomVectorSize = atomVector.size();
+		int sizeOfAtom = sizeof(Atom);
+
+		//cout << "Atom Vector Size: " << atomVectorSize << "  Size of Atom: " << sizeOfAtom << endl;
+
+		atomArray = (Atom*) malloc(sizeof(Atom) * atomVector.size());
                 bondArray = (Bond*) malloc(sizeof(Bond) * bondVector.size());
                 angleArray = (Angle*) malloc(sizeof(Angle) * angleVector.size());
                 dihedralArray = (Dihedral*) malloc(sizeof(Dihedral) * dihedralVector.size());
 
                 for (int i = 0; i < atomVector.size(); i++)
                 {
+		    //cout << "Size of the atom Vector: " << atomVector.size() << endl;
+		    //cout << "Name of ATOMVECTOR[" << i << "] = " << atomVector[i].name << endl;
                     atomArray[i] = atomVector[i];
+		    //cout << "END OF ELEMENT " << i << endl;
                 }
+		//cout << "END OF THE FINAL PROBLEM" << endl;
                 for (int i = 0; i < bondVector.size(); i++)
                 {
                     bondArray[i] = bondVector[i];
@@ -1181,6 +1280,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
                     dihedralArray[i] = dihedralVector[i];
                 }
 
+		//cout << "ITERATED THROUGH ALL ARRAYS" << endl;
                 moleculePattern.push_back(createMolecule(-1, atomArray, angleArray, bondArray, dihedralArray, 
                      atomVector.size(), angleVector.size(), bondVector.size(), dihedralVector.size()));
 
@@ -1195,6 +1295,8 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
     }
 
     zmatrixScanner.close();    	 
+	
+    //cout << "VECTORS HAVE BEEN CLEARED AND FILE IS CLOSED" << endl;
 
     return true;
 }
@@ -1215,7 +1317,9 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
         ss << line;    	
         ss >> atomID >> atomType >> oplsA >> oplsB >> bondWith >> bondDistance >> angleWith >> angleMeasure >> dihedralWith >> dihedralMeasure;
 
-        //setup structures for permanent encapsulation
+        //cout << "THIS IS THE ATOMTYPE BEING READ IN: " << atomType << endl;
+
+	//setup structures for permanent encapsulation
         Atom lineAtom;
         Bond lineBond;
         Angle lineAngle;
@@ -1231,10 +1335,11 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
         }
         else//dummy atom
         {
-        	char dummy = 'X';
+            char dummy = 'X';
             lineAtom = createAtom(atoi(atomID.c_str()), -1, -1, -1, -1, -1, -1, dummy);
         }
-		  atomVector.push_back(lineAtom);
+	
+	atomVector.push_back(lineAtom);
 
         if (bondWith.compare("0") != 0)
         {
@@ -1763,7 +1868,7 @@ vector<Molecule> StateScanner::readInMolecules()
         getline(inFile, line); //blank
         
         Molecule currentMol;
-        int section = 0; // 0 = id, 1 = atom, 2 = bond, 3 = dihedral, 4 = hop, 5 = angle
+        int section = 0; // 0 = id, 1 = atom, 2 = bond, 3 = dihedral, 4 = hop, 5 = angle 6 = name
         int molNum = 0;
         while(inFile.good())
         {
@@ -1943,6 +2048,7 @@ Angle StateScanner::getAngleFromLine(string line)
 
 Atom StateScanner::getAtomFromLine(string line)
 {
+    cout << "WE HAVE HIT THE GETATOMFROMLINE FUNCTION" << endl;
     Atom atom = createAtom(-1,-1,-1,-1,-1,-1);
     char *tokens;
     char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
@@ -1975,6 +2081,10 @@ Atom StateScanner::getAtomFromLine(string line)
             case 6:
                 atom.charge = atof(tokens);
                 break;
+	    case 7:
+		cout << "NAME OF ATOM: " << tokens << endl;
+		atom.name = *tokens;
+		break;
         }
 
         tokens = strtok(NULL, " ");
@@ -2184,7 +2294,8 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
                 << " " << currentAtom.z << " "
                 << currentAtom.sigma << " "
                 << currentAtom.epsilon << " "
-                << currentAtom.charge << " " << std::endl;
+                << currentAtom.charge << " " 
+		<< currentAtom.name << " " << std::endl;
         }
 
         // Write bonds

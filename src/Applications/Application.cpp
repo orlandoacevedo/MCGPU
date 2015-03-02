@@ -46,7 +46,7 @@ int metrosim::run(int argc, char** argv)
 	}
 
 	std::streambuf* cout_sbuf;
-	if (args.silencedOutput) {
+	if (!args.verboseOutput) {
 		std::cout << "Silent run, integration test started..." << endl; // save original sbuf
 		std::streambuf* cout_sbuf = std::cout.rdbuf();
 		std::ofstream fout("/dev/null");
@@ -57,7 +57,7 @@ int metrosim::run(int argc, char** argv)
 	Simulation sim = Simulation(args);
 	sim.run();
 	
-	if (args.silencedOutput) {
+	if (!args.verboseOutput) {
 		 std::cout.rdbuf(cout_sbuf); // restore the original stream buffer
 	}
 	fprintf(stdout, "Finishing simulation...\n\n");

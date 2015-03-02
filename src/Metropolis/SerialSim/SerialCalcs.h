@@ -18,6 +18,11 @@
 #include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/StructLibrary.h"
 
+// Linked-cell neighbor list constants
+#define NMAX 100000  /* Maximum number of atoms which can be simulated */
+#define NCLMAX 10000 /* Maximum number of linked-list cells */
+#define EMPTY -1
+
 namespace SerialCalcs
 {
 	/// Factory method for creating a Box from a configuration file.
@@ -36,6 +41,14 @@ namespace SerialCalcs
 	/// @return Returns total system energy.
 	Real calcSystemEnergy(Molecule *molecules, Environment *environment);
 	
+	
+	/// ****************
+	/// Incorporating old linked-list neighbor function (work-in-progress)
+	Real calcEnergy_NLC(Molecule *molecules, Environment *enviro);
+	Real calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules);
+	
+	
+	
 	/// Calculates the inter-molecular energy contribution of a given molecule,
 	///   without intramolecular energy.
 	/// @param molecules A pointer to the Molecule array.
@@ -46,7 +59,7 @@ namespace SerialCalcs
 	/// @return Returns total molecular energy contribution, without
 	///   intramolecular energy.
 	Real calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx = 0);
-	
+		
 	/// Calculates the inter-molecular energy between two given molecules.
 	/// @param molecules A pointer to the Molecule array.
 	/// @param mol1 The index of the first molecule.
@@ -82,6 +95,13 @@ namespace SerialCalcs
 	/// @return Returns the geometric mean of the two supplied
 	///   values.
 	Real calcBlending(Real d1, Real d2);
+	
+	/// Calculates the squared distance between two atoms.
+	/// @param atom1 The first atom.
+	/// @param atom2 The second atom.
+	/// @param enviro A pointer to the Environment for the simulation.
+	/// @return Returns r2, the distance between the two atoms squared.
+	Real calcAtomDist(Atom atom1, Atom atom2, Environment *enviro);
 }
 
 #endif

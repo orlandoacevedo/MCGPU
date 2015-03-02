@@ -90,9 +90,9 @@
 		/// Declares whether the parallel execution option was specified.
 		bool parallelFlag;
 		
-		/// Declares whether or not to silence the printed run 
+		/// Declares whether or not to display the printed run 
 		/// information to standard cout.
-		bool silentOutputFlag;
+		bool verboseOutputFlag;
 
 		/// Default constructor
 		CommandParameters() :	statusInterval(DEFAULT_STATUS_INTERVAL),
@@ -111,7 +111,7 @@
 								threadFlag(false),
 								serialFlag(false),
 								parallelFlag(false),
-								silentOutputFlag(false) {}
+								verboseOutputFlag(false) {}
 	};
 
 	/// Goes through each argument specified from the command line and checks

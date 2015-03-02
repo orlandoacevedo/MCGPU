@@ -11,9 +11,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include "../DataTypes.h"
-
-
 //Forward declaration so that each can be used in methods below
 
 /**
@@ -248,6 +247,7 @@ struct Environment
 	int numOfAtoms;
 	int numOfMolecules; //this line was added in by Albert to make IOUtilities compile
 	int primaryAtomIndex;
+	std::vector< std::vector<int>* >* primaryAtomIndexArray;
 
 	int randomseed; //--Albert
 	
@@ -263,6 +263,7 @@ struct Environment
 		numOfAtoms = 0;
 		numOfMolecules = 0;
 		primaryAtomIndex = 0;
+		primaryAtomIndexArray = new std::vector< std::vector<int>* >;
 		randomseed = 0;
 	}
 
@@ -283,12 +284,14 @@ struct Environment
         numOfAtoms = environment->numOfAtoms;
         numOfMolecules = environment->numOfMolecules;
         primaryAtomIndex = environment->primaryAtomIndex;
-        randomseed = environment->randomseed;
+	primaryAtomIndexArray = environment->primaryAtomIndexArray;
+	randomseed = environment->randomseed;
     }
 };
 
 struct Molecule
 {
+	char type;
 	/*
 	The number of atoms in the molecule.
 	*/
