@@ -64,7 +64,7 @@ using std::string;
 			{"list-devices",		no_argument,		0,	'Q'},
 			{"device",				required_argument,	0,	'd'},
 			{"version",				no_argument,		0,	'V'},
-			{"silent",				no_argument,		0,	'k'},
+			{"verbose",				no_argument,		0,	'k'},
 			{"name",				required_argument,	0,	LONG_NAME},
 			{0, 0, 0, 0} 
 		};
@@ -152,8 +152,8 @@ using std::string;
 				case 'p':	/* run parallel */
 					params->parallelFlag = true;
 					break;
-				case 'k': 	/* Silence cout */
-					params->silentOutputFlag = true;
+				case 'k': 	/* Verbose cout */
+					params->verboseOutputFlag = true;
 					break;
 				case 'h':	/* print help */
 					printHelpScreen();
@@ -270,7 +270,7 @@ using std::string;
 		args->stepCount = params->stepCount;
 		args->threadCount = params->threadCount;
 		args->simulationName = params->simulationName;
-		args->silencedOutput = params->silentOutputFlag;
+		args->verboseOutput = params->verboseOutputFlag;
 
 		if (!params->parallelFlag && params->deviceFlag)
 		{
@@ -355,7 +355,7 @@ using std::string;
 		cout << "--serial\t(-s)\n";
 		cout << "\tRun the simulation in serial on the host CPU. If you specify this\n"
 			  "\tflag you cannot also specify the --parallel flag.\n\n";
-		cout << "--silent\t(-k)\n";
+		cout << "--verbose\t(-k)\n";
 		cout << "\tRun the simulation without printing to std::cout.\n\n";
 		cout << "--list-devices\t(-Q)\n";
 		cout << "\tQueries the host machine for available CUDA capable devices. The\n"

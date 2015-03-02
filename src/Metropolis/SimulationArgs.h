@@ -81,7 +81,7 @@ struct SimulationArgs
 	
 	/// Whether or not program prints to cout 
 	///		(silenced for integration tests)
-	bool silencedOutput;
+	bool verboseOutput;
 
 	/// The number of simulation steps between status updates printed to
 	/// the console. A value of 0 means that status updates are only
