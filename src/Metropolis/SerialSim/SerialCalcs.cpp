@@ -57,29 +57,62 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 	#pragma omp parallel for //num_threads(4) <- this is set in Simulation.cpp
 	for (int otherMol = startIdx; otherMol < environment->numOfMolecules; otherMol++)
 	{
+	    bool included = false;
 		if (otherMol != currentMol)
 		{
-			Atom atom1 = molecules[currentMol].atoms[environment->primaryAtomIndex];
-			Atom atom2 = molecules[otherMol].atoms[environment->primaryAtomIndex];
-			
-			//square cutoff value for easy comparison
-			Real cutoffSQ = environment->cutoff * environment->cutoff;
-				
-			//calculate difference in coordinates
-			Real deltaX = makePeriodic(atom1.x - atom2.x, environment->x);
-			Real deltaY = makePeriodic(atom1.y - atom2.y, environment->y);
-			Real deltaZ = makePeriodic(atom1.z - atom2.z, environment->z);
-			
-			Real r2 = (deltaX * deltaX) +
-						(deltaY * deltaY) + 
-						(deltaZ * deltaZ);
+			molecules[currentMol].type = 0;
+			molecules[otherMol].type = 1;
+			std::vector<int> currentMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
+			std::vector<int> otherMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[otherMol].type]);
 
-			if (r2 < cutoffSQ)
+			for (int i = 0; i < currentMolPrimaryIndexArray.size(); i++)
 			{
-				Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
-				//this addition needs to be atomic since multiple threads will be modifying totalEnergy
-				#pragma omp atomic
-				totalEnergy += tempEnergy;
+			    for (int j = 0; j < otherMolPrimaryIndexArray.size(); j++)
+    			    {		    
+				
+
+				//cout << "Printing primary atom indexes..." << endl;
+				int primaryIndex1 = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type])[i];
+				int primaryIndex2 = (*(*(environment->primaryAtomIndexArray))[molecules[otherMol].type])[j];
+	
+				//cout << "Primary index 1: " << primaryIndex1 << endl;
+				//cout << " Primary index 2: " << primaryIndex2 << endl;
+				Atom atom1 = molecules[currentMol].atoms[currentMolPrimaryIndexArray[i]];
+				Atom atom2 = molecules[otherMol].atoms[otherMolPrimaryIndexArray[j]];
+				
+				//cout << "Atom 1 primary index: " << atom1.name << endl;
+				//cout << "Atom 2 primary index: " << atom2.name << endl;
+				
+				//square cutoff value for easy comparison
+				Real cutoffSQ = environment->cutoff * environment->cutoff;
+					
+				//calculate difference in coordinates
+				Real deltaX = makePeriodic(atom1.x - atom2.x, environment->x);
+				Real deltaY = makePeriodic(atom1.y - atom2.y, environment->y);
+				Real deltaZ = makePeriodic(atom1.z - atom2.z, environment->z);
+			
+				Real r2 = (deltaX * deltaX) +
+							(deltaY * deltaY) + 
+							(deltaZ * deltaZ);
+	
+				if (r2 < cutoffSQ)
+				{
+					Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
+					//this addition needs to be atomic since multiple threads will be modifying totalEnergy
+					#pragma omp atomic
+					totalEnergy += tempEnergy;
+					included = true;
+					//cout << "Molecule has been included. Skipping rest of primary indexes for otherMol" << endl;
+					break;
+				}
+
+
+			    }
+			    if (included)
+			    {
+				//cout << ".";
+				break;
+			    }
 			}
 		}
 	}

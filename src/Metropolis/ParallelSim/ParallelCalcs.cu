@@ -121,6 +121,12 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 	//checks validity of molecule pair
 	if (otherMol < molecules->moleculeCount && otherMol >= startIdx && otherMol != currentMol)
 	{
+		//std::vector<int> currentPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules->type[currentMol]]);
+		//(*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
+
+		//int i;
+		//int j;
+	//	for (i = 0; i < 
 		//find primary atom indices for this pair of molecules
 		int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
 		int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;

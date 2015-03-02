@@ -32,6 +32,7 @@ struct AtomData
 
 struct MoleculeData
 {
+	char *type;
 	int *atomsIdx, *numOfAtoms;
 	int moleculeCount;
 	
@@ -39,12 +40,14 @@ struct MoleculeData
 	{
 		int idx = 0;
 		
+		type = (char*) malloc(numM * sizeof(char));
 		atomsIdx = (int*) malloc(numM * sizeof(int));
 		numOfAtoms = (int*) malloc(numM * sizeof(int));
 		
 		for (int i = 0; i < numM; i++)
 		{
 			numOfAtoms[i] = molecules[i].numOfAtoms;
+			type[i] = molecules[i].type;
 			atomsIdx[i] = idx;
 			idx += numOfAtoms[i];
 		}
