@@ -229,10 +229,8 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 			} /* Endfor central cell, c */
 		}
 	}
-	// *****FIX: Issue with IntraMolEnergy_NLC returning huge values
-	//return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
 	
-	return totalEnergy;
+	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
 }
 
 /**
@@ -285,12 +283,22 @@ Real SerialCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecule
 				charge_energy = calcCharge(atom1.charge, atom2.charge, sqrt(r2));
 						
 				//gets the fValue in the same molecule
-				fValue = 1.0;
+				fValue = 0.0;
 				
-				// TODO: update getFValue and figure out hops for current box
-				//int ** hopTab1 = box->tables[mol1_i % box->molecTypenum].hopTable;
-				//fValue = box->getFValue(atomIn1_i,atomIn2_i,hopTab1);
+				int hops = 0;
+				for (int k = 0; k < molecules[mol1_i].numOfHops; k++)
+				{
+					Hop currentHop = molecules[mol1_i].hops[k];
+					if (currentHop.atom1 == atomIn1_i && currentHop.atom2 == atomIn2_i)
+					{
+						hops = currentHop.hop;
+					}
+				}
 				
+				if (hops == 3)
+					fValue = 0.5;
+				else if (hops > 3)
+					fValue = 1.0;
 			
 						
 				Real subtotal = (lj_energy + charge_energy) * fValue;
