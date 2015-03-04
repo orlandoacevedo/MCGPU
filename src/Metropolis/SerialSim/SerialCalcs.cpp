@@ -77,7 +77,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 			Real r2 = calcAtomDist(atom1, atom2, environment);
 
 			molecules[currentMol].type = 0;
-			molecules[otherMol].type = 1;
+			molecules[otherMol].type = 0;
 			std::vector<int> currentMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
 			std::vector<int> otherMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[otherMol].type]);
 

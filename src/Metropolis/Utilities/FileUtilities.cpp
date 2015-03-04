@@ -859,7 +859,7 @@ bool ConfigScanner::readInConfig(string configpath)
 						{
 						    for (int j = 0; j < (*(*(enviro.primaryAtomIndexArray))[i]).size(); j++)
 						    {
-							//cout << "Primary index at " << i << "-" << j << " is " << (*(*(enviro.primaryAtomIndexArray))[i])[j] << endl;
+							cout << "Primary index at " << i << "-" << j << " is " << (*(*(enviro.primaryAtomIndexArray))[i])[j] << endl;
 						    }
 						}
 						
