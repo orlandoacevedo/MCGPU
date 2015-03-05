@@ -63,14 +63,14 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 
         box->environment = new Environment(enviro);
 
-	//cout << "BUILDING BOX DATA..." << endl;
+	cout << "BUILDING BOX DATA..." << endl;
         if (!buildBoxData(enviro, moleculeVector, box))
         {
             std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
             return false;
         }
 
-	//cout << "DONE BUILDING BOX DATA" << endl;
+	cout << "DONE BUILDING BOX DATA" << endl;
         return true;
     }
     else if (inputType == InputFile::State)
@@ -113,7 +113,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 
     std::cout << "Error: Could not recognize input file type" << std::endl;
 
-    //cout << "BOX DATA HAS BEEN LOADED!" << endl;
+    cout << "BOX DATA HAS BEEN LOADED!" << endl;
 
 	return false;
 }
@@ -283,7 +283,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
   		count[3]+=molec1.numOfDihedrals;
   		count[4]+=molec1.numOfHops;
   		
-  		//std::cout << "before table building. Number of atom "<< molec1.numOfAtoms << std::endl;
+  		std::cout << "before table building. Number of atom "<< molec1.numOfAtoms << std::endl;
   		
   		Hop *myHop = molec1.hops;
   		int **table;
@@ -331,7 +331,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
     //std::cout << "Bond Count: " << box->bondCount << std::endl;
     //std::cout << "Angle Count: " << box->angleCount << std::endl;
     //std::cout << "Dihedral Count: " << box->dihedralCount << std::endl;
-    //std::cout << "Hop Count: " << box->hopCount << std::endl;
+    std::cout << "Hop Count: " << box->hopCount << std::endl;
      
     box->atoms 	   = (Atom *)malloc(sizeof(Atom)*box->atomCount);
     box->bonds     = (Bond *)malloc(sizeof(Bond)*box->bondCount);
@@ -401,27 +401,34 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
             box->molecules[j].hops[k] = molec1.hops[k];
         }
     }
-   
+   cout << "molecDiv\n";
     for(int m = 1; m < molecDiv; m++)
     {
         int offset=m*molecTypenum;
     	memcpy(&(box->molecules[offset]),box->molecules,sizeof(Molecule)*molecTypenum);
-    	for(int n=0;n<molecTypenum;n++)
+    	cout << "test 1\n";
+	for(int n=0;n<molecTypenum;n++)
         {
-    		box->molecules[offset+n].id=offset+n;
+    	    box->molecules[offset+n].id=offset+n;
             box->molecules[offset+n].atoms = box->molecules[n].atoms+count[0]*m;
             box->molecules[offset+n].bonds =  box->molecules[n].bonds+count[1]*m;
             box->molecules[offset+n].angles =  box->molecules[n].angles+count[2]*m;
             box->molecules[offset+n].dihedrals =  box->molecules[n].dihedrals+count[3]*m;
             box->molecules[offset+n].hops =  box->molecules[n].hops+count[4]*m;
         }
-        
+       cout << "test 2\n";
+	cout << "1\n"; 
         memcpy(&(box->atoms[offset*count[0]]),box->atoms,sizeof(Atom)*count[0]);
-        memcpy(&(box->bonds[offset*count[1]]),box->bonds,sizeof(Bond)*count[1]);
-        memcpy(&(box->angles[offset*count[2]]),box->angles,sizeof(Angle)*count[2]);
-        memcpy(&(box->dihedrals[offset*count[3]]),box->dihedrals,sizeof(Dihedral)*count[3]);
-        memcpy(&(box->hops[offset*count[4]]),box->hops,sizeof(Hop)*count[4]);
-        
+        cout << "2\n";
+	memcpy(&(box->bonds[offset*count[1]]),box->bonds,sizeof(Bond)*count[1]);
+        cout << "3\n";
+	memcpy(&(box->angles[offset*count[2]]),box->angles,sizeof(Angle)*count[2]);
+        cout << "4\n";
+	memcpy(&(box->dihedrals[offset*count[3]]),box->dihedrals,sizeof(Dihedral)*count[3]);
+        cout << "5\n";
+	memcpy(&(box->hops[offset*count[4]]),box->hops,sizeof(Hop)*count[4]);
+       cout << "test 3\n";
+ 
         for(int k=0;k<count[0];k++)
         {
             box->atoms[offset*count[0]+k].id=offset*count[0]+k;
@@ -451,7 +458,8 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
             box->hops[offset*count[4]+k].atom2+=m*count[0];
         }
     }
-     
+    cout << "test 4\n";
+ 
     enviro->numOfAtoms = count[0]*molecDiv;     
 
     if (!generatefccBox(box)) //generate fcc lattice box
@@ -459,7 +467,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
     	std::cerr << "Error: buildBoxData(): Could not generate FCC box" << std::endl;
     	return false;
     }
-    //std::cout << "Finished Assigning Molecule Positions" << std::endl;
+    std::cout << "Finished Assigning Molecule Positions" << std::endl;
 
     return true;
 }
@@ -1219,6 +1227,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
     else
     {
         string line; 
+	int moleculeNum = 0;
         while( zmatrixScanner.good() )
         {
 	    //cout << "SETTING THINGS UP..." << endl;
@@ -1226,7 +1235,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
             getline(zmatrixScanner,line);
 
             Molecule workingMolecule;
-
+	    workingMolecule.type = moleculeNum;
             //check if it is a commented line,
             //or if it is a title line
             try
@@ -1280,8 +1289,9 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
                     dihedralArray[i] = dihedralVector[i];
                 }
 
-		//cout << "ITERATED THROUGH ALL ARRAYS" << endl;
-                moleculePattern.push_back(createMolecule(-1, atomArray, angleArray, bondArray, dihedralArray, 
+		
+		cout << "MoleculeNum: " << moleculeNum << endl;
+                moleculePattern.push_back(createMolecule(-1, moleculeNum, atomArray, angleArray, bondArray, dihedralArray, 
                      atomVector.size(), angleVector.size(), bondVector.size(), dihedralVector.size()));
 
                 atomVector.clear();
@@ -1289,6 +1299,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
                 angleVector.clear();
                 dihedralVector.clear();
 
+		moleculeNum++;
                 startNewMolecule = false;
             } 
         }
@@ -1372,7 +1383,7 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
     else if(format == 2)
     {
         startNewMolecule = true;
-	}
+    }
     else if(format == 3)
     {
         startNewMolecule = true;
@@ -1709,7 +1720,8 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
         }
 
 
-        Molecule molecCopy = Molecule(-1,atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
+	cout << "what the hell is here? " << moleculePattern[i].type << endl;
+        Molecule molecCopy = Molecule(-1, moleculePattern[i].type, atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
                                     moleculePattern[i].numOfAtoms, 
                                     moleculePattern[i].numOfAngles,
                                     moleculePattern[i].numOfBonds,
@@ -1729,6 +1741,7 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
         if(i == 0)
         {
             newMolecules[i].id = startingID;
+	    cout << "what about here cappy: " << newMolecules[i].type << endl;
         }
         else
         {
@@ -1744,9 +1757,11 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
         {
             int atomID = newMolecule.atoms[i].id - 1;
             //newMolecule.atoms[i].id = atomID + newMolecule.id;
-				newMolecule.atoms[i].id = atomID + startingID;
+      	    newMolecule.atoms[i].id = atomID + startingID;
+	    cout << "IS ANYTHING HERE?? : " << newMolecule.type << endl;
 
         }
+	//exit(0);
         for (int i = 0; i < newMolecule.numOfBonds; i++)
         {
             int atom1ID = newMolecule.bonds[i].atom1 - 1;
@@ -1784,11 +1799,12 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
 
             //newMolecule.hops[i].atom1 = atom1ID + newMolecule.id;
             //newMolecule.hops[i].atom2 = atom2ID + newMolecule.id;
-				newMolecule.hops[i].atom1 = atom1ID + startingID;
+	    newMolecule.hops[i].atom1 = atom1ID + startingID;
             newMolecule.hops[i].atom2 = atom2ID + startingID;
         }
     }
 
+    cout << "return vector<Molecule>" << endl;
     return vector<Molecule>(newMolecules,newMolecules+sizeof(newMolecules)/sizeof(Molecule) );
 }
 

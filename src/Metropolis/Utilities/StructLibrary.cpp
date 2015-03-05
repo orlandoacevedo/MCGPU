@@ -84,11 +84,12 @@ Molecule createMolecule(Atom *atoms, int numOfAtoms)
 	return molecule;
 }
 
-Molecule createMolecule(int id, Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals, 
+Molecule createMolecule(int id, int type, Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals, 
                         int atomCount, int angleCount, int bondCount, int dihedralCount)
 {
     Molecule molecule;
     molecule.id = id;
+    molecule.type = type;
 
     molecule.atoms = atoms;
     molecule.angles = angles;

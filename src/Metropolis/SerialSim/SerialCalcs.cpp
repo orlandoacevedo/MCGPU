@@ -61,7 +61,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 	    bool included = false;
 		if (otherMol != currentMol)
 		{
-
+			cout << "Begin Energy Calculation" << endl;
 			Atom atom1 = molecules[currentMol].atoms[environment->primaryAtomIndex];
 			Atom atom2 = molecules[otherMol].atoms[environment->primaryAtomIndex];
 			
@@ -75,9 +75,10 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 			
 			//calculate squared distance between atoms 
 			Real r2 = calcAtomDist(atom1, atom2, environment);
-
-			molecules[currentMol].type = 0;
-			molecules[otherMol].type = 0;
+			
+			cout << "currentMol molecule type: " << molecules[currentMol].type << endl;
+			cout << "otherMol molecule type: " << molecules[otherMol].type << endl;
+			
 			std::vector<int> currentMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
 			std::vector<int> otherMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[otherMol].type]);
 

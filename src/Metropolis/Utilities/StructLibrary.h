@@ -291,7 +291,7 @@ struct Environment
 
 struct Molecule
 {
-	char type;
+	int type;
 	/*
 	The number of atoms in the molecule.
 	*/
@@ -340,9 +340,10 @@ struct Molecule
     /*
     Constructor(s) for the molecule
     */
-    Molecule(int idIn, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
+    Molecule(int idIn, int typeIn, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
     	{
 		id = idIn;
+		type = typeIn;
 
 		atoms = atomsIn;
 		angles = anglesIn;
@@ -387,7 +388,7 @@ Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real 
 
 //Molecule
 Molecule createMolecule(int id, Atom *atoms, int atomCount);
-Molecule createMolecule(int id, Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals,
+Molecule createMolecule(int id, int type,  Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals,
                         int atomCount, int angleCount, int bondCount, int dihedralCount);
 void copyMolecule(Molecule *destination, Molecule *source);
 void printMolecule(Molecule *molecule);
