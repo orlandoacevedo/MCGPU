@@ -27,7 +27,7 @@
 #include "Metropolis/Utilities/MathLibrary.h"
 #include "Metropolis/Utilities/Parsing.h"
 #include "SerialSim/SerialBox.h"
-#include "SerialSim/SerialCalcs.h"
+#include "SerialSim/SerialCalcs.cuh"
 #include "ParallelSim/ParallelCalcs.h"
 #include "Utilities/FileUtilities.h"
 
@@ -134,7 +134,7 @@ void Simulation::run()
 		{
 			// ***** TODO: add cmd line arg to switch between nlc and reg
 			//oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
-			oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro);
+			oldEnergy = SerialCalcs::calc_energy_NLC(molecules, enviro);
 		}
 	}
 	
