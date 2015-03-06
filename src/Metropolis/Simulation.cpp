@@ -27,7 +27,7 @@
 #include "Metropolis/Utilities/MathLibrary.h"
 #include "Metropolis/Utilities/Parsing.h"
 #include "SerialSim/SerialBox.h"
-#include "SerialSim/SerialCalcs.cuh"
+#include "SerialSim/SerialCalcs.h"
 #include "ParallelSim/ParallelCalcs.h"
 #include "Utilities/FileUtilities.h"
 

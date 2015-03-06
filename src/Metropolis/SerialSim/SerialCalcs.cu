@@ -15,6 +15,7 @@
 #include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/FileUtilities.h"
 #include "SerialCalcs.cuh"
+#include "SerialCalcs.h"
 
 using namespace std;
 
