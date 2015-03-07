@@ -61,7 +61,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 	    bool included = false;
 		if (otherMol != currentMol)
 		{
-			cout << "Begin Energy Calculation" << endl;
+			molecules[currentMol].type = 0;
+			molecules[otherMol].type = 1;
 			Atom atom1 = molecules[currentMol].atoms[environment->primaryAtomIndex];
 			Atom atom2 = molecules[otherMol].atoms[environment->primaryAtomIndex];
 			
@@ -76,8 +77,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 			//calculate squared distance between atoms 
 			Real r2 = calcAtomDist(atom1, atom2, environment);
 			
-			cout << "currentMol molecule type: " << molecules[currentMol].type << endl;
-			cout << "otherMol molecule type: " << molecules[otherMol].type << endl;
+			//cout << "currentMol molecule type: " << molecules[currentMol].type << endl;
+			//cout << "otherMol molecule type: " << molecules[otherMol].type << endl;
 			
 			std::vector<int> currentMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
 			std::vector<int> otherMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[otherMol].type]);
@@ -93,13 +94,13 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 				int primaryIndex1 = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type])[i];
 				int primaryIndex2 = (*(*(environment->primaryAtomIndexArray))[molecules[otherMol].type])[j];
 	
-				//cout << "Primary index 1: " << primaryIndex1 << endl;
-				//cout << " Primary index 2: " << primaryIndex2 << endl;
+				cout << "Primary index 1: " << primaryIndex1 << endl;
+				cout << " Primary index 2: " << primaryIndex2 << endl;
 				Atom atom1 = molecules[currentMol].atoms[currentMolPrimaryIndexArray[i]];
 				Atom atom2 = molecules[otherMol].atoms[otherMolPrimaryIndexArray[j]];
 				
-				//cout << "Atom 1 primary index: " << atom1.name << endl;
-				//cout << "Atom 2 primary index: " << atom2.name << endl;
+				cout << "Atom 1 primary index: " << atom1.name << endl;
+				cout << "Atom 2 primary index: " << atom2.name << endl;
 				
 				//square cutoff value for easy comparison
 				Real cutoffSQ = environment->cutoff * environment->cutoff;

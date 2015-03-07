@@ -263,6 +263,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
     
     int molecDiv = enviro->numOfMolecules / molecVec.size();
     int molecTypenum=molecVec.size();
+
     
     int count[5];//sum up number of atoms,bonds,angles,dihedrals,hops
 	//int * 
@@ -352,6 +353,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
  	      //Copy data from vector to molecule
         Molecule molec1 = molecVec[j];   
 
+
         box->molecules[j].atoms = (Atom *)(box->atoms+count[0]);
         box->molecules[j].bonds = (Bond *)(box->bonds+count[1]);
         box->molecules[j].angles = (Angle *)(box->angles+count[2]);
@@ -404,6 +406,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
    cout << "molecDiv\n";
     for(int m = 1; m < molecDiv; m++)
     {
+	cout << "molecDiv = " << molecDiv << endl;
         int offset=m*molecTypenum;
     	memcpy(&(box->molecules[offset]),box->molecules,sizeof(Molecule)*molecTypenum);
     	cout << "test 1\n";
@@ -417,7 +420,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
             box->molecules[offset+n].hops =  box->molecules[n].hops+count[4]*m;
         }
        cout << "test 2\n";
-	cout << "1\n"; 
+	cout << m << "\n"; 
         memcpy(&(box->atoms[offset*count[0]]),box->atoms,sizeof(Atom)*count[0]);
         cout << "2\n";
 	memcpy(&(box->bonds[offset*count[1]]),box->bonds,sizeof(Bond)*count[1]);
@@ -459,6 +462,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
         }
     }
     cout << "test 4\n";
+
  
     enviro->numOfAtoms = count[0]*molecDiv;     
 
