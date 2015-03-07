@@ -38,7 +38,7 @@ Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsil
 	return atom;
 }
 
-Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, char name)
+Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, std::string name)
 {
 	Atom atom;
 	atom.id = id;
@@ -48,7 +48,7 @@ Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsil
 	atom.sigma = sigma;
 	atom.epsilon = epsilon;
 	atom.charge = charge;
-	atom.name = name;
+	*atom.name = name;
 	return atom;	
 }
 

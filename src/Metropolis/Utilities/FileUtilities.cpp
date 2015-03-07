@@ -19,7 +19,7 @@ using std::ifstream;
 
 bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps)
 {
-	//cout << "LOADING BOX DATA...." << endl;
+	cout << "LOADING BOX DATA...." << endl;
 	if (box == NULL)
 	{
 		std::cerr << "Error: loadBoxData(): Box is NULL" << std::endl;
@@ -39,7 +39,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             return false;
         }
 
-	//cout << "RAEDING IN OPLS..." << endl;
+	cout << "RAEDING IN OPLS..." << endl;
         OplsScanner opls_scanner = OplsScanner();
         if (!opls_scanner.readInOpls(config_scanner.getOplsusaparPath()))
         {
@@ -47,7 +47,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             return false;
         }
 
-	//cout << "READING IN ZMATRIX..." << endl;
+	cout << "READING IN ZMATRIX..." << endl;
         ZmatrixScanner zmatrix_scanner = ZmatrixScanner();        
         if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
         {
@@ -55,7 +55,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             return false;
         }
 
-	//cout << "READ-INS HAVE FINISHED!" << endl;
+	cout << "READ-INS HAVE FINISHED!" << endl;
         moleculeVector = zmatrix_scanner.buildMolecule(0);        
         enviro = config_scanner.getEnviro();
         *steps = config_scanner.getSteps();
@@ -1014,8 +1014,9 @@ void OplsScanner::addLineToTable(string line, int numOfLines)
     {      	
         ss >> hashNum >> secCol >> name >> charge >> sigma >> epsilon;
 	char *atomType = (char *)name.c_str();
-         
-        Atom temp = createAtom(0, -1, -1, -1, sigma, epsilon, charge, *atomType);
+	
+        Atom temp = createAtom(0, -1, -1, -1, sigma, epsilon, charge, name);
+	
         pair<map<string,Atom>::iterator,bool> ret;
         ret = oplsTable.insert( pair<string,Atom>(hashNum,temp) );
 
@@ -1275,7 +1276,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
                 for (int i = 0; i < atomVector.size(); i++)
                 {
 		    //cout << "Size of the atom Vector: " << atomVector.size() << endl;
-		    //cout << "Name of ATOMVECTOR[" << i << "] = " << atomVector[i].name << endl;
+		    cout << "Name of ATOMVECTOR[" << i << "] = " << *atomVector[i].name << endl;
                     atomArray[i] = atomVector[i];
 		    //cout << "END OF ELEMENT " << i << endl;
                 }
@@ -1310,6 +1311,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
     }
 
     zmatrixScanner.close();    	 
+
 	
     //cout << "VECTORS HAVE BEEN CLEARED AND FILE IS CLOSED" << endl;
 
@@ -1332,7 +1334,7 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
         ss << line;    	
         ss >> atomID >> atomType >> oplsA >> oplsB >> bondWith >> bondDistance >> angleWith >> angleMeasure >> dihedralWith >> dihedralMeasure;
 
-        //cout << "THIS IS THE ATOMTYPE BEING READ IN: " << atomType << endl;
+        cout << "ThIS IS THE ATOMTYPE BEING READ IN: " << atomType << endl;
 
 	//setup structures for permanent encapsulation
         Atom lineAtom;
@@ -1342,16 +1344,18 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
 		  
         if (oplsA.compare("-1") != 0)
         {
+	    cout << "oplsA enterned" << endl;
             lineAtom = oplsScanner->getAtom(oplsA);
             lineAtom.id = atoi(atomID.c_str());
             lineAtom.x = 0;
             lineAtom.y = 0;
             lineAtom.z = 0;
+	    *lineAtom.name = atomType;
         }
         else//dummy atom
         {
-            char dummy = 'X';
-            lineAtom = createAtom(atoi(atomID.c_str()), -1, -1, -1, -1, -1, -1, dummy);
+	    //std::string dummy = "X";
+            lineAtom = createAtom(atoi(atomID.c_str()), -1, -1, -1, -1, -1, -1, atomType);
         }
 	
 	atomVector.push_back(lineAtom);
@@ -2103,7 +2107,7 @@ Atom StateScanner::getAtomFromLine(string line)
                 break;
 	    case 7:
 		cout << "NAME OF ATOM: " << tokens << endl;
-		atom.name = *tokens;
+		*atom.name = std::string(tokens);
 		break;
         }
 

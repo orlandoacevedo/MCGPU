@@ -62,7 +62,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 		if (otherMol != currentMol)
 		{
 			molecules[currentMol].type = 0;
-			molecules[otherMol].type = 1;
+			molecules[otherMol].type = 0;
 			Atom atom1 = molecules[currentMol].atoms[environment->primaryAtomIndex];
 			Atom atom2 = molecules[otherMol].atoms[environment->primaryAtomIndex];
 			
@@ -99,8 +99,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 				Atom atom1 = molecules[currentMol].atoms[currentMolPrimaryIndexArray[i]];
 				Atom atom2 = molecules[otherMol].atoms[otherMolPrimaryIndexArray[j]];
 				
-				cout << "Atom 1 primary index: " << atom1.name << endl;
-				cout << "Atom 2 primary index: " << atom2.name << endl;
+				cout << "Atom 1 primary index: " << *atom1.name << endl;
+				cout << "Atom 2 primary index: " << *atom2.name << endl;
 				
 				//square cutoff value for easy comparison
 				Real cutoffSQ = environment->cutoff * environment->cutoff;

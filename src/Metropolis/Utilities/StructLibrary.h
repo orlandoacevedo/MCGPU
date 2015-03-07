@@ -214,11 +214,11 @@ struct Fourier
 
 struct Atom
 {
-	char name;
+	std::string* name;
 	Real x, y, z, sigma, epsilon, charge;
 	unsigned long id;
 	Atom(){
-		name = '0';
+		name = new std::string("0");
 		x = 0;
 		y = 0;
 		z = 0;
@@ -228,7 +228,7 @@ struct Atom
 		id = 0;
 	}
 	
-	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, char inName = 0)
+	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, std::string inName = 0)
 	{
 		x = inX;
 		y = inY;
@@ -236,7 +236,7 @@ struct Atom
 		sigma = inSigma;
 		epsilon = inEpsilon;
 		charge = inCharge;
-		name = inName;
+		*name = inName;
         id = inID;
 	}
 };
@@ -379,7 +379,7 @@ struct Molecule
 //Atom
 Atom createAtom(unsigned long id, Real x, Real y, Real z);
 Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon);
-Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, char name);
+Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, std::string name);
 void printAtoms(Atom *atoms, int count);
 void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, int accepts, int rejects, Real totalEnergy);
 
