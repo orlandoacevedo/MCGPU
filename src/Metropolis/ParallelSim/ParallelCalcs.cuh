@@ -61,6 +61,8 @@ namespace ParallelCalcs
 	/// @param enviro Device pointer to Environment struct.
 	/// @param inCutoff Device pointer to valid neighbor molecules
 	///   array.
+    __device__ Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro)
+    __global__ void calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *totalEnergy)
 	__global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);
 	
 	/// Each thread in this kernel calculates the inter-atomic

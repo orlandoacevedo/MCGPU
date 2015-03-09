@@ -44,7 +44,7 @@ namespace SerialCalcs
 	
 	/// ****************
 	/// Incorporating old linked-list neighbor function (work-in-progress)
-    Real calc_energy_NLC(Molecule *molecules, Environment *enviro);
+	Real calcEnergy_NLC(Molecule *molecules, Environment *enviro);
 	Real calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules);
 	
 	
