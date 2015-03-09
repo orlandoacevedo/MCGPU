@@ -97,6 +97,8 @@ Real SerialCalcs::calc_energy_NLC(Molecule *molecules, Environment *enviro){
 	            const Real Region[3] = {enviro->x, enviro->y, enviro->z};
 	            int head[NCLMAX];
 	            int lscl[NMAX];
+	            int lc[3];            	/* Number of cells in the x|y|z direction */
+	            int mc[3];			  	/* Vector cell */
 	            Real rc[3];
 
 	            for (int k=0; k<3; k++)
@@ -136,7 +138,7 @@ Real SerialCalcs::calc_energy_NLC(Molecule *molecules, Environment *enviro){
 	            Real totalEnergy;
 	            Real oldEnergy;
 	            Molecule *d_molecules;
-	            Evironment *d_enviro;
+	            Environment *d_enviro;
 	            int *d_head;
 	            int *d_lscl;
 
@@ -146,13 +148,13 @@ Real SerialCalcs::calc_energy_NLC(Molecule *molecules, Environment *enviro){
 	            cudaMalloc(&d_lscl, sizeof(int)*NMAX);
 	            cudaMalloc(&d_totalEnergy, sizeof(Real));
 
-	            cudaMecpy(d_enviro, enviro, sizeof(Evironment), cudaMecpyHostToDevice);
-	            cudaMecpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMecpyHostToDevice);
-	            cudaMecpy(d_head, head, sizeof(int)*NCLMAX, cudaMecpyHostToDevice);
-	            cudaMecpy(d_lscl, lscl, sizeof(int)*NMAX, cudaMecpyHostToDevice);
+	            cudaMemcpy(d_enviro, enviro, sizeof(Evironment), cudaMemcpyHostToDevice);
+	            cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
+	            cudaMemcpy(d_head, head, sizeof(int)*NCLMAX, cudaMemcpyHostToDevice);
+	            cudaMemcpy(d_lscl, lscl, sizeof(int)*NMAX, cudaMemcpyHostToDevice);
 
 				SerialCalcs::calcEnergy_NLC(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
-	            cudaMecpy(&totalEnergy, d_totalEnergy, sizeof(Real), cudaMecpyDeviceToHost);
+				cudaMemcpy(&totalEnergy, d_totalEnergy, sizeof(Real), cudaMemcpyDeviceToHost);
 
 	            oldEnergy = totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
 	            cudaFree(d_totalEnergy);
@@ -168,7 +170,7 @@ __global__ void SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *en
 	//int lscl[NMAX];       	/* Linked cell lists */
 	int mc1[3];				/* Neighbor cells */
 	Real rshift[3];	  		/* Shift coordinates for periodicity */
-	//const Real Region[3] = {enviro->x, enviro->y, enviro->z};  /* MD box lengths */
+	Real Region[3] = {enviro->x, enviro->y, enviro->z};  /* MD box lengths */
 	int c1;				  	/* Used for scalar cell index */
 	Real dr[3];		  		/* Pair vector dr = atom[i]-atom[j] */
 	Real rrCut = enviro->cutoff * enviro->cutoff;	/* Cutoff squared */
