@@ -80,7 +80,62 @@ Real ParallelCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecu
 				}
 					  
 				//calculate squared distance between atoms 
-				Real r2 = calcAtomDist(atom1, atom2, enviro);
+				Real r2;
+				
+				Real x;
+				Real boxDim;
+				Real deltaX;
+				x = atom1.x - atom2.x;
+			    boxDim = enviro->x;
+				while(x < -0.5 * boxDim)
+							    {
+							        x += boxDim;
+							    }
+
+				while(x > 0.5 * boxDim)
+							    {
+							        x -= boxDim;
+							    }
+				deltaX = x;
+				
+				
+				
+				Real y;
+				boxDim = enviro->y
+				Real deltaY;
+				y = atom1.x - atom2.x;
+				boxDim = enviro->x;
+				while(y < -0.5 * boxDim)
+											    {
+											        y += boxDim;
+											    }
+
+			    while(y > 0.5 * boxDim)
+											    {
+											        y -= boxDim;
+											    }
+				deltaY = y;
+				
+				
+				
+				Real z;
+				BoxDim = enviro->z;
+				Real deltaZ;
+				z = atom1.x - atom2.x;
+							    boxDim = enviro->x;
+				while(z < -0.5 * boxDim)
+											    {
+											       z += boxDim;
+											    }
+
+				while(z > 0.5 * boxDim)
+											    {
+											        z -= boxDim;
+											    }
+				deltaX = z;
+								
+					//calculate squared distance (r2 value) and return
+				r2 = (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
 										  
 				if (r2 == 0.0)
 				{
@@ -88,10 +143,35 @@ Real ParallelCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecu
 				}
 					
 				//calculate LJ energies
-				lj_energy = calc_lj(atom1, atom2, r2);
+				 Real sigma = sqrt(atom1.sigma * atom1.sigma);
+				 Real epsilon = sqrt(atom1.epsilon * atom2.epsilon);
+				    
+				    if (r2 == 0.0)
+				    {
+				    	lj_energy =  0.0;
+				    }
+				    else
+				    {
+				    	//calculate terms
+				    	const Real sig2OverR2 = pow(sigma, 2) / r2;
+						const Real sig6OverR6 = pow(sig2OverR2, 3);
+				    	const Real sig12OverR12 = pow(sig6OverR6, 2);
+				    	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+				    	lj_energy =  energy;
+				    }
+
 						
 				//calculate Coulombic energies
-				charge_energy = calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+				 if (sqrt(r2) == 0.0)
+				    {
+					 charge_energy = 0.0;
+				    }
+				 else
+				    {
+				    	// conversion factor below for units in kcal/mol
+				    	const Real e = 332.06;
+				    	charge_energy = (atom1.charge * atom1.charge) / sqrt(r2);
+				    }
 						
 				//gets the fValue in the same molecule
 				fValue = 0.0;
@@ -495,38 +575,7 @@ __device__ Real ParallelCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
 
 }
 
-Real ParallelCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
-{
-    //store LJ constants locally
-    Real sigma = calcBlending(atom1.sigma, atom2.sigma);
-    Real epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
-    
-    if (r2 == 0.0)
-    {
-        return 0.0;
-    }
-    else
-    {
-    	//calculate terms
-    	const Real sig2OverR2 = pow(sigma, 2) / r2;
-		const Real sig6OverR6 = pow(sig2OverR2, 3);
-    	const Real sig12OverR12 = pow(sig6OverR6, 2);
-    	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
-        return energy;
-    }
-
-}
 __device__ Real ParallelCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
-{
-	//calculate difference in coordinates
-	Real deltaX = makePeriodic(atom1.x - atom2.x, enviro->x);
-	Real deltaY = makePeriodic(atom1.y - atom2.y, enviro->y);
-	Real deltaZ = makePeriodic(atom1.z - atom2.z, enviro->z);
-				
-	//calculate squared distance (r2 value) and return
-	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
-}
-Real ParallelCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
 {
 	//calculate difference in coordinates
 	Real deltaX = makePeriodic(atom1.x - atom2.x, enviro->x);
@@ -538,19 +587,6 @@ Real ParallelCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
 }
 
 __device__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
-{  
-    if (r == 0.0)
-    {
-        return 0.0;
-    }
-    else
-    {
-    	// conversion factor below for units in kcal/mol
-    	const Real e = 332.06;
-        return (charge1 * charge2 * e) / r;
-    }
-}
-Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
 {  
     if (r == 0.0)
     {

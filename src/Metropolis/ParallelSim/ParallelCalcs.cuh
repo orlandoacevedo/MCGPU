@@ -63,9 +63,7 @@ namespace ParallelCalcs
 	///   array.
 	Real calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules);
     __device__ Real calcAtomDist(Atom atom1, Atom atom2, Environment *enviro);
-    Real calcAtomDist(Atom atom1, Atom atom2, Environment *enviro);
     __device__ Real calc_lj(Atom atom1, Atom atom2, Real r2);
-    Real calc_lj(Atom atom1, Atom atom2, Real r2);
     __device__ Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro);
     __global__ void calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *totalEnergy);
 	__global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);
@@ -118,7 +116,6 @@ namespace ParallelCalcs
 	/// @param r The distance between the two atoms.
 	/// @returns Returns the charge energy between two atoms.
 	__device__ Real calcCharge(Real charge1, Real charge2, Real r);
-	Real calcCharge(Real charge1, Real charge2, Real r);
 	
 	/// Makes a distance periodic within a specified range.
 	/// @param x The distance to be made periodic.
