@@ -186,8 +186,9 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_head, head, sizeof(int)*NCLMAX, cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_lscl, lscl, sizeof(int)*NMAX, cudaMemcpyHostToDevice);
-                
-	            calcEnergy_NLC<<dimGrid(lc[0], lc[1], lc[2]), dimBlock(3, 3, 3)>>(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
+                dim3 dimGrid(lc[0], lc[1], lc[2]);
+                dim3 dimBlock(3, 3, 3);
+	            calcEnergy_NLC<<dimGrid, dimBlock>>(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
 				cudaMemcpy(&totalEnergy, d_totalEnergy, sizeof(Real), cudaMemcpyDeviceToHost);
 
 	            oldEnergy = totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
