@@ -472,7 +472,30 @@ __device__ Real ParallelCalcs::calc_lj(AtomData *atoms, int atom1, int atom2, Re
         return energy;
     }
 }
+
 __device__ Real ParallelCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
+{
+    //store LJ constants locally
+    Real sigma = calcBlending(atom1.sigma, atom2.sigma);
+    Real epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+    
+    if (r2 == 0.0)
+    {
+        return 0.0;
+    }
+    else
+    {
+    	//calculate terms
+    	const Real sig2OverR2 = pow(sigma, 2) / r2;
+		const Real sig6OverR6 = pow(sig2OverR2, 3);
+    	const Real sig12OverR12 = pow(sig6OverR6, 2);
+    	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+        return energy;
+    }
+
+}
+
+Real ParallelCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
 {
     //store LJ constants locally
     Real sigma = calcBlending(atom1.sigma, atom2.sigma);
@@ -503,8 +526,31 @@ __device__ Real ParallelCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment 
 	//calculate squared distance (r2 value) and return
 	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
 }
+Real ParallelCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
+{
+	//calculate difference in coordinates
+	Real deltaX = makePeriodic(atom1.x - atom2.x, enviro->x);
+	Real deltaY = makePeriodic(atom1.y - atom2.y, enviro->y);
+	Real deltaZ = makePeriodic(atom1.z - atom2.z, enviro->z);
+				
+	//calculate squared distance (r2 value) and return
+	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
+}
 
 __device__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
+{  
+    if (r == 0.0)
+    {
+        return 0.0;
+    }
+    else
+    {
+    	// conversion factor below for units in kcal/mol
+    	const Real e = 332.06;
+        return (charge1 * charge2 * e) / r;
+    }
+}
+Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
 {  
     if (r == 0.0)
     {
