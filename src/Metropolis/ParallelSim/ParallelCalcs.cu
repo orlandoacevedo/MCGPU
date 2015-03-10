@@ -182,12 +182,12 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            cudaMalloc(&d_lscl, sizeof(int)*NMAX);
 	            cudaMalloc(&d_totalEnergy, sizeof(Real));
 
-	            cudaMemcpy(d_enviro, enviro, sizeof(Evironment), cudaMemcpyHostToDevice);
+	            cudaMemcpy(d_enviro, enviro, sizeof(Environment), cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_head, head, sizeof(int)*NCLMAX, cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_lscl, lscl, sizeof(int)*NMAX, cudaMemcpyHostToDevice);
 
-	            calcEnergy_NLC(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
+	            ParallelCalcs::calcEnergy_NLC(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
 				cudaMemcpy(&totalEnergy, d_totalEnergy, sizeof(Real), cudaMemcpyDeviceToHost);
 
 	            oldEnergy = totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
@@ -315,7 +315,7 @@ __device__ Real ParallelCalcs::calcInterMolecularEnergy(Molecule *molecules, int
 				//calculate squared distance between atoms 
 				Real r2 = calcAtomDist(atom1, atom2, enviro);
 				
-				totalEnergy += ca r2);
+				totalEnergy += calc_lj(atom1, atom2, r2);
 				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
 			}
 		}
