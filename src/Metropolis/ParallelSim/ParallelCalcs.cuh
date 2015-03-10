@@ -61,6 +61,9 @@ namespace ParallelCalcs
 	/// @param enviro Device pointer to Environment struct.
 	/// @param inCutoff Device pointer to valid neighbor molecules
 	///   array.
+	Real calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules);
+    __device__ Real calcAtomDist(Atom atom1, Atom atom2, Environment *enviro);
+    __device__ Real calc_lj(Atom atom1, Atom atom2, Real r2);
     __device__ Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro);
     __global__ void calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *totalEnergy);
 	__global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);

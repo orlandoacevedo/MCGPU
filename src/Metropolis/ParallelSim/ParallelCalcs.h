@@ -19,6 +19,10 @@
 #include "Metropolis/DataTypes.h"
 #include "Metropolis/SimulationArgs.h"
 
+#define NMAX 100000  /* Maximum number of atoms which can be simulated */
+#define NCLMAX 10000 /* Maximum number of linked-list cells */
+#define EMPTY -1
+
 namespace ParallelCalcs
 {
 	/// Factory method for creating a Box from a configuration file.

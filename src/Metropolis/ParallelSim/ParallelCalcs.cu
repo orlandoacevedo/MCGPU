@@ -48,6 +48,82 @@ Box* ParallelCalcs::createBox(string inputPath, InputFileType inputType, long* s
 	box->copyDataToDevice();
 	return (Box*) box;
 }
+Real ParallelCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules)
+{
+    //setup storage
+    Real totalEnergy = 0.0;
+    Real *energySum_device;
+    // Molecule to be computed. Currently code only handles single solvent type systems.
+    // will need to update to handle more than one solvent type (i.e., co-solvents)
+	int mol1_i = 0;
+
+    //determine number of energy calculations
+    int N =(int) ( pow( (float) molecules[mol1_i].numOfAtoms,2)-molecules[mol1_i].numOfAtoms)/2;	 
+    size_t energySumSize = N * sizeof(Real);
+	Real* energySum = (Real*) malloc(energySumSize);
+
+    //calculate all energies
+    Real lj_energy, charge_energy, fValue, nonbonded_energy;
+    Atom atom1, atom2;
+
+	for (int atomIn1_i = 0; atomIn1_i < molecules[mol1_i].numOfAtoms; atomIn1_i++)
+	{	
+		atom1 = molecules[mol1_i].atoms[atomIn1_i];
+					
+		for (int atomIn2_i = atomIn1_i; atomIn2_i < molecules[mol1_i].numOfAtoms; atomIn2_i++)
+		{
+			atom2 = molecules[mol1_i].atoms[atomIn2_i];
+						
+				if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0)
+				{
+					continue;
+				}
+					  
+				//calculate squared distance between atoms 
+				Real r2 = calcAtomDist(atom1, atom2, enviro);
+										  
+				if (r2 == 0.0)
+				{
+					continue;
+				}
+					
+				//calculate LJ energies
+				lj_energy = calc_lj(atom1, atom2, r2);
+						
+				//calculate Coulombic energies
+				charge_energy = calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+						
+				//gets the fValue in the same molecule
+				fValue = 0.0;
+				
+				int hops = 0;
+				for (int k = 0; k < molecules[mol1_i].numOfHops; k++)
+				{
+					Hop currentHop = molecules[mol1_i].hops[k];
+					if (currentHop.atom1 == atomIn1_i && currentHop.atom2 == atomIn2_i)
+					{
+						hops = currentHop.hop;
+					}
+				}
+				
+				if (hops == 3)
+					fValue = 0.5;
+				else if (hops > 3)
+					fValue = 1.0;
+			
+						
+				Real subtotal = (lj_energy + charge_energy) * fValue;
+				totalEnergy += subtotal;
+
+		} /* EndFor atomIn2_i */
+	} /* EndFor atomIn1_i */
+	
+	// Multiply single solvent molecule energy by number of solvent molecules in the system
+	totalEnergy *= enviro->numOfMolecules;
+	
+    free(energySum);
+    return totalEnergy;
+}
 
 Real ParallelCalcs::calcSystemEnergy(Box *box){ 
 	            Molecule *molecules = box->getMolecules();
@@ -101,7 +177,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            int *d_lscl;
 
 	            cudaMalloc(&d_molecules, enviro->numOfMolecules*sizeof(Molecule));
-	            cudaMalloc(&d_enviro, sizeof(Evironment));
+	            cudaMalloc(&d_enviro, sizeof(Environment));
 	            cudaMalloc(&d_head, sizeof(int)*NCLMAX);
 	            cudaMalloc(&d_lscl, sizeof(int)*NMAX);
 	            cudaMalloc(&d_totalEnergy, sizeof(Real));
@@ -111,7 +187,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            cudaMemcpy(d_head, head, sizeof(int)*NCLMAX, cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_lscl, lscl, sizeof(int)*NMAX, cudaMemcpyHostToDevice);
 
-				SerialCalcs::calcEnergy_NLC(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
+	            calcEnergy_NLC(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
 				cudaMemcpy(&totalEnergy, d_totalEnergy, sizeof(Real), cudaMemcpyDeviceToHost);
 
 	            oldEnergy = totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
@@ -163,8 +239,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
     // Calculate a scalar cell index
     if(mc[0] < lc[0]&&mc[1] < lc[1]&&mc[2]<lc[2]){
         int c = mc[0]*lcyz + mc[1]*lc[2] + mc[2];
-				// Skip this cell if empty
-				
+				// Skip this cell if empty		
 							// Periodic boundary condition by shifting coordinates
 							for (int a = 0; a < 3; a++)
 							{
@@ -186,11 +261,6 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 							    +((mc1[1] + lc[1]) % lc[1]) * lc[2]
 							    +((mc1[2] + lc[2]) % lc[2]);
 							// Skip this neighbor cell if empty
-							if (head[c1] == EMPTY)
-							{
-								continue;
-							}
-
 							// Scan atom i in cell c
 							int i = head[c];
 							while (i != EMPTY)
@@ -245,7 +315,7 @@ __device__ Real ParallelCalcs::calcInterMolecularEnergy(Molecule *molecules, int
 				//calculate squared distance between atoms 
 				Real r2 = calcAtomDist(atom1, atom2, enviro);
 				
-				totalEnergy += calc_lj(atom1, atom2, r2);
+				totalEnergy += ca r2);
 				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
 			}
 		}
@@ -400,6 +470,37 @@ __device__ Real ParallelCalcs::calc_lj(AtomData *atoms, int atom1, int atom2, Re
     	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
         return energy;
     }
+}
+__device__ Real ParallelCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
+{
+    //store LJ constants locally
+    Real sigma = calcBlending(atom1.sigma, atom2.sigma);
+    Real epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+    
+    if (r2 == 0.0)
+    {
+        return 0.0;
+    }
+    else
+    {
+    	//calculate terms
+    	const Real sig2OverR2 = pow(sigma, 2) / r2;
+		const Real sig6OverR6 = pow(sig2OverR2, 3);
+    	const Real sig12OverR12 = pow(sig6OverR6, 2);
+    	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+        return energy;
+    }
+
+}
+__device__ Real ParallelCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
+{
+	//calculate difference in coordinates
+	Real deltaX = makePeriodic(atom1.x - atom2.x, enviro->x);
+	Real deltaY = makePeriodic(atom1.y - atom2.y, enviro->y);
+	Real deltaZ = makePeriodic(atom1.z - atom2.z, enviro->z);
+				
+	//calculate squared distance (r2 value) and return
+	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
 }
 
 __device__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
