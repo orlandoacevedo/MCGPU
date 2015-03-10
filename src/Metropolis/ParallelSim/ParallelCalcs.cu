@@ -101,7 +101,7 @@ Real ParallelCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecu
 				
 				
 				Real y;
-				boxDim = enviro->y
+				boxDim = enviro->y;
 				Real deltaY;
 				y = atom1.x - atom2.x;
 				boxDim = enviro->x;
@@ -119,7 +119,7 @@ Real ParallelCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecu
 				
 				
 				Real z;
-				BoxDim = enviro->z;
+				boxDim = enviro->z;
 				Real deltaZ;
 				z = atom1.x - atom2.x;
 							    boxDim = enviro->x;
@@ -132,7 +132,7 @@ Real ParallelCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecu
 											    {
 											        z -= boxDim;
 											    }
-				deltaX = z;
+				deltaZ = z;
 								
 					//calculate squared distance (r2 value) and return
 				r2 = (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
