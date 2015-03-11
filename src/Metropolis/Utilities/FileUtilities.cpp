@@ -403,13 +403,13 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
             box->molecules[j].hops[k] = molec1.hops[k];
         }
     }
-   cout << "molecDiv\n";
+    //cout << "molecDiv\n";
     for(int m = 1; m < molecDiv; m++)
     {
-	cout << "molecDiv = " << molecDiv << endl;
+	//cout << "molecDiv = " << molecDiv << endl;
         int offset=m*molecTypenum;
     	memcpy(&(box->molecules[offset]),box->molecules,sizeof(Molecule)*molecTypenum);
-    	cout << "test 1\n";
+    	//cout << "test 1\n";
 	for(int n=0;n<molecTypenum;n++)
         {
     	    box->molecules[offset+n].id=offset+n;
@@ -419,18 +419,18 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
             box->molecules[offset+n].dihedrals =  box->molecules[n].dihedrals+count[3]*m;
             box->molecules[offset+n].hops =  box->molecules[n].hops+count[4]*m;
         }
-       cout << "test 2\n";
-	cout << m << "\n"; 
+        //cout << "test 2\n";
+	//cout << m << "\n"; 
         memcpy(&(box->atoms[offset*count[0]]),box->atoms,sizeof(Atom)*count[0]);
-        cout << "2\n";
+        //cout << "2\n";
 	memcpy(&(box->bonds[offset*count[1]]),box->bonds,sizeof(Bond)*count[1]);
-        cout << "3\n";
+        //cout << "3\n";
 	memcpy(&(box->angles[offset*count[2]]),box->angles,sizeof(Angle)*count[2]);
-        cout << "4\n";
+        //cout << "4\n";
 	memcpy(&(box->dihedrals[offset*count[3]]),box->dihedrals,sizeof(Dihedral)*count[3]);
-        cout << "5\n";
+        //cout << "5\n";
 	memcpy(&(box->hops[offset*count[4]]),box->hops,sizeof(Hop)*count[4]);
-       cout << "test 3\n";
+        //cout << "test 3\n";
  
         for(int k=0;k<count[0];k++)
         {
@@ -461,7 +461,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
             box->hops[offset*count[4]+k].atom2+=m*count[0];
         }
     }
-    cout << "test 4\n";
+    //cout << "test 4\n";
 
  
     enviro->numOfAtoms = count[0]*molecDiv;     
@@ -1728,7 +1728,7 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
         }
 
 
-	cout << "what the hell is here? " << moleculePattern[i].type << endl;
+	cout << "Molecule type after read-ins: " << moleculePattern[i].type << endl;
         Molecule molecCopy = Molecule(-1, moleculePattern[i].type, atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
                                     moleculePattern[i].numOfAtoms, 
                                     moleculePattern[i].numOfAngles,
@@ -1746,14 +1746,20 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
 
     for (int i = 0; i < numOfMolec; i++)
     {
+	cout << "numOfMolec: " << numOfMolec << endl;
         if(i == 0)
         {
             newMolecules[i].id = startingID;
-	    cout << "what about here cappy: " << newMolecules[i].type << endl;
+	    cout << "Molecule type after-after readins (first) : " << newMolecules[i].type << endl;
         }
         else
         {
-            newMolecules[i].id = newMolecules[i-1].id + newMolecules[i-1].numOfAtoms; 
+            cout << "Molecule " << i << " id : " << newMolecules[i-1].id << endl;
+	    cout << "Molecule " << i << " numOfAtoms : " << newMolecules[i-1].numOfAtoms << endl;
+	    cout << "Molecule " << i << " type : " << newMolecules[i-1].type << endl;
+	    newMolecules[i].id = newMolecules[i-1].id + newMolecules[i-1].numOfAtoms; 
+	    cout << "Molecule id after-after readins (more) : " << newMolecules[i].id << endl;
+	    cout << "Molecule type: " << newMolecules[i].type << endl;
         }
     }
 	 
@@ -1766,7 +1772,7 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
             int atomID = newMolecule.atoms[i].id - 1;
             //newMolecule.atoms[i].id = atomID + newMolecule.id;
       	    newMolecule.atoms[i].id = atomID + startingID;
-	    cout << "IS ANYTHING HERE?? : " << newMolecule.type << endl;
+	    cout << "Molecule Type : " << newMolecule.type << endl;
 
         }
 	//exit(0);
