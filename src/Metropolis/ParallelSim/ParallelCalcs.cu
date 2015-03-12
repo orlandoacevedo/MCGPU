@@ -276,7 +276,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            cudaFree(d_molecules);
 	            cudaFree(d_enviro);
 	            cudaFree(d_head);
-	            cudaFree(d_lscl):
+	            cudaFree(d_lscl);
 	            return oldEnergy;
 }
 
