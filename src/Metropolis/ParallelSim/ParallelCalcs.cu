@@ -206,7 +206,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 {
 	// Variables for linked-cell neighbor list	
 	int lc[3];            	/* Number of cells in the x|y|z direction */
-	//Real rc[3];         	/* Length of a cell in the x|y|z direction */
+	Real rc[3];         	/* Length of a cell in the x|y|z direction */
 	//int head[NCLMAX];    	/* Headers for the linked cell lists */
 	int mc[3];			  	/* Vector cell */
 	//int lscl[NMAX];       	/* Linked cell lists */
