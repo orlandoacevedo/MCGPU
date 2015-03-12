@@ -63,8 +63,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 	    //cout << "OTHERMOL before: " << otherMol << endl;
 		if (otherMol != currentMol)
 		{
-			if (otherMol == 0)
-				cout << "OTHERMOL IS NULL" << endl;
+			//if (otherMol == 0)
+				//cout << "OTHERMOL IS NULL" << endl;
 			//cout << "OTHERMOL before: " << otherMol << endl;
 	//		cout << "othermol printed" << endl;
 			/*if (*(molecules[currentMol].atoms[0].name) == "O")
@@ -75,8 +75,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 				molecules[otherMol].type = 0;
 			else 
 				molecules[otherMol].type = 1;*/
-			//molecules[currentMol].type = 0;
-			//molecules[otherMol].type = 0;
+			molecules[currentMol].type = 0;
+			molecules[otherMol].type = 1;
 			
 			
 			//calculate squared distance between atoms 
@@ -109,7 +109,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 				
 				Atom atom1 = molecules[currentMol].atoms[currentMolPrimaryIndexArray[i]];
 				//THIS WILL MOST LIKELY NEED TO BE CHANGED BACK TO OTHERMOL
-				Atom atom2 = molecules[currentMol].atoms[otherMolPrimaryIndexArray[j]];
+				Atom atom2 = molecules[otherMol].atoms[otherMolPrimaryIndexArray[j]];
 				//cout << "OTHERMOL after 3: " << otherMol << endl;
 				for (int k =0; k < 6; k++)
 				{
