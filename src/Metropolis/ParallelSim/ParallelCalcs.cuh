@@ -128,7 +128,7 @@ namespace ParallelCalcs
 	/// @param d2 The second value.
 	/// @return Returns the geometric mean of the two supplied
 	///   values.
-	__device__ Real calcBlending(Real d1, Real d2);
+	__device__ __host__ Real calcBlending(Real d1, Real d2);
 	
 	/// This method, combined with getYFromIndex(),
 	///   provides functionality to generate a non-overlapping

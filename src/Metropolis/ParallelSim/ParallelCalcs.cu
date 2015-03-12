@@ -206,7 +206,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 {
 	// Variables for linked-cell neighbor list	
 	int lc[3];            	/* Number of cells in the x|y|z direction */
-	Real rc[3];         	/* Length of a cell in the x|y|z direction */
+	//Real rc[3];         	/* Length of a cell in the x|y|z direction */
 	//int head[NCLMAX];    	/* Headers for the linked cell lists */
 	int mc[3];			  	/* Vector cell */
 	//int lscl[NMAX];       	/* Linked cell lists */
@@ -217,8 +217,8 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	Real dr[3];		  		/* Pair vector dr = atom[i]-atom[j] */
 	Real rrCut = enviro->cutoff * enviro->cutoff;	/* Cutoff squared */
 	Real rr;			  	/* Distance between atoms */
-	Real lj_energy;			/* Holds current Lennard-Jones energy */
-	Real charge_energy;		/* Holds current coulombic charge energy */
+	//Real lj_energy;			/* Holds current Lennard-Jones energy */
+	//Real charge_energy;		/* Holds current coulombic charge energy */
 	Real fValue = 1.0;		/* Holds 1,4-fudge factor value */
 	//Real totalEnergy = 0.0;	/* Total nonbonded energy x fudge factor */
 	
@@ -238,7 +238,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 		
   /* Make a linked-cell list, lscl--------------------------------------------*/
 	int lcyz = lc[1]*lc[2];
-	int lcxyz = lc[0]*lcyz;
+	//int lcxyz = lc[0]*lcyz;
 
   /* Calculate pair interaction-----------------------------------------------*/
 		
@@ -543,7 +543,7 @@ __device__ __host__ Real ParallelCalcs::makePeriodic(Real x, Real boxDim)
 
 }
 
-__device__ Real ParallelCalcs::calcBlending(Real d1, Real d2)
+__device__ __host__ Real ParallelCalcs::calcBlending(Real d1, Real d2)
 {
     return sqrt(d1 * d2);
 }
