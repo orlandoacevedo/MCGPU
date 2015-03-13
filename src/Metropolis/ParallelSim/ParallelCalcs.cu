@@ -171,18 +171,20 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            } /* Endfor molecule i */
 
 	            Real *d_totalEnergy;
-	            Real totalEnergy;
+	            Real *part_energy; //energy computed by every thread
+	            Real total_energy;
 	            Real oldEnergy;
 	            Molecule *d_molecules;
 	            Environment *d_enviro;
 	            int *d_head;
 	            int *d_lscl;
-
+	            
+                part_nergy = (Real *)malloc(sizeof(Real)*lcxyz*27);
 	            cudaMalloc(&d_molecules, enviro->numOfMolecules*sizeof(Molecule));
 	            cudaMalloc(&d_enviro, sizeof(Environment));
 	            cudaMalloc(&d_head, sizeof(int)*NCLMAX);
 	            cudaMalloc(&d_lscl, sizeof(int)*NMAX);
-	            cudaMalloc(&d_totalEnergy, sizeof(Real));
+	            cudaMalloc(&d_totalEnergy, sizeof(Real)*lcxyz*27);
 
 	            cudaMemcpy(d_enviro, enviro, sizeof(Environment), cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
@@ -191,9 +193,13 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
                 dim3 dimGrid(lc[0], lc[1], lc[2]);
                 dim3 dimBlock(3, 3, 3);
 	            calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
-				cudaMemcpy(&totalEnergy, d_totalEnergy, sizeof(Real), cudaMemcpyDeviceToHost);
+				cudaMemcpy(part_energy, d_totalEnergy, sizeof(Real), cudaMemcpyDeviceToHost);
+				
+				for(int i = 0; i<lcxyz*27; i++){
+					total_energy = total_energy + part_energy[i];
+				}
 
-	            oldEnergy = totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
+	            oldEnergy = total_energy + calcIntramolEnergy_NLC(enviro, molecules);
 	            cudaFree(d_totalEnergy);
 	            cudaFree(d_molecules);
 	            cudaFree(d_enviro);
@@ -229,6 +235,11 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
     mc1[0] = mc[0] + (threadIdx.x - 1);
     mc1[1] = mc[1] + (threadIdx.y - 1);
     mc1[2] = mc[2] + (threadIdx.z - 1);
+    
+    int identifier;
+    int id_x; 
+    int id_y;
+    int id_z;
 	// Compute the # of cells for linked cell lists
 	for (int k=0; k<3; k++)
 	{
@@ -239,6 +250,11 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
   /* Make a linked-cell list, lscl--------------------------------------------*/
 	int lcyz = lc[1]*lc[2];
 	//int lcxyz = lc[0]*lcyz;
+	id_x = 3*blockIdx.x + threadIdx.x;
+	id_y = 3*blockIdx.y + threadIdx.y;
+	id_z = 3*blockIdx.z + threadIdx.z;
+	identifier = id_z*lc[0]*lc[1] + id_y*lc[1] + id_x;
+	
 
   /* Calculate pair interaction-----------------------------------------------*/
 		
@@ -291,8 +307,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 										// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 										if (rr < rrCut)
 										{	
-											(*totalEnergy) += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
-											
+											totalEnergy[identifier] += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
 										} /* Endif rr < rrCut */
 									} /* Endif i<j */
 									
