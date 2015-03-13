@@ -76,7 +76,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 			else 
 				molecules[otherMol].type = 1;*/
 			molecules[currentMol].type = 0;
-			molecules[otherMol].type = 1;
+			molecules[otherMol].type = 0;
 			
 			
 			//calculate squared distance between atoms 
