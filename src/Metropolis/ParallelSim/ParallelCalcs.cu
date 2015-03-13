@@ -170,7 +170,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	                head[c] = i;
 	            } /* Endfor molecule i */
 
-	            Real *d_totalEnergy;
+	            Real *d_totalEnergy;//for gpu use
 	            Real *part_energy; //energy computed by every thread
 	            Real total_energy;
 	            Real oldEnergy;
@@ -179,7 +179,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            int *d_head;
 	            int *d_lscl;
 	            
-                part_nergy = (Real *)malloc(sizeof(Real)*lcxyz*27);
+                part_energy = (Real *)malloc(sizeof(Real)*lcxyz*27);
 	            cudaMalloc(&d_molecules, enviro->numOfMolecules*sizeof(Molecule));
 	            cudaMalloc(&d_enviro, sizeof(Environment));
 	            cudaMalloc(&d_head, sizeof(int)*NCLMAX);
@@ -205,6 +205,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            cudaFree(d_enviro);
 	            cudaFree(d_head);
 	            cudaFree(d_lscl);
+	            free(part_energy);
 	            return oldEnergy;
 }
 
