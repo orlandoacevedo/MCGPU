@@ -193,7 +193,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
                 dim3 dimGrid(lc[0], lc[1], lc[2]);
                 dim3 dimBlock(3, 3, 3);
 	            calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
-				cudaMemcpy(part_energy, d_totalEnergy, sizeof(Real), cudaMemcpyDeviceToHost);
+				cudaMemcpy(part_energy, d_totalEnergy, sizeof(Real)*lcxyz*27, cudaMemcpyDeviceToHost);
 				
 				for(int i = 0; i<lcxyz*27; i++){
 					total_energy = total_energy + part_energy[i];
@@ -206,7 +206,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            cudaFree(d_head);
 	            cudaFree(d_lscl);
 	            free(part_energy);
-	            return 281.611;
+	            return oldEnergy;
 }
 
 __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *totalEnergy)
