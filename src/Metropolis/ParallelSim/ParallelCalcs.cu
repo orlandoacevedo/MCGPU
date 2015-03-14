@@ -199,7 +199,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 					total_energy = total_energy + part_energy[i];
 				}
 
-	            oldEnergy = total_energy + calcIntramolEnergy_NLC(enviro, molecules);
+	            oldEnergy = calcIntramolEnergy_NLC(enviro, molecules);
 	            cudaFree(d_totalEnergy);
 	            cudaFree(d_molecules);
 	            cudaFree(d_enviro);
