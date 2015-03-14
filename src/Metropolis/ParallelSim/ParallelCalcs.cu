@@ -241,6 +241,8 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
     int id_x; 
     int id_y;
     int id_z;
+    
+    totalEnergy[identifier] = 0;
 	// Compute the # of cells for linked cell lists
 	for (int k=0; k<3; k++)
 	{
