@@ -241,8 +241,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
     int id_x; 
     int id_y;
     int id_z;
-    
-    totalEnergy[identifier] = 0;
+   
 	// Compute the # of cells for linked cell lists
 	for (int k=0; k<3; k++)
 	{
@@ -257,6 +256,8 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	id_y = 3*blockIdx.y + threadIdx.y;
 	id_z = 3*blockIdx.z + threadIdx.z;
 	identifier = id_z*lc[0]*lc[1] + id_y*lc[1] + id_x;
+	
+	totalEnergy[identifier] = 0;//initialization
 	
 
   /* Calculate pair interaction-----------------------------------------------*/
