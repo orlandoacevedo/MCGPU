@@ -172,7 +172,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 
 	            Real *d_totalEnergy;//for gpu use
 	            Real *part_energy; //energy computed by every thread
-	            Real total_energy;
+	            Real total_energy = 0;
 	            Real oldEnergy;
 	            Molecule *d_molecules;
 	            Environment *d_enviro;
