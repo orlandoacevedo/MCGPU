@@ -69,16 +69,22 @@ void ParallelBox::copyDataToDevice()
 	cudaMemcpy(atomsD, tempAD, sizeof(AtomData), cudaMemcpyHostToDevice);
 	
 	//create MoleculeData on host, and fill molecular data arrays on device
-	moleculesH = new MoleculeData(molecules, moleculeCount);
+	moleculesH = new MoleculeData(molecules, moleculeCount, environment);
 	cudaMalloc(&atomsIdxD, moleculeCount * sizeof(int));
 	cudaMalloc(&numOfAtomsD, moleculeCount * sizeof(int));
+	cudaMalloc(&typeD, moleculeCount * sizeof(int));
+	cudaMalloc(&primaryIndexesD, moleculesH->totalPrimaryIndexSize * sizeof(int));
 	cudaMemcpy(atomsIdxD, moleculesH->atomsIdx, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(numOfAtomsD, moleculesH->numOfAtoms, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(typeD, moleculesH->type, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(primaryIndexesD, moleculesH->primaryIndexes, moleculesH->totalPrimaryIndexSize * sizeof(int), cudaMemcpyHostToDevice);
 	
 	//create device MoleculeData struct with pointers to filled-in molecular data arrays
 	MoleculeData *tempMD = (MoleculeData*) malloc(sizeof(MoleculeData));
 	tempMD->atomsIdx = atomsIdxD;
 	tempMD->numOfAtoms = numOfAtomsD;
+	tempMD->type = typeD;
+	tempMD->primaryIndexes = primaryIndexesD;
 	tempMD->moleculeCount = moleculesH->moleculeCount;
 	cudaMalloc(&moleculesD, sizeof(MoleculeData));
 	cudaMemcpy(moleculesD, tempMD, sizeof(MoleculeData), cudaMemcpyHostToDevice);

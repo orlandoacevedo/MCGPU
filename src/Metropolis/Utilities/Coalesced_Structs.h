@@ -32,18 +32,30 @@ struct AtomData
 
 struct MoleculeData
 {
-	char *type;
+	int *type;
 	int *atomsIdx, *numOfAtoms;
 	int moleculeCount;
+	int *primaryIndexes;
+	int totalPrimaryIndexSize;
 	
-	MoleculeData(Molecule *molecules, int numM)
+	MoleculeData(Molecule *molecules, int numM, Environment *enviro)
 	{
 		int idx = 0;
-		
-		type = (char*) malloc(numM * sizeof(char));
+		//std::vector<int> currentMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
+                
+		int sizeOfPrimaryIndexVector = (*enviro->primaryAtomIndexArray).size();
+ 		int totalPrimaryIndexSize = 0;
+		for (int i = 0; i < sizeOfPrimaryIndexVector; i++)
+		{
+		    totalPrimaryIndexSize += (*(*enviro->primaryAtomIndexArray)[i]).size();
+		}		
+		totalPrimaryIndexSize += 2 * sizeOfPrimaryIndexVector;
+
+		type = (int*) malloc(numM * sizeof(int));
 		atomsIdx = (int*) malloc(numM * sizeof(int));
 		numOfAtoms = (int*) malloc(numM * sizeof(int));
-		
+		primaryIndexes = (int*) malloc(totalPrimaryIndexSize * sizeof(int));
+
 		for (int i = 0; i < numM; i++)
 		{
 			numOfAtoms[i] = molecules[i].numOfAtoms;
@@ -52,6 +64,20 @@ struct MoleculeData
 			idx += numOfAtoms[i];
 		}
 		
+		int index = 0;
+		for (int i = 0; i < sizeOfPrimaryIndexVector; i++)
+		{
+		    primaryIndexes[index] = (*(*enviro->primaryAtomIndexArray)[i]).size() + 1;
+		    primaryIndexes[index+1] = i;
+		    
+		    for(int j = 0; j < (*(*enviro->primaryAtomIndexArray)[i]).size(); j++)
+		    {
+			primaryIndexes[j + index + 2] = (*(*enviro->primaryAtomIndexArray)[i])[j];
+		    }
+			
+		    index += 2 + (*(*enviro->primaryAtomIndexArray)[i]).size();
+		}
+	
 		moleculeCount = numM;
 	}
 };
