@@ -19,6 +19,7 @@
 #include <thrust/count.h>
 #include <thrust/remove.h>
 #include <thrust/device_ptr.h>
+#include <thrust/device_vector.h>
 
 #define NO -1
 
@@ -121,13 +122,91 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 	//checks validity of molecule pair
 	if (otherMol < molecules->moleculeCount && otherMol >= startIdx && otherMol != currentMol)
 	{
-		//(*(*(enviro->primaryAtomIndexArray))[0]);
-		//(*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
+	    	
+		for (int i = 0; i < molecules->totalPrimaryIndexSize; i++)
+		{
+		    int currentMoleculeIndexCount = molecules->primaryIndexes[i];
 
-		//int i;
-		//int j;
-	//	for (i = 0; i < 
-		//find primary atom indices for this pair of molecules
+		    for (int j = i+1; j < currentMoleculeIndexCount + i+1; j++)
+		    {
+			int currentMoleculeType = molecules->primaryIndexes[j];
+			
+			if (currentMoleculeType == molecules->type[currentMol])
+			{
+			    //thrust::device_vector<int> currentMolPrimaryIndexVector(currentMoleculeIndexCount-2);
+			    int *currentMolPrimaryIndexArray = new int[currentMoleculeIndexCount-1];
+		    	    int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount-1;		
+			    for (int z = 0; z < currentMolPrimaryIndexArrayLength; z++)
+			    {
+				*(currentMolPrimaryIndexArray + z) = molecules->primaryIndexes[j+z+1];
+			    }
+
+			    for (int k = 0; k < molecules->totalPrimaryIndexSize; k++)
+			    {
+		    		int otherMoleculeIndexCount = molecules->primaryIndexes[k];
+
+		   		for (int l = k+1; l < otherMoleculeIndexCount + l+1; l++)
+		    		{
+				    int otherMoleculeType = molecules->primaryIndexes[l];
+			
+				    if (otherMoleculeType == molecules->type[otherMol])
+				    {
+				    	//device_vector<int> otherMolPrimaryIndexVector(otherMoleculeIndexCount-2);
+					int *otherMolPrimaryIndexArray = new int[otherMoleculeIndexCount-1];
+					int otherMolPrimaryIndexArrayLength = otherMoleculeIndexCount-1;
+					for (int z = 0; z < otherMolPrimaryIndexArrayLength; z++)
+			    		{
+					    *(otherMolPrimaryIndexArray + z) = molecules->primaryIndexes[l+z+1];
+			    		}
+					
+					bool included = false;
+					for (int m = 0; m < currentMolPrimaryIndexArrayLength; m++)
+					{
+					    for (int n = 0; n < otherMolPrimaryIndexArrayLength; n++)
+					    {
+						//find primary atom indices for this pair of molecules
+						int atom1 = molecules->atomsIdx[currentMol] + *(currentMolPrimaryIndexArray + m);
+						int atom2 = molecules->atomsIdx[otherMol] + *(otherMolPrimaryIndexArray + n);
+			
+						//calculate periodic difference in coordinates
+						Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
+						Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
+						Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
+		
+						Real r2 = (deltaX * deltaX) +
+								    (deltaY * deltaY) + 
+								    (deltaZ * deltaZ);
+		
+						//if within curoff, write index to inCutoff
+						if (r2 < enviro->cutoff * enviro->cutoff)
+						{
+						    inCutoff[otherMol] = otherMol;
+						    included = true;
+						    break;
+						}	
+					    }
+					    if (included)
+						break;
+					}
+			 	    }
+				}
+			     }
+			}
+		    }
+		}
+		
+		
+		/*//find primary atom indices for this pair of molecules
+		for (int i = 0; i < molecules->totalPrimaryIndexSize; i++)
+		{
+		    printf("checkMoleculeDistances:totalPrimaryIndexSize: %d Array: ",molecules->totalPrimaryIndexSize);
+		    printf("%d: ", i);
+		    printf("%d", molecules->primaryIndexes[i]);
+		} 
+		printf("\n");
+		//int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
+		//int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;
+
 		int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
 		int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;
 			
@@ -144,7 +223,7 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 		if (r2 < enviro->cutoff * enviro->cutoff)
 		{
 			inCutoff[otherMol] = otherMol;
-		}
+		}*/
 	}
 }
 
