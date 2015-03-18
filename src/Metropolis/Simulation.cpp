@@ -49,8 +49,6 @@ Simulation::Simulation(SimulationArgs simArgs)
 		int processorCount = omp_get_num_procs();
 		//We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
 		//We could do performance tuning to get more information on what the ideal number might be.
-		//TODO: REMOVE THIS
-		//threadsToSpawn = 1;
 		threadsToSpawn = max(processorCount / 2, 1);
 		if (simArgs.threadCount > 0) {
 			threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
@@ -105,7 +103,7 @@ void Simulation::run()
 	int accepted = 0;
 	int rejected = 0;
 
-	string directory = getcwd(NULL, 0);
+	string directory = get_current_dir_name();
 	
 	std::string mc ("MCGPU");
 	std::size_t found = directory.find(mc);
@@ -134,9 +132,16 @@ void Simulation::run()
 		}
 		else
 		{
-			// ***** TODO: add cmd line arg to switch between nlc and reg
-			oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
-			//oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro);
+			/*if (args.useNeighborList)
+			{
+				std::cout << "Using neighbor-list for energy calc" << std::endl;
+				oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro);
+			}
+			else
+			{*/
+				//std::cout << "Using original system energy calc" << std::endl;
+				oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
+			//}
 		}
 	}
 	

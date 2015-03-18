@@ -49,7 +49,7 @@ using std::string;
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:I:n:i:d:sphQVkt";
+		const char* short_options = ":i:I:n:i:d:sphQVktl";
 
 		// The long options recognized by the program
 		struct option long_options[] = 
@@ -65,6 +65,7 @@ using std::string;
 			{"device",				required_argument,	0,	'd'},
 			{"version",				no_argument,		0,	'V'},
 			{"verbose",				no_argument,		0,	'k'},
+			{"neighbor",			no_argument,		0,	'l'},
 			{"name",				required_argument,	0,	LONG_NAME},
 			{0, 0, 0, 0} 
 		};
@@ -155,6 +156,9 @@ using std::string;
 				case 'k': 	/* Verbose cout */
 					params->verboseOutputFlag = true;
 					break;
+				case 'l': 	/* use neighbor list */
+					params->neighborListFlag = true;
+					break;	
 				case 'h':	/* print help */
 					printHelpScreen();
 					return false;
@@ -271,6 +275,7 @@ using std::string;
 		args->threadCount = params->threadCount;
 		args->simulationName = params->simulationName;
 		args->verboseOutput = params->verboseOutputFlag;
+		//args->useNeighborList = params->neighborListFlag;
 
 		if (!params->parallelFlag && params->deviceFlag)
 		{

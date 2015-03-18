@@ -44,7 +44,6 @@ Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
 	//for each molecule
 	for (int mol = 0; mol < enviro->numOfMolecules; mol++)
 	{
-		//cout << "Molecule Number: " << mol << endl;
 		totalEnergy += calcMolecularEnergyContribution(molecules, enviro, mol, mol);
 	}
 	
@@ -63,6 +62,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 
 		if (otherMol != currentMol)
 		{
+			Atom atom1 = molecules[currentMol].atoms[environment->primaryAtomIndex];
+			Atom atom2 = molecules[otherMol].atoms[environment->primaryAtomIndex];
 			
 			std::vector<int> currentMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
 			std::vector<int> otherMolPrimaryIndexArray;
@@ -87,15 +88,10 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 					//square cutoff value for easy comparison
 					Real cutoffSQ = environment->cutoff * environment->cutoff;
 					
-					//calculate difference in coordinates
-					Real deltaX = makePeriodic(atom1.x - atom2.x, environment->x);
-					Real deltaY = makePeriodic(atom1.y - atom2.y, environment->y);
-					Real deltaZ = makePeriodic(atom1.z - atom2.z, environment->z);
 			
-					Real r2 = (deltaX * deltaX) +
-								(deltaY * deltaY) + 
-								(deltaZ * deltaZ);
-	
+					//calculate squared distance between atoms 
+					Real r2 = calcAtomDist(atom1, atom2, environment);
+
 					if (r2 < cutoffSQ)
 					{
 						Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
@@ -441,3 +437,83 @@ Real SerialCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
 }
 
 
+Real SerialCalcs::Energy_LRC(Molecule *molec, Environment *enviro)
+{
+	Real Ecut = 0.0;		// Holds LJ long-range cutoff energy correction 
+	
+	Real Vnew = enviro->x * enviro->y * enviro->z;	// Volume of box in Ang^3
+	Real RC3 = 1.00 / pow(enviro->cutoff, 3);		// 1 / cutoff^3
+	Real RC9 = pow(RC3, 3);							// 1 / cutoff^9
+	
+	int a = 0, b = 1;
+	Real NMOL1 = enviro->numOfMolecules / 2;	// Number of molecules of solvent1
+	Real NMOL2 = enviro->numOfMolecules / 2;	// Number of molecules of solvent1
+	int NATOM1 = molec[a].numOfAtoms;		// Number of atoms in solvent1
+	int NATOM2 = molec[b].numOfAtoms;		// Number of atoms in solvent2
+	int NATMX = NATOM1;
+	if (NATMX < NATOM2)		// NATMX = MAX(NAT0M1, NAT0M2)
+	{
+		NATMX = NATOM2;
+	}
+	
+	Real sig2, sig6, sig12;
+	// get LJ-values for solvent1 and store in A6, A12
+	Real SigmaA[NATOM1], EpsilonA[NATOM1];
+	Real A6[NATOM1], A12[NATOM1];
+	for(int i = 0; i < NATOM1; i++)
+	{
+		if (molec[a].atoms[i].sigma < 0 || molec[a].atoms[i].epsilon < 0)
+		{
+			SigmaA[i] = 0.0;
+			EpsilonA[i] = 0.0;
+		}
+		else
+		{
+			SigmaA[i] = molec[a].atoms[i].sigma;
+			EpsilonA[i] = molec[a].atoms[i].epsilon;
+		}
+		
+		sig2 = pow(SigmaA[i], 2);
+        sig6 = pow(sig2, 3);
+    	sig12 = pow(sig6, 2);
+		A6[i] = sqrt(4 * EpsilonA[i] * sig6);
+		A12[i] = sqrt(4 * EpsilonA[i] * sig12);
+	}
+	
+	// get LJ-values for solvent2 and store in B6, B12
+	Real SigmaB[NATOM2], EpsilonB[NATOM2];
+	Real B6[NATOM2], B12[NATOM2];
+	for(int i = 0; i < NATOM2; i++)
+	{
+		if (molec[b].atoms[i].sigma < 0 || molec[b].atoms[i].epsilon < 0)
+		{
+			SigmaB[i] = 0.0;
+			EpsilonB[i] = 0.0;
+		}
+		else
+		{
+			SigmaB[i] = molec[b].atoms[i].sigma;
+			EpsilonB[i] = molec[b].atoms[i].epsilon;
+		}
+		
+		sig2 = pow(SigmaB[i], 2);
+        sig6 = pow(sig2, 3);
+    	sig12 = pow(sig6, 2);
+		B6[i] = sqrt(4 * EpsilonB[i] * sig6);
+		B12[i] = sqrt(4 * EpsilonB[i] * sig12);
+	}
+	
+	// loop over all atoms in a pair
+	for(int i = 0; i < NATMX; i++)
+	{
+		for(int j = 0; j < NATMX; j++)
+		{
+			Ecut += (2*PI*NMOL1*NMOL1/(3.0*Vnew)) * (A12[i]*A12[j]*RC9/3.0 - A6[i]*A6[j]*RC3);
+			Ecut += (2*PI*NMOL2*NMOL2/(3.0*Vnew)) * (B12[i]*B12[j]*RC9/3.0 - B6[i]*B6[j]*RC3);
+			Ecut += (4*PI*NMOL1*NMOL2/(3.0*Vnew)) * (A12[i]*B12[j]*RC9/3.0 - A6[i]*B6[j]*RC3);
+		}
+	}
+
+	std::cout << "Energy_LRC = " << Ecut << std::endl;
+	return Ecut;
+}

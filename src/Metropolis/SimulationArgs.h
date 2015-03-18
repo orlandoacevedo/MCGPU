@@ -83,6 +83,9 @@ struct SimulationArgs
 	///		(silenced for integration tests)
 	bool verboseOutput;
 
+	/// Enables or disables use of linked-list neigborlist in calcs
+	bool useNeighborList;
+
 	/// The number of simulation steps between status updates printed to
 	/// the console. A value of 0 means that status updates are only
 	/// printed at the beginning and the end of the simulation.

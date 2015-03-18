@@ -111,7 +111,8 @@
 								threadFlag(false),
 								serialFlag(false),
 								parallelFlag(false),
-								verboseOutputFlag(false) {}
+								verboseOutputFlag(false),
+								neighborListFlag(false)		{}
 	};
 
 	/// Goes through each argument specified from the command line and checks
