@@ -44,7 +44,7 @@ Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
 	//for each molecule
 	for (int mol = 0; mol < enviro->numOfMolecules; mol++)
 	{
-		cout << "Molecule Number: " << mol << endl;
+		//cout << "Molecule Number: " << mol << endl;
 		totalEnergy += calcMolecularEnergyContribution(molecules, enviro, mol, mol);
 	}
 	
@@ -54,101 +54,62 @@ Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
 Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx)
 {
     Real totalEnergy = 0;
-	
+
 	//for every other molecule
 	#pragma omp parallel for //num_threads(4) <- this is set in Simulation.cpp
 	for (int otherMol = startIdx; otherMol < environment->numOfMolecules; otherMol++)
 	{
 	    bool included = false;
-	    //cout << "OTHERMOL before: " << otherMol << endl;
+
 		if (otherMol != currentMol)
 		{
-			//if (otherMol == 0)
-				//cout << "OTHERMOL IS NULL" << endl;
-			//cout << "OTHERMOL before: " << otherMol << endl;
-	//		cout << "othermol printed" << endl;
-			/*if (*(molecules[currentMol].atoms[0].name) == "O")
-				molecules[currentMol].type = 0;
-			else 
-				molecules[currentMol].type = 1;
-			if (*(molecules[otherMol].atoms[0].name) == "O")
-				molecules[otherMol].type = 0;
-			else 
-				molecules[otherMol].type = 1;*/
-			//molecules[currentMol].type = 0;
-			//molecules[otherMol].type = 0;
-			
-			
-			//calculate squared distance between atoms 
-			//Real r2 = calcAtomDist(atom1, atom2, environment);
-			
-			//cout << "currentMol molecule type: " << molecules[currentMol].type << endl;
-			//cout << "otherMol molecule type: " << molecules[otherMol].type << endl;
 			
 			std::vector<int> currentMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
-			std::vector<int> otherMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[otherMol].type]);
-			//cout << "Size of currentMolPrimaryIndexArray: " << currentMolPrimaryIndexArray.size() << endl;
-			//cout << "Size of otherMolPrimaryIndexArray: " << otherMolPrimaryIndexArray.size() << endl;
-			//cout << "currentMol: " << currentMol << endl;
+			std::vector<int> otherMolPrimaryIndexArray;
+			if (molecules[currentMol].type == molecules[otherMol].type)
+			{
+				otherMolPrimaryIndexArray = currentMolPrimaryIndexArray;
+			}
+			else 
+			{
+				otherMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[otherMol].type]);
+			}
+
 			for (int i = 0; i < currentMolPrimaryIndexArray.size(); i++)
 			{
 			    for (int j = 0; j < otherMolPrimaryIndexArray.size(); j++)
-    			    {		    
-				//cout << "i: " << i << endl;
-				//cout << "j: " << j << endl;
- 				//cout << "OTHERMOL after 1: " << otherMol << endl;
-				//cout << "Printing primary atom indexes..." << endl;
-				int primaryIndex1 = currentMolPrimaryIndexArray[i];
-				int primaryIndex2 = otherMolPrimaryIndexArray[j];
-	 			//cout << "OTHERMOL after 2: " << otherMol << endl;
-				//cout << "Primary index 1: " << primaryIndex1 << endl;
-				//cout << "Primary index 2: " << primaryIndex2 << endl;
-				//cout << "CurrentMol: " << currentMol << endl;
-				//cout << "OtherMol: " << otherMol << endl;
-				//cout << "Length of otherMol atom list: " << molecules[otherMol].atoms.size();
+    			{
+					int primaryIndex1 = currentMolPrimaryIndexArray[i];
+					int primaryIndex2 = otherMolPrimaryIndexArray[j];
+					Atom atom1 = molecules[currentMol].atoms[currentMolPrimaryIndexArray[i]];
+					Atom atom2 = molecules[otherMol].atoms[otherMolPrimaryIndexArray[j]];
 				
-				Atom atom1 = molecules[currentMol].atoms[currentMolPrimaryIndexArray[i]];
-				//THIS WILL MOST LIKELY NEED TO BE CHANGED BACK TO OTHERMOL
-				Atom atom2 = molecules[otherMol].atoms[otherMolPrimaryIndexArray[j]];
-				//cout << "OTHERMOL after 3: " << otherMol << endl;
-				for (int k =0; k < 6; k++)
-				{
-				   // if (molecules[otherMol].type == 1)
-				    	//cout << k << "th place in otherMol atom array: " << *molecules[otherMol].atoms[k].name << endl;
-				}	
-				//cout << "Atom 1 primary index: " << *atom1.name << endl;
-				//cout << "Atom 2 primary index: " << *atom2.name << endl;
-				
-				//square cutoff value for easy comparison
-				Real cutoffSQ = environment->cutoff * environment->cutoff;
+					//square cutoff value for easy comparison
+					Real cutoffSQ = environment->cutoff * environment->cutoff;
 					
-				//calculate difference in coordinates
-				Real deltaX = makePeriodic(atom1.x - atom2.x, environment->x);
-				Real deltaY = makePeriodic(atom1.y - atom2.y, environment->y);
-				Real deltaZ = makePeriodic(atom1.z - atom2.z, environment->z);
+					//calculate difference in coordinates
+					Real deltaX = makePeriodic(atom1.x - atom2.x, environment->x);
+					Real deltaY = makePeriodic(atom1.y - atom2.y, environment->y);
+					Real deltaZ = makePeriodic(atom1.z - atom2.z, environment->z);
 			
-				Real r2 = (deltaX * deltaX) +
-							(deltaY * deltaY) + 
-							(deltaZ * deltaZ);
+					Real r2 = (deltaX * deltaX) +
+								(deltaY * deltaY) + 
+								(deltaZ * deltaZ);
 	
-				if (r2 < cutoffSQ)
-				{
-					Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
-					//this addition needs to be atomic since multiple threads will be modifying totalEnergy
-					#pragma omp atomic
-					totalEnergy += tempEnergy;
-					included = true;
-					//cout << "Molecule has been included. Skipping rest of primary indexes for otherMol" << endl;
-					break;
-				}
-
-
+					if (r2 < cutoffSQ)
+					{
+						Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
+						//this addition needs to be atomic since multiple threads will be modifying totalEnergy
+						#pragma omp atomic
+						totalEnergy += tempEnergy;
+						included = true;
+						//cout << "Molecule has been included. Skipping rest of primary indexes for otherMol" << endl;
+						break;
+					}
 			    }
-			   //cout << "OTHERMOL after 4: " << otherMol << endl;
 			    if (included)
 			    {
-				//cout << ".";
-				break;
+					break;
 			    }
 			}
 		}

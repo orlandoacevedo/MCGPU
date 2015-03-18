@@ -49,6 +49,8 @@ Simulation::Simulation(SimulationArgs simArgs)
 		int processorCount = omp_get_num_procs();
 		//We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
 		//We could do performance tuning to get more information on what the ideal number might be.
+		//TODO: REMOVE THIS
+		//threadsToSpawn = 1;
 		threadsToSpawn = max(processorCount / 2, 1);
 		if (simArgs.threadCount > 0) {
 			threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
@@ -96,7 +98,7 @@ void Simulation::run()
 	//declare variables common to both parallel and serial
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
-	
+
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont, oldEnergyCont;
 	Real  kT = kBoltz * enviro->temp;
