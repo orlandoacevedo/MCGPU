@@ -146,7 +146,6 @@ void Simulation::run()
                 		duration = function_time_end -function_time_start;
                         }
 		}
-
 		else
 		{
 			if (args.useNeighborList)
