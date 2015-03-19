@@ -122,20 +122,21 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 	//checks validity of molecule pair
 	if (otherMol < molecules->moleculeCount && otherMol >= startIdx && otherMol != currentMol)
 	{
-	    	
+		bool included = false;    	
 		for (int i = 0; i < molecules->totalPrimaryIndexSize; i++)
 		{
 		    int currentMoleculeIndexCount = molecules->primaryIndexes[i];
 
-		    for (int j = i+1; j < currentMoleculeIndexCount + i+1; j++)
+		    for (int j = i+1; j < currentMoleculeIndexCount + i; j++)
 		    {
 			int currentMoleculeType = molecules->primaryIndexes[j];
 			
 			if (currentMoleculeType == molecules->type[currentMol])
 			{
 			    //thrust::device_vector<int> currentMolPrimaryIndexVector(currentMoleculeIndexCount-2);
-			    int *currentMolPrimaryIndexArray = new int[currentMoleculeIndexCount-1];
-		    	    int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount-1;		
+			    //int *currentMolPrimaryIndexArray = new int[currentMoleculeIndexCount-1];
+		    	    int *currentMolPrimaryIndexArray = molecules->primaryIndexes + j+1;
+			    int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount-1;		
 			    for (int z = 0; z < currentMolPrimaryIndexArrayLength; z++)
 			    {
 				*(currentMolPrimaryIndexArray + z) = molecules->primaryIndexes[j+z+1];
@@ -145,21 +146,21 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 			    {
 		    		int otherMoleculeIndexCount = molecules->primaryIndexes[k];
 
-		   		for (int l = k+1; l < otherMoleculeIndexCount + l+1; l++)
+		   		for (int l = k+1; l < otherMoleculeIndexCount + k; l++)
 		    		{
 				    int otherMoleculeType = molecules->primaryIndexes[l];
 			
 				    if (otherMoleculeType == molecules->type[otherMol])
 				    {
 				    	//device_vector<int> otherMolPrimaryIndexVector(otherMoleculeIndexCount-2);
-					int *otherMolPrimaryIndexArray = new int[otherMoleculeIndexCount-1];
+					//int *otherMolPrimaryIndexArray = new int[otherMoleculeIndexCount-1];
+					int *otherMolPrimaryIndexArray = molecules->primaryIndexes + l+1;
 					int otherMolPrimaryIndexArrayLength = otherMoleculeIndexCount-1;
 					for (int z = 0; z < otherMolPrimaryIndexArrayLength; z++)
 			    		{
 					    *(otherMolPrimaryIndexArray + z) = molecules->primaryIndexes[l+z+1];
 			    		}
 					
-					bool included = false;
 					for (int m = 0; m < currentMolPrimaryIndexArrayLength; m++)
 					{
 					    for (int n = 0; n < otherMolPrimaryIndexArrayLength; n++)
@@ -188,14 +189,18 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 					    if (included)
 						break;
 					}
+				 //	delete[] otherMolPrimaryIndexArray;
 			 	    }
+				    
 				}
+				k += otherMoleculeIndexCount+1;
 			     }
+			    //delete[] currentMolPrimaryIndexArray;
 			}
 		    }
+		    i += currentMoleculeIndexCount+1;
 		}
-		
-		
+	
 		/*//find primary atom indices for this pair of molecules
 		for (int i = 0; i < molecules->totalPrimaryIndexSize; i++)
 		{
@@ -206,6 +211,7 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 		printf("\n");
 		//int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
 		//int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;
+
 
 		int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
 		int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;
