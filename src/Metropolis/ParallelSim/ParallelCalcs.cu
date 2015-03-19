@@ -137,10 +137,10 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 			    //int *currentMolPrimaryIndexArray = new int[currentMoleculeIndexCount-1];
 		    	    int *currentMolPrimaryIndexArray = molecules->primaryIndexes + j+1;
 			    int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount-1;		
-			    for (int z = 0; z < currentMolPrimaryIndexArrayLength; z++)
+			    /*for (int z = 0; z < currentMolPrimaryIndexArrayLength; z++)
 			    {
 				*(currentMolPrimaryIndexArray + z) = molecules->primaryIndexes[j+z+1];
-			    }
+			    }*/
 
 			    for (int k = 0; k < molecules->totalPrimaryIndexSize; k++)
 			    {
@@ -156,10 +156,10 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 					//int *otherMolPrimaryIndexArray = new int[otherMoleculeIndexCount-1];
 					int *otherMolPrimaryIndexArray = molecules->primaryIndexes + l+1;
 					int otherMolPrimaryIndexArrayLength = otherMoleculeIndexCount-1;
-					for (int z = 0; z < otherMolPrimaryIndexArrayLength; z++)
+					/*for (int z = 0; z < otherMolPrimaryIndexArrayLength; z++)
 			    		{
 					    *(otherMolPrimaryIndexArray + z) = molecules->primaryIndexes[l+z+1];
-			    		}
+			    		}*/
 					
 					for (int m = 0; m < currentMolPrimaryIndexArrayLength; m++)
 					{
