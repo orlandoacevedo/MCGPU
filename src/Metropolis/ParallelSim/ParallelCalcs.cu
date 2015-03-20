@@ -127,78 +127,65 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 		{
 		    int currentMoleculeIndexCount = molecules->primaryIndexes[i];
 
-		    for (int j = i+1; j < currentMoleculeIndexCount + i; j++)
+		    int currentTypeIndex = i+1;
+		    int potentialCurrentMoleculeType = molecules->primaryIndexes[currentTypeIndex];
+			
+		    if (potentialCurrentMoleculeType == molecules->type[currentMol])
 		    {
-			int currentMoleculeType = molecules->primaryIndexes[j];
-			
-			if (currentMoleculeType == molecules->type[currentMol])
+	    	        int *currentMolPrimaryIndexArray = molecules->primaryIndexes + currentTypeIndex + 1;
+		        int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount - 1;		
+
+			for (int k = 0; k < molecules->totalPrimaryIndexSize; k++)
 			{
-			    //thrust::device_vector<int> currentMolPrimaryIndexVector(currentMoleculeIndexCount-2);
-			    //int *currentMolPrimaryIndexArray = new int[currentMoleculeIndexCount-1];
-		    	    int *currentMolPrimaryIndexArray = molecules->primaryIndexes + j+1;
-			    int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount-1;		
-			    /*for (int z = 0; z < currentMolPrimaryIndexArrayLength; z++)
-			    {
-				*(currentMolPrimaryIndexArray + z) = molecules->primaryIndexes[j+z+1];
-			    }*/
+		    	    int otherMoleculeIndexCount = molecules->primaryIndexes[k];
 
-			    for (int k = 0; k < molecules->totalPrimaryIndexSize; k++)
-			    {
-		    		int otherMoleculeIndexCount = molecules->primaryIndexes[k];
-
-		   		for (int l = k+1; l < otherMoleculeIndexCount + k; l++)
-		    		{
-				    int otherMoleculeType = molecules->primaryIndexes[l];
+    			    int otherTypeIndex = k+1;
+			    int potentialOtherMoleculeType = molecules->primaryIndexes[otherTypeIndex];
 			
-				    if (otherMoleculeType == molecules->type[otherMol])
-				    {
-				    	//device_vector<int> otherMolPrimaryIndexVector(otherMoleculeIndexCount-2);
-					//int *otherMolPrimaryIndexArray = new int[otherMoleculeIndexCount-1];
-					int *otherMolPrimaryIndexArray = molecules->primaryIndexes + l+1;
-					int otherMolPrimaryIndexArrayLength = otherMoleculeIndexCount-1;
-					/*for (int z = 0; z < otherMolPrimaryIndexArrayLength; z++)
-			    		{
-					    *(otherMolPrimaryIndexArray + z) = molecules->primaryIndexes[l+z+1];
-			    		}*/
+			    if (potentialOtherMoleculeType == molecules->type[otherMol])
+			    {
+				int *otherMolPrimaryIndexArray = molecules->primaryIndexes + otherTypeIndex + 1;
+				int otherMolPrimaryIndexArrayLength = otherMoleculeIndexCount - 1;
 					
-					for (int m = 0; m < currentMolPrimaryIndexArrayLength; m++)
-					{
-					    for (int n = 0; n < otherMolPrimaryIndexArrayLength; n++)
-					    {
-						//find primary atom indices for this pair of molecules
-						int atom1 = molecules->atomsIdx[currentMol] + *(currentMolPrimaryIndexArray + m);
-						int atom2 = molecules->atomsIdx[otherMol] + *(otherMolPrimaryIndexArray + n);
+				for (int m = 0; m < currentMolPrimaryIndexArrayLength; m++)
+				{
+				    for (int n = 0; n < otherMolPrimaryIndexArrayLength; n++)
+				    {
+					//find primary atom indices for this pair of molecules
+					int atom1 = molecules->atomsIdx[currentMol] + *(currentMolPrimaryIndexArray + m);
+					int atom2 = molecules->atomsIdx[otherMol] + *(otherMolPrimaryIndexArray + n);
 			
-						//calculate periodic difference in coordinates
-						Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
-						Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
-						Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
+					//calculate periodic difference in coordinates
+					Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
+					Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
+					Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
 		
-						Real r2 = (deltaX * deltaX) +
-								    (deltaY * deltaY) + 
-								    (deltaZ * deltaZ);
+					Real r2 = (deltaX * deltaX) +
+							    (deltaY * deltaY) + 
+							    (deltaZ * deltaZ);
 		
-						//if within curoff, write index to inCutoff
-						if (r2 < enviro->cutoff * enviro->cutoff)
-						{
-						    inCutoff[otherMol] = otherMol;
-						    included = true;
-						    break;
-						}	
-					    }
-					    if (included)
-						break;
-					}
-				 //	delete[] otherMolPrimaryIndexArray;
-			 	    }
-				    
+					//if within curoff, write index to inCutoff
+					if (r2 < enviro->cutoff * enviro->cutoff)
+					{
+					    inCutoff[otherMol] = otherMol;
+					    included = true;
+					    break;
+					}	
+				    }
+				    if (included)
+					break;
 				}
-				k += otherMoleculeIndexCount+1;
-			     }
-			    //delete[] currentMolPrimaryIndexArray;
-			}
+			    }
+			    if (included)
+				break;
+			    else
+			    	k += otherMoleculeIndexCount;
+			 }
 		    }
-		    i += currentMoleculeIndexCount+1;
+		    if (included)
+			break;
+		    else
+			i += currentMoleculeIndexCount;
 		}
 	
 		/*//find primary atom indices for this pair of molecules

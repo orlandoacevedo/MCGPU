@@ -81,8 +81,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
     			{
 					int primaryIndex1 = currentMolPrimaryIndexArray[i];
 					int primaryIndex2 = otherMolPrimaryIndexArray[j];
-					Atom atom1 = molecules[currentMol].atoms[currentMolPrimaryIndexArray[i]];
-					Atom atom2 = molecules[otherMol].atoms[otherMolPrimaryIndexArray[j]];
+					Atom atom1 = molecules[currentMol].atoms[primaryIndex1];
+					Atom atom2 = molecules[otherMol].atoms[primaryIndex2];
 				
 					//square cutoff value for easy comparison
 					Real cutoffSQ = environment->cutoff * environment->cutoff;
@@ -102,8 +102,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 						//this addition needs to be atomic since multiple threads will be modifying totalEnergy
 						#pragma omp atomic
 						totalEnergy += tempEnergy;
+						//Molecule has been included. Skipping rest of primary indexes for otherMol
 						included = true;
-						//cout << "Molecule has been included. Skipping rest of primary indexes for otherMol" << endl;
 						break;
 					}
 			    }
