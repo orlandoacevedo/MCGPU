@@ -128,8 +128,7 @@ void Simulation::run()
 	{
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
-			//oldEnergy = ParallelCalcs::calcSystemEnergy(box);
-            oldEnergy = 99;
+			oldEnergy = ParallelCalcs::calcSystemEnergy(box);
 		}
 		else
 		{
