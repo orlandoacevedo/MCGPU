@@ -246,6 +246,8 @@ struct Environment
 	Real x, y, z, cutoff, temp, maxTranslation, maxRotation;
 	int numOfAtoms;
 	int numOfMolecules; //this line was added in by Albert to make IOUtilities compile
+	std::string* primaryAtomIndexConfigLine;
+	int primaryAtomIndexDefinitions;
 	int primaryAtomIndex;
 	std::vector< std::vector<int>* >* primaryAtomIndexArray;
 
@@ -262,6 +264,8 @@ struct Environment
 		maxRotation = 0.0;
 		numOfAtoms = 0;
 		numOfMolecules = 0;
+		primaryAtomIndexConfigLine = new std::string("0");
+		primaryAtomIndexDefinitions = 0;
 		primaryAtomIndex = 0;
 		primaryAtomIndexArray = new std::vector< std::vector<int>* >;
 		randomseed = 0;
@@ -283,8 +287,10 @@ struct Environment
         maxRotation = environment->maxRotation;
         numOfAtoms = environment->numOfAtoms;
         numOfMolecules = environment->numOfMolecules;
-        primaryAtomIndex = environment->primaryAtomIndex;
-	primaryAtomIndexArray = environment->primaryAtomIndexArray;
+        primaryAtomIndexConfigLine = environment->primaryAtomIndexConfigLine;
+	primaryAtomIndexDefinitions = environment->primaryAtomIndexDefinitions;
+	primaryAtomIndex = environment->primaryAtomIndex;
+	primaryAtomIndexArray = (environment->primaryAtomIndexArray);
 	randomseed = environment->randomseed;
     }
 };

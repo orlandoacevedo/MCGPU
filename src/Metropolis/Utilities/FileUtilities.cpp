@@ -57,6 +57,14 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
         *steps = config_scanner.getSteps();
         *startStep = 0;
 
+	if (moleculeVector.size() != enviro->primaryAtomIndexDefinitions) 
+        {
+            std::cerr << "Error: loadBoxData(): The number of molecules read from the Z Matrix file (" << moleculeVector.size() 
+	    << ") does not equal the number of primary index definitions in the config file (" 
+	    << enviro->primaryAtomIndexDefinitions << ")" << std::endl;
+            return false;
+        }
+
         box->environment = new Environment(enviro);
 
         if (!buildBoxData(enviro, moleculeVector, box))
@@ -782,82 +790,7 @@ bool ConfigScanner::readInConfig(string configpath)
                 case 30:
                     if(line.length() > 0){
 						// Convert to a zero-based index
-					
-    						char *indexVector;
-    						char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
-    						strcpy(charLine, line.c_str());
-    						indexVector = strtok(charLine, ",");
-
-   
-    						//int tokenNumber = 0;
-
-    						//while(tokens != NULL)
-    						//{
-       						//	switch(tokenNumber)
-       						//	{
-          
-       						//	}
-
-       						//	tokens = strtok(NULL, " ");
-       						//	tokenNumber++;
-    						//}
-
-    						//free (charLine);
-
-
-						//cout << "Size of indexVector: " << strlen(indexVector)  << endl;
-						//const char* indexVector = (const char*)strtok((char*)line.c_str(), 					
-						for (int i = 0; indexVector ; i++)
-						{
-						    //cout << "indexVector: " << indexVector << endl;
-						    //cout << "indexVector element " << (indexVector) << " being converted to int" << endl;
-
-						    std::string sIndexVector = indexVector;
-						    char* c;
-						    if ((c=strchr(indexVector, '['))!=NULL)
-						    {
-							//cout << "BRACKETS DETECTED" << endl;
-							indexVector = (indexVector + 1);
-							//delete c;
-							//cout << "DELETED c" << endl;	
-							//strtok(NULL, ",");
-							while ((c=strchr(indexVector, ']'))==NULL)
-							{
-							   // cout << "Inside the while loop" << endl;
-							    int currentPrimaryIndex = atoi(indexVector);
-							    (*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
-							    (*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
-							    indexVector = strtok(NULL, ",");
-							}
-							*c = '\0';
-							int currentPrimaryIndex = atoi(indexVector);
-						        (*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
-							(*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);	
-							//cout << "CONTINUING..." << endl; 
-							indexVector =strtok(NULL, ",");
-							continue;
-						    }
-
-						    int currentPrimaryIndex = atoi(indexVector);
-						    //cout << "Integer has been converted to: " << currentPrimaryIndex << endl;
-						    (*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
-						    //(*(enviro.primaryAtomIndexArray))[i] = new std::vector<int>;
-						    //cout << "Allocated new memory to element in array" << endl;
-						    (*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
-						    indexVector = strtok(NULL, ",");
-						}
-						free (charLine);
-
-						// for (int i = 0; i < (*(enviro.primaryAtomIndexArray)).size(); i++)
-						// {
-						//     for (int j = 0; j < (*(*(enviro.primaryAtomIndexArray))[i]).size(); j++)
-						//     {
-						// 	cout << "Primary index at " << i << "-" << j << " is " << (*(*(enviro.primaryAtomIndexArray))[i])[j] << endl;
-						//     }
-						// }
-						
-						//exit(0);
-						//enviro.primaryAtomIndex=atoi(line.c_str()) - 1;
+						parsePrimaryIndexDefinitions(line);	
                     }
 					else
 					{
@@ -874,6 +807,56 @@ bool ConfigScanner::readInConfig(string configpath)
     configscanner.close();
 
     return true;
+}
+
+void ConfigScanner::parsePrimaryIndexDefinitions(string definitions)
+{
+    *enviro.primaryAtomIndexConfigLine = definitions;
+    cout << "Definitions = " << definitions << endl;
+    cout << "ConfigLine = " << *enviro.primaryAtomIndexConfigLine << endl;	
+    char *indexVector;
+    char *charLine = (char *) malloc(sizeof(char) * (definitions.size()+1));
+    strcpy(charLine, definitions.c_str());
+    indexVector = strtok(charLine, ",");
+					
+    for (int i = 0; indexVector ; i++)
+    {
+	std::string sIndexVector = indexVector;
+	enviro.primaryAtomIndexDefinitions++;
+	char* c;
+	if ((c=strchr(indexVector, '['))!=NULL)
+	{
+	    indexVector = (indexVector + 1);
+	    while ((c=strchr(indexVector, ']'))==NULL)
+	    {
+		int currentPrimaryIndex = atoi(indexVector);
+		(*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
+		(*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
+		indexVector = strtok(NULL, ",");
+	    }
+	    *c = '\0';
+	    int currentPrimaryIndex = atoi(indexVector);
+	    (*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
+	    (*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);	
+	    indexVector =strtok(NULL, ",");
+	    continue;
+	}
+
+        int currentPrimaryIndex = atoi(indexVector);
+	(*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
+	(*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
+	indexVector = strtok(NULL, ",");
+    }
+    free (charLine);
+
+    for (int i = 0; i < (*(enviro.primaryAtomIndexArray)).size(); i++)
+    {
+        for (int j = 0; j < (*(*(enviro.primaryAtomIndexArray))[i]).size(); j++)
+        {
+	    cout << "Primary index at " << i << "-" << j << " is " << (*(*(enviro.primaryAtomIndexArray))[i])[j] << endl;
+        }
+    }
+
 }
 
 void ConfigScanner::throwScanError(string message)
@@ -2231,7 +2214,8 @@ Environment* StateScanner::getEnvironmentFromLine(string line)
                 environment->maxRotation = atof(tokens);
                 break;
             case 9:
-                environment->primaryAtomIndex = atoi(tokens);
+                parsePrimaryIndexDefinitions(environment, std::string(tokens));
+		environment->randomseed =  atoi(tokens + (strlen(tokens) + 1));
                 break;
             case 10:
                 environment->randomseed = atoi(tokens);
@@ -2244,6 +2228,55 @@ Environment* StateScanner::getEnvironmentFromLine(string line)
     free (charLine);
 
     return environment;
+}
+
+void StateScanner::parsePrimaryIndexDefinitions(Environment* enviro, string definitions)
+{
+    *enviro->primaryAtomIndexConfigLine = definitions;
+    cout << "Definitions = " << definitions << endl;
+    cout << "ConfigLine = " << *enviro->primaryAtomIndexConfigLine << endl;	
+    char *indexVector;
+    char *charLine = (char *) malloc(sizeof(char) * (definitions.size()+1));
+    strcpy(charLine, definitions.c_str());
+    indexVector = strtok(charLine, ",");
+					
+    for (int i = 0; indexVector ; i++)
+    {
+	std::string sIndexVector = indexVector;
+	enviro->primaryAtomIndexDefinitions++;
+	char* c;
+	if ((c=strchr(indexVector, '['))!=NULL)
+	{
+	    indexVector = (indexVector + 1);
+	    while ((c=strchr(indexVector, ']'))==NULL)
+	    {
+		int currentPrimaryIndex = atoi(indexVector);
+		(*(enviro->primaryAtomIndexArray)).push_back(new std::vector<int>);
+		(*(*(enviro->primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
+		indexVector = strtok(NULL, ",");
+	    }
+	    *c = '\0';
+	    int currentPrimaryIndex = atoi(indexVector);
+	    (*(enviro->primaryAtomIndexArray)).push_back(new std::vector<int>);
+	    (*(*(enviro->primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);	
+	    indexVector =strtok(NULL, ",");
+	    continue;
+	}
+
+        int currentPrimaryIndex = atoi(indexVector);
+	(*(enviro->primaryAtomIndexArray)).push_back(new std::vector<int>);
+	(*(*(enviro->primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
+	indexVector = strtok(NULL, ",");
+    }
+    free (charLine);
+
+    for (int i = 0; i < (*(enviro->primaryAtomIndexArray)).size(); i++)
+    		{
+        	    for (int j = 0; j < (*(*(enviro->primaryAtomIndexArray))[i]).size(); j++)
+        	    {
+	    		cout << "Primary index at " << i << "-" << j << " is " << (*(*(enviro->primaryAtomIndexArray))[i])[j] << endl;
+        	    }
+    		}
 }
 
 Hop StateScanner::getHopFromLine(string line)
@@ -2287,8 +2320,8 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
         << environment->z << " " << environment->numOfMolecules << " "
         << environment->numOfAtoms << " " << environment->temp << " "
         << environment->cutoff << " " << environment->maxTranslation << " "
-        << environment->maxRotation << " " << environment->primaryAtomIndex << " "
-        << environment->randomseed
+        << environment->maxRotation << " " << *environment->primaryAtomIndexConfigLine << " "
+        << environment->randomseed << " "
         << std::endl;
     outFile << step << std::endl;  // The current simulation step
     outFile << std::endl; //blank line

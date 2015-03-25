@@ -126,7 +126,6 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 		for (int i = 0; i < molecules->totalPrimaryIndexSize; i++)
 		{
 		    int currentMoleculeIndexCount = molecules->primaryIndexes[i];
-
 		    int currentTypeIndex = i+1;
 		    int potentialCurrentMoleculeType = molecules->primaryIndexes[currentTypeIndex];
 			
@@ -138,7 +137,6 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 			for (int k = 0; k < molecules->totalPrimaryIndexSize; k++)
 			{
 		    	    int otherMoleculeIndexCount = molecules->primaryIndexes[k];
-
     			    int otherTypeIndex = k+1;
 			    int potentialOtherMoleculeType = molecules->primaryIndexes[otherTypeIndex];
 			
