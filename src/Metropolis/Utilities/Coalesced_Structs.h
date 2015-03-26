@@ -41,9 +41,9 @@ struct MoleculeData
 	MoleculeData(Molecule *molecules, int numM, Environment *enviro)
 	{
 		int idx = 0;
-		//std::vector<int> currentMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[currentMol].type]);
                 
-		int sizeOfPrimaryIndexVector = (*enviro->primaryAtomIndexArray).size();
+		//int sizeOfPrimaryIndexVector = (*enviro->primaryAtomIndexArray).size();
+		int sizeOfPrimaryIndexVector = enviro->primaryAtomIndexDefinitions;
  		int totalPrimaryIndexCount = 0;
 		for (int i = 0; i < sizeOfPrimaryIndexVector; i++)
 		{
@@ -78,12 +78,10 @@ struct MoleculeData
 		    index += 2 + (*(*enviro->primaryAtomIndexArray)[i]).size();
 		}
 
+		printf("TotalPrimaryIndexSize: %d\n", totalPrimaryIndexCount);
 		for (int i = 0; i < totalPrimaryIndexCount; i++)
 		{
-		    printf("TotalPrimaryIndexSize: %d\n", totalPrimaryIndexCount);
-		    printf("%d: ", primaryIndexes[i]);
-		    printf("\n");
-
+		    printf("%d ", primaryIndexes[i]);
 		}
 	
 		moleculeCount = numM;
