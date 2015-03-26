@@ -42,7 +42,6 @@ struct MoleculeData
 	{
 		int idx = 0;
                 
-		//int sizeOfPrimaryIndexVector = (*enviro->primaryAtomIndexArray).size();
 		int sizeOfPrimaryIndexVector = enviro->primaryAtomIndexDefinitions;
  		int totalPrimaryIndexCount = 0;
 		for (int i = 0; i < sizeOfPrimaryIndexVector; i++)
