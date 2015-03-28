@@ -301,7 +301,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 					// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 					if (rr < rrCut)
 					{	
-						part_energy[index] = part_energy[index] + calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
+						part_energy[index] = 1;
 					} /* Endif rr < rrCut */
 				} /* Endif i<j */
 				j = lscl[j];
@@ -314,7 +314,25 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 __device__ Real ParallelCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro)
 {
 	Real totalEnergy = 0;
-	
+	for (int i = 0; i < molecules[mol1].numOfAtoms; i++)
+	{
+		Atom atom1 = molecules[mol1].atoms[i];
+
+		for (int j = 0; j < molecules[mol2].numOfAtoms; j++)
+		{
+			Atom atom2 = molecules[mol2].atoms[j];
+
+			if (atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
+			{
+				//calculate squared distance between atoms 
+				Real r2 = calcAtomDist(atom1, atom2, enviro);
+
+				totalEnergy += calc_lj(atom1, atom2, r2);
+				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+			}
+		}
+
+	}
 	return totalEnergy;
 }
 
