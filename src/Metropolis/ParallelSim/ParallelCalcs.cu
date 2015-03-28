@@ -19,6 +19,7 @@
 #include <thrust/count.h>
 #include <thrust/remove.h>
 #include <thrust/device_ptr.h>
+#include <thrust/device_vector.h>
 
 #define NO -1
 
@@ -170,47 +171,41 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	                head[c] = i;
 	            } /* Endfor molecule i */
 
-	            Real *d_totalEnergy;//for gpu use
-	            Real *part_energy; //energy computed by every thread
+			    thrust::device_vector<Real> part_energy(lcxyz*27);
 	            Real total_energy = 0;
-	            Real oldEnergy;
+	            Real oldEnergy;//result that will be returned
+	            
 	            Molecule *d_molecules;
 	            Environment *d_enviro;
 	            int *d_head;
 	            int *d_lscl;
 	            
-                part_energy = (Real *)malloc(sizeof(Real)*lcxyz*27);
 	            cudaMalloc(&d_molecules, enviro->numOfMolecules*sizeof(Molecule));
 	            cudaMalloc(&d_enviro, sizeof(Environment));
 	            cudaMalloc(&d_head, sizeof(int)*NCLMAX);
 	            cudaMalloc(&d_lscl, sizeof(int)*NMAX);
-	            cudaMalloc(&d_totalEnergy, sizeof(Real)*lcxyz*27);
 
 	            cudaMemcpy(d_enviro, enviro, sizeof(Environment), cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_head, head, sizeof(int)*NCLMAX, cudaMemcpyHostToDevice);
 	            cudaMemcpy(d_lscl, lscl, sizeof(int)*NMAX, cudaMemcpyHostToDevice);
-                dim3 dimGrid(lc[0], lc[1], lc[2]);
+                
+	            dim3 dimGrid(lc[0], lc[1], lc[2]);
                 dim3 dimBlock(3, 3, 3);
-	            calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, d_totalEnergy);
-				cudaMemcpy(part_energy, d_totalEnergy, sizeof(Real)*lcxyz*27, cudaMemcpyDeviceToHost);
-				cudaFree(d_totalEnergy);
+	            calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, part_energy);
+	            
+	            total_energy = thrust::ruduce(part_energy.begin(), part_energy.end());
+
 			    cudaFree(d_molecules);
 			    cudaFree(d_enviro);
 			    cudaFree(d_head);
 			    cudaFree(d_lscl);
 				
-				for(int i = 0; i<lcxyz*27; i++){
-					total_energy = total_energy + part_energy[i];
-				}
-
 	            oldEnergy = calcIntramolEnergy_NLC(enviro, molecules);
-	            
-	            free(part_energy);
-	            return oldEnergy;
+	            return oldEnergy + total_energy;
 }
 
-__global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *totalEnergy)
+__global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, device_vector<Real> part_energy)
 {
 	// Variables for linked-cell neighbor list	
 	int lc[3];            	/* Number of cells in the x|y|z direction */
@@ -238,7 +233,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
     mc1[1] = mc[1] + (threadIdx.y - 1);
     mc1[2] = mc[2] + (threadIdx.z - 1);
     
-    int identifier;
+    int index;
     int id_x; 
     int id_y;
     int id_z;
@@ -256,9 +251,9 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	id_x = 3*blockIdx.x + threadIdx.x;
 	id_y = 3*blockIdx.y + threadIdx.y;
 	id_z = 3*blockIdx.z + threadIdx.z;
-	identifier = id_z*lc[0]*lc[1] + id_y*lc[1] + id_x;
+	index = id_z*lc[0]*lc[1] + id_y*lc[1] + id_x;
 	
-	totalEnergy[identifier] = 0;//initialization
+	part_energy[index] = 0;//initialization
 	
 
   /* Calculate pair interaction-----------------------------------------------*/
@@ -312,7 +307,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 										// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 										if (rr < rrCut)
 										{	
-											totalEnergy[identifier] += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
+											part_energy[index] += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
 										} /* Endif rr < rrCut */
 									} /* Endif i<j */
 									
