@@ -326,10 +326,10 @@ __device__ Real ParallelCalcs::calcInterMolecularEnergy(Molecule *molecules, int
 			if (atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
 			{
 				//calculate squared distance between atoms 
-				Real r2 = calcAtomDist(atom1, atom2, enviro);
+				//Real r2 = calcAtomDist(atom1, atom2, enviro);
 				
-				totalEnergy += calc_lj(atom1, atom2, r2);
-				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+				//totalEnergy += calc_lj(atom1, atom2, r2);
+				//totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
 			}
 		}
 		
