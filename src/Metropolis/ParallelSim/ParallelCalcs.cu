@@ -192,9 +192,9 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
                 
 	            dim3 dimGrid(lc[0], lc[1], lc[2]);
                 dim3 dimBlock(3, 3, 3);
-	            calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, part_energy);
+	            calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, part_energy.begin);
 	            
-	            total_energy = thrust::ruduce(part_energy.begin(), part_energy.end());
+	            total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 
 			    cudaFree(d_molecules);
 			    cudaFree(d_enviro);
@@ -205,7 +205,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	            return oldEnergy + total_energy;
 }
 
-__global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, device_vector<Real> part_energy)
+__global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, thrust::device_ptr<Real> part_energy)
 {
 	// Variables for linked-cell neighbor list	
 	int lc[3];            	/* Number of cells in the x|y|z direction */
