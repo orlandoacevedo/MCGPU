@@ -171,7 +171,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 		head[c] = i;
 	} /* Endfor molecule i */
 
-	thrust::device_vector<Real> part_energy(lcxyz*27, 1);
+	thrust::device_vector<Real> part_energy(lcxyz*27, 0);
 	Real total_energy = 0;
 	Real oldEnergy;//result that will be returned
 
@@ -254,7 +254,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	id_z = 3*blockIdx.z + threadIdx.z;
 	index = id_x*lcyz*9 + id_y*lc[2]*3 + id_z;
 
-	//part_energy[index] = 1;//initialization
+	part_energy[index] = 1;//initialization
 
 
 	/* Calculate pair interaction-----------------------------------------------*/
