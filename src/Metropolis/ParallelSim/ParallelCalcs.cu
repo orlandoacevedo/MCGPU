@@ -284,7 +284,6 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 		// Skip this neighbor cell if empty
 		// Scan atom i in cell c
 		int i = head[c];
-		__syncthreads();
 		while (i != EMPTY)
 		{   // Scan atom j in cell c1
 			int j = head[c1];
@@ -301,7 +300,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 					// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 					if (rr < rrCut)
 					{	
-						part_energy[index] = 2;
+						part_energy[index] = 1;
 					} /* Endif rr < rrCut */
 				} /* Endif i<j */
 				j = lscl[j];
