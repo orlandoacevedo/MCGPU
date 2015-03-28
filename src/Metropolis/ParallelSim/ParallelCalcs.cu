@@ -254,7 +254,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	id_z = 3*blockIdx.z + threadIdx.z;
 	index = id_x*lcyz*9 + id_y*lc[2]*3 + id_z;
 
-	part_energy[index] = 1;//initialization
+	part_energy[index] = 0;//initialization
 
 	/* Calculate pair interaction-----------------------------------------------*/
     
@@ -284,6 +284,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 		// Skip this neighbor cell if empty
 		// Scan atom i in cell c
 		int i = head[c];
+		__syncthreads();
 		while (i != EMPTY)
 		{   // Scan atom j in cell c1
 			int j = head[c1];
