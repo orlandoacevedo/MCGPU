@@ -254,7 +254,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	id_z = 3*blockIdx.z + threadIdx.z;
 	index = id_x*lcyz*9 + id_y*lc[2]*3 + id_z;
 
-	part_energy[index] = 1;//initialization
+	part_energy[index] = 0;//initialization
 
 
 	/* Calculate pair interaction-----------------------------------------------*/
@@ -301,7 +301,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 					// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 					if (rr < rrCut)
 					{	
-						//part_energy[index] += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
+						part_energy[index] = part_energy[index] + calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
 					} /* Endif rr < rrCut */
 				} /* Endif i<j */
 				j = lscl[j];
