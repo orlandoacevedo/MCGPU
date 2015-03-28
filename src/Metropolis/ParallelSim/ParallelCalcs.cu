@@ -255,7 +255,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	index = id_x*lcyz*9 + id_y*lc[2]*3 + id_z;
 
 	part_energy[index] = 1;//initialization
-
+	part_energy[index] = 2;
 
 	/* Calculate pair interaction-----------------------------------------------*/
     
