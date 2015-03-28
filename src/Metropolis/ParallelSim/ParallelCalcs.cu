@@ -261,8 +261,54 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
     
 	// Scan inner cells
 	// Calculate a scalar cell index
-	
+	if(mc[0] < lc[0]&&mc[1] < lc[1]&&mc[2]<lc[2]){
+		int c = mc[0]*lcyz + mc[1]*lc[2] + mc[2];
+		// Skip this cell if empty		
+		// Periodic boundary condition by shifting coordinates
+		for (int a = 0; a < 3; a++)
+		{
+			if (mc1[a] < 0)
+			{
+				rshift[a] = -Region[a];
+			}
+			else if (mc1[a] >= lc[a])
+			{
+				rshift[a] = Region[a];
+			}
+			else
+			{
+				rshift[a] = 0.0;
+			}
+		}
+		// Calculate the scalar cell index of the neighbor cell
+		c1 = ((mc1[0] + lc[0]) % lc[0]) * lcyz+((mc1[1] + lc[1]) % lc[1]) * lc[2] +((mc1[2] + lc[2]) % lc[2]);
+		// Skip this neighbor cell if empty
+		// Scan atom i in cell c
+		int i = head[c];
+		while (i != EMPTY)
+		{   // Scan atom j in cell c1
+			int j = head[c1];
+			while (j != EMPTY)
+			{	// Avoid double counting of pairs
+				if (i < j)
+				{   // Pair vector dr = atom[i]-atom[j]
+					rr = 0.0;
+					dr[0] = molecules[i].atoms[enviro->primaryAtomIndex].x - (molecules[j].atoms[enviro->primaryAtomIndex].x + rshift[0]);
+					dr[1] = molecules[i].atoms[enviro->primaryAtomIndex].y - (molecules[j].atoms[enviro->primaryAtomIndex].y + rshift[1]);
+					dr[2] = molecules[i].atoms[enviro->primaryAtomIndex].z - (molecules[j].atoms[enviro->primaryAtomIndex].z + rshift[2]);
+					rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
 
+					// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
+					if (rr < rrCut)
+					{	
+						//part_energy[index] += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
+					} /* Endif rr < rrCut */
+				} /* Endif i<j */
+				j = lscl[j];
+			} /* Endwhile j not empty */
+			i = lscl[i];
+		} /* Endwhile i not empty */
+	}
 }
 
 __device__ Real ParallelCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro)
