@@ -128,9 +128,8 @@ void Simulation::run()
 	{
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
-			//oldEnergy = ParallelCalcs::calcSystemEnergy(box);
-            oldEnergy = 200;
-		}
+			oldEnergy = ParallelCalcs::calcSystemEnergy(box);
+        }
 		else
 		{
 			// ***** TODO: add cmd line arg to switch between nlc and reg

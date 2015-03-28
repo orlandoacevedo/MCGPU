@@ -288,17 +288,12 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 		// Scan atom i in cell c
 		int i = head[c];
 		while (i != EMPTY)
-		{
-
-			// Scan atom j in cell c1
+		{   // Scan atom j in cell c1
 			int j = head[c1];
 			while (j != EMPTY)
-			{
-
-				// Avoid double counting of pairs
+			{	// Avoid double counting of pairs
 				if (i < j)
-				{
-					// Pair vector dr = atom[i]-atom[j]
+				{   // Pair vector dr = atom[i]-atom[j]
 					rr = 0.0;
 					dr[0] = molecules[i].atoms[enviro->primaryAtomIndex].x - (molecules[j].atoms[enviro->primaryAtomIndex].x + rshift[0]);
 					dr[1] = molecules[i].atoms[enviro->primaryAtomIndex].y - (molecules[j].atoms[enviro->primaryAtomIndex].y + rshift[1]);
@@ -311,10 +306,8 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 						part_energy[index] += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
 					} /* Endif rr < rrCut */
 				} /* Endif i<j */
-
 				j = lscl[j];
 			} /* Endwhile j not empty */
-
 			i = lscl[i];
 		} /* Endwhile i not empty */
 	}
