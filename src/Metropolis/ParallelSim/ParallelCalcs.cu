@@ -192,7 +192,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 
 	dim3 dimGrid(lc[0], lc[1], lc[2]);
 	dim3 dimBlock(3, 3, 3);
-	Real *raw_ptr = thrust::raw_pointer_cast(part_energy.begin());
+	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, raw_ptr);
 
 	total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
