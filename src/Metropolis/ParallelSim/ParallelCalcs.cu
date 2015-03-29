@@ -296,13 +296,11 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 					dr[1] = molecules[i].atoms[enviro->primaryAtomIndex].y - (molecules[j].atoms[enviro->primaryAtomIndex].y + rshift[1]);
 					dr[2] = molecules[i].atoms[enviro->primaryAtomIndex].z - (molecules[j].atoms[enviro->primaryAtomIndex].z + rshift[2]);
 					rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
-                    
+
 					// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
-					if (rr < rrCut)
-					{	
-						 printf("test\n");
-						//part_energy[index] = 1;
-					} /* Endif rr < rrCut */
+					//if (rr < rrCut)
+					part_energy[index] = 1;
+					/* Endif rr < rrCut */
 				} /* Endif i<j */
 				j = lscl[j];
 			} /* Endwhile j not empty */
