@@ -300,7 +300,6 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 					// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 					if (rr < rrCut)
 					{	
-						printf("Test");
 						//part_energy[index] = 1;
 					} /* Endif rr < rrCut */
 				} /* Endif i<j */
