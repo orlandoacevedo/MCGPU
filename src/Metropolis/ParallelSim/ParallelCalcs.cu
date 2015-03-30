@@ -220,7 +220,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	int c1;				  	/* Used for scalar cell index */
 	Real dr[3];		  		/* Pair vector dr = atom[i]-atom[j] */
 	Real rrCut = enviro->cutoff * enviro->cutoff;	/* Cutoff squared */
-	Real rr;			  	/* Distance between atoms */
+	//Real rr;			  	/* Distance between atoms */
 	//Real lj_energy;			/* Holds current Lennard-Jones energy */
 	//Real charge_energy;		/* Holds current coulombic charge energy */
 	Real fValue = 1.0;		/* Holds 1,4-fudge factor value */
@@ -234,11 +234,6 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	mc1[1] = mc[1] + (threadIdx.y - 1);
 	mc1[2] = mc[2] + (threadIdx.z - 1);
 
-	int index;
-	int id_x; 
-	int id_y;
-	int id_z;
-
 	// Compute the # of cells for linked cell lists
 	for (int k=0; k<3; k++)
 	{
@@ -249,10 +244,10 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 	/* Make a linked-cell list, lscl--------------------------------------------*/
 	int lcyz = lc[1]*lc[2];
 	//int lcxyz = lc[0]*lcyz;
-	id_x = 3*blockIdx.x + threadIdx.x;
-	id_y = 3*blockIdx.y + threadIdx.y;
-	id_z = 3*blockIdx.z + threadIdx.z;
-	index = id_x*lcyz*9 + id_y*lc[2]*3 + id_z;
+	const int id_x = 3*blockIdx.x + threadIdx.x;
+	const int id_y = 3*blockIdx.y + threadIdx.y;
+	const int id_z = 3*blockIdx.z + threadIdx.z;
+	const int index = id_x*lcyz*9 + id_y*lc[2]*3 + id_z;
 
 	part_energy[index] = 0;//initialization
 
@@ -291,15 +286,15 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 			{	// Avoid double counting of pairs
 				if (i < j)
 				{   // Pair vector dr = atom[i]-atom[j]
-					rr = 0.0;
+					//rr = 0.0;
 					dr[0] = molecules[i].atoms[enviro->primaryAtomIndex].x - (molecules[j].atoms[enviro->primaryAtomIndex].x + rshift[0]);
 					dr[1] = molecules[i].atoms[enviro->primaryAtomIndex].y - (molecules[j].atoms[enviro->primaryAtomIndex].y + rshift[1]);
 					dr[2] = molecules[i].atoms[enviro->primaryAtomIndex].z - (molecules[j].atoms[enviro->primaryAtomIndex].z + rshift[2]);
-					rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
+					const Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
 
 					// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 
-					/*if (rr < rrCut)*/{
+					if (rr < rrCut) {
 						//printf("test\n");
 						//rr = 1;
 						part_energy[index] = 1;
