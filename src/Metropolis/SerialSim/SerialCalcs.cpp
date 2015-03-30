@@ -18,8 +18,6 @@
 
 using namespace std;
 
-int INCLUDED_MOLECULES = 0;
-
 Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long* startStep, long* steps)
 {
 	SerialBox* box = new SerialBox();
