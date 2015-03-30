@@ -298,8 +298,10 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 					rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
 
 					// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
+
 					if (rr < rrCut){
-						rr = 1;
+						printf("test\n");
+						//rr = 1;
 						//part_energy[index] = 1;
 					}
 					/* Endif rr < rrCut */
