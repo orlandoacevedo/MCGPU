@@ -22,6 +22,7 @@
 int metrosim::run(int argc, char** argv)
 {
 	SimulationArgs args = SimulationArgs();
+	//args.useNeighborList = false;
 	if (!getCommands(argc, argv, &args))
 	{
 		exit(EXIT_FAILURE);

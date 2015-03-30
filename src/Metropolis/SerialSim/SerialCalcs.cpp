@@ -257,7 +257,9 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 		}
 	}
 	
+	// *** Note: this function returns values similar to calcSystemEnergy before the calcIntramolEnergy_NLC is called
 	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
+	//return totalEnergy;
 }
 
 /**

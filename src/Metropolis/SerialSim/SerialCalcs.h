@@ -103,6 +103,11 @@ namespace SerialCalcs
 	/// @return Returns r2, the distance between the two atoms squared.
 	Real calcAtomDist(Atom atom1, Atom atom2, Environment *enviro);
 	
+	/// Calculates the squared distance between two atoms.
+	/// @param atom1 The first atom.
+	/// @param atom2 The second atom.
+	/// @param enviro A pointer to the Environment for the simulation.
+	/// @return Returns r2, the distance between the two atoms squared.
 	Real Energy_LRC(Molecule *molec, Environment *enviro);
 }
 

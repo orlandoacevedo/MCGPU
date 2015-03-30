@@ -49,7 +49,7 @@ using std::string;
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:I:n:i:d:sphQVktl";
+		const char* short_options = ":i:I:n:t:d:sphQVkl";
 
 		// The long options recognized by the program
 		struct option long_options[] = 
@@ -153,8 +153,8 @@ using std::string;
 				case 'p':	/* run parallel */
 					params->parallelFlag = true;
 					break;
-				case 'k': 	/* Verbose cout */
-					params->verboseOutputFlag = true;
+				case 'k': 	/* Silence cout */
+					params->silentOutputFlag = true;
 					break;
 				case 'l': 	/* use neighbor list */
 					params->neighborListFlag = true;
@@ -275,7 +275,7 @@ using std::string;
 		args->threadCount = params->threadCount;
 		args->simulationName = params->simulationName;
 		args->verboseOutput = params->verboseOutputFlag;
-		//args->useNeighborList = params->neighborListFlag;
+		args->useNeighborList = params->neighborListFlag;
 
 		if (!params->parallelFlag && params->deviceFlag)
 		{

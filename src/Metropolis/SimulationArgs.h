@@ -85,6 +85,7 @@ struct SimulationArgs
 
 	/// Enables or disables use of linked-list neigborlist in calcs
 	bool useNeighborList;
+	//const static bool useNeighborList = false;
 
 	/// The number of simulation steps between status updates printed to
 	/// the console. A value of 0 means that status updates are only
