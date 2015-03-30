@@ -47,7 +47,7 @@ Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
 		totalEnergy += calcMolecularEnergyContribution(molecules, enviro, mol, mol);
 	}
 	
-    return totalEnergy;
+    return totalEnergy + Energy_LRC(molecules, enviro);
 }
 
 Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx)
@@ -258,7 +258,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 	}
 	
 	// *** Note: this function returns values similar to calcSystemEnergy before the calcIntramolEnergy_NLC is called
-	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
+	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules) + Energy_LRC(molecules, enviro);
 	//return totalEnergy;
 }
 
