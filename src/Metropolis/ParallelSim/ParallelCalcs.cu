@@ -288,7 +288,8 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 				{   // Pair vector dr = atom[i]-atom[j]
 					//rr = 0.0;
 					int pai = enviro->primaryAtomIndex;
-					Atom atom = molecules[i].atoms[pai];
+					Molecule mol = molecules[i];
+					Atom atom = mol.atoms[pai];
 					Atom atom2 = molecules[j].atoms[pai];
 					dr[0] = atom.x - (atom2.x + rshift[0]);
 
