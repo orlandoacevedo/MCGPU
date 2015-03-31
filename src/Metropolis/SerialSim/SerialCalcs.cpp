@@ -231,7 +231,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 		}
 	}
 	
-	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
+	return calcIntramolEnergy_NLC(enviro, molecules);
 }
 
 /**
