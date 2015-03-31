@@ -173,7 +173,6 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 
 	thrust::device_vector<Real> part_energy(lcxyz*27, 0);
 	Real total_energy = 0;
-	Real oldEnergy;//result that will be returned
 
 	Molecule *d_molecules;
 	Environment *d_enviro;
@@ -209,8 +208,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	cudaFree(d_head);
 	cudaFree(d_lscl);
 
-	oldEnergy = calcIntramolEnergy_NLC(enviro, molecules);
-	return total_energy;
+	return total_energy + calcIntramolEnergy_NLC(enviro, molecules);
 }
 
 __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *part_energy)
@@ -309,7 +307,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 
 					if (rr < rrCut) {
 						//printf("test\n");
-						part_energy[index] = 1;
+						part_energy[index] += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
 					}
 					/* Endif rr < rrCut */
 				} /* Endif i<j */
