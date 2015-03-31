@@ -194,7 +194,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	for(int i = 0; i < enviro->numOfMolecules; i++){
 		cudaMalloc((void **)&d_atoms, sizeof(Atom)*5);
 		cudaMemcpy(d_atoms, molecules[i].atoms, sizeof(Atom)*5, cudaMemcpyHostToDevice);
-		cudaMemcpy((long)d_molecules + i * sizeof(Molecule) + 2 * sizeof(int), &d_atoms, sizeof(Atom *), cudaMemcpyHostToDevice);	
+		cudaMemcpy((void *)((long)d_molecules + i * sizeof(Molecule) + 2 * sizeof(int)), &d_atoms, sizeof(Atom *), cudaMemcpyHostToDevice);	
 	}
 
 	dim3 dimGrid(lc[0], lc[1], lc[2]);
