@@ -195,6 +195,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 
 							// Scan atom i in cell c
 							int i = head[c];
+                            totalEnergy[counter] = 0;
 							while (i != EMPTY)
 							{
 
