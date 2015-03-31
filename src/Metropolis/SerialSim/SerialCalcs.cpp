@@ -230,8 +230,8 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 			} /* Endfor central cell, c */
 		}
 	}
-	
-	return calcIntramolEnergy_NLC(enviro, molecules);
+	//calcIntramolEnergy_NLC(enviro, molecules);
+    return totalEnergy;
 }
 
 /**
