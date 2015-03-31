@@ -180,15 +180,22 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	int *d_head;
 	int *d_lscl;
 
-	cudaMalloc(&d_molecules, enviro->numOfMolecules*sizeof(Molecule));
-	cudaMalloc(&d_enviro, sizeof(Environment));
-	cudaMalloc(&d_head, sizeof(int)*NCLMAX);
-	cudaMalloc(&d_lscl, sizeof(int)*NMAX);
+	cudaMalloc((void **)&d_molecules, enviro->numOfMolecules*sizeof(Molecule));
+	cudaMalloc((void **)&d_enviro, sizeof(Environment));
+	cudaMalloc((void **)&d_head, sizeof(int)*NCLMAX);
+	cudaMalloc((void **)&d_lscl, sizeof(int)*NMAX);
 
 	cudaMemcpy(d_enviro, enviro, sizeof(Environment), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_head, head, sizeof(int)*NCLMAX, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_lscl, lscl, sizeof(int)*NMAX, cudaMemcpyHostToDevice);
+	
+	Atom *d_atoms;
+	for(int i = 0; i < enviro->numOfMolecules; i++){
+		cudaMalloc((void **)&d_atoms, sizeof(Atom)*5);
+		cudaMemcpy(d_atoms, molecules[i].atoms, sizeof(Atom)*5, cudaMemcpyHostToDevice);
+		cudaMemcpy((long)d_molecules + i * sizeof(Molecule) + 2 * sizeof(int), &d_atoms, sizeof(Atom *), cudaMemcpyHostToDevice);	
+	}
 
 	dim3 dimGrid(lc[0], lc[1], lc[2]);
 	dim3 dimBlock(3, 3, 3);
@@ -287,13 +294,12 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 				if (i < j)
 				{   // Pair vector dr = atom[i]-atom[j]
 					//rr = 0.0;
-					int pai = enviro->primaryAtomIndex;
-					Molecule mol = molecules[i];
-					Atom atom = mol.atoms[pai];
-					Atom atom2 = molecules[j].atoms[pai];
-					dr[0] = atom.x - (atom2.x + rshift[0]);
+					//int pai = enviro->primaryAtomIndex;
+					//Molecule mol = molecules[i];
+					//Atom atom = mol.atoms[pai];
+					//Atom atom2 = molecules[j].atoms[pai];
+					//dr[0] = atom.x - (atom2.x + rshift[0]);
 
-					
 					dr[0] = molecules[i].atoms[enviro->primaryAtomIndex].x - (molecules[j].atoms[enviro->primaryAtomIndex].x + rshift[0]);
 					dr[1] = molecules[i].atoms[enviro->primaryAtomIndex].y - (molecules[j].atoms[enviro->primaryAtomIndex].y + rshift[1]);
 					dr[2] = molecules[i].atoms[enviro->primaryAtomIndex].z - (molecules[j].atoms[enviro->primaryAtomIndex].z + rshift[2]);
@@ -303,7 +309,6 @@ __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *
 
 					if (rr < rrCut) {
 						//printf("test\n");
-						//rr = 1;
 						part_energy[index] = 1;
 					}
 					/* Endif rr < rrCut */
