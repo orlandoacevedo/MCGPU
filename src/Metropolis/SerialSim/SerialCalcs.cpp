@@ -110,7 +110,8 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 	Real lj_energy;			/* Holds current Lennard-Jones energy */
 	Real charge_energy;		/* Holds current coulombic charge energy */
 	Real fValue = 1.0;		/* Holds 1,4-fudge factor value */
-	Real totalEnergy = 0.0;	/* Total nonbonded energy x fudge factor */
+
+    int counter = 0;
 			
 	// Compute the # of cells for linked cell lists
 	for (int k=0; k<3; k++)
@@ -122,8 +123,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
   /* Make a linked-cell list, lscl--------------------------------------------*/
 	int lcyz = lc[1]*lc[2];
 	int lcxyz = lc[0]*lcyz;
-    printf("my test: %d", lcxyz);
-		
+    Real totalEnergy[lcxyz * 27];	/* Total nonbonded energy x fudge factor */
 	// Reset the headers, head
 	for (int c = 0; c < lcxyz; c++) 
 	{
@@ -216,7 +216,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 										// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 										if (rr < rrCut)
 										{	
-											totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
+											totalEnergy[counter]= 1;
 											
 										} /* Endif rr < rrCut */
 									} /* Endif i<j */
@@ -226,12 +226,18 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 
 								i = lscl[i];
 							} /* Endwhile i not empty */
+                            counter ++;
 						} /* Endfor neighbor cells, c1 */
 			} /* Endfor central cell, c */
 		}
 	}
+    Real sum = 0;
+    
+    for(int i = 0; i < lcxyz * 27; i++){
+        sum = sum + totalEnergy[i];
+    }
 	//calcIntramolEnergy_NLC(enviro, molecules);
-    return totalEnergy;
+    return sum;
 }
 
 /**
