@@ -110,8 +110,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 	Real lj_energy;			/* Holds current Lennard-Jones energy */
 	Real charge_energy;		/* Holds current coulombic charge energy */
 	Real fValue = 1.0;		/* Holds 1,4-fudge factor value */
-
-    int counter = 0;
+	Real totalEnergy = 0.0;	/* Total nonbonded energy x fudge factor */
 			
 	// Compute the # of cells for linked cell lists
 	for (int k=0; k<3; k++)
@@ -123,7 +122,8 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
   /* Make a linked-cell list, lscl--------------------------------------------*/
 	int lcyz = lc[1]*lc[2];
 	int lcxyz = lc[0]*lcyz;
-    Real totalEnergy[lcxyz * 27];	/* Total nonbonded energy x fudge factor */
+    printf("my test: %d", lcxyz);
+		
 	// Reset the headers, head
 	for (int c = 0; c < lcxyz; c++) 
 	{
@@ -195,7 +195,6 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 
 							// Scan atom i in cell c
 							int i = head[c];
-                            totalEnergy[counter] = 0;
 							while (i != EMPTY)
 							{
 
@@ -217,7 +216,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 										// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 										if (rr < rrCut)
 										{	
-											totalEnergy[counter]= 1;
+											totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
 											
 										} /* Endif rr < rrCut */
 									} /* Endif i<j */
@@ -227,18 +226,12 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 
 								i = lscl[i];
 							} /* Endwhile i not empty */
-                            counter ++;
 						} /* Endfor neighbor cells, c1 */
 			} /* Endfor central cell, c */
 		}
 	}
-    Real sum = 0;
-    
-    for(int i = 0; i < lcxyz * 27; i++){
-        sum = sum + totalEnergy[i];
-    }
-	//calcIntramolEnergy_NLC(enviro, molecules);
-    return sum;
+	
+	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
 }
 
 /**
