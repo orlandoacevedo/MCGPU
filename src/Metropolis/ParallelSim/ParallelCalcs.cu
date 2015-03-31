@@ -191,8 +191,8 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	
 	Atom *d_atoms;
 	for(int i = 0; i < enviro->numOfMolecules; i++){
-		cudaMalloc((void **)&d_atoms, sizeof(Atom)*5);
-		cudaMemcpy(d_atoms, molecules[i].atoms, sizeof(Atom)*5, cudaMemcpyHostToDevice);
+		cudaMalloc((void **)&d_atoms, sizeof(Atom)*6);
+		cudaMemcpy(d_atoms, molecules[i].atoms, sizeof(Atom)*6, cudaMemcpyHostToDevice);
 		cudaMemcpy((void *)((long)d_molecules + i * sizeof(Molecule) + 2 * sizeof(int)), &d_atoms, sizeof(Atom *), cudaMemcpyHostToDevice);	
 	}
 
@@ -207,8 +207,8 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	cudaFree(d_enviro);
 	cudaFree(d_head);
 	cudaFree(d_lscl);
-	//calcIntramolEnergy_NLC(enviro, molecules)
-	return total_energy;
+	
+	return total_energy + calcIntramolEnergy_NLC(enviro, molecules);
 }
 
 __global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *part_energy)
