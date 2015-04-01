@@ -150,7 +150,6 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
   /* Make a linked-cell list, lscl--------------------------------------------*/
 	int lcyz = lc[1]*lc[2];
 	int lcxyz = lc[0]*lcyz;
-    printf("my test: %d", lcxyz);
 		
 	// Reset the headers, head
 	for (int c = 0; c < lcxyz; c++) 

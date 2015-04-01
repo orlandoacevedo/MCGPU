@@ -203,9 +203,9 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	
 	clock_t function_time_start, function_time_end;
 	long duration;
-	function_time_start = clock();
-	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, raw_ptr);
 	
+	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, raw_ptr);
+	function_time_start = clock();
 	total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 	function_time_end = clock();
 	duration = function_time_end -function_time_start;
