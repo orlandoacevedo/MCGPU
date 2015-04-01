@@ -132,7 +132,7 @@ void Simulation::run()
             function_time_start = clock();
 			oldEnergy = ParallelCalcs::calcSystemEnergy(box);
             function_time_end = clock();
-            duration = function_time_end -function_time_start;
+            duration = function_time_end - function_time_start;
         }
 		else
 		{

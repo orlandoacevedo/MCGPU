@@ -8,7 +8,8 @@
 	-> April 21, by Nathan Coleman
 	-> February 25, 2015 by Jared Brown
 */
-
+#include <time.h>
+#include <iostream>
 #include <math.h>
 #include <string>
 #include "Metropolis/DataTypes.h"
@@ -175,6 +176,9 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 	} /* Endfor molecule i */
 
   /* Calculate pair interaction-----------------------------------------------*/
+    clock_t function_time_start, function_time_end;
+    long duration;
+    function_time_start = clock();
 		
 	// Scan inner cells
 	for (mc[0] = 0; mc[0] < lc[0]; (mc[0])++)
@@ -257,6 +261,10 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 			} /* Endfor central cell, c */
 		}
 	}
+    
+    function_time_end = clock();
+    duration = function_time_end - function_time_start;
+    std::cout << "Duration of neighbor list function: " << duration << std::endl;
 	
 	// *** Note: this function returns values similar to calcSystemEnergy before the calcIntramolEnergy_NLC is called
 	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules) + Energy_LRC(molecules, enviro);

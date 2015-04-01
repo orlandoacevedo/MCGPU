@@ -7,7 +7,8 @@
 	-> March 28, by Joshua Mosby
 	-> April 21, by Nathan Coleman
 */
-
+#include <time.h>
+#include <iostream>
 #include "ParallelCalcs.h"
 #include "ParallelCalcs.cuh"
 #include "ParallelBox.cuh"
@@ -199,10 +200,17 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	dim3 dimGrid(lc[0], lc[1], lc[2]);
 	dim3 dimBlock(3, 3, 3);
 	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
+	
+	clock_t function_time_start, function_time_end;
+	long duration;
+	function_time_start = clock();
 	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, raw_ptr);
-
+	
 	total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
-
+	function_time_end = clock();
+	duration = function_time_end -function_time_start;
+	std::cout << "Duration of neighbor list function: " << duration << std::endl;
+	
 	cudaFree(d_molecules);
 	cudaFree(d_enviro);
 	cudaFree(d_head);
