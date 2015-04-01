@@ -49,20 +49,300 @@ Box* ParallelCalcs::createBox(string inputPath, InputFileType inputType, long* s
 	box->copyDataToDevice();
 	return (Box*) box;
 }
-
-Real ParallelCalcs::calcSystemEnergy(Box *box)
+Real ParallelCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules)
 {
-	Real totalEnergy = 0;
-	
-	//for each molecule
-	for (int mol = 0; mol < box->moleculeCount; mol++)
-	{
-		//use startIdx parameter to prevent double-calculating energies (Ex mols 3->5 and mols 5->3)
-		totalEnergy += calcMolecularEnergyContribution(box, mol, mol + 1);
-	}
+    //setup storage
+    Real totalEnergy = 0.0;
+    Real *energySum_device;
+    // Molecule to be computed. Currently code only handles single solvent type systems.
+    // will need to update to handle more than one solvent type (i.e., co-solvents)
+	int mol1_i = 0;
 
+    //determine number of energy calculations
+    int N =(int) ( pow( (float) molecules[mol1_i].numOfAtoms,2)-molecules[mol1_i].numOfAtoms)/2;	 
+    size_t energySumSize = N * sizeof(Real);
+	Real* energySum = (Real*) malloc(energySumSize);
+
+    //calculate all energies
+    Real lj_energy, charge_energy, fValue, nonbonded_energy;
+    Atom atom1, atom2;
+
+	for (int atomIn1_i = 0; atomIn1_i < molecules[mol1_i].numOfAtoms; atomIn1_i++)
+	{	
+		atom1 = molecules[mol1_i].atoms[atomIn1_i];
+					
+		for (int atomIn2_i = atomIn1_i; atomIn2_i < molecules[mol1_i].numOfAtoms; atomIn2_i++)
+		{
+			atom2 = molecules[mol1_i].atoms[atomIn2_i];
+						
+				if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0)
+				{
+					continue;
+				}
+					  
+				//calculate squared distance between atoms 
+				
+			    Real r2 = calcAtomDist(atom1, atom2, enviro);
+										  
+				if (r2 == 0.0)
+				{
+					continue;
+				}
+					
+				//calculate LJ energies
+				lj_energy = calc_lj(atom1, atom2, r2);
+
+						
+				//calculate Coulombic energies
+				charge_energy = calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+						
+				//gets the fValue in the same molecule
+				fValue = 0.0;
+				
+				int hops = 0;
+				for (int k = 0; k < molecules[mol1_i].numOfHops; k++)
+				{
+					Hop currentHop = molecules[mol1_i].hops[k];
+					if (currentHop.atom1 == atomIn1_i && currentHop.atom2 == atomIn2_i)
+					{
+						hops = currentHop.hop;
+					}
+				}
+				
+				if (hops == 3)
+					fValue = 0.5;
+				else if (hops > 3)
+					fValue = 1.0;
+			
+						
+				Real subtotal = (lj_energy + charge_energy) * fValue;
+				totalEnergy += subtotal;
+
+		} /* EndFor atomIn2_i */
+	} /* EndFor atomIn1_i */
+	
+	// Multiply single solvent molecule energy by number of solvent molecules in the system
+	totalEnergy *= enviro->numOfMolecules;
+	
+    free(energySum);
     return totalEnergy;
 }
+
+Real ParallelCalcs::calcSystemEnergy(Box *box){ 
+	Molecule *molecules = box->getMolecules();
+	Environment *enviro = box->getEnvironment();
+	const Real Region[3] = {enviro->x, enviro->y, enviro->z};
+	int head[NCLMAX];
+	int lscl[NMAX];
+	int lc[3];            	/* Number of cells in the x|y|z direction */
+	int mc[3];			  	/* Vector cell */
+	Real rc[3];
+
+	for (int k=0; k<3; k++)
+	{
+		lc[k] = Region[k] / enviro->cutoff;
+		rc[k] = Region[k] / lc[k];
+	}
+
+	/* Make a linked-cell list, lscl--------------------------------------------*/
+	int lcyz = lc[1]*lc[2];
+	int lcxyz = lc[0]*lcyz;
+
+	// Reset the headers, head
+	for (int c = 0; c < lcxyz; c++)
+	{
+		head[c] = EMPTY;
+	}
+
+	// Scan cutoff index atom in each molecule to construct headers, head, & linked lists, lscl
+	for (int i = 0; i < enviro->numOfMolecules; i++)
+	{
+		mc[0] = molecules[i].atoms[enviro->primaryAtomIndex].x / rc[0];
+		mc[1] = molecules[i].atoms[enviro->primaryAtomIndex].y / rc[1];
+		mc[2] = molecules[i].atoms[enviro->primaryAtomIndex].z / rc[2];
+
+		// Translate the vector cell index, mc, to a scalar cell index
+		int c = mc[0]*lcyz + mc[1]*lc[2] + mc[2];
+
+		// Link to the previous occupant (or EMPTY if you're the 1st)
+		lscl[i] = head[c];
+
+		// The last one goes to the header
+		head[c] = i;
+	} /* Endfor molecule i */
+
+	thrust::device_vector<Real> part_energy(lcxyz*27, 0);
+	Real total_energy = 0;
+
+	Molecule *d_molecules;
+	Environment *d_enviro;
+	int *d_head;
+	int *d_lscl;
+
+	cudaMalloc((void **)&d_molecules, enviro->numOfMolecules*sizeof(Molecule));
+	cudaMalloc((void **)&d_enviro, sizeof(Environment));
+	cudaMalloc((void **)&d_head, sizeof(int)*NCLMAX);
+	cudaMalloc((void **)&d_lscl, sizeof(int)*NMAX);
+
+	cudaMemcpy(d_enviro, enviro, sizeof(Environment), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_head, head, sizeof(int)*NCLMAX, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_lscl, lscl, sizeof(int)*NMAX, cudaMemcpyHostToDevice);
+	
+	Atom *d_atoms;
+	for(int i = 0; i < enviro->numOfMolecules; i++){
+		cudaMalloc((void **)&d_atoms, sizeof(Atom)*6);
+		cudaMemcpy(d_atoms, molecules[i].atoms, sizeof(Atom)*6, cudaMemcpyHostToDevice);
+		cudaMemcpy((void *)((long)d_molecules + i * sizeof(Molecule) + 2 * sizeof(int)), &d_atoms, sizeof(Atom *), cudaMemcpyHostToDevice);	
+	}
+
+	dim3 dimGrid(lc[0], lc[1], lc[2]);
+	dim3 dimBlock(3, 3, 3);
+	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
+	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, raw_ptr);
+
+	total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
+
+	cudaFree(d_molecules);
+	cudaFree(d_enviro);
+	cudaFree(d_head);
+	cudaFree(d_lscl);
+	
+	return total_energy + calcIntramolEnergy_NLC(enviro, molecules);
+}
+
+__global__ void ParallelCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *part_energy)
+{
+	// Variables for linked-cell neighbor list	
+	int lc[3];            	/* Number of cells in the x|y|z direction */
+	Real rc[3];         	/* Length of a cell in the x|y|z direction */
+	//int head[NCLMAX];    	/* Headers for the linked cell lists */
+	int mc[3];			  	/* Vector cell */
+	//int lscl[NMAX];       	/* Linked cell lists */
+	int mc1[3];				/* Neighbor cells */
+	Real rshift[3];	  		/* Shift coordinates for periodicity */
+	Real Region[3] = {enviro->x, enviro->y, enviro->z};  /* MD box lengths */
+	int c1;				  	/* Used for scalar cell index */
+	Real dr[3];		  		/* Pair vector dr = atom[i]-atom[j] */
+	Real rrCut = enviro->cutoff * enviro->cutoff;	/* Cutoff squared */
+	//Real rr;			  	/* Distance between atoms */
+	//Real lj_energy;			/* Holds current Lennard-Jones energy */
+	//Real charge_energy;		/* Holds current coulombic charge energy */
+	Real fValue = 1.0;		/* Holds 1,4-fudge factor value */
+	//Real totalEnergy = 0.0;	/* Total nonbonded energy x fudge factor */
+
+	mc[0] = blockIdx.x;
+	mc[1] = blockIdx.y;
+	mc[2] = blockIdx.z;
+
+	mc1[0] = mc[0] + (threadIdx.x - 1);
+	mc1[1] = mc[1] + (threadIdx.y - 1);
+	mc1[2] = mc[2] + (threadIdx.z - 1);
+
+	// Compute the # of cells for linked cell lists
+	for (int k=0; k<3; k++)
+	{
+		lc[k] = Region[k] / enviro->cutoff; 
+		rc[k] = Region[k] / lc[k];
+	}
+
+	/* Make a linked-cell list, lscl--------------------------------------------*/
+	int lcyz = lc[1]*lc[2];
+	//int lcxyz = lc[0]*lcyz;
+	const int id_x = 3*blockIdx.x + threadIdx.x;
+	const int id_y = 3*blockIdx.y + threadIdx.y;
+	const int id_z = 3*blockIdx.z + threadIdx.z;
+	const int index = id_x*lcyz*9 + id_y*lc[2]*3 + id_z;
+
+	part_energy[index] = 0;//initialization
+
+	/* Calculate pair interaction-----------------------------------------------*/
+    
+	// Scan inner cells
+	// Calculate a scalar cell index
+	if(mc[0] < lc[0]&&mc[1] < lc[1]&&mc[2]<lc[2]){
+		int c = mc[0]*lcyz + mc[1]*lc[2] + mc[2];
+		// Skip this cell if empty		
+		// Periodic boundary condition by shifting coordinates
+		for (int a = 0; a < 3; a++)
+		{
+			if (mc1[a] < 0)
+			{
+				rshift[a] = -Region[a];
+			}
+			else if (mc1[a] >= lc[a])
+			{
+				rshift[a] = Region[a];
+			}
+			else
+			{
+				rshift[a] = 0.0;
+			}
+		}
+		// Calculate the scalar cell index of the neighbor cell
+		c1 = ((mc1[0] + lc[0]) % lc[0]) * lcyz+((mc1[1] + lc[1]) % lc[1]) * lc[2] +((mc1[2] + lc[2]) % lc[2]);
+		// Skip this neighbor cell if empty
+		// Scan atom i in cell c
+		int i = head[c];
+		while (i != EMPTY)
+		{   // Scan atom j in cell c1
+			int j = head[c1];
+			while (j != EMPTY)
+			{	// Avoid double counting of pairs
+				if (i < j)
+				{   // Pair vector dr = atom[i]-atom[j]
+					//rr = 0.0;
+					//int pai = enviro->primaryAtomIndex;
+					//Molecule mol = molecules[i];
+					//Atom atom = mol.atoms[pai];
+					//Atom atom2 = molecules[j].atoms[pai];
+					//dr[0] = atom.x - (atom2.x + rshift[0]);
+
+					dr[0] = molecules[i].atoms[enviro->primaryAtomIndex].x - (molecules[j].atoms[enviro->primaryAtomIndex].x + rshift[0]);
+					dr[1] = molecules[i].atoms[enviro->primaryAtomIndex].y - (molecules[j].atoms[enviro->primaryAtomIndex].y + rshift[1]);
+					dr[2] = molecules[i].atoms[enviro->primaryAtomIndex].z - (molecules[j].atoms[enviro->primaryAtomIndex].z + rshift[2]);
+					const Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
+
+					// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
+
+					if (rr < rrCut) {
+						//printf("test\n");
+						part_energy[index] = part_energy[index] + calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
+					}
+					/* Endif rr < rrCut */
+				} /* Endif i<j */
+				j = lscl[j];
+			} /* Endwhile j not empty */
+			i = lscl[i];
+		} /* Endwhile i not empty */
+	}
+}
+
+__device__ Real ParallelCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro)
+{
+	Real totalEnergy = 0;
+	for (int i = 0; i < molecules[mol1].numOfAtoms; i++)
+	{
+		Atom atom1 = molecules[mol1].atoms[i];
+
+		for (int j = 0; j < molecules[mol2].numOfAtoms; j++)
+		{
+			Atom atom2 = molecules[mol2].atoms[j];
+
+			if (atom1.sigma >= 0 && atom1.epsilon >= 0 && atom2.sigma >= 0 && atom2.epsilon >= 0)
+			{
+				//calculate squared distance between atoms 
+				Real r2 = calcAtomDist(atom1, atom2, enviro);
+
+				totalEnergy += calc_lj(atom1, atom2, r2);
+				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+			}
+		}
+
+	}
+	return totalEnergy;
+}
+
 
 Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int startIdx)
 {
@@ -286,7 +566,40 @@ __device__ Real ParallelCalcs::calc_lj(AtomData *atoms, int atom1, int atom2, Re
     }
 }
 
-__device__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
+__device__ __host__ Real ParallelCalcs::calc_lj(Atom atom1, Atom atom2, Real r2)
+{
+    //store LJ constants locally
+    Real sigma = calcBlending(atom1.sigma, atom2.sigma);
+    Real epsilon = calcBlending(atom1.epsilon, atom2.epsilon);
+    
+    if (r2 == 0.0)
+    {
+        return 0.0;
+    }
+    else
+    {
+    	//calculate terms
+    	const Real sig2OverR2 = pow(sigma, 2) / r2;
+		const Real sig6OverR6 = pow(sig2OverR2, 3);
+    	const Real sig12OverR12 = pow(sig6OverR6, 2);
+    	const Real energy = 4.0 * epsilon * (sig12OverR12 - sig6OverR6);
+        return energy;
+    }
+
+}
+
+__device__ __host__ Real ParallelCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
+{
+	//calculate difference in coordinates
+	Real deltaX = makePeriodic(atom1.x - atom2.x, enviro->x);
+	Real deltaY = makePeriodic(atom1.y - atom2.y, enviro->y);
+	Real deltaZ = makePeriodic(atom1.z - atom2.z, enviro->z);
+				
+	//calculate squared distance (r2 value) and return
+	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
+}
+
+__device__ __host__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
 {  
     if (r == 0.0)
     {
@@ -300,7 +613,7 @@ __device__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
     }
 }
 
-__device__ Real ParallelCalcs::makePeriodic(Real x, Real boxDim)
+__device__ __host__ Real ParallelCalcs::makePeriodic(Real x, Real boxDim)
 {
     
     while(x < -0.5 * boxDim)
@@ -317,7 +630,7 @@ __device__ Real ParallelCalcs::makePeriodic(Real x, Real boxDim)
 
 }
 
-__device__ Real ParallelCalcs::calcBlending(Real d1, Real d2)
+__device__ __host__ Real ParallelCalcs::calcBlending(Real d1, Real d2)
 {
     return sqrt(d1 * d2);
 }

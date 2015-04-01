@@ -121,26 +121,36 @@ void Simulation::run()
 	int pdbSequenceNum = 0;
 	startTime = clock();
 
-	
+    clock_t function_time_start, function_time_end;
+    long duration;
 	
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
 	{
 		if (args.simulationMode == SimulationMode::Parallel)
-		{
+        {
+            function_time_start = clock();
 			oldEnergy = ParallelCalcs::calcSystemEnergy(box);
-		}
+            function_time_end = clock();
+            duration = function_time_end -function_time_start;
+        }
 		else
 		{
 			if (args.useNeighborList)
 			{
+				function_time_start = clock();
 				std::cout << "Using neighbor-list for energy calc" << std::endl;
 				oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro);
+				function_time_end = clock();
+            	duration = function_time_end -function_time_start;			
 			}
 			else
 			{
+				function_time_start = clock();
 				std::cout << "Using original system energy calc" << std::endl;
 				oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
+				function_time_end = clock();
+            	duration = function_time_end -function_time_start;
 			}
 		}
 	}
@@ -258,6 +268,7 @@ void Simulation::run()
 	std::cout << "Accepted Moves: " << accepted << std::endl;
 	std::cout << "Rejected Moves: " << rejected << std::endl;
 	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;
+    std::cout << "Duration of neighbor list function: " << duration << std::endl;
 
 	std::string resultsName;
 	if (args.simulationName.empty())

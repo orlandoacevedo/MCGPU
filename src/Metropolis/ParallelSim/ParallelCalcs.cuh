@@ -61,6 +61,11 @@ namespace ParallelCalcs
 	/// @param enviro Device pointer to Environment struct.
 	/// @param inCutoff Device pointer to valid neighbor molecules
 	///   array.
+	Real calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules);
+    __device__ __host__ Real calcAtomDist(Atom atom1, Atom atom2, Environment *enviro);
+    __device__ __host__ Real calc_lj(Atom atom1, Atom atom2, Real r2);
+    __device__ Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro);
+    __global__ void calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *totalEnergy);
 	__global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);
 	
 	/// Each thread in this kernel calculates the inter-atomic
@@ -110,20 +115,20 @@ namespace ParallelCalcs
 	/// @param charge2 The charge of atom 2.
 	/// @param r The distance between the two atoms.
 	/// @returns Returns the charge energy between two atoms.
-	__device__ Real calcCharge(Real charge1, Real charge2, Real r);
+	__device__ __host__ Real calcCharge(Real charge1, Real charge2, Real r);
 	
 	/// Makes a distance periodic within a specified range.
 	/// @param x The distance to be made periodic.
 	/// @param boxDim The magnitude of the periodic range.
 	/// @return Returns the periodic distance.
-	__device__ Real makePeriodic(Real x, Real boxDim);
+	__device__ __host__ Real makePeriodic(Real x, Real boxDim);
 	
 	/// Calculates the geometric mean of two values.
 	/// @param d1 The first value.
 	/// @param d2 The second value.
 	/// @return Returns the geometric mean of the two supplied
 	///   values.
-	__device__ Real calcBlending(Real d1, Real d2);
+	__device__ __host__ Real calcBlending(Real d1, Real d2);
 	
 	/// This method, combined with getYFromIndex(),
 	///   provides functionality to generate a non-overlapping
