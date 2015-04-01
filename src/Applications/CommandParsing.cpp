@@ -153,8 +153,8 @@ using std::string;
 				case 'p':	/* run parallel */
 					params->parallelFlag = true;
 					break;
-				case 'k': 	/* Silence cout */
-					params->silentOutputFlag = true;
+				case 'k': 	/* Verbose cout */
+					params->verboseOutputFlag = true;
 					break;
 				case 'l': 	/* use neighbor list */
 					params->neighborListFlag = true;

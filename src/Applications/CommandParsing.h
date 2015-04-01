@@ -94,6 +94,9 @@
 		/// information to standard cout.
 		bool verboseOutputFlag;
 
+		/// Declares whether the use of the Neighbor-list is enabled.
+		bool neighborListFlag;
+
 		/// Default constructor
 		CommandParameters() :	statusInterval(DEFAULT_STATUS_INTERVAL),
 								stateInterval(0),
