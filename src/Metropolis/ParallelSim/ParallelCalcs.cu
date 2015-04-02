@@ -210,9 +210,13 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	
 	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, d_part_energy);
 	
-	
+	function_time_start = clock();
 	//total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 	cudaMemcpy(part_energy, d_part_energy, sizeof(Real)*lcxyz*27, cudaMemcpyDeviceToHost);
+	
+	function_time_end = clock();
+	duration = function_time_end -function_time_start;
+	std::cout << "Duration of neighbor list function: " << duration << std::endl;
 	
 	cudaFree(d_molecules);
 	cudaFree(d_enviro);
@@ -223,9 +227,6 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 		total_energy = total_energy + part_energy[i];
 	}
 
-	function_time_end = clock();
-	duration = function_time_end -function_time_start;
-	std::cout << "Duration of neighbor list function: " << duration << std::endl;
 	return total_energy + calcIntramolEnergy_NLC(enviro, molecules);
 }
 
