@@ -187,7 +187,6 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	cudaMalloc((void **)&d_head, sizeof(int)*NCLMAX);
 	cudaMalloc((void **)&d_lscl, sizeof(int)*NMAX);
 	cudaMalloc((void **)&d_part_energy, sizeof(Real)*lcxyz*27);
-
 	clock_t function_time_start, function_time_end;
 	long duration;
 
