@@ -187,8 +187,10 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	cudaMalloc((void **)&d_head, sizeof(int)*NCLMAX);
 	cudaMalloc((void **)&d_lscl, sizeof(int)*NMAX);
 	cudaMalloc((void **)&d_part_energy, sizeof(Real)*lcxyz*27);
+	
 	clock_t function_time_start, function_time_end;
 	long duration;
+	function_time_start = clock();
 
 	cudaMemcpy(d_enviro, enviro, sizeof(Environment), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
@@ -212,7 +214,6 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	
 	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, d_part_energy);
 	
-	function_time_start = clock();
 	//total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 	cudaMemcpy(part_energy, d_part_energy, sizeof(Real)*lcxyz*27, cudaMemcpyDeviceToHost);
 	
