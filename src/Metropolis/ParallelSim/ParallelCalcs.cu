@@ -7,8 +7,8 @@
 	-> March 28, by Joshua Mosby
 	-> April 21, by Nathan Coleman
 */
-#include <time.h>
-#include <iostream>
+//#include <time.h>
+//#include <iostream>
 #include "ParallelCalcs.h"
 #include "ParallelCalcs.cuh"
 #include "ParallelBox.cuh"
@@ -172,18 +172,21 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 		head[c] = i;
 	} /* Endfor molecule i */
 
-	thrust::device_vector<Real> part_energy(lcxyz*27, 0);
+	//thrust::device_vector<Real> part_energy(lcxyz*27, 0);
+	Real part_energy[lcxyz*27];
 	Real total_energy = 0;
 
 	Molecule *d_molecules;
 	Environment *d_enviro;
 	int *d_head;
 	int *d_lscl;
+	Real *d_part_energy;
 
 	cudaMalloc((void **)&d_molecules, enviro->numOfMolecules*sizeof(Molecule));
 	cudaMalloc((void **)&d_enviro, sizeof(Environment));
 	cudaMalloc((void **)&d_head, sizeof(int)*NCLMAX);
 	cudaMalloc((void **)&d_lscl, sizeof(int)*NMAX);
+	cudaMalloc((void **)&d_part_energy, sizeof(Real)*lcxyz*27);
 
 	cudaMemcpy(d_enviro, enviro, sizeof(Environment), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
@@ -199,23 +202,28 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 
 	dim3 dimGrid(lc[0], lc[1], lc[2]);
 	dim3 dimBlock(3, 3, 3);
-	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
+	//Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 	
-	clock_t function_time_start, function_time_end;
-	long duration;
+	//clock_t function_time_start, function_time_end;
+	//long duration;
 	
-	function_time_start = clock();
-	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, raw_ptr);
-	function_time_end = clock();
-	duration = function_time_end -function_time_start;
-	std::cout << "Duration of neighbor list function: " << duration << std::endl;
+	//function_time_start = clock();
+	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, d_part_energy);
+	//function_time_end = clock();
+	//duration = function_time_end -function_time_start;
+	//std::cout << "Duration of neighbor list function: " << duration << std::endl;
 	
-	total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
+	//total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
+	cudaMemcpy(part_energy, d_part_energy, sizeof(Real)*lcxyz*27, cudaMemcpyDeviceToHost);
 	
 	cudaFree(d_molecules);
 	cudaFree(d_enviro);
 	cudaFree(d_head);
 	cudaFree(d_lscl);
+	
+	for(int i = 0; i<lcxyz*27; i++){
+		total_energy = total_energy + part_energy[i];
+	}
 	
 	return total_energy + calcIntramolEnergy_NLC(enviro, molecules);
 }
