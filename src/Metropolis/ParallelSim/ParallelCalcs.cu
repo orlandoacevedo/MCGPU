@@ -207,7 +207,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	clock_t function_time_start, function_time_end;
 	long duration;
 	
-	function_time_start = clock();
+	
 	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, d_part_energy);
 	
 	
