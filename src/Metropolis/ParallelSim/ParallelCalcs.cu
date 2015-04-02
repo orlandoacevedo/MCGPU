@@ -190,16 +190,14 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 	
 	clock_t function_time_start, function_time_end;
 	long duration;
-	function_time_start = clock();
+	
 
 	cudaMemcpy(d_enviro, enviro, sizeof(Environment), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_molecules, molecules, enviro->numOfMolecules*sizeof(Molecule), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_head, head, sizeof(int)*NCLMAX, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_lscl, lscl, sizeof(int)*NMAX, cudaMemcpyHostToDevice);
 
-	function_time_end = clock();
-	duration = function_time_end -function_time_start;
-	std::cout << "Duration of neighbor list function: " << duration << std::endl;
+	
 		
 	Atom *d_atoms;
 	for(int i = 0; i < enviro->numOfMolecules; i++){
@@ -207,12 +205,16 @@ Real ParallelCalcs::calcSystemEnergy(Box *box){
 		cudaMemcpy(d_atoms, molecules[i].atoms, sizeof(Atom)*6, cudaMemcpyHostToDevice);
 		cudaMemcpy((void *)((long)d_molecules + i * sizeof(Molecule) + 2 * sizeof(int)), &d_atoms, sizeof(Atom *), cudaMemcpyHostToDevice);	
 	}
-
+	
 	dim3 dimGrid(lc[0], lc[1], lc[2]);
 	dim3 dimBlock(3, 3, 3);
 	//Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 	
+	function_time_start = clock();
 	calcEnergy_NLC<<<dimGrid, dimBlock>>>(d_molecules, d_enviro, d_head, d_lscl, d_part_energy);
+	function_time_end = clock();
+	duration = function_time_end -function_time_start;
+	std::cout << "Duration of neighbor list function: " << duration << std::endl;
 	
 	//total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 	cudaMemcpy(part_energy, d_part_energy, sizeof(Real)*lcxyz*27, cudaMemcpyDeviceToHost);
