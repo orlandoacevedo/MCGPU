@@ -124,6 +124,16 @@ void Simulation::run()
     clock_t function_time_start, function_time_end;
     long duration;
 	
+	//Set the output depending on the verbose flag
+	std::streambuf* cout_sbuf;
+	if (!args.verboseOutput)
+	{
+		std::cout << "Silent run, integration test started..." << endl; // save original sbuf
+		std::streambuf* cout_sbuf = std::cout.rdbuf();
+		std::ofstream fout("/dev/null");
+		std::cout.rdbuf(fout.rdbuf()); // redirect 'cout' to a 'fout'
+	}
+
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
 	{
@@ -262,13 +272,18 @@ void Simulation::run()
 		saveState(baseStateFile, (stepStart + simSteps));
 	}
 	
-	std::cout << std::endl << "Finished running " << simSteps << " steps" << std::endl;
-	std::cout << "Final Energy: " << currentEnergy << std::endl;
-	std::cout << "Run Time: " << diffTime << " seconds" << std::endl;
-	std::cout << "Accepted Moves: " << accepted << std::endl;
-	std::cout << "Rejected Moves: " << rejected << std::endl;
-	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;
-    std::cout << "Duration of neighbor list function: " << duration << std::endl;
+	if (!args.verboseOutput)
+	{
+		std::cout.rdbuf(cout_sbuf); // restore the original stream buffer
+	}
+
+	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
+	fprintf(stdout, "Final Energy: %f\n", currentEnergy);
+	fprintf(stdout, "Run Time: %f seconds\n", diffTime);
+	fprintf(stdout, "Accepted Moves: %d\n", accepted);
+	fprintf(stdout, "Rejected Moves: %d\n", rejected);
+	fprintf(stdout, "Acceptance Raio: %.2f%%\n", 100.0 * accepted / (accepted + rejected));
+	fprintf(stdout, "Duration of neighbor list function: %d\n", duration);
 
 	std::string resultsName;
 	if (args.simulationName.empty())

@@ -46,21 +46,9 @@ int metrosim::run(int argc, char** argv)
 		fprintf(stdout, "Beginning simulation using CPU...\n");
 	}
 
-	std::streambuf* cout_sbuf;
-	if (!args.verboseOutput) {
-		std::cout << "Silent run, integration test started..." << endl; // save original sbuf
-		std::streambuf* cout_sbuf = std::cout.rdbuf();
-		std::ofstream fout("/dev/null");
-		std::cout.rdbuf(fout.rdbuf()); // redirect 'cout' to a 'fout'
-	}
-	
-
 	Simulation sim = Simulation(args);
 	sim.run();
-	
-	if (!args.verboseOutput) {
-		 std::cout.rdbuf(cout_sbuf); // restore the original stream buffer
-	}
+
 	fprintf(stdout, "Finishing simulation...\n\n");
 
 	if (args.simulationMode == SimulationMode::Parallel)
