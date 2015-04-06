@@ -172,6 +172,7 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
         box->molecules[j].hops = (Hop *)(box->hops+count[4]);
 
         box->molecules[j].id = molec1.id;
+        box->molecules[j].type = molec1.type;
         box->molecules[j].numOfAtoms = molec1.numOfAtoms;
         box->molecules[j].numOfBonds = molec1.numOfBonds;
         box->molecules[j].numOfDihedrals = molec1.numOfDihedrals;
@@ -1865,7 +1866,7 @@ vector<Molecule> StateScanner::readInMolecules()
         getline(inFile, line); //blank
         
         Molecule currentMol;
-        int section = 0; // 0 = id, 1 = atom, 2 = bond, 3 = dihedral, 4 = hop, 5 = angle 6 = name
+        int section = 0; // 0 = id, 1 = type, 2 = atom, 3 = bond, 4 = dihedral, 5 = hop, 6 = angle 7 = name
         int molNum = 0;
         while(inFile.good())
         {
@@ -1873,7 +1874,6 @@ vector<Molecule> StateScanner::readInMolecules()
               //      bonds.size(), angles.size(), atoms.size(), dihedrals.size());
             getline(inFile, line);
             string hold = line.substr(0, 2);
-
             switch(section)
             {
                 case 0: // id
@@ -1886,7 +1886,17 @@ vector<Molecule> StateScanner::readInMolecules()
                         currentMol.id = atoi(line.c_str());
                     }
                     break;
-                case 1: // atom
+                case 1: // type
+                    if(hold.compare("= ") == 0)
+                    {
+                        section++;
+                    }
+                    else
+                    {
+                        currentMol.type = atoi(line.c_str());
+                    }
+                    break;
+                case 2: // atom
                     if(hold.compare("= ") == 0)
                     {
                         section++;
@@ -1896,7 +1906,7 @@ vector<Molecule> StateScanner::readInMolecules()
                        atoms.push_back(getAtomFromLine(line)); 
                     }
                     break;
-                case 2: // bond
+                case 3: // bond
                     if(hold.compare("= ") == 0)
                     {
                         section++;
@@ -1906,7 +1916,7 @@ vector<Molecule> StateScanner::readInMolecules()
                        bonds.push_back(getBondFromLine(line)); 
                     }
                     break;
-                case 3: // dihedral
+                case 4: // dihedral
                     if(hold.compare("= ") == 0)
                     {
                         section++;
@@ -1916,7 +1926,7 @@ vector<Molecule> StateScanner::readInMolecules()
                        dihedrals.push_back(getDihedralFromLine(line)); 
                     }
                     break;
-                case 4: // hop
+                case 5: // hop
                     if(hold.compare("= ") == 0)
                     {
                         section++;
@@ -1926,7 +1936,7 @@ vector<Molecule> StateScanner::readInMolecules()
                         hops.push_back(getHopFromLine(line));
                     }
                     break;
-                case 5: // angle
+                case 6: // angle
                     if(hold.compare("==") == 0)
                     {
                         section = 0;
@@ -2330,6 +2340,9 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
     {
         Molecule currentMol = molecules[i];
         outFile << currentMol.id << std::endl;
+
+        outFile << "= Type" << std::endl;
+        outFile << currentMol.type << std::endl;
 
         // Write atoms
         outFile << "= Atoms" << std::endl;
