@@ -99,6 +99,7 @@ void Simulation::run()
 
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont, oldEnergyCont;
+	Real lj_energy = 0, charge_energy = 0, energy_LRC = 0;
 	Real  kT = kBoltz * enviro->temp;
 	int accepted = 0;
 	int rejected = 0;
@@ -148,11 +149,14 @@ void Simulation::run()
 		}
 		else
 		{
+			energy_LRC = SerialCalcs::energy_LRC(molecules, enviro);
+			oldEnergy += energy_LRC;
+			
 			if (args.useNeighborList)
 			{
 				function_time_start = clock();
 				std::cout << "Using neighbor-list for energy calc" << std::endl;
-				oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro);
+				oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro, lj_energy, charge_energy);
 				function_time_end = clock();
             	duration = function_time_end -function_time_start;			
 			}
@@ -160,7 +164,7 @@ void Simulation::run()
 			{
 				function_time_start = clock();
 				std::cout << "Using original system energy calc" << std::endl;
-				oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
+				oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro, lj_energy, charge_energy);
 				function_time_end = clock();
             	duration = function_time_end -function_time_start;
 			}
@@ -209,7 +213,7 @@ void Simulation::run()
 		}
 		else
 		{
-			oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
+			oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
 		}
 		
 		//Actually translate the molecule at the preselected index	
@@ -222,7 +226,7 @@ void Simulation::run()
 		}
 		else
 		{
-			newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
+			newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
 		}
 		
 		//Compare new energy and old energy to decide if we should accept or not
@@ -265,8 +269,24 @@ void Simulation::run()
 	//However, it is a good enough estimation witout adding unnecessary complexity.
     double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 
-	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << oldEnergy << std::endl;
-	currentEnergy = oldEnergy;
+	lj_energy = 0, charge_energy = 0;
+	if (args.simulationMode == SimulationMode::Parallel)
+	{
+		currentEnergy = ParallelCalcs::calcSystemEnergy(box);
+	}
+	else
+	{
+		if (args.useNeighborList)
+		{
+			currentEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro, lj_energy, charge_energy);
+		}
+		else
+		{
+			currentEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro, lj_energy, charge_energy);
+		}
+	}
+	
+	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << currentEnergy << std::endl;
 
 	// Save the final state of the simulation
 	if (args.stateInterval >= 0)
@@ -275,7 +295,10 @@ void Simulation::run()
 	}
 	
 	std::cout << std::endl << "Finished running " << simSteps << " steps" << std::endl;
-	std::cout << "Final Energy: " << currentEnergy << std::endl;
+	std::cout << "LJ-Energy Subtotal: " << lj_energy << std::endl;
+	std::cout << "Charge Energy Subtotal: " << charge_energy << std::endl;
+	std::cout << "Energy Long-range Correction: " << energy_LRC << std::endl;
+	std::cout << "Final Total Energy: " << currentEnergy << std::endl;
 	std::cout << "Run Time: " << diffTime << " seconds" << std::endl;
 	std::cout << "Accepted Moves: " << accepted << std::endl;
 	std::cout << "Rejected Moves: " << rejected << std::endl;

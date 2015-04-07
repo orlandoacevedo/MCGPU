@@ -37,23 +37,23 @@ Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long
 	return (Box*) box;
 }
 
-Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
+Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge)
 {
     Real totalEnergy = 0;
 
 	//for each molecule
 	for (int mol = 0; mol < enviro->numOfMolecules; mol++)
 	{
-		totalEnergy += calcMolecularEnergyContribution(molecules, enviro, mol, mol);
+		totalEnergy += calcMolecularEnergyContribution(molecules, enviro, subLJ, subCharge, mol, mol);
 	}
 	
     return totalEnergy;
 }
 
-Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx)
+Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, Real &subLJ, Real &subCharge, int currentMol, int startIdx)
 {
     Real totalEnergy = 0;
-	
+
 	//for every other molecule
 	#pragma omp parallel for //num_threads(4) <- this is set in Simulation.cpp
 	for (int otherMol = startIdx; otherMol < environment->numOfMolecules; otherMol++)
@@ -94,10 +94,13 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 
 					if (r2 < cutoffSQ)
 					{
-						Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
+						Real lj_energy = 0, charge_energy = 0;
+						Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment, lj_energy, charge_energy);
 						//this addition needs to be atomic since multiple threads will be modifying totalEnergy
 						#pragma omp atomic
 						totalEnergy += tempEnergy;
+						subLJ += lj_energy;
+						subCharge += charge_energy;
 						//Molecule has been included. Skipping rest of primary indexes for otherMol
 						included = true;
 						break;
@@ -120,7 +123,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 	intramolecular nonbonded interactions for every molecule and sums it to the total
 	energy.
 */
-Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
+Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge)
 {
     // Variables for linked-cell neighbor list
     int numCells[3];            	/* Number of cells in the x|y|z direction */
@@ -298,7 +301,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 	Calculates the nonbonded energy for intramolecular nonbonded interactions for every 
 	solvent molecule and sums it to the total energy. Uses getFValue().
 */
-Real SerialCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules)
+Real SerialCalcs::calcIntramolEnergy_NLC(Molecule *molecules, Environment *enviro)
 {
     //setup storage
     Real totalEnergy = 0.0;
@@ -375,9 +378,10 @@ Real SerialCalcs::calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecule
     return totalEnergy;
 }
 
-Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro)
+Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro, Real &subLJ, Real &subCharge)
 {
 	Real totalEnergy = 0;
+	Real lj_energy, charge_energy;
 	
 	for (int i = 0; i < molecules[mol1].numOfAtoms; i++)
 	{
@@ -392,8 +396,13 @@ Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 				//calculate squared distance between atoms 
 				Real r2 = calcAtomDist(atom1, atom2, enviro);
 				
-				totalEnergy += calc_lj(atom1, atom2, r2);
-				totalEnergy += calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+				lj_energy = calc_lj(atom1, atom2, r2);
+				subLJ += lj_energy;
+				
+				charge_energy = calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+				subCharge += charge_energy;
+				
+				totalEnergy += lj_energy + charge_energy;
 			}
 		}
 		
@@ -471,7 +480,7 @@ Real SerialCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
 }
 
 
-Real SerialCalcs::Energy_LRC(Molecule *molec, Environment *enviro)
+Real SerialCalcs::energy_LRC(Molecule *molec, Environment *enviro)
 {
 	Real Ecut = 0.0;		// Holds LJ long-range cutoff energy correction 
 	
