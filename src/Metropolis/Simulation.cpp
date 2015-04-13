@@ -303,7 +303,7 @@ void Simulation::run()
 	std::cout << "Accepted Moves: " << accepted << std::endl;
 	std::cout << "Rejected Moves: " << rejected << std::endl;
 	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;
-    std::cout << "Duration of neighbor list function: " << duration << std::endl;
+    std::cout << "Duration of energy calculation function: " << duration << std::endl;
 
 	std::string resultsName;
 	if (args.simulationName.empty())
