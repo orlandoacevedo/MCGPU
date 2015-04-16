@@ -62,7 +62,8 @@ namespace ParallelCalcs
 	/// @param inCutoff Device pointer to valid neighbor molecules
 	///   array.
 	Real calcEnergyContribution(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int currentMol, int otherMol, int startIdx);
-	Real calcIntramolEnergy_NLC(Environment *enviro, MoleculeData *molecules, AtomData *atoms);
+	Real calcSystemEnergy_NLC(Box *box); 
+    Real calcIntramolEnergy_NLC(Environment *enviro, MoleculeData *molecules, AtomData *atoms);
     __device__ __host__ Real calcAtomDist(Atom atom1, Atom atom2, Environment *enviro);
     __device__ __host__ Real calcAtomDist(AtomData *atoms, int atom1, int atom2, Environment *enviro);
     __device__ __host__ Real calc_lj(Atom atom1, Atom atom2, Real r2);
@@ -84,7 +85,7 @@ namespace ParallelCalcs
 	///   molecule indexes.
 	/// @param maxMolSize The size (in Atoms) of the largest molecule.
 	///   Used for energy segmentation size calculation.
-	__global__ void calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int curentMol, Environment *enviro, Real *energies, int numEnergies, int *molBatch, int maxMolSize);
+	__global__ void calcInterAtomicEnergy(MoleculeData *molecules, AtomData *atoms, int curentMol, Environment *enviro, Real *energies, int numEnergies, int *molBatch, int maxMolSize);
 	
 	/// This kernel performs parallel energy aggregation,
 	///   and also performs the service of resetting energies

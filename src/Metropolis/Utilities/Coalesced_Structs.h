@@ -54,24 +54,13 @@ struct MoleculeData
 		atomsIdx = (int*) malloc(numM * sizeof(int));
 		numOfAtoms = (int*) malloc(numM * sizeof(int));
 		primaryIndexes = (int*) malloc(totalPrimaryIndexCount * sizeof(int));
-//		hops = (Hop*) malloc(molecules->numOfHops * sizeof(Hop));
-//		numOfHops = (int*) malloc(numM * sizeof(int));
-//		hopsIdx = (int*) malloc(numM * sizeof(int));
 
 		for (int i = 0; i < numM; i++)
 		{
-//			for (int j = 0; j < molecules[i].numOfHops; j++)
-//			{
-//			    hops[hopsSize] = molecules[i].hops[j];
-//			    hopsSize++;
-//			}
 			numOfAtoms[i] = molecules[i].numOfAtoms;
-//			numOfHops[i] = molecules[i].numOfHops;
 			type[i] = molecules[i].type;
 			atomsIdx[i] = idx;
-//			hopsIdx[i] = hIdx;
 			idx += numOfAtoms[i];
-//		 	hIdx += numOfHops[i];	
 		}
 		
 		int index = 0;
@@ -96,7 +85,6 @@ struct MoleculeData
 	
 		moleculeCount = numM;
 		totalPrimaryIndexSize = totalPrimaryIndexCount;
-//		totalHopSize = hopsSize;
 	}
 };
 
