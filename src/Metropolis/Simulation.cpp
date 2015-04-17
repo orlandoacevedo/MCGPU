@@ -98,7 +98,7 @@ void Simulation::run()
 	Environment *enviro = box->getEnvironment();
 
 	Real oldEnergy = 0, currentEnergy = 0;
-	Real newEnergyCont, oldEnergyCont;
+	Real newEnergyCont = 0, oldEnergyCont = 0;
 	Real lj_energy = 0, charge_energy = 0, energy_LRC = 0;
 	Real  kT = kBoltz * enviro->temp;
 	int accepted = 0;
@@ -123,30 +123,25 @@ void Simulation::run()
 	startTime = clock();
 
     clock_t function_time_start, function_time_end;
-    long duration;
+	function_time_start = clock();
 	
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
 	{
 		if (args.simulationMode == SimulationMode::Parallel)
-        	{
-	    		if (args.useNeighborList)
-                        {
-                                function_time_start = clock();
-                                std::cout << "Using neighbor-list for energy calc" << std::endl;
-                                //oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
-                                function_time_end = clock();
-                		duration = function_time_end -function_time_start;
-                        }
-                        else
-                        {
-                                function_time_start = clock();
-                                std::cout << "Using original system energy calc" << std::endl;
-                                oldEnergy = ParallelCalcs::calcSystemEnergy(box);
-                                function_time_end = clock();
-                		duration = function_time_end -function_time_start;
-                        }
-		}
+        {
+			if (args.useNeighborList)
+			{
+				std::cout << "Using neighbor-list for parallel energy calculation" << std::endl;
+				//oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box); for refactored parallelCalcs
+				oldEnergy = ParallelCalcs::calcSystemEnergy(box);				
+			}
+			else
+			{
+				std::cout << "Using original parallel energy calculation" << std::endl;
+				oldEnergy = ParallelCalcs::calcSystemEnergy(box);
+			}
+        }
 		else
 		{
 			energy_LRC = SerialCalcs::energy_LRC(molecules, enviro);
@@ -154,22 +149,18 @@ void Simulation::run()
 			
 			if (args.useNeighborList)
 			{
-				function_time_start = clock();
-				std::cout << "Using neighbor-list for energy calc" << std::endl;
-				oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro, lj_energy, charge_energy);
-				function_time_end = clock();
-            	duration = function_time_end -function_time_start;			
+				std::cout << "Using neighbor-list for energy calculation" << std::endl;
+				oldEnergy = SerialCalcs::calcSystemEnergy_NLC(molecules, enviro);		
 			}
 			else
 			{
-				function_time_start = clock();
-				std::cout << "Using original system energy calc" << std::endl;
-				oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro, lj_energy, charge_energy);
-				function_time_end = clock();
-            	duration = function_time_end -function_time_start;
+				std::cout << "Using original system energy calculation" << std::endl;
+				oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
 			}
 		}
 	}
+	function_time_end = clock();
+    long duration = function_time_end - function_time_start;
 	
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
@@ -209,11 +200,26 @@ void Simulation::run()
 		//Calculate the current/original/old energy contribution for the current molecule
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
-			oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+			if (args.useNeighborList)
+			{
+				//newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);	
+				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+			}
+			else
+			{
+				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+			}
 		}
 		else
 		{
-			oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
+			if (args.useNeighborList)
+			{
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, changeIdx);
+			}
+			else
+			{
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
+			}
 		}
 		
 		//Actually translate the molecule at the preselected index	
@@ -222,23 +228,39 @@ void Simulation::run()
 		//Calculate the new energy after translation
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
-			newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+			if (args.useNeighborList)
+			{
+				//newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);	
+				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+			}
+			else
+			{
+				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+			}
 		}
 		else
 		{
-			newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
+			if (args.useNeighborList)
+			{
+				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, changeIdx);
+			}
+			else
+			{
+				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
+			}
 		}
 		
-		//Compare new energy and old energy to decide if we should accept or not
+		// Compare new energy and old energy to decide if we should accept or not
 		bool accept = false;
-		//Always accept decrease in energy
+		
 		if(newEnergyCont < oldEnergyCont)
 		{
+			// Always accept decrease in energy
 			accept = true;
 		}
-		//Use statistics+random number to determine weather to accept increase in energy
 		else
 		{
+			// Otherwise use statistics+random number to determine weather to accept increase in energy
 			Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
 			
 			if(x >= randomReal(0.0, 1.0))
