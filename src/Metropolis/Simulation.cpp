@@ -99,7 +99,8 @@ void Simulation::run()
 
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont = 0, oldEnergyCont = 0;
-	Real lj_energy = 0, charge_energy = 0, energy_LRC = 0;
+	Real lj_energy = 0, charge_energy = 0;
+	Real energy_LRC = SerialCalcs::calcEnergy_LRC(molecules, enviro);
 	Real  kT = kBoltz * enviro->temp;
 	int accepted = 0;
 	int rejected = 0;
@@ -127,13 +128,14 @@ void Simulation::run()
 	
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
-	{
+	{	
 		if (args.simulationMode == SimulationMode::Parallel)
         {
 			if (args.useNeighborList)
 			{
 				std::cout << "Using neighbor-list for parallel energy calculation" << std::endl;
-				//oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box); for refactored parallelCalcs
+				// TODO: update for refactored/renamed parallel function
+				//oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
 				oldEnergy = ParallelCalcs::calcSystemEnergy(box);				
 			}
 			else
@@ -144,23 +146,23 @@ void Simulation::run()
         }
 		else
 		{
-			energy_LRC = SerialCalcs::energy_LRC(molecules, enviro);
-			oldEnergy += energy_LRC;
-			
 			if (args.useNeighborList)
 			{
 				std::cout << "Using neighbor-list for energy calculation" << std::endl;
-				oldEnergy = SerialCalcs::calcSystemEnergy_NLC(molecules, enviro);		
+				oldEnergy = SerialCalcs::calcSystemEnergy_NLC(molecules, enviro, lj_energy, charge_energy);		
 			}
 			else
 			{
 				std::cout << "Using original system energy calculation" << std::endl;
-				oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
+				oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro, lj_energy, charge_energy);
 			}
 		}
+		
+		oldEnergy += energy_LRC; // add in long-range correction value
 	}
 	function_time_end = clock();
-    long duration = function_time_end - function_time_start;
+    double duration = difftime(function_time_start, function_time_end);
+	
 	
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
@@ -214,11 +216,11 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, changeIdx);
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, lj_energy, charge_energy, changeIdx);
 			}
 			else
 			{
-				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
 			}
 		}
 		
@@ -242,11 +244,11 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, changeIdx);
+				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, lj_energy, charge_energy, changeIdx);
 			}
 			else
 			{
-				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, changeIdx);
+				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
 			}
 		}
 		
@@ -294,13 +296,14 @@ void Simulation::run()
 	lj_energy = 0, charge_energy = 0;
 	if (args.simulationMode == SimulationMode::Parallel)
 	{
-		currentEnergy = ParallelCalcs::calcSystemEnergy(box);
+		// TODO: update parallelCalcs for detailed energy printout
+		currentEnergy = oldEnergy;
 	}
 	else
 	{
 		if (args.useNeighborList)
 		{
-			currentEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro, lj_energy, charge_energy);
+			currentEnergy = SerialCalcs::calcSystemEnergy_NLC(molecules, enviro, lj_energy, charge_energy);
 		}
 		else
 		{
@@ -317,15 +320,19 @@ void Simulation::run()
 	}
 	
 	std::cout << std::endl << "Finished running " << simSteps << " steps" << std::endl;
+	
 	std::cout << "LJ-Energy Subtotal: " << lj_energy << std::endl;
 	std::cout << "Charge Energy Subtotal: " << charge_energy << std::endl;
 	std::cout << "Energy Long-range Correction: " << energy_LRC << std::endl;
 	std::cout << "Final Total Energy: " << currentEnergy << std::endl;
-	std::cout << "Run Time: " << diffTime << " seconds" << std::endl;
+	
+	std::cout << "Total Run Time: " << diffTime << " seconds" << std::endl;
+	std::cout << "Duration of energy calculation function: " << duration << std::endl;
+	
 	std::cout << "Accepted Moves: " << accepted << std::endl;
 	std::cout << "Rejected Moves: " << rejected << std::endl;
 	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;
-    std::cout << "Duration of energy calculation function: " << duration << std::endl;
+    
 
 	std::string resultsName;
 	if (args.simulationName.empty())
@@ -361,6 +368,8 @@ void Simulation::run()
 	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;
 
 	resultsFile.close();
+
+
 }
 
 void Simulation::saveState(const std::string& baseFileName, int simStep)
