@@ -222,7 +222,7 @@ struct Atom
 	Atom(){
 		//std::shared_ptr<std::string> tempName(new std::string("0"));
 		//name = tempName;
-		name = new std::string("0");
+		name = new std::string("000");
 		x = 0;
 		y = 0;
 		z = 0;

@@ -861,6 +861,13 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 	for(int m=0; m<numBonded; m++)
     {
 	 	//run build on atom 1 in the molecule
+		if (m == 1)
+		{
+			for (int i = 0; i < molec[m].numOfAtoms; i++)
+			{
+			    molec[m].atoms[i].id -= 6;
+			}
+		}
 	 	lineAtom = molec[m].atoms[0];
 	 	//set the vectors with appropiate contents as if in Zmatrix 
 		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
