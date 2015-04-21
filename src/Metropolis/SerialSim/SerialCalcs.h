@@ -14,14 +14,13 @@
 #include <string>
 #include "Metropolis/Box.h"
 #include "SerialBox.h"
+#include "NeighborList.h"
 #include "Metropolis/DataTypes.h"
 #include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/StructLibrary.h"
 
 // Linked-cell neighbor list constants
-#define NMAX 100000  /* Maximum number of atoms which can be simulated */
-#define NCLMAX 10000 /* Maximum number of linked-list cells */
-#define EMPTY -1
+
 
 namespace SerialCalcs
 {
@@ -38,40 +37,48 @@ namespace SerialCalcs
 	
 	/// Calculates the system energy using consecutive calls to
 	///   calcMolecularEnergyContribution.
-	/// @param molecules A pointer to the Molecule array.
-	/// @param environment A pointer to the Environment for the simulation.
-	/// @param subLJ A reference to the subtotal energy from the LJ values.
-	/// @param subCharge A reference to the subtotal energy from the charge energies.
-	/// @param subLRC A reference to the subtotal energy from the energy long-range correction.
-	/// @return Returns total system energy.
+	/// 	@param molecules A pointer to the Molecule array.
+	/// 	@param enviro A pointer to the Environment for the simulation.
+	/// 	@param subLJ A reference to the subtotal energy from the LJ values.
+	/// 	@param subCharge A reference to the subtotal energy from the charge energies.
+	/// 	@return Returns total system energy.
 	Real calcSystemEnergy(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge);
 	
 	/// Calculates the inter-molecular energy contribution of a given molecule
 	/// 	@param molecules A pointer to the Molecule array.
 	/// 	@param enviro A pointer to the Environment for the simulation.
+	/// 	@param subLJ A reference to the subtotal energy from the LJ values.
+	/// 	@param subCharge A reference to the subtotal energy from the charge energies.
 	/// 	@param currentMol the index of the current changed molecule.
 	/// 	@param startIdx The optional starting index for other molecules.
 	///   		Used for system energy calculation.
 	/// 	@return Returns total inter-molecular energy contribution
-	Real calcMolecularEnergyContribution(Molecule *molecules, Environment *enviro, int currentMol, int startIdx = 0);
+	Real calcMolecularEnergyContribution(Molecule *molecules, Environment *enviro, 
+		Real &subLJ, Real &subCharge, int currentMol, int startIdx = 0);
 	
 	/* ------ Neighbor-List System Energy Calculation Functions ------ */
 	
 	/// Calculates the system energy using neighbor linked-list cells (NLC).
 	/// 	@param molecules A pointer to the Molecule array.
 	/// 	@param enviro A pointer to the Environment for the simulation.
+	/// 	@param subLJ A reference to the subtotal energy from the LJ values.
+	/// 	@param subCharge A reference to the subtotal energy from the charge energies.
 	/// 	@return Returns total system energy.
-	Real calcSystemEnergy_NLC(Molecule *molecules, Environment *enviro);
+	Real calcSystemEnergy_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, 
+		Real &subLJ, Real &subCharge);
 	
 	/// Calculates the inter-molecular energy contribution of a given molecule
 	///		using the neighbor-list structure.
 	/// 	@param molecules A pointer to the Molecule array.
 	/// 	@param enviro A pointer to the Environment for the simulation.
+	/// 	@param subLJ A reference to the subtotal energy from the LJ values.
+	/// 	@param subCharge A reference to the subtotal energy from the charge energies.
 	/// 	@param currentMol the index of the current changed molecule.
 	/// 	@param startIdx The optional starting index for other molecules.
 	///   		Used for system energy calculation.
 	/// 	@return Returns total inter-molecular energy contribution
-	Real calcMolecularEnergyContribution_NLC(Molecule *molecules, Environment *enviro, int currentMol, int startIdx = 0);
+	Real calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, 
+		Real &subLJ, Real &subCharge, int currentMol, int startIdx = 0);
 	
 	
 	/* ------ Utility Calculation Functions ------ */
@@ -80,21 +87,22 @@ namespace SerialCalcs
 	/// 	@param molecules A pointer to the Molecule array.
 	/// 	@param mol1 The index of the first molecule.
 	/// 	@param mol2 The index of the second molecule.
-	/// 	@param environment A pointer to the Environment for the simulation.
+	/// 	@param enviro A pointer to the Environment for the simulation.
 	/// 	@param subLJ A reference to the subtotal energy from the LJ values.
 	/// 	@param subCharge A reference to the subtotal energy from the charge energies.
 	/// 	@return Returns the intermolecular energy between the two specified
 	///   		molecules.
-	Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *environment);
+	Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *environment, Real &subLJ, Real &subCharge);
 	
 	/// Calculates the intra-molecular energy between atoms of the given molecule(s).
 	/// 	@param molecules A pointer to the Molecule array.
 	/// 	@param enviro A pointer to the Environment for the simulation.
 	/// 	@return Returns the intermolecular energy between the two specified
 	///   		molecules.
-	Real calcIntraMolecularEnergy(Molecule *molecules, Environment *enviro);
+	Real calcIntraMolecularEnergy(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge);
 	
-	/// Calculates the long-range correction (LRC) energy value.
+	/// Calculates the long-range correction energy value for molecules outside the cutoff.
+	/// 	@note *** This needs to be updated if the volume ever changes or to support more than 2 solvents
 	/// 	@param molecules A pointer to the Molecule array.
 	/// 	@param enviro A pointer to the Environment for the simulation.
 	/// 	@return Returns r2, the distance between the two atoms squared.

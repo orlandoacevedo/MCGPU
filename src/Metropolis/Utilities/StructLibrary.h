@@ -404,4 +404,5 @@ Molecule createMolecule(int id, int type,  Atom *atoms, Angle *angles, Bond *bon
 void copyMolecule(Molecule *destination, Molecule *source);
 void printMolecule(Molecule *molecule);
 
+
 #endif

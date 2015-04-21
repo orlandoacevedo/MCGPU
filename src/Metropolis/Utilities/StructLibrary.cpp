@@ -108,4 +108,5 @@ void copyMolecule(Molecule *destination, Molecule *source){}
 
 void printMolecule(Molecule *molecule){}
 
+
 #endif

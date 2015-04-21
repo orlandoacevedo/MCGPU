@@ -119,77 +119,29 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 
 /* ------ Neighbor-List System Energy Calculation Functions ------ */
 
-
-Real SerialCalcs::calcSystemEnergy_NLC(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge)
+Real SerialCalcs::calcSystemEnergy_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge)
 {
-	// Variables for linked-cell neighbor list	
-	int numCells[3];            	/* Number of cells in the x|y|z direction */
-	Real lengthCell[3];         	/* Length of a cell in the x|y|z direction */
-	int head[NCLMAX];    			/* Headers for the linked cell lists */
-	int linkedCellList[NMAX];       /* Linked cell lists */
-	int vectorCells[3];			  	/* Vector cells */
-	int neighborCells[3];			/* Neighbor cells */
-	
-	Real rshift[3];	  		/* Shift coordinates for periodicity */
-	const Real Region[3] = {enviro->x, enviro->y, enviro->z};  /* MD box lengths */
-	int c1;				  	/* Used for scalar cell index */
-	Real rrCut = enviro->cutoff * enviro->cutoff;	/* Cutoff squared */
 	Real fValue = 1.0;				/* Holds 1,4-fudge factor value */
 	Real lj_energy = 0.0;			/* Holds current Lennard-Jones energy */
 	Real charge_energy = 0.0;		/* Holds current coulombic charge energy */
 	Real totalEnergy = 0.0;			/* Total nonbonded energy x fudge factor */
-			
-	// Compute the # of cells for linked cell lists
-	for (int k = 0; k < 3; k++)
-	{
-		numCells[k] = Region[k] / enviro->cutoff; 
-		lengthCell[k] = Region[k] / numCells[k];
-	}
-		
-  /* Make a linked-cell list --------------------------------------------*/
-	int numCellsYZ = numCells[1] * numCells[2];
-	int numCellsXYZ = numCells[0] * numCellsYZ;
-		
-	// Reset the headers, head
-	for (int c = 0; c < numCellsXYZ; c++) 
-	{
-		head[c] = EMPTY;
-	}
-
-	// Scan cutoff index atom in each molecule to construct headers, head, & linked lists, linkedCellList
-	for (int i = 0; i < enviro->numOfMolecules; i++)
-	{
-		std::vector<int> molPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[i].type]);
-		int primaryIndex = molPrimaryIndexArray[0]; // Use first primary index to determine cell placement
-		
-		vectorCells[0] = molecules[i].atoms[primaryIndex].x / lengthCell[0]; 
-		vectorCells[1] = molecules[i].atoms[primaryIndex].y / lengthCell[1];
-		vectorCells[2] = molecules[i].atoms[primaryIndex].z / lengthCell[2];
-		
-		// Translate the vector cell index to a scalar cell index
-		int c = vectorCells[0]*numCellsYZ + vectorCells[1]*numCells[2] + vectorCells[2];
-
-		// Link to the previous occupant (or EMPTY if you're the 1st)
-		linkedCellList[i] = head[c];
-
-		// The last one goes to the header
-		head[c] = i;
-	} /* Endfor molecule i */
-
+	
   /* Calculate pair interaction-----------------------------------------------*/
-		
+	int vectorCells[3];			  	/* Vector cells */
+	int neighborCells[3];			/* Neighbor cells */
+	
 	// Scan inner cells
-	for (vectorCells[0] = 0; vectorCells[0] < numCells[0]; (vectorCells[0])++)
-	{
-		for (vectorCells[1] = 0; vectorCells[1] < numCells[1]; (vectorCells[1])++)
-		{
-			for (vectorCells[2] = 0; vectorCells[2] < numCells[2]; (vectorCells[2])++)
+	for (vectorCells[0] = 0; vectorCells[0] < nl->numCells[0]; (vectorCells[0])++)
+		for (vectorCells[1] = 0; vectorCells[1] < nl->numCells[1]; (vectorCells[1])++)
+			for (vectorCells[2] = 0; vectorCells[2] < nl->numCells[2]; (vectorCells[2])++)
 			{
 
 				// Calculate a scalar cell index
-				int c = vectorCells[0]*numCellsYZ + vectorCells[1]*numCells[2] + vectorCells[2];
+				int c = vectorCells[0] * nl->numCellsYZ 
+					+ vectorCells[1] * nl->numCells[2] 
+					+ vectorCells[2];
 				// Skip this cell if empty
-				if (head[c] == EMPTY) continue;
+				if (nl->head[c] == EMPTY) continue;
 
 				// Scan the neighbor cells (including itself) of cell c
 				for (neighborCells[0] = vectorCells[0]-1; neighborCells[0] <= vectorCells[0]+1; (neighborCells[0])++)
@@ -197,15 +149,16 @@ Real SerialCalcs::calcSystemEnergy_NLC(Molecule *molecules, Environment *enviro,
 						for (neighborCells[2] = vectorCells[2]-1; neighborCells[2] <= vectorCells[2]+1; (neighborCells[2])++)
 						{
 							// Periodic boundary condition by shifting coordinates
+							Real rshift[3];	  		/* Shift coordinates for periodicity */
 							for (int a = 0; a < 3; a++)
 							{
 								if (neighborCells[a] < 0)
 								{
-									rshift[a] = -Region[a];
+									rshift[a] = -nl->region[a];
 								}
-								else if (neighborCells[a] >= numCells[a])
+								else if (neighborCells[a] >= nl->numCells[a])
 								{
-									rshift[a] = Region[a];
+									rshift[a] = nl->region[a];
 								}
 								else
 								{
@@ -213,22 +166,22 @@ Real SerialCalcs::calcSystemEnergy_NLC(Molecule *molecules, Environment *enviro,
 								}
 							}
 							// Calculate the scalar cell index of the neighbor cell
-							c1 = ((neighborCells[0] + numCells[0]) % numCells[0]) * numCellsYZ
-							    +((neighborCells[1] + numCells[1]) % numCells[1]) * numCells[2]
-							    +((neighborCells[2] + numCells[2]) % numCells[2]);
+							int c1 = ((neighborCells[0] + nl->numCells[0]) % nl->numCells[0]) * nl->numCellsYZ
+							    +((neighborCells[1] + nl->numCells[1]) % nl->numCells[1]) * nl->numCells[2]
+							    +((neighborCells[2] + nl->numCells[2]) % nl->numCells[2]);
 							// Skip this neighbor cell if empty
-							if (head[c1] == EMPTY)
+							if (nl->head[c1] == EMPTY)
 							{
 								continue;
 							}
 
 							// Scan atom i in cell c
-							int i = head[c];
+							int i = nl->head[c];
 							while (i != EMPTY)
 							{
 
 								// Scan atom j in cell c1
-								int j = head[c1];
+								int j = nl->head[c1];
 								while (j != EMPTY)
 								{
 									bool included = false;
@@ -263,7 +216,7 @@ Real SerialCalcs::calcSystemEnergy_NLC(Molecule *molecules, Environment *enviro,
 												Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
 												
 												// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
-												if (rr < rrCut)
+												if (rr < nl->rrCut)
 												{	
 													totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro, subLJ, subCharge) * fValue;
 													
@@ -279,22 +232,20 @@ Real SerialCalcs::calcSystemEnergy_NLC(Molecule *molecules, Environment *enviro,
 										}
 									} /* Endif i<j */
 							
-									j = linkedCellList[j];
+									j = nl->linkedCellList[j];
 								} /* Endwhile j not empty */
 
-								i = linkedCellList[i];
+								i = nl->linkedCellList[i];
 							} /* Endwhile i not empty */
 						} /* Endfor neighbor cells, c1 */
 			} /* Endfor central cell, c */
-		}
-	}
 	
 	// *** Note: this function returns values similar to calcSystemEnergy before the calcIntramolEnergy_NLC is called
 	//return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules);
 	return totalEnergy;
 }
 
-Real SerialCalcs::calcMolecularEnergyContribution_NLC(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge, int currentMol, int startIdx) {
+Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge, int currentMol, int startIdx) {
 	Real totalEnergy = 0.0;
 	
 	// TODO: finish this version of neighbor-list calc
