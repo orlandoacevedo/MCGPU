@@ -122,8 +122,8 @@ void Simulation::run()
 	startTime = clock();
 
     clock_t function_time_start, function_time_end;
-  
-	function_time_start = clock();
+    long duration;
+	
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
 	{
@@ -131,17 +131,19 @@ void Simulation::run()
         	{
 	    		if (args.useNeighborList)
                         {
-                            
+                                function_time_start = clock();
                                 std::cout << "Using neighbor-list for energy calc" << std::endl;
                                 oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
-                            
+                                function_time_end = clock();
+                		duration = function_time_end -function_time_start;
                         }
                         else
                         {
+                                function_time_start = clock();
                                 std::cout << "Using original system energy calc" << std::endl;
                                 oldEnergy = ParallelCalcs::calcSystemEnergy(box);
-                            
-
+                                function_time_end = clock();
+                		duration = function_time_end -function_time_start;
                         }
 		}
 
@@ -149,24 +151,23 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				
+				function_time_start = clock();
 				std::cout << "Using neighbor-list for energy calc" << std::endl;
 				oldEnergy = SerialCalcs::calcEnergy_NLC(molecules, enviro);
-				
-			
+				function_time_end = clock();
+            	duration = function_time_end -function_time_start;			
 			}
 			else
 			{
-				
+				function_time_start = clock();
 				std::cout << "Using original system energy calc" << std::endl;
 				oldEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro);
-
+				function_time_end = clock();
+            	duration = function_time_end -function_time_start;
 			}
 		}
 	}
-	function_time_end = clock();
-    double duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC);
-    std::cout << "Duration of neighbor list function: " << duration << " seconds" <<std::endl;
+	
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
 	//determine where we want the state file to go
@@ -280,6 +281,7 @@ void Simulation::run()
 	std::cout << "Accepted Moves: " << accepted << std::endl;
 	std::cout << "Rejected Moves: " << rejected << std::endl;
 	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;
+    std::cout << "Duration of neighbor list function: " << duration << std::endl;
 
 	std::string resultsName;
 	if (args.simulationName.empty())

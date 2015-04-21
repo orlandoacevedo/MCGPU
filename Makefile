@@ -136,7 +136,7 @@ endif
 ifeq ($(LOCAL_INSTALL),1)
 	CUDA_PATH ?= /usr/local/cuda
 else
-	CUDA_PATH ?= /opt/asn/apps/cuda_6.5
+	CUDA_PATH ?= /opt/asn/apps/cuda_5.5
 endif
 
 # The path to the cuda include directory where the CUDA header files are found

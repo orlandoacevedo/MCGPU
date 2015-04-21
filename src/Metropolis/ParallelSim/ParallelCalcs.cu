@@ -325,7 +325,7 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 	int validEnergies = numMols * box->maxMolSize * box->maxMolSize;
 	
 	//calculate interatomic energies between changed molecule and all molecules in batch
-	calcInterAtomicEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
+	calcInterMolecularEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
 	(box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->molBatchD, box->maxMolSize);
 	
 	//Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
@@ -436,7 +436,7 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 	}
 }
 
-__global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
+__global__ void ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
 {
 	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x;
 	int segmentSize = maxMolSize * maxMolSize;
