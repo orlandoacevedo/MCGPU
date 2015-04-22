@@ -97,20 +97,20 @@ void Simulation::run()
 	//declare variables common to both parallel and serial
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
-	NeighborList *neighborList = NULL;
 	
+	NeighborList *neighborList = NULL;
 	if (args.useNeighborList) 
 	{
-		std::cout << "trying to create neighbor-list" << std::endl;
 		neighborList = new NeighborList(molecules, enviro);
 	}
-	
-	std::cout << "created neighbor-list" << std::endl;
 
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont = 0, oldEnergyCont = 0;
 	Real lj_energy = 0, charge_energy = 0;
+	
 	Real energy_LRC = SerialCalcs::calcEnergy_LRC(molecules, enviro);
+	Real intraMolEnergy = SerialCalcs::calcIntraMolecularEnergy(molecules, enviro, lj_energy, charge_energy);
+	
 	Real  kT = kBoltz * enviro->temp;
 	int accepted = 0;
 	int rejected = 0;
@@ -168,11 +168,11 @@ void Simulation::run()
 			}
 		}
 		
-		oldEnergy += energy_LRC; // add in long-range correction value
+		oldEnergy += energy_LRC + intraMolEnergy; // add in long-range correction value and intramol energy
 	}
 	function_time_end = clock();
     double duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC);
-	
+	std::cout << "Duration of system energy calculation function: " << duration << " seconds" << std::endl;
 	
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
@@ -190,6 +190,12 @@ void Simulation::run()
 	//Loop for each individual step
 	for (int move = stepStart; move < (stepStart + simSteps); move++)
 	{
+		// update neighbor-list every 100 steps
+		if (args.useNeighborList && (move % 100 == 0))
+		{
+			neighborList = new NeighborList(molecules, enviro);
+		}
+		
 		//provide printouts at each pre-determined interval (not at each step)
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
 		{
@@ -214,7 +220,7 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				//newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);	
+				//oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);	
 				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
 			}
 			else
@@ -226,8 +232,7 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				//oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, lj_energy, charge_energy, changeIdx);
-				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, lj_energy, charge_energy, changeIdx);
 			}
 			else
 			{
@@ -255,8 +260,7 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				//newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, lj_energy, charge_energy, changeIdx);
-				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
+				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, lj_energy, charge_energy, changeIdx);
 			}
 			else
 			{
@@ -303,8 +307,9 @@ void Simulation::run()
 	endTime = clock();
 	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
 	//However, it is a good enough estimation witout adding unnecessary complexity.
-    double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
-
+    //double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
+	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC);
+	
 	lj_energy = 0, charge_energy = 0;
 	if (args.simulationMode == SimulationMode::Parallel)
 	{
@@ -336,11 +341,10 @@ void Simulation::run()
 	std::cout << "LJ-Energy Subtotal: " << lj_energy << std::endl;
 	std::cout << "Charge Energy Subtotal: " << charge_energy << std::endl;
 	std::cout << "Energy Long-range Correction: " << energy_LRC << std::endl;
+	std::cout << "Intramolecular Energy: " << intraMolEnergy << std::endl;
 	std::cout << "Final Total Energy: " << currentEnergy << std::endl;
 	
 	std::cout << "Total Run Time: " << diffTime << " seconds" << std::endl;
-	std::cout << "Duration of energy calculation function: " << duration << std::endl;
-	
 	std::cout << "Accepted Moves: " << accepted << std::endl;
 	std::cout << "Rejected Moves: " << rejected << std::endl;
 	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;

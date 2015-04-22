@@ -74,11 +74,9 @@ namespace SerialCalcs
 	/// 	@param subLJ A reference to the subtotal energy from the LJ values.
 	/// 	@param subCharge A reference to the subtotal energy from the charge energies.
 	/// 	@param currentMol the index of the current changed molecule.
-	/// 	@param startIdx The optional starting index for other molecules.
-	///   		Used for system energy calculation.
 	/// 	@return Returns total inter-molecular energy contribution
 	Real calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, 
-		Real &subLJ, Real &subCharge, int currentMol, int startIdx = 0);
+		Real &subLJ, Real &subCharge, int currentMol, bool isSysCalc = false);
 	
 	
 	/* ------ Utility Calculation Functions ------ */
