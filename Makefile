@@ -196,7 +196,7 @@ CudaArchitecture := -arch=sm_21
 
 # Compiler specific flags for the C++ compiler when generating .o files
 # and when generating .d files for dependency information
-CxxFlags := -c 
+CxxFlags := -c -std=c++11 
 
 # Compiler specific flags for the CUDA compiler when generating .o files
 # and when generating .d files for dependency information

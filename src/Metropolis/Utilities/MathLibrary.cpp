@@ -16,7 +16,7 @@ using std::vector;
 using std::string;
 using std::map;
 using std::stringstream;  
-
+using std::cout;
 
 
 /**
@@ -671,7 +671,7 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded)
         //run build on each atom in the molecule
         for(int x = 0; x < molec[m].numOfAtoms; x++)
         {	     
-            lineAtom = molec[m].atoms[x];
+    	        lineAtom = molec[m].atoms[x];
     		//set the vectors with appropiate contents as if in Zmatrix		  
     		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
     		  
@@ -861,17 +861,12 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 	for(int m=0; m<numBonded; m++)
     {
 	 	//run build on atom 1 in the molecule
-		if (m == 1)
-		{
-			for (int i = 0; i < molec[m].numOfAtoms; i++)
-			{
-			    molec[m].atoms[i].id -= 6;
-			}
-		}
+		
 	 	lineAtom = molec[m].atoms[0];
 	 	//set the vectors with appropiate contents as if in Zmatrix 
-		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
 		
+		setMoleculeVectors(molec, numBonded, lineAtom.id, bondVector, angleVector, dihedralVector);
+	
 		// First atom at (0,0,0)
 		molec[m].atoms[0].x = 0.0;
 		molec[m].atoms[0].y = 0.0;
@@ -931,7 +926,7 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
         {
 			break;
         }
-		
+
 		//run build on atoms 4 and above in the molecule
 		double xbs, ybs, zbs, sinval;
 		double ia[3], ib[3], ic[3];
@@ -961,11 +956,20 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			xbs = lineBond.distance * sinval * cos(phiRadians);
 			ybs = lineBond.distance * sinval * sin(phiRadians);
 			zbs = -lineBond.distance * cos(thetaRadians);
-			
+		
+				
+	//		adjustAtomsIDs(molec, m);
 			// Determine transformation (direction cosine) matrix
 			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.id);
 			unsigned long AngleWith = getOppositeAtom(lineAngle, lineAtom.id);
 			unsigned long DihedralWith = getOppositeAtom(lineDihedral, lineAtom.id);
+			
+			if (m > 0)
+			{
+				BondedTo -= molec[m-1].numOfAtoms;
+				AngleWith -= molec[m-1].numOfAtoms;
+				DihedralWith -= molec[m-1].numOfAtoms;
+			}
 			ia[0] = molec[m].atoms[DihedralWith - 1].x;
 			ia[1] = molec[m].atoms[DihedralWith - 1].y;
 			ia[2] = molec[m].atoms[DihedralWith - 1].z;
@@ -998,8 +1002,53 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			molec[m].atoms[N].x = vx[0]*xbs + vy[0]*ybs + vz[0]*zbs + ic[0];
 			molec[m].atoms[N].y = vx[1]*xbs + vy[1]*ybs + vz[1]*zbs + ic[1];
 			molec[m].atoms[N].z = vx[2]*xbs + vy[2]*ybs + vz[2]*zbs + ic[2];
-		} //End for dihedral atoms loop
+		
+		}
+	  //revertAtomIDs(molec, m);
 	} //End for molecules loop
+}
+
+void adjustAtomIDs(Molecule* molec, int m)
+{
+    if (m > 0){
+	
+			std::cout << "Adjusting ID..." << std::endl;
+			for (int i = 0; i < molec[m].numOfAtoms; i++)
+			{
+				std::cout << "ID of atom " << i << ": " << molec[m].atoms[i].id << std::endl;
+			}
+			for (int i = 0; i < molec[m].numOfAtoms; i++)
+			{
+				for (int j = 0; j < m; j++)
+				{
+			    		molec[m].atoms[i].id -= molec[j].numOfAtoms;
+				}
+			}
+			for (int i = 0; i < molec[m].numOfAtoms; i++)
+				std::cout << "ID of atom " << i << ": " << molec[m].atoms[i].id << std::endl;
+    }
+}
+
+void revertAtomIDs(Molecule* molec, int m)
+{
+   if (m > 0)
+	   {
+	
+			std::cout << "Reverting ID bigger than 3 back to normal..." << std::endl;
+			for (int i = 0; i < molec[m].numOfAtoms; i++)
+				std::cout << "ID of atom " << i << ": " << molec[m].atoms[i].id << std::endl;
+
+			for (int i = 0; i < molec[m].numOfAtoms; i++)
+			{
+				for (int j = 0; j < m; j++)
+				{
+			    		molec[m].atoms[i].id += molec[j].numOfAtoms;
+				}
+			}
+			for (int i = 0; i < molec[m].numOfAtoms; i++)
+				std::cout << "ID of atom " << i << ": " << molec[m].atoms[i].id << std::endl;
+
+	    } //End for dihedral atoms loop
 }
 
 void cross(double *A, double *B, double *C)

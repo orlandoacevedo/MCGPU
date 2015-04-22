@@ -215,14 +215,11 @@ struct Fourier
 
 struct Atom
 {
-	//std::shared_ptr<std::string> name;
-	std::string *name;
+	std::string *name = new std::string("000");
 	Real x, y, z, sigma, epsilon, charge;
 	unsigned long id;
 	Atom(){
-		//std::shared_ptr<std::string> tempName(new std::string("0"));
-		//name = tempName;
-		name = new std::string("000");
+		//*(name + 3) = "\0";
 		x = 0;
 		y = 0;
 		z = 0;

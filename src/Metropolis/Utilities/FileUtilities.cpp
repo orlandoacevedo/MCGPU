@@ -949,7 +949,9 @@ bool OplsScanner::readInOpls(string filename)
             try
             {
                 if(line.at(0) != '#' && numOfLines > 1)
+		{
                     addLineToTable(line,numOfLines);
+		}
             }
             catch (std::out_of_range& e)
             {

@@ -543,9 +543,9 @@ Real SerialCalcs::Energy_LRC(Molecule *molec, Environment *enviro)
 	}
 	
 	// loop over all atoms in a pair
-	for(int i = 0; i < NATMX; i++)
+	for(int i = 0; i < NATOM2; i++)
 	{
-		for(int j = 0; j < NATMX; j++)
+		for(int j = 0; j < NATOM2; j++)
 		{
 			Ecut += (2*PI*NMOL1*NMOL1/(3.0*Vnew)) * (A12[i]*A12[j]*RC9/3.0 - A6[i]*A6[j]*RC3);
 			Ecut += (2*PI*NMOL2*NMOL2/(3.0*Vnew)) * (B12[i]*B12[j]*RC9/3.0 - B6[i]*B6[j]*RC3);
