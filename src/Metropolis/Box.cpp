@@ -28,6 +28,7 @@ Box::Box()
 
 	atomCount = 0;
 	moleculeCount = 0;
+	first = true;
 }
 
 Box::~Box()
@@ -99,11 +100,15 @@ void Box::saveChangedMol(int molIdx)
 	Molecule *mol_src = &molecules[molIdx];
 
 	//free memory of changedMol before allocate memory
-	delete[] changedMol.atoms;
-	delete[] changedMol.bonds;
-	delete[] changedMol.angles;
-	delete[] changedMol.dihedrals;
-	delete[] changedMol.hops;
+	if (!first) {
+		delete[] changedMol.atoms;
+		delete[] changedMol.bonds;
+		delete[] changedMol.angles;
+		delete[] changedMol.dihedrals;
+		delete[] changedMol.hops;
+	}
+	
+	first = false;
 
 	memcpy(&changedMol,mol_src,sizeof(changedMol));
 

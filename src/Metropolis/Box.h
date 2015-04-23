@@ -27,6 +27,8 @@ using namespace std;
 
 class Box
 {
+	private:
+		bool first;
 	protected:
 		Molecule changedMol;
 
