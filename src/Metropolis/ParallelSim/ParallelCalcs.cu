@@ -51,8 +51,6 @@ Box* ParallelCalcs::createBox(string inputPath, InputFileType inputType, long* s
 	return (Box*) box;
 }
 
-
-
 Real ParallelCalcs::calcSystemEnergy(Box *box)
 {
         Real totalEnergy = 0;
@@ -260,27 +258,26 @@ __global__ void ParallelCalcs::calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real
 	}
 }
 
-	__device__ Real ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro)
+__device__ Real ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro)
+{
+	Real totalEnergy = 0;
+	for (int i = 0; i < molecules->numOfAtoms[mol1]; i++)
 	{
-		Real totalEnergy = 0;
-		for (int i = 0; i < molecules->numOfAtoms[mol1]; i++)
+		for (int j = 0; j < molecules->numOfAtoms[mol2]; j++)
 		{
-			for (int j = 0; j < molecules->numOfAtoms[mol2]; j++)
+			int atom1 = molecules->atomsIdx[mol1] + i;
+			int atom2 = molecules->atomsIdx[mol2] + j;
+			if (atoms->sigma[atom1] >= 0 && atoms->epsilon[atom1] >= 0 && atoms->sigma[atom2] >= 0 && atoms->epsilon[atom2] >= 0)
 			{
-				int atom1 = molecules->atomsIdx[mol1] + i;
-				int atom2 = molecules->atomsIdx[mol2] + j;
-				if (atoms->sigma[atom1] >= 0 && atoms->epsilon[atom1] >= 0 && atoms->sigma[atom2] >= 0 && atoms->epsilon[atom2] >= 0)
-				{
-					//calculate squared distance between atoms 
-					Real r2 = calcAtomDist(atoms, atom1, atom2, enviro);
-					totalEnergy += calc_lj(atoms, atom1, atom2, r2);
-					totalEnergy += calcCharge(atoms->charge[atom1], atoms->charge[atom2], sqrt(r2));
-				}
+				//calculate squared distance between atoms 
+				Real r2 = calcAtomDist(atoms, atom1, atom2, enviro);
+				totalEnergy += calc_lj(atoms, atom1, atom2, r2);
+				totalEnergy += calcCharge(atoms->charge[atom1], atoms->charge[atom2], sqrt(r2));
 			}
-
 		}
-		return totalEnergy;
 	}
+	return totalEnergy;
+}
 
 Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int startIdx)
 {
@@ -510,6 +507,7 @@ __device__ Real ParallelCalcs::calcAtomDist(AtomData *atoms, int atomIdx1, int a
 	Real deltaX = makePeriodic(atoms->x[atomIdx1] - atoms->x[atomIdx2], enviro->x);
 	Real deltaY = makePeriodic(atoms->y[atomIdx1] - atoms->y[atomIdx2], enviro->y);
 	Real deltaZ = makePeriodic(atoms->z[atomIdx1] - atoms->z[atomIdx2], enviro->z);
+				
 	//calculate squared distance (r2 value) and return
 	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
 }

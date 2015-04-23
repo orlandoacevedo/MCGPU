@@ -317,14 +317,6 @@ void Simulation::run()
 	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;
 
 	resultsFile.close();
-
-
-//	for (int i = 0; i < primaryAtomIndexDefinitions; i++)
-  //      {
-    //        delete (*primaryAtomIndexArray)[i];
-      //  }
-   //     delete box->environment->primaryAtomIndexArray;
-    //    delete box->environment->primaryAtomIndexConfigLine;
 }
 
 void Simulation::saveState(const std::string& baseFileName, int simStep)

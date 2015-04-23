@@ -20,8 +20,7 @@ class ParallelBox : public Box
 {
 	private:
 		Real *xD, *yD, *zD, *sigmaD, *epsilonD, *chargeD;
-		int *atomsIdxD, *numOfAtomsD, *typeD, *primaryIndexesD, *hopsIdxD, *numOfHopsD;
-		Hop *hopsD;
+		int *atomsIdxD, *numOfAtomsD, *typeD, *primaryIndexesD;
 		
 		/// Copies a specified molecule and all of its atoms
 		///   over to the device. Called after changing a
