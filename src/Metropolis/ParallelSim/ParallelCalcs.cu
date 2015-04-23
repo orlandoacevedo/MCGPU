@@ -148,7 +148,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box)
 Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){ 
 
 	Molecule *molecules = box->getMolecules();
-    Environment *enviro = box->getEnvironment();
+	Environment *enviro = box->getEnvironment();
 	int numCells[3];            	/* Number of cells in the x|y|z direction */
 	Real lengthCell[3];         	/* Length of a cell in the x|y|z direction */
 	int head[NCLMAX];    			/* Headers for the linked cell lists */
@@ -341,22 +341,22 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 		Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 		int blocksPerGrid = 53;
 		calcEnergy_NLC<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_pair_i, d_pair_j, raw_ptr, molecules, atoms, enviro, iterater_i);
-        
+
 		Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 
 		cudaFree(d_pair_i);
 		cudaFree(d_pair_j);
 
 		return total_energy;// + calcIntramolEnergy_NLC(enviro, pBox->moleculesD, pBox->atomsD);
-}
-
-__global__ void ParallelCalcs::calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real *part_energy, MoleculeData *molecules, AtomData *atoms, Environment *enviro, int limit)
-{
-	int i = blockIdx.x * blockDim.x + threadIdx.x;
-	if(i < limit){
-		part_energy[i] = part_energy[i] + calcInterMolecularEnergy(molecules, atoms, d_pair_i[i], d_pair_j[i], enviro) * 1.0;
 	}
-}
+
+	__global__ void ParallelCalcs::calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real *part_energy, MoleculeData *molecules, AtomData *atoms, Environment *enviro, int limit){
+
+		int i = blockIdx.x * blockDim.x + threadIdx.x;
+		if(i < limit){
+			part_energy[i] = part_energy[i] + calcInterMolecularEnergy(molecules, atoms, d_pair_i[i], d_pair_j[i], enviro) * 1.0;
+		}
+	}
 	
 
 
