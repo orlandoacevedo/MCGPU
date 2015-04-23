@@ -27,6 +27,7 @@
 #define MOL_BLOCK 256
 #define BATCH_BLOCK 512
 #define AGG_BLOCK 512
+#define THREADS_PER_BLOCK 192
 
 using namespace std;
 
@@ -296,8 +297,8 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 													//totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro, subLJ, subCharge) * fValue;
 													pair_i[iterater_i] = i;
 													iterater_i++;
-													pair_j[iterater_j] = j
-															iterater_j++;
+													pair_j[iterater_j] = j;
+													iterater_j++;
 													included = true;
 													break;
 												} /* Endif rr < rrCut */
@@ -338,9 +339,10 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 		AtomData *atoms = pBox->atomsD;
 		Environment *enviro = pBox->environmentD;
 		Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
-		calcEnergy_NLC<<<53, 192>>>(d_pair_i, d_pair_j, Real *part_energy, molecules, atoms, enviro, iterater_i);
-
-		total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
+		int blocksPerGrid = 53;
+		calcEnergy_NLC<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_pair_i, d_pair_j, Real *part_energy, molecules, atoms, enviro, iterater_i);
+        
+		Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 
 		cudaFree(d_pair_i);
 		cudaFree(d_pair_j);
