@@ -215,11 +215,11 @@ struct Fourier
 
 struct Atom
 {
-	std::string *name = new std::string("000");
+	std::string *name;
 	Real x, y, z, sigma, epsilon, charge;
 	unsigned long id;
 	Atom(){
-		//*(name + 3) = "\0";
+		name = new std::string("000");
 		x = 0;
 		y = 0;
 		z = 0;
@@ -238,9 +238,9 @@ struct Atom
 		epsilon = inEpsilon;
 		charge = inCharge;
 		*name = inName;
-        id = inID;
+        	id = inID;
 	}
-
+	
 	
 };
 
@@ -370,6 +370,7 @@ struct Molecule
 		
 	Molecule() {
 		id = 0;
+		type = 0;
 
 		atoms = new Atom[0];
 		angles = new Angle[0];

@@ -100,7 +100,7 @@ void Box::saveChangedMol(int molIdx)
 	Molecule *mol_src = &molecules[molIdx];
 
 	//free memory of changedMol before allocate memory
-	if (!first) {
+	if (changedMol.numOfAtoms != 0) {
 		delete[] changedMol.atoms;
 		delete[] changedMol.bonds;
 		delete[] changedMol.angles;
@@ -108,8 +108,6 @@ void Box::saveChangedMol(int molIdx)
 		delete[] changedMol.hops;
 	}
 	
-	first = false;
-
 	memcpy(&changedMol,mol_src,sizeof(changedMol));
 
 	changedMol.atoms = new Atom[mol_src->numOfAtoms];
@@ -129,6 +127,7 @@ void Box::copyMolecule(Molecule *mol_dst, Molecule *mol_src)
     mol_dst->numOfDihedrals = mol_src->numOfDihedrals;
     mol_dst->numOfHops = mol_src->numOfHops;
     mol_dst->id = mol_src->id;
+    mol_dst->type = mol_src->type;
     
     for(int i = 0; i < mol_src->numOfAtoms; i++)
     {

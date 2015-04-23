@@ -903,7 +903,10 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			Angle lineAngle = angleVector[angleFound];
 			unsigned long BondedTo = getOppositeAtom(lineBond, lineAtom.id);
 			double thetaRadians = degreesToRadians(lineAngle.value);
-			
+		
+			//adjust BondedTo index
+			for (int i = 0; i < m; i++)
+				BondedTo -= molec[i].numOfAtoms;
 			// Third atom in XY plane
 			if(BondedTo == 1)
             {
@@ -964,11 +967,12 @@ void buildMoleculeXYZ(Molecule *molec, int numBonded)
 			unsigned long AngleWith = getOppositeAtom(lineAngle, lineAtom.id);
 			unsigned long DihedralWith = getOppositeAtom(lineDihedral, lineAtom.id);
 			
-			if (m > 0)
+			//adjust indexing for BondedTo, AngleWith, and DihedralWith
+			for (int i = 0; i < m; i++)
 			{
-				BondedTo -= molec[m-1].numOfAtoms;
-				AngleWith -= molec[m-1].numOfAtoms;
-				DihedralWith -= molec[m-1].numOfAtoms;
+				BondedTo -= molec[i].numOfAtoms;
+				AngleWith -= molec[i].numOfAtoms;
+				DihedralWith -= molec[i].numOfAtoms;
 			}
 			ia[0] = molec[m].atoms[DihedralWith - 1].x;
 			ia[1] = molec[m].atoms[DihedralWith - 1].y;
