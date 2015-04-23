@@ -67,7 +67,7 @@ namespace ParallelCalcs
     __device__ __host__ Real calcAtomDist(AtomData *atoms, int atom1, int atom2, Environment *enviro);
     __device__ __host__ Real calc_lj(Atom atom1, Atom atom2, Real r2);
     __device__ Real calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro);
-    __global__ void calcEnergy_NLC(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int *head, int *lscl, Real *totalEnergy);
+    __global__ void ParallelCalcs::calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real *part_energy, MoleculeData *molecules, AtomData *atoms, Environment *enviro, int limit);
 	__global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);
 	
 	/// Each thread in this kernel calculates the inter-atomic
