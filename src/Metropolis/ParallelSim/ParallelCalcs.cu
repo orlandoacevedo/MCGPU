@@ -181,7 +181,7 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	int numCellsXYZ = numCells[0] * numCellsYZ;
 
 	// Reset the headers, head
-	for (int c = 0; c < lcxyz; c++)
+	for (int c = 0; c < numCellsXYZ; c++)
 	{
 		head[c] = EMPTY;
 	}
@@ -294,9 +294,9 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 												if (rr < rrCut)
 												{	
 													//totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro, subLJ, subCharge) * fValue;
-													pair[iterater_i] = i;
+													pair_i[iterater_i] = i;
 													iterater_i++;
-													pair[iterater_j] = j
+													pair_j[iterater_j] = j
 															iterater_j++;
 													included = true;
 													break;
