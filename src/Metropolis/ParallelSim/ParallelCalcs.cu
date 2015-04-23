@@ -337,12 +337,12 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	{
 		return 0;
 	}
-	MoleculeData *molecules = pBox->moleculesD;
-	AtomData *atoms = pBox->atomsD;
-	Environment *enviro = pBox->environmentD;
+	MoleculeData *d_molecules = pBox->moleculesD;
+	AtomData *d_atoms = pBox->atomsD;
+	Environment *d_enviro = pBox->environmentD;
 	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 	int blocksPerGrid = 53;
-	calcEnergy_NLC<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_pair_i, d_pair_j, raw_ptr, molecules, atoms, enviro, iterater_i);
+	calcEnergy_NLC<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_pair_i, d_pair_j, raw_ptr, d_molecules, d_atoms, d_enviro, iterater_i);
 
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 
