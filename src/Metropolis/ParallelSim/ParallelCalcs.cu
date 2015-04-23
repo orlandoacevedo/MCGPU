@@ -319,44 +319,47 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 						} /* Endfor neighbor cells, c1 */
 			} /* Endfor central cell, c */
 		}
-
-		int *d_pair_i;
-		int *d_pair_j;
-		cudaMalloc((void **)&d_pair_i, sizeof(int)*10000);
-		cudaMalloc((void **)&d_pair_j, sizeof(int)*10000);
-
-		cudaMemcpy(d_pair_i, pair_i, sizeof(int)*10000, cudaMemcpyHostToDevice);
-		cudaMemcpy(d_pair_j, pair_j, sizeof(int)*10000, cudaMemcpyHostToDevice);
-
-		thrust::device_vector<Real> part_energy(10000, 0);//this will store the result
-		ParallelBox *pBox = (ParallelBox*) box;
-
-		if (pBox == NULL)
-		{
-			return 0;
-		}
-		MoleculeData *molecules = pBox->moleculesD;
-		AtomData *atoms = pBox->atomsD;
-		Environment *enviro = pBox->environmentD;
-		Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
-		int blocksPerGrid = 53;
-		calcEnergy_NLC<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_pair_i, d_pair_j, raw_ptr, molecules, atoms, enviro, iterater_i);
-
-		Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
-
-		cudaFree(d_pair_i);
-		cudaFree(d_pair_j);
-
-		return total_energy;// + calcIntramolEnergy_NLC(enviro, pBox->moleculesD, pBox->atomsD);
 	}
 
-	__global__ void ParallelCalcs::calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real *part_energy, MoleculeData *molecules, AtomData *atoms, Environment *enviro, int limit){
 
-		int i = blockIdx.x * blockDim.x + threadIdx.x;
-		if(i < limit){
-			part_energy[i] = part_energy[i] + calcInterMolecularEnergy(molecules, atoms, d_pair_i[i], d_pair_j[i], enviro) * 1.0;
-		}
+	int *d_pair_i;
+	int *d_pair_j;
+	cudaMalloc((void **)&d_pair_i, sizeof(int)*10000);
+	cudaMalloc((void **)&d_pair_j, sizeof(int)*10000);
+
+	cudaMemcpy(d_pair_i, pair_i, sizeof(int)*10000, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_pair_j, pair_j, sizeof(int)*10000, cudaMemcpyHostToDevice);
+
+	thrust::device_vector<Real> part_energy(10000, 0);//this will store the result
+	ParallelBox *pBox = (ParallelBox*) box;
+
+	if (pBox == NULL)
+	{
+		return 0;
 	}
+	MoleculeData *molecules = pBox->moleculesD;
+	AtomData *atoms = pBox->atomsD;
+	Environment *enviro = pBox->environmentD;
+	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
+	int blocksPerGrid = 53;
+	calcEnergy_NLC<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_pair_i, d_pair_j, raw_ptr, molecules, atoms, enviro, iterater_i);
+
+	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
+
+	cudaFree(d_pair_i);
+	cudaFree(d_pair_j);
+
+	return total_energy;// + calcIntramolEnergy_NLC(enviro, pBox->moleculesD, pBox->atomsD);
+}
+
+__global__ void ParallelCalcs::calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real *part_energy, MoleculeData *molecules, AtomData *atoms, Environment *enviro, int limit)
+{
+
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if(i < limit){
+		part_energy[i] = part_energy[i] + calcInterMolecularEnergy(molecules, atoms, d_pair_i[i], d_pair_j[i], enviro) * 1.0;
+	}
+}
 	
 
 
@@ -430,27 +433,27 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 
 }*/
 
-__device__ Real ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro)
-{
-	Real totalEnergy = 0;
-	for (int i = 0; i < molecules->numOfAtoms[mol1]; i++)
+	__device__ Real ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro)
 	{
-		for (int j = 0; j < molecules->numOfAtoms[mol2]; j++)
+		Real totalEnergy = 0;
+		for (int i = 0; i < molecules->numOfAtoms[mol1]; i++)
 		{
-			int atom1 = molecules->atomsIdx[mol1] + i;
-			int atom2 = molecules->atomsIdx[mol2] + j;
-			if (atoms->sigma[atom1] >= 0 && atoms->epsilon[atom1] >= 0 && atoms->sigma[atom2] >= 0 && atoms->epsilon[atom2] >= 0)
+			for (int j = 0; j < molecules->numOfAtoms[mol2]; j++)
 			{
-				//calculate squared distance between atoms 
-				Real r2 = calcAtomDist(atoms, atom1, atom2, enviro);
-				totalEnergy += calc_lj(atoms, atom1, atom2, r2);
-				totalEnergy += calcCharge(atoms->charge[atom1], atoms->charge[atom2], sqrt(r2));
+				int atom1 = molecules->atomsIdx[mol1] + i;
+				int atom2 = molecules->atomsIdx[mol2] + j;
+				if (atoms->sigma[atom1] >= 0 && atoms->epsilon[atom1] >= 0 && atoms->sigma[atom2] >= 0 && atoms->epsilon[atom2] >= 0)
+				{
+					//calculate squared distance between atoms 
+					Real r2 = calcAtomDist(atoms, atom1, atom2, enviro);
+					totalEnergy += calc_lj(atoms, atom1, atom2, r2);
+					totalEnergy += calcCharge(atoms->charge[atom1], atoms->charge[atom2], sqrt(r2));
+				}
 			}
-		}
 
+		}
+		return totalEnergy;
 	}
-	return totalEnergy;
-}
 
 
 Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int startIdx)
