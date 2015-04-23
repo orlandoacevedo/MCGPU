@@ -146,6 +146,8 @@ Real ParallelCalcs::calcSystemEnergy(Box *box)
 
 Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){ 
 
+	Molecule *molecules = box->getMolecules();
+    Environment *enviro = box->getEnvironment();
 	int numCells[3];            	/* Number of cells in the x|y|z direction */
 	Real lengthCell[3];         	/* Length of a cell in the x|y|z direction */
 	int head[NCLMAX];    			/* Headers for the linked cell lists */
