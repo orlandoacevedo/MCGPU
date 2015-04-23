@@ -61,11 +61,13 @@ namespace ParallelCalcs
 	/// @param enviro Device pointer to Environment struct.
 	/// @param inCutoff Device pointer to valid neighbor molecules
 	///   array.
-	Real calcIntramolEnergy_NLC(Environment *enviro, Molecule *molecules);
+	Real calcEnergyContribution(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int currentMol, int otherMol, int startIdx);
+	Real calcIntramolEnergy_NLC(Environment *enviro, MoleculeData *molecules, AtomData *atoms);
     __device__ __host__ Real calcAtomDist(Atom atom1, Atom atom2, Environment *enviro);
+    __device__ __host__ Real calcAtomDist(AtomData *atoms, int atom1, int atom2, Environment *enviro);
     __device__ __host__ Real calc_lj(Atom atom1, Atom atom2, Real r2);
-    __device__ Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro);
-    __global__ void calcEnergy_NLC(Molecule *molecules, Environment *enviro, int *head, int *lscl, Real *part_energy);
+    __device__ Real calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro);
+    __global__ void calcEnergy_NLC(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int *head, int *lscl, Real *totalEnergy);
 	__global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);
 	
 	/// Each thread in this kernel calculates the inter-atomic
@@ -82,7 +84,7 @@ namespace ParallelCalcs
 	///   molecule indexes.
 	/// @param maxMolSize The size (in Atoms) of the largest molecule.
 	///   Used for energy segmentation size calculation.
-	__global__ void calcInterAtomicEnergy(MoleculeData *molecules, AtomData *atoms, int curentMol, Environment *enviro, Real *energies, int numEnergies, int *molBatch, int maxMolSize);
+	__global__ void calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int curentMol, Environment *enviro, Real *energies, int numEnergies, int *molBatch, int maxMolSize);
 	
 	/// This kernel performs parallel energy aggregation,
 	///   and also performs the service of resetting energies
@@ -108,7 +110,7 @@ namespace ParallelCalcs
 	/// @param r2 The distance between the two atoms, squared.
 	/// @return Returns the LJ energy between the two specified
 	///   atoms.
-	__device__ Real calc_lj(AtomData *atoms, int atom1, int atom2, Real r2);
+	__device__ __host__ Real calc_lj(AtomData *atoms, int atom1, int atom2, Real r2);
 	
 	/// Calculates the charge energy between two atoms.
 	/// @param charge1 The charge of atom 1.

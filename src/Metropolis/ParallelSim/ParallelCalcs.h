@@ -40,6 +40,14 @@ namespace ParallelCalcs
 	/// @return Returns total system energy.
 	Real calcSystemEnergy(Box *box);
 	
+	/// Parallel version of the Neighbor List function
+	/// Calculates the system energy using consecutive calls to
+	///   calcMolecularEnergyContribution.
+	/// @param box A ParallelBox cast as a Box, passed from Simulation.
+	/// @return Returns total system energy.
+	Real calcSystemEnergy_NLC(Box *box);
+	
+
 	/// Calculates the inter-molecular energy contribution of a given molecule,
 	///   without intramolecular energy, using a batch method.
 	/// @param box A ParallelBox cast as a Box, passed from Simulation.

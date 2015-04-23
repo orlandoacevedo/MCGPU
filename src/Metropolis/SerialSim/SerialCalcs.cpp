@@ -8,8 +8,7 @@
 	-> April 21, by Nathan Coleman
 	-> February 25, 2015 by Jared Brown
 */
-#include <time.h>
-#include <iostream>
+
 #include <math.h>
 #include <string>
 #include "Metropolis/DataTypes.h"
@@ -18,6 +17,8 @@
 #include "SerialCalcs.h"
 
 using namespace std;
+
+int INCLUDED_MOLECULES = 0;
 
 Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long* startStep, long* steps)
 {
@@ -40,6 +41,7 @@ Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long
 
 Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
 {
+    INCLUDED_MOLECULES = 0;
     Real totalEnergy = 0;
 
 	//for each molecule
@@ -47,6 +49,8 @@ Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
 	{
 		totalEnergy += calcMolecularEnergyContribution(molecules, enviro, mol, mol);
 	}
+
+    cout << "INCLUDED MOLECULES: " << INCLUDED_MOLECULES << endl;
 	
     return totalEnergy + Energy_LRC(molecules, enviro);
 }
@@ -54,7 +58,6 @@ Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro)
 Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environment *environment, int currentMol, int startIdx)
 {
     Real totalEnergy = 0;
-
 	//for every other molecule
 	#pragma omp parallel for //num_threads(4) <- this is set in Simulation.cpp
 	for (int otherMol = startIdx; otherMol < environment->numOfMolecules; otherMol++)
@@ -98,6 +101,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 						Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, environment);
 						//this addition needs to be atomic since multiple threads will be modifying totalEnergy
 						#pragma omp atomic
+						INCLUDED_MOLECULES++;
 						totalEnergy += tempEnergy;
 						//Molecule has been included. Skipping rest of primary indexes for otherMol
 						included = true;
@@ -111,6 +115,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 			}
 		}
 	}
+
 	return totalEnergy;
 }
 
@@ -150,6 +155,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
   /* Make a linked-cell list, lscl--------------------------------------------*/
 	int lcyz = lc[1]*lc[2];
 	int lcxyz = lc[0]*lcyz;
+    printf("my test: %d", lcxyz);
 		
 	// Reset the headers, head
 	for (int c = 0; c < lcxyz; c++) 
@@ -175,9 +181,6 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 	} /* Endfor molecule i */
 
   /* Calculate pair interaction-----------------------------------------------*/
-    clock_t function_time_start, function_time_end;
-    long duration;
-    function_time_start = clock();
 		
 	// Scan inner cells
 	for (mc[0] = 0; mc[0] < lc[0]; (mc[0])++)
@@ -260,10 +263,6 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
 			} /* Endfor central cell, c */
 		}
 	}
-    
-    function_time_end = clock();
-    duration = function_time_end - function_time_start;
-    std::cout << "Duration of neighbor list function: " << duration << std::endl;
 	
 	// *** Note: this function returns values similar to calcSystemEnergy before the calcIntramolEnergy_NLC is called
 	return totalEnergy + calcIntramolEnergy_NLC(enviro, molecules) + Energy_LRC(molecules, enviro);
