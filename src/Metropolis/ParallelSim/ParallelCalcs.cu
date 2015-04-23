@@ -358,7 +358,7 @@ __global__ void ParallelCalcs::calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real
 	}
 }
 	
-}
+
 
 /*__device__ Real ParallelCalcs::calcEnergyContribution(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int currentMol, int startIdx, )
 {
