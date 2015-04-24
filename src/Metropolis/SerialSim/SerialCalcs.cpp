@@ -270,7 +270,7 @@ Real SerialCalcs::calcEnergy_NLC(Molecule *molecules, Environment *enviro)
                                         // Calculate energy for entire molecule interaction if rij < Cutoff for atom index
                                         if (rr < rrCut)
                                         {	
-                                            totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro, subLJ, subCharge) * fValue;
+                                            totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro) * fValue;
                                             
                                             included = true;
                                             break;
