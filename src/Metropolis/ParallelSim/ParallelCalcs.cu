@@ -51,6 +51,86 @@ Box* ParallelCalcs::createBox(string inputPath, InputFileType inputType, long* s
 	return (Box*) box;
 }
 
+Real ParallelCalcs::calcIntramolEnergy_NLC(Environment *enviro, MoleculeData *molecules, AtomData *atoms)
+{
+    //setup storage
+    Real totalEnergy = 0.0;
+    Real *energySum_device;
+    // Molecule to be computed. Currently code only handles single solvent type systems.
+    // will need to update to handle more than one solvent type (i.e., co-solvents)
+    int mol1_i = 0;
+
+    //determine number of energy calculations
+    /*int N =(int) ( pow( (float) molecules->numOfAtoms[mol1_i],2)-molecules->numOfAtoms[mol1_i])/2;	 
+    size_t energySumSize = N * sizeof(Real);
+	Real* energySum = (Real*) malloc(energySumSize);*/
+
+    //calculate all energies
+    Real lj_energy, charge_energy, fValue, nonbonded_energy;
+    int atom1, atom2;
+	
+    for (int atomIn1_i = 0; atomIn1_i < molecules->numOfAtoms[mol1_i]; atomIn1_i++)
+    {	
+	atom1 = molecules->atomsIdx[mol1_i] + atomIn1_i;
+					
+	for (int atomIn2_i = atomIn1_i; atomIn2_i < molecules->numOfAtoms[mol1_i]; atomIn2_i++)
+	{
+		atom2 = molecules->atomsIdx[mol1_i] + atomIn2_i;
+			
+		if (atoms->sigma[atom1] < 0 || atoms->epsilon[atom1] < 0 || atoms->sigma[atom2] < 0 || atoms->epsilon[atom2] < 0)
+		{
+		    continue;
+		}
+					  
+		//calculate squared distance between atoms 
+			
+		Real r2 = calcAtomDist(atoms, atom1, atom2, enviro);
+									  
+		if (r2 == 0.0)
+		{
+		    continue;
+		}
+					
+		//calculate LJ energies
+		lj_energy = calc_lj(atoms, atom1, atom2, r2);
+
+					
+		//calculate Coulombic energies
+		charge_energy = calcCharge(atoms->charge[atom1], atoms->charge[atom2], sqrt(r2));
+						
+		//gets the fValue in the same molecule
+		fValue = 0.0;
+				
+		int hops = 0;
+		for (int k = 0; k < molecules->numOfHops[mol1_i]; k++)
+		{
+			int hopIdx = molecules->hopsIdx[mol1_i];
+			Hop currentHop = molecules->hops[hopIdx + k];
+			if (currentHop.atom1 == atomIn1_i && currentHop.atom2 == atomIn2_i)
+			{
+				hops = currentHop.hop;
+			}
+		}
+			
+		if (hops == 3)
+			fValue = 0.5;
+		else if (hops > 3)
+			fValue = 1.0;
+			
+						
+		Real subtotal = (lj_energy + charge_energy) * fValue;
+		totalEnergy += subtotal;
+
+	    } /* EndFor atomIn2_i */
+	} /* EndFor atomIn1_i */
+	
+	// Multiply single solvent molecule energy by number of solvent molecules in the system
+	totalEnergy *= enviro->numOfMolecules;
+	
+    //free(energySum);
+    return totalEnergy;
+}
+
 Real ParallelCalcs::calcSystemEnergy(Box *box)
 {
         Real totalEnergy = 0;
@@ -75,6 +155,7 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	int linkedCellList[NMAX];       /* Linked cell lists */
 	int vectorCells[3];			  	/* Vector cells */
 	int neighborCells[3];			/* Neighbor cells */
+
 	Real rshift[3];	  		/* Shift coordinates for periodicity */
 	const Real Region[3] = {enviro->x, enviro->y, enviro->z};  /* MD box lengths */
 	int c1;				  	/* Used for scalar cell index */
@@ -83,22 +164,23 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	Real lj_energy = 0.0;			/* Holds current Lennard-Jones energy */
 	Real charge_energy = 0.0;		/* Holds current coulombic charge energy */
 	Real totalEnergy = 0.0;		
+
 	int pair_i[10000];
 	int pair_j[10000];
 	int iterater_i = 0;
-	int iterater_j = 0;
-	
-// Compute the # of cells for linked cell lists
+
+
+	// Compute the # of cells for linked cell lists
 	for (int k = 0; k < 3; k++)
 	{
 		numCells[k] = Region[k] / enviro->cutoff; 
 		lengthCell[k] = Region[k] / numCells[k];
 	}
-	
-/* Make a linked-cell list --------------------------------------------*/
+
+	/* Make a linked-cell list --------------------------------------------*/
 	int numCellsYZ = numCells[1] * numCells[2];
 	int numCellsXYZ = numCells[0] * numCellsYZ;
-	
+
 	// Reset the headers, head
 	for (int c = 0; c < numCellsXYZ; c++)
 	{
@@ -110,16 +192,21 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	{
 		std::vector<int> molPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[i].type]);
 		int primaryIndex = molPrimaryIndexArray[0]; // Use first primary index to determine cell placement
+
 		vectorCells[0] = molecules[i].atoms[primaryIndex].x / lengthCell[0]; 
 		vectorCells[1] = molecules[i].atoms[primaryIndex].y / lengthCell[1];
 		vectorCells[2] = molecules[i].atoms[primaryIndex].z / lengthCell[2];
+
 		// Translate the vector cell index to a scalar cell index
 		int c = vectorCells[0]*numCellsYZ + vectorCells[1]*numCells[2] + vectorCells[2];
+
 		// Link to the previous occupant (or EMPTY if you're the 1st)
 		linkedCellList[i] = head[c];
+
 		// The last one goes to the header
 		head[c] = i;
 	} /* Endfor molecule i */
+
 
 	for (vectorCells[0] = 0; vectorCells[0] < numCells[0]; (vectorCells[0])++)
 	{
@@ -127,10 +214,12 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 		{
 			for (vectorCells[2] = 0; vectorCells[2] < numCells[2]; (vectorCells[2])++)
 			{
+
 				// Calculate a scalar cell index
 				int c = vectorCells[0]*numCellsYZ + vectorCells[1]*numCells[2] + vectorCells[2];
 				// Skip this cell if empty
 				if (head[c] == EMPTY) continue;
+
 				// Scan the neighbor cells (including itself) of cell c
 				for (neighborCells[0] = vectorCells[0]-1; neighborCells[0] <= vectorCells[0]+1; (neighborCells[0])++)
 					for (neighborCells[1] = vectorCells[1]-1; neighborCells[1] <= vectorCells[1]+1; (neighborCells[1])++)
@@ -161,15 +250,18 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 							{
 								continue;
 							}
+
 							// Scan atom i in cell c
 							int i = head[c];
 							while (i != EMPTY)
 							{
+
 								// Scan atom j in cell c1
 								int j = head[c1];
 								while (j != EMPTY)
 								{
 									bool included = false;
+
 									// Avoid double counting of pairs
 									if (i < j)
 									{	
@@ -183,6 +275,7 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 										{
 											otherMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[j].type]);
 										}
+
 										for (int i1 = 0; i1 < currentMolPrimaryIndexArray.size(); i1++)
 										{
 											for (int i2 = 0; i2 < otherMolPrimaryIndexArray.size(); i2++)
@@ -191,23 +284,24 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 												int primaryIndex2 = otherMolPrimaryIndexArray[i2];
 												Atom atom1 = molecules[i].atoms[primaryIndex1];
 												Atom atom2 = molecules[j].atoms[primaryIndex2];
+
 												Real dr[3];		  /* Pair vector dr = atom[i]-atom[j] */
 												dr[0] = atom1.x - (atom2.x + rshift[0]);
 												dr[1] = atom1.y - (atom2.y + rshift[1]);
 												dr[2] = atom1.z - (atom2.z + rshift[2]);
 												Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
-												
+
 												// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 												if (rr < rrCut)
 												{	
 													//totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro, subLJ, subCharge) * fValue;
 													pair_i[iterater_i] = i;
+													pair_j[iterater_i] = j;
 													iterater_i++;
-													pair_j[iterater_j] = j;
-													iterater_j++;
 													included = true;
 													break;
 												} /* Endif rr < rrCut */
+
 											}
 											if (included)
 											{
@@ -215,24 +309,29 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 											}
 										}
 									} /* Endif i<j */
-									
+
 									j = linkedCellList[j];
 								} /* Endwhile j not empty */
-								
+
 								i = linkedCellList[i];
 							} /* Endwhile i not empty */
 						} /* Endfor neighbor cells, c1 */
 			} /* Endfor central cell, c */
 		}
 	}
+
+
 	int *d_pair_i;
 	int *d_pair_j;
 	cudaMalloc((void **)&d_pair_i, sizeof(int)*10000);
 	cudaMalloc((void **)&d_pair_j, sizeof(int)*10000);
+
 	cudaMemcpy(d_pair_i, pair_i, sizeof(int)*10000, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_pair_j, pair_j, sizeof(int)*10000, cudaMemcpyHostToDevice);
+
 	thrust::device_vector<Real> part_energy(10000, 0);//this will store the result
 	ParallelBox *pBox = (ParallelBox*) box;
+
 	if (pBox == NULL)
 	{
 		return 0;
@@ -243,9 +342,12 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 	int blocksPerGrid = 53;
 	calcEnergy_NLC<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_pair_i, d_pair_j, raw_ptr, d_molecules, d_atoms, d_enviro, iterater_i);
+
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
+
 	cudaFree(d_pair_i);
 	cudaFree(d_pair_j);
+
 	return total_energy;// + calcIntramolEnergy_NLC(enviro, pBox->moleculesD, pBox->atomsD);
 }
 
@@ -257,27 +359,101 @@ __global__ void ParallelCalcs::calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real
 		part_energy[i] = part_energy[i] + calcInterMolecularEnergy(molecules, atoms, d_pair_i[i], d_pair_j[i], enviro) * 1.0;
 	}
 }
+	
 
-__device__ Real ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro)
+
+/*__device__ Real ParallelCalcs::calcEnergyContribution(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int currentMol, int startIdx, )
 {
-	Real totalEnergy = 0;
-	for (int i = 0; i < molecules->numOfAtoms[mol1]; i++)
+    int otherMol = blockIdx.x * blockDim.x + threadIdx.x;
+
+    //checks validity of molecule pair
+    if (otherMol < molecules->moleculeCount && otherMol >= startIdx && otherMol != currentMol)
+    {
+        bool included = false;
+        for (int i = 0; i < molecules->totalPrimaryIndexSize; i++)
+        {
+            int currentMoleculeIndexCount = molecules->primaryIndexes[i];
+            int currentTypeIndex = i+1;
+            int potentialCurrentMoleculeType = molecules->primaryIndexes[currentTypeIndex];
+
+            if (potentialCurrentMoleculeType == molecules->type[currentMol])
+            {
+                int *currentMolPrimaryIndexArray = molecules->primaryIndexes + currentTypeIndex + 1;
+		int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount - 1;
+
+                for (int k = 0; k < molecules->totalPrimaryIndexSize; k++)
+                {
+                    int otherMoleculeIndexCount = molecules->primaryIndexes[k];
+                    int otherTypeIndex = k+1;
+                    int potentialOtherMoleculeType = molecules->primaryIndexes[otherTypeIndex];
+
+                    if (potentialOtherMoleculeType == molecules->type[otherMol])
+                    {
+                        int *otherMolPrimaryIndexArray = molecules->primaryIndexes + otherTypeIndex + 1;
+                        int otherMolPrimaryIndexArrayLength = otherMoleculeIndexCount - 1;
+
+                        for (int m = 0; m < currentMolPrimaryIndexArrayLength; m++)
+                        {
+                            for (int n = 0; n < otherMolPrimaryIndexArrayLength; n++)
+                            {
+                                //find primary atom indices for this pair of molecules
+				int atom1 = molecules->atomsIdx[currentMol] + *(currentMolPrimaryIndexArray + m);
+				int atom2 = molecules->atomsIdx[otherMol] + *(otherMolPrimaryIndexArray + n);
+	
+				dr[0] = atoms->x[atom1] - (atoms->x[atom2] + rshift[0]);
+                                dr[1] = atoms->y[atom1] - (atoms->y[atom2] + rshift[1]);
+                                dr[2] = atoms->z[atom1] - (atoms->z[atom2] + rshift[2]);
+                                const Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);
+
+                                // Calculate energy for entire molecule interaction if rij < Cutoff for atom index
+
+                                if (rr < rrCut) {
+                                    included = true;
+                                    part_energy[index] = part_energy[index] + calcInterMolecularEnergy(molecules, atoms, i, j, enviro) * fValue;
+                                    break;
+                                 }
+                            }
+                            if (included)
+                                break;
+                        }
+		     }
+                     if (included)
+                         break;
+                     else
+                         k += otherMoleculeIndexCount;
+                }
+            }   
+            if (included)
+                break;
+            else
+                i += currentMoleculeIndexCount;
+        }
+    }
+
+}*/
+
+	__device__ Real ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro)
 	{
-		for (int j = 0; j < molecules->numOfAtoms[mol2]; j++)
+		Real totalEnergy = 0;
+		for (int i = 0; i < molecules->numOfAtoms[mol1]; i++)
 		{
-			int atom1 = molecules->atomsIdx[mol1] + i;
-			int atom2 = molecules->atomsIdx[mol2] + j;
-			if (atoms->sigma[atom1] >= 0 && atoms->epsilon[atom1] >= 0 && atoms->sigma[atom2] >= 0 && atoms->epsilon[atom2] >= 0)
+			for (int j = 0; j < molecules->numOfAtoms[mol2]; j++)
 			{
-				//calculate squared distance between atoms 
-				Real r2 = calcAtomDist(atoms, atom1, atom2, enviro);
-				totalEnergy += calc_lj(atoms, atom1, atom2, r2);
-				totalEnergy += calcCharge(atoms->charge[atom1], atoms->charge[atom2], sqrt(r2));
+				int atom1 = molecules->atomsIdx[mol1] + i;
+				int atom2 = molecules->atomsIdx[mol2] + j;
+				if (atoms->sigma[atom1] >= 0 && atoms->epsilon[atom1] >= 0 && atoms->sigma[atom2] >= 0 && atoms->epsilon[atom2] >= 0)
+				{
+					//calculate squared distance between atoms 
+					Real r2 = calcAtomDist(atoms, atom1, atom2, enviro);
+					totalEnergy += calc_lj(atoms, atom1, atom2, r2);
+					totalEnergy += calcCharge(atoms->charge[atom1], atoms->charge[atom2], sqrt(r2));
+				}
 			}
+
 		}
+		return totalEnergy;
 	}
-	return totalEnergy;
-}
+
 
 Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int startIdx)
 {
@@ -327,9 +503,7 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 	
 	//Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
 	thrust::device_ptr<Real> energiesOnDevice = thrust::device_pointer_cast(&box->energiesD[0]);
-	double reduction = thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
-	cudaMemset(box->energiesD, 0, validEnergies * sizeof(Real));
-	return reduction;
+	return thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
 }
 
 __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff)
@@ -403,6 +577,35 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 			i += currentMoleculeIndexCount;
 		}
 	
+		/*//find primary atom indices for this pair of molecules
+		for (int i = 0; i < molecules->totalPrimaryIndexSize; i++)
+		{
+		    printf("checkMoleculeDistances:totalPrimaryIndexSize: %d Array: ",molecules->totalPrimaryIndexSize);
+		    printf("%d: ", i);
+		    printf("%d", molecules->primaryIndexes[i]);
+		} 
+		printf("\n");
+		//int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
+		//int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;
+
+
+		int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
+		int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;
+			
+		//calculate periodic difference in coordinates
+		Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
+		Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
+		Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
+		
+		Real r2 = (deltaX * deltaX) +
+					(deltaY * deltaY) + 
+					(deltaZ * deltaZ);
+		
+		//if within curoff, write index to inCutoff
+		if (r2 < enviro->cutoff * enviro->cutoff)
+		{
+			inCutoff[otherMol] = otherMol;
+		}*/
 	}
 }
 
@@ -484,7 +687,6 @@ __device__ Real ParallelCalcs::calcAtomDist(AtomData *atoms, int atomIdx1, int a
 	//calculate squared distance (r2 value) and return
 	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
 }
-
 __device__ __host__ Real ParallelCalcs::calcCharge(Real charge1, Real charge2, Real r)
 {  
     if (r == 0.0)
