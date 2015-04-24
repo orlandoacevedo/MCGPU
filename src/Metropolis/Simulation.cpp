@@ -165,7 +165,7 @@ void Simulation::run()
 		}
 	}
 	function_time_end = clock();
-    long duration = function_time_end - function_time_start;//difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC);
+    long duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC);
     std::cout << "Duration of neighbor list function: " << duration << " seconds" <<std::endl;
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
