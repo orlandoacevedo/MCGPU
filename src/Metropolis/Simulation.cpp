@@ -371,19 +371,17 @@ if (!args.verboseOutput)
 		std::cout.rdbuf(cout_sbuf); // restore the original stream buffer
 	}
 	
-	std::cout << std::endl << "Finished running " << simSteps << " steps" << std::endl;
-	
-	std::cout << "LJ-Energy Subtotal: " << lj_energy << std::endl;
-	std::cout << "Charge Energy Subtotal: " << charge_energy << std::endl;
-	std::cout << "Energy Long-range Correction: " << energy_LRC << std::endl;
-	std::cout << "Intramolecular Energy: " << intraMolEnergy << std::endl;
-	std::cout << "Final Total Energy: " << currentEnergy << std::endl;
-	
-	std::cout << "Total Run Time: " << diffTime << " seconds" << std::endl;
-	std::cout << "Accepted Moves: " << accepted << std::endl;
-	std::cout << "Rejected Moves: " << rejected << std::endl;
-	std::cout << "Acceptance Ratio: " << 100.0 * accepted / (accepted + rejected) << '\%' << std::endl;
-    
+	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
+	fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
+	fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
+	fprintf(stdout, "Energy Long-range Correcton: %.3f\n", energy_LRC);
+	fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
+	fprintf(stdout, "Final Energy: %.3f\n", currentEnergy);
+	fprintf(stdout, "Run Time: %.3f seconds\n", diffTime);
+	fprintf(stdout, "Accepted Moves: %d\n", accepted);
+	fprintf(stdout, "Rejected Moves: %d\n", rejected);
+	fprintf(stdout, "Acceptance Raio: %.2f%%\n", 100.0 * accepted / (accepted + rejected));
+	fprintf(stdout, "Duration of neighbor list function: %d\n", diffTime);
 
 	std::string resultsName;
 	if (args.simulationName.empty())
