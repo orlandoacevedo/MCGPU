@@ -92,7 +92,7 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 					{
 						Real lj_energy = 0, charge_energy = 0;
 						Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, enviro, lj_energy, charge_energy);
-
+		
 						//this addition needs to be atomic since multiple threads will be modifying totalEnergy
 						#pragma omp critical
 						{
@@ -169,6 +169,7 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 	
 	// Scan the neighbor cells (including itself) of cell c
 	int neighborCells[3];			/* Neighbor cells */
+	//#pragma omp parallel for collapse(3)
 	for (neighborCells[0] = vectorCells[0]-1; neighborCells[0] <= vectorCells[0]+1; (neighborCells[0])++)
 		for (neighborCells[1] = vectorCells[1]-1; neighborCells[1] <= vectorCells[1]+1; (neighborCells[1])++)
 			for (neighborCells[2] = vectorCells[2]-1; neighborCells[2] <= vectorCells[2]+1; (neighborCells[2])++)
@@ -236,7 +237,20 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 								{
 									Real lj_energy = 0, charge_energy = 0;
 									
-									totalEnergy += calcInterMolecularEnergy(molecules, currentMol, otherMol, enviro, lj_energy, charge_energy) * fValue;
+									Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, enviro, lj_energy, charge_energy) * fValue;
+									subLJ += lj_energy;
+									subCharge += charge_energy;
+									
+									/*
+									#pragma omp critical
+									{
+										totalEnergy += tempEnergy;
+										subLJ += lj_energy;
+										subCharge += charge_energy;
+									}
+									*/
+									
+									totalEnergy += tempEnergy;
 									subLJ += lj_energy;
 									subCharge += charge_energy;
 									

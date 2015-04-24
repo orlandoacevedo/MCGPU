@@ -168,11 +168,23 @@ void Simulation::run()
 			}
 		}
 		
-		oldEnergy += energy_LRC + intraMolEnergy; // add in long-range correction value and intramol energy
+		//oldEnergy += energy_LRC + intraMolEnergy; // add in long-range correction value and intramol energy
+		oldEnergy += energy_LRC;
 	}
 	function_time_end = clock();
-    double duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC);
+	
+	double duration = 0.0;
+	if (args.useNeighborList)
+	{
+		duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC);
+	}
+	else
+	{
+		duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC * threadsToSpawn);
+	}
+
 	std::cout << "Duration of system energy calculation function: " << duration << " seconds" << std::endl;
+	std::cout << "Threads to spawn: " << threadsToSpawn << std::endl;
 	
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
@@ -306,9 +318,17 @@ void Simulation::run()
 	writePDB(enviro, molecules);
 	endTime = clock();
 	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
-	//However, it is a good enough estimation witout adding unnecessary complexity.
-    //double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
-	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC);
+	//However, it is a good enough estimation without adding unnecessary complexity.
+	
+	double diffTime = 0.0;
+	if (args.useNeighborList)
+	{
+		diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC);
+	}
+	else
+	{
+		diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
+	}
 	
 	lj_energy = 0, charge_energy = 0;
 	if (args.simulationMode == SimulationMode::Parallel)
