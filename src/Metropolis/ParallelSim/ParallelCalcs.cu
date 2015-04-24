@@ -328,6 +328,7 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 	//Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
 	thrust::device_ptr<Real> energiesOnDevice = thrust::device_pointer_cast(&box->energiesD[0]);
 	double reduction = thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
+	cudaMemset(box->energiesD, 0, validEnergies * sizeof(Real));
 	return reduction;
 }
 
