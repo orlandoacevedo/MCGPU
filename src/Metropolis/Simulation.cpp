@@ -136,6 +136,16 @@ void Simulation::run()
     clock_t function_time_start, function_time_end;
 	function_time_start = clock();
 	
+	//Set the output depending on the verbose flag
+	std::streambuf* cout_sbuf;
+	if (!args.verboseOutput)
+	{
+		std::cout << "Silent run, integration test started..." << endl; // save original sbuf
+		std::streambuf* cout_sbuf = std::cout.rdbuf();
+		std::ofstream fout("/dev/null");
+		std::cout.rdbuf(fout.rdbuf()); // redirect 'cout' to a 'fout'
+	}
+
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
 	{	
@@ -354,6 +364,11 @@ void Simulation::run()
 	if (args.stateInterval >= 0)
 	{
 		saveState(baseStateFile, (stepStart + simSteps));
+	}
+
+if (!args.verboseOutput)
+	{
+		std::cout.rdbuf(cout_sbuf); // restore the original stream buffer
 	}
 	
 	std::cout << std::endl << "Finished running " << simSteps << " steps" << std::endl;
