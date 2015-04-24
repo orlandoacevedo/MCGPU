@@ -133,7 +133,7 @@ void Simulation::run()
                         {
                                 function_time_start = clock();
                                 std::cout << "Using neighbor-list for energy calc" << std::endl;
-                                oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
+                                //oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
                                 function_time_end = clock();
                 		duration = function_time_end -function_time_start;
                         }

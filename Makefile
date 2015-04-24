@@ -201,7 +201,6 @@ CxxFlags := -c
 # Compiler specific flags for the CUDA compiler when generating .o files
 # and when generating .d files for dependency information
 CuFlags := -c -rdc=true $(CudaArchitecture)
-#CuFlags := -c -std=c++11 -rdc=true $(CudaArchitecture)
 
 # Linker specific flags for the C++ compiler
 LCxxFlags := 

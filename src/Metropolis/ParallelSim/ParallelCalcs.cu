@@ -327,7 +327,8 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 	
 	//Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
 	thrust::device_ptr<Real> energiesOnDevice = thrust::device_pointer_cast(&box->energiesD[0]);
-	return thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
+	double reduction = thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
+	return reduction;
 }
 
 __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff)
@@ -401,35 +402,6 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 			i += currentMoleculeIndexCount;
 		}
 	
-		/*//find primary atom indices for this pair of molecules
-		for (int i = 0; i < molecules->totalPrimaryIndexSize; i++)
-		{
-		    printf("checkMoleculeDistances:totalPrimaryIndexSize: %d Array: ",molecules->totalPrimaryIndexSize);
-		    printf("%d: ", i);
-		    printf("%d", molecules->primaryIndexes[i]);
-		} 
-		printf("\n");
-		//int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
-		//int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;
-
-
-		int atom1 = molecules->atomsIdx[currentMol] + enviro->primaryAtomIndex;
-		int atom2 = molecules->atomsIdx[otherMol] + enviro->primaryAtomIndex;
-			
-		//calculate periodic difference in coordinates
-		Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
-		Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
-		Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
-		
-		Real r2 = (deltaX * deltaX) +
-					(deltaY * deltaY) + 
-					(deltaZ * deltaZ);
-		
-		//if within curoff, write index to inCutoff
-		if (r2 < enviro->cutoff * enviro->cutoff)
-		{
-			inCutoff[otherMol] = otherMol;
-		}*/
 	}
 }
 
