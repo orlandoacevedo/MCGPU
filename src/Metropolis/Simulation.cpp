@@ -150,8 +150,8 @@ void Simulation::run()
 			{
 				std::cout << "Using neighbor-list for parallel energy calculation" << std::endl;
 				// TODO: update for refactored/renamed parallel function
-				//oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
-				oldEnergy = ParallelCalcs::calcSystemEnergy(box);				
+				oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
+				//oldEnergy = ParallelCalcs::calcSystemEnergy(box);
 			}
 			else
 			{
@@ -237,8 +237,8 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				//oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);	
-				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);
+				//oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
 			}
 			else
 			{
@@ -265,8 +265,8 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				//newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);	
-				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);
+                //newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(neighborList, box, changeIdx);
 			}
 			else
 			{

@@ -57,6 +57,7 @@ namespace ParallelCalcs
 	/// @return Returns total molecular energy contribution, without
 	///   intramolecular energy.
 	Real calcMolecularEnergyContribution(Box *box, int molIdx, int startIdx = 0);
+    Real calcMolecularEnergyContribution_NLC(NeighborList *nl, Box *box int currentMol);
 }
 
 #endif
