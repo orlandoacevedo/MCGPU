@@ -32,15 +32,12 @@ struct AtomData
 
 struct MoleculeData
 {
-	int *atomsIdx, *numOfAtoms, *type, *primaryIndexes, *hopsIdx, *numOfHops;
-	int moleculeCount, totalPrimaryIndexSize, totalHopSize;
-	Hop *hops;
+	int *atomsIdx, *numOfAtoms, *type, *primaryIndexes;
+	int moleculeCount, totalPrimaryIndexSize;
 
 	MoleculeData(Molecule *molecules, int numM, Environment *enviro)
 	{
 		int idx = 0;
-		int hIdx = 0;
-		int hopsSize = 0;
 		int sizeOfPrimaryIndexVector = enviro->primaryAtomIndexDefinitions;
  		int totalPrimaryIndexCount = 0;
 		

@@ -79,10 +79,6 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	const Real Region[3] = {enviro->x, enviro->y, enviro->z};  /* MD box lengths */
 	int c1;				  	/* Used for scalar cell index */
 	Real rrCut = enviro->cutoff * enviro->cutoff;	/* Cutoff squared */
-	Real fValue = 1.0;				/* Holds 1,4-fudge factor value */
-	Real lj_energy = 0.0;			/* Holds current Lennard-Jones energy */
-	Real charge_energy = 0.0;		/* Holds current coulombic charge energy */
-	Real totalEnergy = 0.0;		
 	int pair_i[10000];
 	int pair_j[10000];
 	int iterater_i = 0;
