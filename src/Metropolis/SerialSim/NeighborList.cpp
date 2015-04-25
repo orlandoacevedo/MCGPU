@@ -36,7 +36,7 @@ NeighborList::NeighborList(Molecule *molecules, Environment *enviro)
 		lengthCell[k] = region[k] / numCells[k];
 	}
 		
-  /* Make a linked-cell list --------------------------------------------*/
+  	/* Make a linked-cell list --------------------------------------------*/
 	numCellsYZ = numCells[1] * numCells[2];
 	numCellsXYZ = numCells[0] * numCellsYZ;
 		

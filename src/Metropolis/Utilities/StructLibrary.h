@@ -218,7 +218,8 @@ struct Atom
 	std::string *name;
 	Real x, y, z, sigma, epsilon, charge;
 	unsigned long id;
-	Atom(){
+	Atom()
+    {
 		name = new std::string("000");
 		x = 0;
 		y = 0;
@@ -291,10 +292,10 @@ struct Environment
         numOfAtoms = environment->numOfAtoms;
         numOfMolecules = environment->numOfMolecules;
         primaryAtomIndexConfigLine = environment->primaryAtomIndexConfigLine;
-	primaryAtomIndexDefinitions = environment->primaryAtomIndexDefinitions;
-	primaryAtomIndex = environment->primaryAtomIndex;
-	primaryAtomIndexArray = (environment->primaryAtomIndexArray);
-	randomseed = environment->randomseed;
+	   primaryAtomIndexDefinitions = environment->primaryAtomIndexDefinitions;
+	   primaryAtomIndex = environment->primaryAtomIndex;
+	   primaryAtomIndexArray = (environment->primaryAtomIndexArray);
+	   randomseed = environment->randomseed;
     }
 
 };
@@ -351,7 +352,7 @@ struct Molecule
     Constructor(s) for the molecule
     */
     Molecule(int idIn, int typeIn, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
-    	{
+    {
 		id = idIn;
 		type = typeIn;
 
@@ -366,9 +367,10 @@ struct Molecule
 		numOfBonds = bondCount;
 		numOfDihedrals = dihedralCount;
 		numOfHops = hopCount; 	
-		}
+	}
 		
-	Molecule() {
+	Molecule() 
+    {
 		id = 0;
 		type = 0;
 
@@ -383,7 +385,7 @@ struct Molecule
 		numOfBonds = 0;
 		numOfDihedrals = 0;
 		numOfHops = 0; 	
-		}    
+	}    
 };
 
 
@@ -403,6 +405,5 @@ Molecule createMolecule(int id, int type,  Atom *atoms, Angle *angles, Bond *bon
                         int atomCount, int angleCount, int bondCount, int dihedralCount);
 void copyMolecule(Molecule *destination, Molecule *source);
 void printMolecule(Molecule *molecule);
-
 
 #endif

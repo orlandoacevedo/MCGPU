@@ -241,15 +241,6 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 									subLJ += lj_energy;
 									subCharge += charge_energy;
 									
-									/*
-									#pragma omp critical
-									{
-										totalEnergy += tempEnergy;
-										subLJ += lj_energy;
-										subCharge += charge_energy;
-									}
-									*/
-									
 									totalEnergy += tempEnergy;
 									subLJ += lj_energy;
 									subCharge += charge_energy;
@@ -275,7 +266,6 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 
 
 /* ------ Utility Calculation Functions ------ */
-
 
 Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *enviro, Real &subLJ, Real &subCharge)
 {
@@ -315,14 +305,6 @@ Real SerialCalcs::calcIntraMolecularEnergy(Molecule *molecules, Environment *env
 	
     // NOTE: Current code only handles one or two solvent type systems. ****
 	int NMOL = 2;
-
-	/*
-    //determine number of energy calculations
-	Real *energySum_device;
-    int N =(int) ( pow( (float) molecules[mol1_i].numOfAtoms,2)-molecules[mol1_i].numOfAtoms)/2;	 
-    size_t energySumSize = N * sizeof(Real);
-	Real* energySum = (Real*) malloc(energySumSize);
-	*/
 	
 	for (int molIndex = 0; molIndex < NMOL - 1; molIndex++)
 	{
@@ -336,49 +318,48 @@ Real SerialCalcs::calcIntraMolecularEnergy(Molecule *molecules, Environment *env
 			{
 				atom2 = molecules[molIndex].atoms[atomIn2_i];
 					
-					if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0) continue;
+				if (atom1.sigma < 0 || atom1.epsilon < 0 || atom2.sigma < 0 || atom2.epsilon < 0) continue;
 					
-					//calculate squared distance between atoms 
-					Real r2 = calcAtomDist(atom1, atom2, enviro);
+				//calculate squared distance between atoms 
+				Real r2 = calcAtomDist(atom1, atom2, enviro);
 					
-					if (r2 == 0.0) continue;
+				if (r2 == 0.0) 
+					continue;
 						
-					//calculate LJ energies
-					lj_energy = calc_lj(atom1, atom2, r2);
-					subLJ += lj_energy;
+				//calculate LJ energies
+				lj_energy = calc_lj(atom1, atom2, r2);
+				subLJ += lj_energy;
 					
-					//calculate Coulombic energies
-					charge_energy = calcCharge(atom1.charge, atom2.charge, sqrt(r2));
-					subCharge += charge_energy;
+				//calculate Coulombic energies
+				charge_energy = calcCharge(atom1.charge, atom2.charge, sqrt(r2));
+				subCharge += charge_energy;
 					
-					//gets the fValue in the same molecule
-					Real fValue = 0.0;
+				//gets the fValue in the same molecule
+				Real fValue = 0.0;
 					
-					int hops = 0;
-					for (int k = 0; k < molecules[molIndex].numOfHops; k++)
+				int hops = 0;
+				for (int k = 0; k < molecules[molIndex].numOfHops; k++)
+				{
+					Hop currentHop = molecules[molIndex].hops[k];
+					if (currentHop.atom1 == atomIn1_i && currentHop.atom2 == atomIn2_i)
 					{
-						Hop currentHop = molecules[molIndex].hops[k];
-						if (currentHop.atom1 == atomIn1_i && currentHop.atom2 == atomIn2_i)
-						{
-							hops = currentHop.hop;
-						}
+						hops = currentHop.hop;
 					}
+				}
 					
-					if (hops == 3)
-						fValue = 0.5;
-					else if (hops > 3)
-						fValue = 1.0;
+				if (hops == 3)
+					fValue = 0.5;
+				else if (hops > 3)
+					fValue = 1.0;
 							
-					Real subtotal = (lj_energy + charge_energy) * fValue;
-					totalEnergy += subtotal;
-
+				Real subtotal = (lj_energy + charge_energy) * fValue;
+				totalEnergy += subtotal;
 			} /* EndFor atomIn2_i */
 		} /* EndFor atomIn1_i */
 	}
 
 	totalEnergy *= (enviro->numOfMolecules / NMOL);
 	
-    //free(energySum);
     return totalEnergy;
 }
 
@@ -534,5 +515,3 @@ Real SerialCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
 	//calculate squared distance (r2 value) and return
 	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
 }
-
-

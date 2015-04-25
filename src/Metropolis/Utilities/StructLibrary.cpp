@@ -11,7 +11,6 @@
 
 #include "StructLibrary.h"
 #include "Metropolis/DataTypes.h" //AlbertExcludes
-//#include "../../Metropolis/DataTypes.h" //AlbertIncludes
 
 using namespace std;
 
@@ -56,8 +55,6 @@ void printAtoms(Atom *atoms, int count){}
 
 void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, int accepts, int rejects, Real totalEnergy){}
 
-
-
 //Environment
 Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real temp, int numOfAtoms, Real cutoff, Real maxRotation)
 {
@@ -72,8 +69,6 @@ Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real 
 	environment.numOfAtoms = numOfAtoms;
 	return environment;
 }
-
-
 
 //Molecule
 Molecule createMolecule(Atom *atoms, int numOfAtoms)

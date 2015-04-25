@@ -66,8 +66,9 @@ class ConfigScanner
         bool useStatefileSetup; //if true, always try the state file for pre-sim setup; else, try ZMatrix
         bool useZMatrixSetup; //if set to true, use the ZMatrix file unless state file is available
 		
-	void throwScanError(string message);
-	void parsePrimaryIndexDefinitions(string definitions);
+      	void throwScanError(string message);
+      	void parsePrimaryIndexDefinitions(string definitions);
+
     public:
         /// Default constructor that initializes the scanner to default
         /// values but does not read in any files yet.
@@ -134,10 +135,10 @@ class ConfigScanner
         */
         bool doSetupFromStateFile() {return useStatefileSetup;}
 
-		/**
-			@return - return whether or not we should use the ZMatrix file for setup, in the event the state file isn't found
-		*/
-		bool doSetupFromZMatrixFile() {return useZMatrixSetup;}
+    		/**
+    			@return - return whether or not we should use the ZMatrix file for setup, in the event the state file isn't found
+    		*/
+    		bool doSetupFromZMatrixFile() {return useZMatrixSetup;}
         
 
 };
