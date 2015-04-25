@@ -71,10 +71,10 @@ NeighborList::NeighborList(Molecule *molecules, Environment *enviro)
 }
 
 NeighborList::~NeighborList() {
-	FREE(numCells);
-	FREE(lengthCell);
-	FREE(head);
-	FREE(linkedCellList);
-	FREE(region);
+	free(numCells);
+	free(lengthCell);
+	free(head);
+	free(linkedCellList);
+	free(region);
 }
 	
