@@ -67,58 +67,15 @@ Real ParallelCalcs::calcSystemEnergy(Box *box)
 }
 
 Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){ 
-
+	NeiborList *nl = box->neighborList;
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
-	int numCells[3];            	/* Number of cells in the x|y|z direction */
-	Real lengthCell[3];         	/* Length of a cell in the x|y|z direction */
-	int head[NCLMAX];    			/* Headers for the linked cell lists */
-	int linkedCellList[NMAX];       /* Linked cell lists */
-	int vectorCells[3];			  	/* Vector cells */
-	int neighborCells[3];			/* Neighbor cells */
-	Real rshift[3];	  		/* Shift coordinates for periodicity */
-	const Real Region[3] = {enviro->x, enviro->y, enviro->z};  /* MD box lengths */
-	int c1;				  	/* Used for scalar cell index */
-	Real rrCut = enviro->cutoff * enviro->cutoff;	/* Cutoff squared */
 	int pair_i[10000];
 	int pair_j[10000];
 	int iterater_i = 0;
-	int iterater_j = 0;
-	
-// Compute the # of cells for linked cell lists
-	for (int k = 0; k < 3; k++)
-	{
-		numCells[k] = Region[k] / enviro->cutoff; 
-		lengthCell[k] = Region[k] / numCells[k];
-	}
-	
-/* Make a linked-cell list --------------------------------------------*/
-	int numCellsYZ = numCells[1] * numCells[2];
-	int numCellsXYZ = numCells[0] * numCellsYZ;
-	
-	// Reset the headers, head
-	for (int c = 0; c < numCellsXYZ; c++)
-	{
-		head[c] = EMPTY;
-	}
 
-	// Scan cutoff index atom in each molecule to construct headers, head, & linked lists, lscl
-	for (int i = 0; i < enviro->numOfMolecules; i++)
-	{
-		std::vector<int> molPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[i].type]);
-		int primaryIndex = molPrimaryIndexArray[0]; // Use first primary index to determine cell placement
-		vectorCells[0] = molecules[i].atoms[primaryIndex].x / lengthCell[0]; 
-		vectorCells[1] = molecules[i].atoms[primaryIndex].y / lengthCell[1];
-		vectorCells[2] = molecules[i].atoms[primaryIndex].z / lengthCell[2];
-		// Translate the vector cell index to a scalar cell index
-		int c = vectorCells[0]*numCellsYZ + vectorCells[1]*numCells[2] + vectorCells[2];
-		// Link to the previous occupant (or EMPTY if you're the 1st)
-		linkedCellList[i] = head[c];
-		// The last one goes to the header
-		head[c] = i;
-	} /* Endfor molecule i */
-
-	for (vectorCells[0] = 0; vectorCells[0] < numCells[0]; (vectorCells[0])++)
+	int vectorCells[3];
+	for (vectorCells[0] = 0; vectorCells[0] < nl->numCells[0]; (vectorCells[0])++)
 	{
 		for (vectorCells[1] = 0; vectorCells[1] < numCells[1]; (vectorCells[1])++)
 		{
@@ -199,9 +156,8 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 												{	
 													//totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro, subLJ, subCharge) * fValue;
 													pair_i[iterater_i] = i;
+													pair_j[iterater_i] = j;
 													iterater_i++;
-													pair_j[iterater_j] = j;
-													iterater_j++;
 													included = true;
 													break;
 												} /* Endif rr < rrCut */
@@ -506,7 +462,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 								if (rr < nl->rrCut)
 								{
 									
-									calcInterMolecularEnergy<<<1, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, otherMol, counter, raw_ptr, pBox->maxMolSize);
+									calcInterMolecularEnergy_NLC<<<1, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, enviro, currentMol, otherMol, counter, raw_ptr, pBox->maxMolSize);
 									counter++;
 									included = true;
 									break;
@@ -529,7 +485,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	return total_energy;
 }
 
-__global__ void ParallelCalcs::calcInterMolecularEnergy_NLC(MoleculeData *molecules, AtomData *atoms, int currentMol, int otherMol, int counter, Real *energies, int maxMolSize)
+__global__ void ParallelCalcs::calcInterMolecularEnergy_NLC(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int currentMol, int otherMol, int counter, Real *energies, int maxMolSize)
 {
 	int energyIdx = threadIdx.x;
 
