@@ -157,6 +157,7 @@ Real SerialCalcs::calcSystemEnergy_NLC(NeighborList *nl, Molecule *molecules, En
 Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge, int currentMol, bool isSysCalc) {
 	Real totalEnergy = 0.0;			/* Total nonbonded energy x fudge factor */
 	Real fValue = 1.0;				/* Holds 1,4-fudge factor value */
+    int counter = 0;
 	
 	// Find the vector cell for the currentMol (based on 1st primary index)
 	std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
@@ -238,6 +239,7 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 								if (rr < nl->rrCut)
 								{
 									Real lj_energy = 0, charge_energy = 0;
+                                    counter++;
 									
 									Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, enviro, lj_energy, charge_energy) * fValue;
 									subLJ += lj_energy;
@@ -271,6 +273,7 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 					otherMol = nl->linkedCellList[otherMol];
 				} /* Endwhile otherMol not empty */
 			} /* Endfor neighbor cells, c1 */
+    printf("!!!!!!!!!!!: %d", counter);
 	
 	return totalEnergy;
 }
