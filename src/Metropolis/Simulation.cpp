@@ -372,16 +372,17 @@ if (!args.verboseOutput)
 	}
 	
 	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
+	
+	fprintf(stdout, "Final Energy: %.3f\n", currentEnergy);
+	fprintf(stdout, "Run Time: %.3f seconds\n", diffTime);
+	
 	fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
 	fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
 	fprintf(stdout, "Energy Long-range Correcton: %.3f\n", energy_LRC);
 	fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
-	fprintf(stdout, "Final Energy: %.3f\n", currentEnergy);
-	fprintf(stdout, "Run Time: %.3f seconds\n", diffTime);
 	fprintf(stdout, "Accepted Moves: %d\n", accepted);
 	fprintf(stdout, "Rejected Moves: %d\n", rejected);
 	fprintf(stdout, "Acceptance Raio: %.2f%%\n", 100.0 * accepted / (accepted + rejected));
-	fprintf(stdout, "Duration of neighbor list function: %d\n", diffTime);
 
 	std::string resultsName;
 	if (args.simulationName.empty())
@@ -410,8 +411,14 @@ if (!args.verboseOutput)
 	resultsFile << "Steps = " << simSteps << std::endl;
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;
 	resultsFile << "[Results]" << std::endl;
+	
 	resultsFile << "Final-Energy = " << currentEnergy << std::endl;
 	resultsFile << "Run-Time = " << diffTime << " seconds" << std::endl;
+
+	resultsFile << "LJ-Energy Subtotal = " << lj_energy << std::endl;
+	resultsFile << "Charge Energy Subtotal = " << charge_energy << std::endl;
+	resultsFile << "Energy Long-range Correcton = " << energy_LRC << std::endl;
+	resultsFile << "Intramolecular Energy = " << intraMolEnergy << std::endl;
 	resultsFile << "Accepted-Moves = " << accepted << std::endl;
 	resultsFile << "Rejected-Moves = " << rejected << std::endl;
 	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;
