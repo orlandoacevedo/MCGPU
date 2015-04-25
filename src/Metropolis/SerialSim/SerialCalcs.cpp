@@ -159,6 +159,8 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 	Real fValue = 1.0;				/* Holds 1,4-fudge factor value */
 	
 	// Find the vector cell for the currentMol (based on 1st primary index)
+	// NOTE: for multiple solvents each with multiple primary indexes, this is slightly off for
+	//	special cases when a molecule has primary indexes across cell boundaries
 	std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
 	int primaryIndex = currentMolPrimaryIndexArray[0]; // Use first primary index to determine cell placement
 		
