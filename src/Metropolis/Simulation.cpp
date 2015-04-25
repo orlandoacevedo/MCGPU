@@ -107,9 +107,11 @@ void Simulation::run()
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont = 0, oldEnergyCont = 0;
 	Real lj_energy = 0, charge_energy = 0;
+	Real new_lj = 0, old_lj = 0;
+	Real new_charge = 0, old_charge = 0;
 	
 	Real energy_LRC = SerialCalcs::calcEnergy_LRC(molecules, enviro);
-	Real intraMolEnergy = SerialCalcs::calcIntraMolecularEnergy(molecules, enviro, lj_energy, charge_energy);
+	//Real intraMolEnergy = SerialCalcs::calcIntraMolecularEnergy(molecules, enviro, lj_energy, charge_energy);
 	
 	Real  kT = kBoltz * enviro->temp;
 	int accepted = 0;
@@ -209,6 +211,9 @@ void Simulation::run()
 	//Loop for each individual step
 	for (int move = stepStart; move < (stepStart + simSteps); move++)
 	{
+		new_lj = 0, old_lj = 0;
+		new_charge = 0, old_charge = 0;
+		
 		// update neighbor-list every 100 steps
 		if (args.useNeighborList && (move % args.neighborListInterval == 0))
 		{
@@ -247,11 +252,11 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, lj_energy, charge_energy, changeIdx);
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, old_lj, old_charge, changeIdx);
 			}
 			else
 			{
-				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, old_lj, old_charge, changeIdx);
 			}
 		}
 		
@@ -275,11 +280,11 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, lj_energy, charge_energy, changeIdx);
+				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, new_lj, new_charge, changeIdx);
 			}
 			else
 			{
-				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, lj_energy, charge_energy, changeIdx);
+				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, new_lj, new_charge, changeIdx);
 			}
 		}
 		
@@ -310,6 +315,8 @@ void Simulation::run()
 		{
 			accepted++;
 			oldEnergy += newEnergyCont - oldEnergyCont;
+			lj_energy += new_lj - old_lj;
+			charge_energy += new_charge - old_charge;
 		}
 		else
 		{
@@ -322,27 +329,9 @@ void Simulation::run()
 	endTime = clock();
 	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
 	//However, it is a good enough estimation without adding unnecessary complexity.
-	
 	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 	
-	lj_energy = 0, charge_energy = 0;
-	if (args.simulationMode == SimulationMode::Parallel)
-	{
-		// TODO: update parallelCalcs for detailed energy printout
-		currentEnergy = oldEnergy;
-	}
-	else
-	{
-		if (args.useNeighborList)
-		{
-			currentEnergy = SerialCalcs::calcSystemEnergy_NLC(neighborList, molecules, enviro, lj_energy, charge_energy);
-		}
-		else
-		{
-			currentEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro, lj_energy, charge_energy);
-		}
-	}
-	
+	currentEnergy = oldEnergy;
 	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << currentEnergy << std::endl;
 
 	// Save the final state of the simulation
@@ -360,7 +349,7 @@ if (!args.verboseOutput)
 	fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
 	fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
 	fprintf(stdout, "Energy Long-range Correcton: %.3f\n", energy_LRC);
-	fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
+	//fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
 	fprintf(stdout, "Final Energy: %.3f\n", currentEnergy);
 	fprintf(stdout, "Run Time: %.3f seconds\n", diffTime);
 	fprintf(stdout, "Accepted Moves: %d\n", accepted);
