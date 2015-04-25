@@ -183,16 +183,9 @@ void Simulation::run()
 	}
 	function_time_end = clock();
 	
-	double duration = 0.0;
-	if (args.useNeighborList)
-	{
-		duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC);
-	}
-	else
-	{
-		duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC * threadsToSpawn);
-	}
+	double duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC * threadsToSpawn);
 
+	//for testing/debug purposes
 	std::cout << "Duration of system energy calculation function: " << duration << " seconds" << std::endl;
 	std::cout << "Threads to spawn: " << threadsToSpawn << std::endl;
 
@@ -330,15 +323,7 @@ void Simulation::run()
 	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
 	//However, it is a good enough estimation without adding unnecessary complexity.
 	
-	double diffTime = 0.0;
-	if (args.useNeighborList)
-	{
-		diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC);
-	}
-	else
-	{
-		diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
-	}
+	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 	
 	lj_energy = 0, charge_energy = 0;
 	if (args.simulationMode == SimulationMode::Parallel)
@@ -381,7 +366,6 @@ if (!args.verboseOutput)
 	fprintf(stdout, "Accepted Moves: %d\n", accepted);
 	fprintf(stdout, "Rejected Moves: %d\n", rejected);
 	fprintf(stdout, "Acceptance Raio: %.2f%%\n", 100.0 * accepted / (accepted + rejected));
-	fprintf(stdout, "Duration of neighbor list function: %d\n", diffTime);
 
 	std::string resultsName;
 	if (args.simulationName.empty())

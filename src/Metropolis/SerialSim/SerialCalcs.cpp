@@ -167,9 +167,12 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 	vectorCells[1] = molecules[currentMol].atoms[primaryIndex].y / nl->lengthCell[1];
 	vectorCells[2] = molecules[currentMol].atoms[primaryIndex].z / nl->lengthCell[2];
 	
+	// Store the molecules to include for calculation (this is done separtely to use openMP)
+	int molsToInclude[enviro->numOfMolecules];
+	int molsIndex = 0;
+	
 	// Scan the neighbor cells (including itself) of cell c
 	int neighborCells[3];			/* Neighbor cells */
-	//#pragma omp parallel for collapse(3)
 	for (neighborCells[0] = vectorCells[0]-1; neighborCells[0] <= vectorCells[0]+1; (neighborCells[0])++)
 		for (neighborCells[1] = vectorCells[1]-1; neighborCells[1] <= vectorCells[1]+1; (neighborCells[1])++)
 			for (neighborCells[2] = vectorCells[2]-1; neighborCells[2] <= vectorCells[2]+1; (neighborCells[2])++)
@@ -234,16 +237,9 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 								
 								// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 								if (rr < nl->rrCut)
-								{
-									Real lj_energy = 0, charge_energy = 0;
-									
-									Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, enviro, lj_energy, charge_energy) * fValue;
-									subLJ += lj_energy;
-									subCharge += charge_energy;
-									
-									totalEnergy += tempEnergy;
-									subLJ += lj_energy;
-									subCharge += charge_energy;
+								{	
+									molsToInclude[molsIndex] = otherMol;
+									molsIndex++;
 									
 									included = true;
 									break;
@@ -260,6 +256,23 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 					otherMol = nl->linkedCellList[otherMol];
 				} /* Endwhile otherMol not empty */
 			} /* Endfor neighbor cells, c1 */
+	
+	#pragma omp parallel for
+	for (int index = 0; index < molsIndex; index++)
+	{
+		Real lj_energy = 0, charge_energy = 0;
+									
+		Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, molsToInclude[index], enviro, lj_energy, charge_energy) * fValue;
+		subLJ += lj_energy;
+		subCharge += charge_energy;
+									
+		#pragma omp critical
+		{
+			totalEnergy += tempEnergy;
+			subLJ += lj_energy;
+			subCharge += charge_energy;
+		}
+	}
 	
 	return totalEnergy;
 }
