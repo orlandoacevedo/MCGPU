@@ -162,10 +162,10 @@ using std::string;
 					{
 						params->neighborListInterval = DEFAULT_NEIGHBORLIST_INTERVAL;
 					}
-					if (params->statusInterval < 0)
+					if (params->neighborListInterval < 1)
 					{
 						std::cerr << APP_NAME << ": ";
-						std::cerr << " --neighborlist_interval (-l): Neighborlist Interval must be non-negative" << std::endl;
+						std::cerr << " --neighborlist_interval (-l): Neighborlist Interval must be greater than 0" << std::endl;
 						return false;
 					}
 					break;	
@@ -372,7 +372,7 @@ using std::string;
 		cout << "\tRun the simulation in serial on the host CPU. If you specify this\n"
 			  "\tflag you cannot also specify the --parallel flag.\n\n";
 		cout << "--verbose\t(-k)\n";
-		cout << "\tRun the simulation without printing to std::cout.\n\n";
+		cout << "\tRun the simulation printing regular step updates to std::cout.\n\n";
 		cout << "--list-devices\t(-Q)\n";
 		cout << "\tQueries the host machine for available CUDA capable devices. The\n"
 			  "\tentries will contain the following information about each\n"
@@ -405,6 +405,14 @@ using std::string;
 		cout << "\tSpecifies how many simulation steps to execute in the Monte\n"
 				"\tCarlo Metropolis algorithm. This value must a valid integer\n"
 				"\tthat is greater than zero.\n\n";
+		cout << "--neighbor <interval>\t\t(-l)\n";
+		cout << "\tSpecifies using the linked-cell neighborlist structure for molecule\n"
+				"\torganization. The neighborlist is generally faster for large\n"
+				"\tsimulations. Interval dicatates how many steps are executed\n"
+				"\tinbetween updating the neighborlist structure. Having the\n"
+				"\tneighborlist update more often will result in a more accurate\n"
+				"\tsimulation but some performance will be lost. The default is set\n"
+				"\tat 100 and the given interval must be greater than 0.\n\n";
 		cout << "--status-interval <interval>\t(-i)\n";
 		cout << "\tSpecifies the number of simulation steps between status updates.\n"
 				"\tThese status updates will periodically be printed out that list\n"

@@ -4,12 +4,13 @@ MCGPU (Monte Carlo on Graphics Processing Units)
 
 ##Requirements
 ###Required Hardware:
- * Nvidia graphics card with compute Compute Capability 2.0 (or greater)
+ * For Parallel Execution - Nvidia graphics card with compute Compute Capability 2.0 (or greater)
     * Tested on Nvidia Fermi M2070, Kepler K20m
 
+
 ###Required Software:
- * Linux Operating System
-    * Tested on Ubuntu 14.04 LTS, SUSE Linux Enterprise Server 11 SP2
+ * Linux or OSX Operating System
+    * Tested on Ubuntu 14.04 LTS, SUSE Linux Enterprise Server 11 SP2, OSX Yosemite 
  * [Nvidia Developer Toolkit](http://developer.nvidia.com/cuda-downloads)
     * Tested with CUDA 5.5, 6.5
  * [OpenMp](http://www.openmp.org)
@@ -21,6 +22,16 @@ MCGPU (Monte Carlo on Graphics Processing Units)
 git clone git://github.com/orlandoacevedo/MCGPU.git
 cd MCGPU/
 make
+```
+
+*Note*: To build on a local machine, use LOCAL_INSTALL=1
+```
+make LOCAL_INSTALL=1
+```
+
+*Note*: To build on an OSX machine, use MAC=1
+```
+make MAC=1
 ```
 
 *Note*: To build in debug mode, use BUILD=debug:
@@ -80,6 +91,13 @@ cd bin/
 
 For more information, see the Alabama Supercomputer Center manual.
 
+
+##Running With Multiple Solvents
+MCGPU currently supports the simulaton of two solvents within one z-matrix file where separate solvents are separated by TERZ.
+
+When using multiple solvents, the primary index array (Configuration File line 30), must contan at least one primary index array for each molecule, with the arrays enclosed in brackets and comma separated. For example [2],[0,3] represents the primary index structure for two molecules where the first molecule (defined above TERZ) has the primary index of '2' and the second molecule (defined below TERZ) has the primary indexes of '0' and '3'.
+
+
 ##Available Command-line Options
  * `--serial`: Runs simulation on CPU (default)
  * `--parallel`: Runs simulation on GPU (requries CUDA)
@@ -89,6 +107,7 @@ For more information, see the Alabama Supercomputer Center manual.
  * `--name <title>`: Specifies the name of the simulation that will be run.
  * `--steps <count>`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
  * `--verbose`: Enables real time energy printouts
+ * `--neighbor <interval>`: Specifies to use the neighborlist structure for molecular organization. interval is optional and refers to how many steps between updating the neighborlist (default is 100).
 
 To view documentation for all command-line flags available, use the --help flag:
 ```
@@ -129,7 +148,7 @@ Line numbers are important
 [27]    #line 27 is a comment and is ignored.
 [28]    <random number seed input as integer value>
 [29]    #line 29 is a comment and is ignored.
-[30]    <primary atom index to be used during cutoff as integer index of z-matrix atom in molecule>
+[30]    <primary atom index array to be used during cutoff as integer indexes of z-matrix atom in molecule, comma separated, starting from zero>
 ```
 
-**Contributing Authors**: Scott Aldige, Matt Campbell, William Champion, Nathan Coleman, Seth Denney, Matthew Hardwick, Andrew Lewis, Alexander Luchs, Tavis Maclellan, Joshua Mosby, Robert Sanek, Riley Spahn, Kalan Stowe, Ashley Tolbert, Albert Wallace, Seth Wooten, Xiao (David) Zhang, and Orlando Acevedo*
+**Contributing Authors**: Scott Aldige, Jared Brown, Matt Campbell, William Champion, Nathan Coleman, Yitong Dai, Seth Denney, Matthew Hardwick, Andrew Lewis, Alexander Luchs, Jennifer Lynch, Tavis Maclellan, Joshua Mosby, Robert Sanek, Riley Spahn, Kalan Stowe, Ashley Tolbert, Albert Wallace, Seth Wooten, James Young, Francis Zayek, Xiao (David) Zhang, and Orlando Acevedo*
