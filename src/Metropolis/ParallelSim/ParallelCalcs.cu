@@ -70,8 +70,10 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	NeighborList *nl = box->neighborList;
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
-	int pair_i[10000];
-	int pair_j[10000];
+	
+	int maxPairs = enviro->numOfMolecules * enviro->numOfMolecules;
+	int pair_i[maxPairs];
+	int pair_j[maxPairs];
 	int iterater_i = 0;
 
 	int vectorCells[3];
@@ -182,11 +184,11 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	}
 	int *d_pair_i;
 	int *d_pair_j;
-	cudaMalloc((void **)&d_pair_i, sizeof(int)*10000);
-	cudaMalloc((void **)&d_pair_j, sizeof(int)*10000);
-	cudaMemcpy(d_pair_i, pair_i, sizeof(int)*10000, cudaMemcpyHostToDevice);
-	cudaMemcpy(d_pair_j, pair_j, sizeof(int)*10000, cudaMemcpyHostToDevice);
-	thrust::device_vector<Real> part_energy(10000, 0);//this will store the result
+	cudaMalloc((void **)&d_pair_i, sizeof(int)*maxPairs);
+	cudaMalloc((void **)&d_pair_j, sizeof(int)*maxPairs);
+	cudaMemcpy(d_pair_i, pair_i, sizeof(int)*maxPairs, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_pair_j, pair_j, sizeof(int)*maxPairs, cudaMemcpyHostToDevice);
+	thrust::device_vector<Real> part_energy(maxPairs, 0);//this will store the result
 	ParallelBox *pBox = (ParallelBox*) box;
 	if (pBox == NULL)
 	{
