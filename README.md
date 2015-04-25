@@ -72,7 +72,7 @@ Enter memory limit (default <cr>: 500mb) <enter required memory>
 Enter GPU architecture [t10/fermi/kepler/any] (default <cr>: any) <kepler>
 ```
 
-You standard out for your job will be written to 
+Your standard out for your job will be written to 
 ```
 <jobname>.o<job number>
 ```

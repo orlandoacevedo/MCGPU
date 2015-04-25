@@ -261,10 +261,7 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 	for (int index = 0; index < molsIndex; index++)
 	{
 		Real lj_energy = 0, charge_energy = 0;
-									
 		Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, molsToInclude[index], enviro, lj_energy, charge_energy) * fValue;
-		subLJ += lj_energy;
-		subCharge += charge_energy;
 									
 		#pragma omp critical
 		{

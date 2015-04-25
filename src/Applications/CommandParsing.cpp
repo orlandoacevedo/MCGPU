@@ -49,7 +49,7 @@ using std::string;
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:I:n:i:d:sphQVktl";
+		const char* short_options = ":i:I:n:i:d:sphQVktl:";
 
 		// The long options recognized by the program
 		struct option long_options[] = 
