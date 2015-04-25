@@ -382,7 +382,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	}
 	MoleculeData *d_molecules = pBox->moleculesD;
 	AtomData *d_atoms = pBox->atomsD;
-	Environment *d_enviro = pbox->environmentD;
+	Environment *d_enviro = pBox->environmentD;
 	int counter = 0;//count how many iterations 
 	
 	// Find the vector cell for the currentMol (based on 1st primary index)
