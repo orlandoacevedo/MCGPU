@@ -65,7 +65,7 @@ using std::string;
 			{"device",				required_argument,	0,	'd'},
 			{"version",				no_argument,		0,	'V'},
 			{"verbose",				no_argument,		0,	'k'},
-			{"neighbor",			no_argument,		0,	'l'},
+			{"neighbor",			required_argument,	0,	'l'},
 			{"name",				required_argument,	0,	LONG_NAME},
 			{0, 0, 0, 0} 
 		};
@@ -158,6 +158,16 @@ using std::string;
 					break;
 				case 'l': 	/* use neighbor list */
 					params->neighborListFlag = true;
+					if (!fromString<int>(optarg, params->neighborListInterval))
+					{
+						params->neighborListInterval = DEFAULT_NEIGHBORLIST_INTERVAL;
+					}
+					if (params->statusInterval < 0)
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --neighborlist_interval (-l): Neighborlist Interval must be non-negative" << std::endl;
+						return false;
+					}
 					break;	
 				case 'h':	/* print help */
 					printHelpScreen();
@@ -169,12 +179,6 @@ using std::string;
 					break;
 				case 'd':
 					params->deviceFlag = true;
-					if (!fromString<int>(optarg, params->deviceIndex))
-					{
-						std::cerr << APP_NAME << ": ";
-						std::cerr << " --device (-d): Device index must be a valid integer" << std::endl;
-						return false;
-					}
 					if (params->deviceIndex < 0)
 					{
 						std::cerr << APP_NAME << ": ";
@@ -183,17 +187,23 @@ using std::string;
 					}
 					break;
 				case ':':	/* missing argument */
-					if (sizeof(argv[optind-1]) > 2 && argv[optind-1][0] == '-' && argv[optind-1][1] == '-')
+					if (optopt == 'l')
+					{
+						params->neighborListFlag = true;
+						params->neighborListInterval = DEFAULT_NEIGHBORLIST_INTERVAL;
+					}
+					else if (sizeof(argv[optind-1]) > 2 && argv[optind-1][0] == '-' && argv[optind-1][1] == '-')
 					{
 						std::cerr << APP_NAME << ": A required argument is missing for ";
 						std::cerr << argv[optind-1] << std::endl;
+						return false;
 					}
 					else
 					{
 						std::cerr << APP_NAME << ": A required argument is missing for ";
 						std::cerr << "-" << (char) optopt << std::endl;
+						return false;
 					}
-					return false;
 					break;
 				case '?':	/* unknown option */
 					if (optopt)
@@ -276,6 +286,7 @@ using std::string;
 		args->simulationName = params->simulationName;
 		args->verboseOutput = params->verboseOutputFlag;
 		args->useNeighborList = params->neighborListFlag;
+		args->neighborListInterval = params->neighborListInterval;
 
 		if (!params->parallelFlag && params->deviceFlag)
 		{

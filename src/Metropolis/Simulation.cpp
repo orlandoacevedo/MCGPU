@@ -195,6 +195,10 @@ void Simulation::run()
 
 	std::cout << "Duration of system energy calculation function: " << duration << " seconds" << std::endl;
 	std::cout << "Threads to spawn: " << threadsToSpawn << std::endl;
+
+	//REMOVE
+	if (args.useNeighborList)
+		std::cout << "NeighborList Interval: " << args.neighborListInterval << std::endl;
 	
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
@@ -213,7 +217,7 @@ void Simulation::run()
 	for (int move = stepStart; move < (stepStart + simSteps); move++)
 	{
 		// update neighbor-list every 100 steps
-		if (args.useNeighborList && (move % 100 == 0))
+		if (args.useNeighborList && (move % args.neighborListInterval == 0))
 		{
 			neighborList = new NeighborList(molecules, enviro);
 		}
@@ -221,10 +225,7 @@ void Simulation::run()
 		//provide printouts at each pre-determined interval (not at each step)
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
 		{
-			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;	
-			//Make printing at each step optional
-			//writePDB(enviro, molecules);
-			//pdbSequenceNum++;					
+			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;		
 		}
 		
 		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0)
@@ -241,8 +242,7 @@ void Simulation::run()
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
 			if (args.useNeighborList)
-			{
-				//oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);	
+			{	
 				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
 			}
 			else
