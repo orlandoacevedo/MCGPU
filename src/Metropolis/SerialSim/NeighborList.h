@@ -10,7 +10,6 @@
 
 #include <string>
 #include "Metropolis/Box.h"
-#include "SerialBox.h"
 #include "Metropolis/DataTypes.h"
 #include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/StructLibrary.h"

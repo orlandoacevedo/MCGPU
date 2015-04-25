@@ -19,8 +19,8 @@
 class ParallelBox : public Box
 {
 	private:
-		Real *xD, *yD, *zD, *sigmaD, *epsilonD, *chargeD;
-		int *atomsIdxD, *numOfAtomsD, *typeD, *primaryIndexesD;
+		Real *xD, *yD, *zD, *sigmaD, *epsilonD, *chargeD, *lengthCellD, *regionD;
+		int *atomsIdxD, *numOfAtomsD, *typeD, *primaryIndexesD, *numCellsD, *headD, *linkedCellListD;
 		
 		/// Copies a specified molecule and all of its atoms
 		///   over to the device. Called after changing a
@@ -32,6 +32,7 @@ class ParallelBox : public Box
 		AtomData *atomsH, *atomsD;
 		Environment *environmentD;
 		MoleculeData *moleculesH, *moleculesD;
+		NeighborListData *neighborListH, *neighborListD;
 		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
 		Real *energiesD;
 		int energyCount, maxMolSize;

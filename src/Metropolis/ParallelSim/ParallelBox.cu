@@ -15,7 +15,6 @@ using namespace std;
 
 ParallelBox::ParallelBox(): Box()
 {
-	//Is anything really needed here?
 }
 
 ParallelBox::~ParallelBox()
@@ -91,6 +90,36 @@ void ParallelBox::copyDataToDevice()
 	cudaMalloc(&moleculesD, sizeof(MoleculeData));
 	cudaMemcpy(moleculesD, tempMD, sizeof(MoleculeData), cudaMemcpyHostToDevice);
 	
+	if (neighborList != NULL){//create NeighborListData on host, and fill data arrays on device
+	neighborListH = new NeighborListData(neighborList);
+	cudaMalloc(&numCellsD, 3 * sizeof(int));
+	cudaMalloc(&headD, neighborListH->nclmax * sizeof(int));
+	cudaMalloc(&linkedCellListD, neighborListH->nmax * sizeof(int));
+	cudaMalloc(&lengthCellD, 3 * sizeof(Real));
+	cudaMalloc(&regionD, 3 * sizeof(Real));
+	cudaMemcpy(numCellsD, neighborListH->numCells, 3 * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(headD, neighborListH->head, neighborListH->nclmax * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(linkedCellListD, neighborListH->linkedCellList, neighborListH->nmax * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(lengthCellD, neighborListH->lengthCell, 3 * sizeof(Real), cudaMemcpyHostToDevice);
+	cudaMemcpy(regionD, neighborListH->region, 3 * sizeof(Real), cudaMemcpyHostToDevice);
+	
+	//create device MoleculeData struct with pointers to filled-in molecular data arrays
+	NeighborListData *tempNLD = (NeighborListData*) malloc(sizeof(NeighborListData));
+	tempNLD->numCells = numCellsD;
+	tempNLD->head = headD;
+	tempNLD->linkedCellList = linkedCellListD;
+	tempNLD->lengthCell = lengthCellD;
+	tempNLD->region = regionD;
+	tempNLD->nmax = neighborListH->nmax;
+	tempNLD->nclmax = neighborListH->nclmax;
+	tempNLD->empty = neighborListH->empty;
+	tempNLD->numCellsYZ = neighborListH->numCellsYZ;
+	tempNLD->numCellsXYZ = neighborListH->numCellsXYZ;
+	tempNLD->rrCut= neighborListH->rrCut;
+
+	cudaMalloc(&neighborListD, sizeof(NeighborListData));
+	cudaMemcpy(neighborListD, tempNLD, sizeof(NeighborListData), cudaMemcpyHostToDevice);
+	 }
 	//data structures for neighbor batch in energy calculation
 	nbrMolsH = (int*) malloc(moleculeCount * sizeof(int));
 	molBatchH = (int*) malloc(moleculeCount * sizeof(int));

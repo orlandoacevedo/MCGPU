@@ -47,6 +47,7 @@ Box* ParallelCalcs::createBox(string inputPath, InputFileType inputType, long* s
 			return NULL;
 		}
 	}
+	box->neighborList = new NeighborList(box->molecules, box->environment);
 	box->copyDataToDevice();
 	return (Box*) box;
 }
