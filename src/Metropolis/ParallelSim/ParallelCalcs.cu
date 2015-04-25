@@ -67,7 +67,7 @@ Real ParallelCalcs::calcSystemEnergy(Box *box)
 }
 
 Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){ 
-	NeiborList *nl = box->neighborList;
+	NeighborList *nl = box->neighborList;
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
 	int pair_i[10000];
@@ -77,29 +77,31 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	int vectorCells[3];
 	for (vectorCells[0] = 0; vectorCells[0] < nl->numCells[0]; (vectorCells[0])++)
 	{
-		for (vectorCells[1] = 0; vectorCells[1] < numCells[1]; (vectorCells[1])++)
+		for (vectorCells[1] = 0; vectorCells[1] < nl->numCells[1]; (vectorCells[1])++)
 		{
-			for (vectorCells[2] = 0; vectorCells[2] < numCells[2]; (vectorCells[2])++)
+			for (vectorCells[2] = 0; vectorCells[2] < nl->numCells[2]; (vectorCells[2])++)
 			{
 				// Calculate a scalar cell index
-				int c = vectorCells[0]*numCellsYZ + vectorCells[1]*numCells[2] + vectorCells[2];
+				int c = vectorCells[0]*nl->numCellsYZ + vectorCells[1]*nl->numCells[2] + vectorCells[2];
 				// Skip this cell if empty
-				if (head[c] == EMPTY) continue;
+				if (nl->head[c] == EMPTY) continue;
 				// Scan the neighbor cells (including itself) of cell c
+				int neighborCells[3];
 				for (neighborCells[0] = vectorCells[0]-1; neighborCells[0] <= vectorCells[0]+1; (neighborCells[0])++)
 					for (neighborCells[1] = vectorCells[1]-1; neighborCells[1] <= vectorCells[1]+1; (neighborCells[1])++)
 						for (neighborCells[2] = vectorCells[2]-1; neighborCells[2] <= vectorCells[2]+1; (neighborCells[2])++)
 						{
 							// Periodic boundary condition by shifting coordinates
+							Real rshift[3];
 							for (int a = 0; a < 3; a++)
 							{
 								if (neighborCells[a] < 0)
 								{
-									rshift[a] = -Region[a];
+									rshift[a] = -nl->region[a];
 								}
-								else if (neighborCells[a] >= numCells[a])
+								else if (neighborCells[a] >= nl->numCells[a])
 								{
-									rshift[a] = Region[a];
+									rshift[a] = nl->region[a];
 								}
 								else
 								{
@@ -107,20 +109,20 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 								}
 							}
 							// Calculate the scalar cell index of the neighbor cell
-							c1 = ((neighborCells[0] + numCells[0]) % numCells[0]) * numCellsYZ
-									+((neighborCells[1] + numCells[1]) % numCells[1]) * numCells[2]
-									                                                             +((neighborCells[2] + numCells[2]) % numCells[2]);
+							int c1 = ((neighborCells[0] + nl->numCells[0]) % nl->numCells[0]) * nl->numCellsYZ
+									+((neighborCells[1] + nl->numCells[1]) % nl->numCells[1]) * nl->numCells[2]
+									+((neighborCells[2] + nl->numCells[2]) % nl->numCells[2]);
 							// Skip this neighbor cell if empty
-							if (head[c1] == EMPTY)
+							if (nl->head[c1] == EMPTY)
 							{
 								continue;
 							}
 							// Scan atom i in cell c
-							int i = head[c];
+							int i = nl->head[c];
 							while (i != EMPTY)
 							{
 								// Scan atom j in cell c1
-								int j = head[c1];
+								int j = nl->head[c1];
 								while (j != EMPTY)
 								{
 									bool included = false;
@@ -152,7 +154,7 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 												Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
 												
 												// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
-												if (rr < rrCut)
+												if (rr < nl->rrCut)
 												{	
 													//totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro, subLJ, subCharge) * fValue;
 													pair_i[iterater_i] = i;
@@ -169,10 +171,10 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 										}
 									} /* Endif i<j */
 									
-									j = linkedCellList[j];
+									j = nl->linkedCellList[j];
 								} /* Endwhile j not empty */
 								
-								i = linkedCellList[i];
+								i = nl->linkedCellList[i];
 							} /* Endwhile i not empty */
 						} /* Endfor neighbor cells, c1 */
 			} /* Endfor central cell, c */
@@ -380,9 +382,6 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	AtomData *d_atoms = pBox->atomsD;
 	int counter = 0;//count how many iterations 
 	
-	Real totalEnergy = 0.0;			/* Total nonbonded energy x fudge factor */
-	Real fValue = 1.0;				/* Holds 1,4-fudge factor value */
-	
 	// Find the vector cell for the currentMol (based on 1st primary index)
 	std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
 	int primaryIndex = currentMolPrimaryIndexArray[0]; // Use first primary index to determine cell placement
@@ -394,7 +393,6 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	
 	// Scan the neighbor cells (including itself) of cell c
 	int neighborCells[3];			/* Neighbor cells */
-	int pair[1000];
 	//#pragma omp parallel for collapse(3)
 	for (neighborCells[0] = vectorCells[0]-1; neighborCells[0] <= vectorCells[0]+1; (neighborCells[0])++)
 		for (neighborCells[1] = vectorCells[1]-1; neighborCells[1] <= vectorCells[1]+1; (neighborCells[1])++)
