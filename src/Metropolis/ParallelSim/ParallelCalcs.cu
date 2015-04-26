@@ -382,7 +382,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	AtomData *d_atoms = pBox->atomsD;
 	Environment *d_enviro = pBox->environmentD;
 	int counter = 0;//count how many iterations
-	int maxThreads = enviro->numOfMolecules * box->maxMolSize * box->maxMolSize;
+	int maxThreads = enviro->numOfMolecules * pBox->maxMolSize * pBox->maxMolSize;
 	int pair[maxThreads];
 	thrust::device_vector<Real> part_energy(maxThreads, 0);
 	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
@@ -483,7 +483,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 				} /* Endwhile otherMol not empty */
 			} /* Endfor neighbor cells, c1 */
 	
-	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
+	
 	int *d_pair;
 	cudaMalloc((void **)&d_pair, sizeof(int)*maxThreads);
 	cudaMemcpy(d_pair, pair, sizeof(int)*maxThreads, cudaMemcpyHostToDevice);
