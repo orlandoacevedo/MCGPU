@@ -385,7 +385,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	int maxThreads = enviro->numOfMolecules * pBox->maxMolSize * pBox->maxMolSize;
 	int pair[enviro->numOfMolecules];
 	thrust::device_vector<Real> part_energy(maxThreads, 0);
-	Real *raw_ptdr = thrust::raw_pointer_cast(&part_energy[0]);
+	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 	
 	// Find the vector cell for the currentMol (based on 1st primary index)
 	std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
