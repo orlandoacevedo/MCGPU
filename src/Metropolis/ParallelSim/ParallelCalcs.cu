@@ -382,7 +382,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	AtomData *d_atoms = pBox->atomsD;
 	Environment *d_enviro = pBox->environmentD;
 	int counter = 0;//count how many iterations
-	int maxThreads = enviro->numOfMolecules * pBox->maxMolSize * pBox->maxMolSize;
+	int maxThreads = enviro->numOfMolecules * pBox->maxMolSize * pBdox->maxMolSize;
 	int pair[maxThreads];
 	thrust::device_vector<Real> part_energy(maxThreads, 0);
 	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
