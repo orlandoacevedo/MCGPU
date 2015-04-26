@@ -198,7 +198,7 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	AtomData *d_atoms = pBox->atomsD;
 	Environment *d_enviro = pBox->environmentD;
 	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
-	int blocksPerGrid = 53;
+	int blocksPerGrid = maxPairs/THREADS_PER_BLOCK;
 	calcEnergy_NLC<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_pair_i, d_pair_j, raw_ptr, d_molecules, d_atoms, d_enviro, iterater_i);
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 	cudaFree(d_pair_i);
@@ -372,8 +372,6 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	NeighborList *nl = box->neighborList; 
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
-	thrust::device_vector<Real> part_energy(19200, 0);
-	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 
 	ParallelBox *pBox = (ParallelBox*) box;
 	if (pBox == NULL)
@@ -383,7 +381,11 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	MoleculeData *d_molecules = pBox->moleculesD;
 	AtomData *d_atoms = pBox->atomsD;
 	Environment *d_enviro = pBox->environmentD;
-	int counter = 0;//count how many iterations 
+	int counter = 0;//count how many iterations
+	int maxThreads = enviro->numOfMolecules * box->maxMolSize * box->maxMolSize;
+	int pair[maxThreads];
+	thrust::device_vector<Real> part_energy(maxThreads, 0);
+	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 	
 	// Find the vector cell for the currentMol (based on 1st primary index)
 	std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
@@ -463,7 +465,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 								if (rr < nl->rrCut)
 								{
 									
-									calcInterMolecularEnergy_NLC<<<1, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, d_enviro, currentMol, otherMol, counter, raw_ptr, pBox->maxMolSize);
+									pair[counter] = otherMol;
 									counter++;
 									included = true;
 									break;
@@ -481,51 +483,16 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 				} /* Endwhile otherMol not empty */
 			} /* Endfor neighbor cells, c1 */
 	
+	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
+	int *d_pair;
+	cudaMalloc((void **)&d_pair, sizeof(int)*maxThreads);
+	cudaMemcpy(d_pair, pair, sizeof(int)*maxThreads, cudaMemcpyHostToDevice);
+
+	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter, d_pair, box->maxMolSize);
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
-	
+	cudaFree(d_pair);
+
 	return total_energy;
-}
-
-__global__ void ParallelCalcs::calcInterMolecularEnergy_NLC(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int currentMol, int otherMol, int counter, Real *energies, int maxMolSize)
-{
-	int energyIdx = threadIdx.x;
-
-	//check validity of thread
-
-	//get atom pair for this thread
-	int x = energyIdx / maxMolSize;
-	int y = energyIdx % maxMolSize;
-
-	//check validity of atom pair
-	if (x < molecules->numOfAtoms[currentMol] && y < molecules->numOfAtoms[otherMol])
-	{
-		//get atom indices
-		int atom1 = molecules->atomsIdx[currentMol] + x;
-		int atom2 = molecules->atomsIdx[otherMol] + y;
-
-		//check validity of atoms (ensure they are not dummy atoms)
-		if (atoms->sigma[atom1] >= 0 && atoms->epsilon[atom1] >= 0 && atoms->sigma[atom2] >= 0 && atoms->epsilon[atom2] >= 0)
-		{
-			Real totalEnergy = 0;
-
-			//calculate periodic distance between atoms
-			Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
-			Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
-			Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
-
-			Real r2 = (deltaX * deltaX) +
-					(deltaY * deltaY) + 
-					(deltaZ * deltaZ);
-
-			//calculate interatomic energies
-			totalEnergy += calc_lj(atoms, atom1, atom2, r2);
-			totalEnergy += calcCharge(atoms->charge[atom1], atoms->charge[atom2], sqrt(r2));
-
-			//store energy
-			energies[energyIdx + blockDim.x*counter] = totalEnergy;
-		}
-	}
-
 }
 
 __global__ void ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
