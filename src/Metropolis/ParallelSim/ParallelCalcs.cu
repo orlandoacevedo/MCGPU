@@ -383,9 +383,9 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	Environment *d_enviro = pBox->environmentD;
 	int counter = 0;//count how many iterations
 	int maxThreads = enviro->numOfMolecules * pBox->maxMolSize * pBox->maxMolSize;
-	int pair[maxThreads];
+	int pair[enviro->numOfMolecules];
 	thrust::device_vector<Real> part_energy(maxThreads, 0);
-	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
+	Real *raw_ptdr = thrust::raw_pointer_cast(&part_energy[0]);
 	
 	// Find the vector cell for the currentMol (based on 1st primary index)
 	std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
@@ -485,10 +485,10 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	
 	
 	int *d_pair;
-	cudaMalloc((void **)&d_pair, sizeof(int)*maxThreads);
-	cudaMemcpy(d_pair, pair, sizeof(int)*maxThreads, cudaMemcpyHostToDevice);
+	cudaMalloc((void **)&d_pair, sizeof(int)*enviro->numOfMolecules);
+	cudaMemcpy(d_pair, pair, sizeof(int)*enviro->numOfMolecules, cudaMemcpyHostToDevice);
 
-	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter, d_pair, pBox->maxMolSize);
+	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter*pBox->maxMolSize * pBox->maxMolSize, d_pair, pBox->maxMolSize);
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 	cudaFree(d_pair);
 
