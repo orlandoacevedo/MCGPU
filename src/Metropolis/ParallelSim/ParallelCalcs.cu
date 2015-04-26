@@ -488,7 +488,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	cudaMalloc((void **)&d_pair, sizeof(int)*maxThreads);
 	cudaMemcpy(d_pair, pair, sizeof(int)*maxThreads, cudaMemcpyHostToDevice);
 
-	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter, d_pair, box->maxMolSize);
+	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter, d_pair, pBox->maxMolSize);
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 	cudaFree(d_pair);
 
