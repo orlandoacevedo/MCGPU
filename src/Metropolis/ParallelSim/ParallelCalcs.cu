@@ -27,7 +27,7 @@
 #define MOL_BLOCK 256
 #define BATCH_BLOCK 512
 #define AGG_BLOCK 512
-#define THREADS_PER_BLOCK 192
+#define THREADS_PER_BLOCK 512
 
 using namespace std;
 
