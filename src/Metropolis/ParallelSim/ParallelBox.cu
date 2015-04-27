@@ -112,9 +112,13 @@ void ParallelBox::copyDataToDevice()
 	//possible interatomic energies for one pair of molecules
 	energyCount = moleculesH->moleculeCount * maxMolSize * maxMolSize;
 	cudaMalloc(&(energiesD), energyCount * sizeof(Real));
+
 	
 	//initialize energies to 0
 	cudaMemset(energiesD, 0, energyCount * sizeof(Real));
+	
+	cudaMalloc(&moleculesWithinCutoffD, moleculesH->moleculeCount * sizeof(int));
+	cudaMemset(moleculesWithinCutoffD, 0, moleculesH->moleculeCount * sizeof(int));
 	
 	//copy Environment to device
 	cudaMalloc(&(environmentD), sizeof(Environment));
@@ -138,4 +142,9 @@ void ParallelBox::writeChangeToDevice(int changeIdx)
 	cudaMemcpy(yD + startIdx, atomsH->y + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
 	cudaMemcpy(zD + startIdx, atomsH->z + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
 	//sigma, epsilon, and charge will not change, so there is no need to update those arrays
+}
+
+void ParallelBox::writeMoleculesWithinCutoffToDevice(int* moleculesWithinCutoff)
+{
+	cudaMemcpy(moleculesWithinCutoffD, moleculesWithinCutoff, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
 }
