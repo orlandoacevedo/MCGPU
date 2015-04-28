@@ -38,6 +38,16 @@ namespace ParallelCalcs
 	///   intramolecular energy.
 	Real calcBatchEnergy(ParallelBox *box, int numMols, int molIdx);
 	
+	/// Given a box with a filled-in molecule batch, calculate the
+        ///   inter-molecular energy contribution of a given molecule,
+        ///   with every molecule specified in the batch.
+        /// @param box A ParallelBox containing the molecule data.
+        /// @param numMols The number of molecules within the cutoff.
+        /// @param molIdx The index of the current changed molecule.
+        /// @return Returns total molecular energy contribution, without
+        ///   intramolecular energy.
+        Real calcNeighborListBatchEnergy(ParallelBox *box, Environment *enviro, int molIdx);
+
 	/// Given an array of calculated energies on the device, get
 	///   the total energy and return it on the host.
 	/// @param box  A ParallelBox containing the molecule data.

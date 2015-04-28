@@ -67,6 +67,16 @@ namespace SerialCalcs
 	Real calcSystemEnergy_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, 
 		Real &subLJ, Real &subCharge);
 	
+	/// Finds the neighbor molecules of a given molecule using the neighbor-list structure.
+	/// 	@param molecules A pointer to the Molecule array.
+	/// 	@param enviro A pointer to the Environment for the simulation.
+	/// 	@param currentMol the index of the current changed molecule.
+	///		@param neighbors Vector containing neighbor molecules of currentMol.
+	///		@param neighbors A reference to the vector where neighbors are stored.
+	/// 	@param isSysCalc A boolen for full system version to avoid double-counting.
+	void getNeighbors_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, 
+		int currentMol, std::vector<int>& neighbors, bool isSysCalc);
+	
 	/// Calculates the inter-molecular energy contribution of a given molecule
 	///		using the neighbor-list structure.
 	/// 	@param molecules A pointer to the Molecule array.
@@ -74,10 +84,10 @@ namespace SerialCalcs
 	/// 	@param subLJ A reference to the subtotal energy from the LJ values.
 	/// 	@param subCharge A reference to the subtotal energy from the charge energies.
 	/// 	@param currentMol the index of the current changed molecule.
+	///		@param neighbors Vector containing neighbor molecules of currentMol.
 	/// 	@return Returns total inter-molecular energy contribution
-	Real calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, 
-		Real &subLJ, Real &subCharge, int currentMol, bool isSysCalc = false);
-	
+	Real calcMolecularEnergyContribution_NLC(Molecule *molecules, Environment *enviro, 
+		Real &subLJ, Real &subCharge, int currentMol, std::vector<int> neighbors);
 	
 	/* ------ Utility Calculation Functions ------ */
 		
@@ -90,7 +100,8 @@ namespace SerialCalcs
 	/// 	@param subCharge A reference to the subtotal energy from the charge energies.
 	/// 	@return Returns the intermolecular energy between the two specified
 	///   		molecules.
-	Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *environment, Real &subLJ, Real &subCharge);
+	Real calcInterMolecularEnergy(Molecule *molecules, int mol1, int mol2, Environment *environment, 
+		Real &subLJ, Real &subCharge);
 	
 	/// Calculates the intra-molecular energy between atoms of the given molecule(s).
 	/// 	@param molecules A pointer to the Molecule array.

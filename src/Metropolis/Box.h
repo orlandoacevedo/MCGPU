@@ -82,7 +82,7 @@ class Box
 		/// @param mol_dst A pointer to the destination molecule.
 		/// @param mol_src A pointer to the source molecule.
 		void copyMolecule(Molecule *mol_dst, Molecule *mol_src);
-		
+
 		/// Makes a position periodic within a specified range.
 		/// @param x The position to be made periodic.
 		/// @param boxDim The magnitude of the periodic range.

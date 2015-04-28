@@ -211,14 +211,9 @@ void Simulation::run()
 	//Loop for each individual step
 	for (int move = stepStart; move < (stepStart + simSteps); move++)
 	{
+		std::vector<int> neighbors;
 		new_lj = 0, old_lj = 0;
 		new_charge = 0, old_charge = 0;
-		
-		// update neighbor-list every 100 steps
-		if (args.useNeighborList && (move % args.neighborListInterval == 0))
-		{
-			neighborList = new NeighborList(molecules, enviro);
-		}
 		
 		//provide printouts at each pre-determined interval (not at each step)
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
@@ -236,6 +231,17 @@ void Simulation::run()
 		//Randomly select index of a molecule for changing
 		int changeIdx = box->chooseMolecule();
 		
+		// get neighbors and update neighbor-list on interval
+		if (args.useNeighborList)
+		{
+			if (move % args.neighborListInterval == 0) 
+			{
+				neighborList = new NeighborList(molecules, enviro);
+			}
+			
+			SerialCalcs::getNeighbors_NLC(neighborList, molecules, enviro, changeIdx, neighbors, false);
+		}
+		
 		//Calculate the current/original/old energy contribution for the current molecule
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
@@ -252,7 +258,7 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, old_lj, old_charge, changeIdx);
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, old_lj, old_charge, changeIdx, neighbors);
 			}
 			else
 			{
@@ -280,7 +286,7 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(neighborList, molecules, enviro, new_lj, new_charge, changeIdx);
+				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, new_lj, new_charge, changeIdx, neighbors);
 			}
 			else
 			{

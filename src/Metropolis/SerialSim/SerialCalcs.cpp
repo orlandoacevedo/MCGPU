@@ -145,7 +145,9 @@ Real SerialCalcs::calcSystemEnergy_NLC(NeighborList *nl, Molecule *molecules, En
 				while (i != EMPTY)
 				{
 					// Add the molecular energy contribution to the system total
-					totalEnergy += calcMolecularEnergyContribution_NLC(nl, molecules, enviro, subLJ, subCharge, i, true);
+					std::vector<int> neighbors;
+					getNeighbors_NLC(nl, molecules, enviro, i, neighbors, true);
+					totalEnergy += calcMolecularEnergyContribution_NLC(molecules, enviro, subLJ, subCharge, i, neighbors);
 					
 					i = nl->linkedCellList[i];
 				} /* Endwhile i not empty */
@@ -154,11 +156,10 @@ Real SerialCalcs::calcSystemEnergy_NLC(NeighborList *nl, Molecule *molecules, En
 	return totalEnergy;
 }
 
-Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge, int currentMol, bool isSysCalc) {
-	Real totalEnergy = 0.0;			/* Total nonbonded energy x fudge factor */
-	Real fValue = 1.0;				/* Holds 1,4-fudge factor value */
-	
+void SerialCalcs::getNeighbors_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, int currentMol, std::vector<int>& neighbors, bool isSysCalc) {
 	// Find the vector cell for the currentMol (based on 1st primary index)
+	// NOTE: for multiple solvents each with multiple primary indexes, this is slightly off for
+	//	special cases when a molecule has primary indexes across cell boundaries
 	std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
 	int primaryIndex = currentMolPrimaryIndexArray[0]; // Use first primary index to determine cell placement
 		
@@ -166,10 +167,6 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 	vectorCells[0] = molecules[currentMol].atoms[primaryIndex].x / nl->lengthCell[0]; 
 	vectorCells[1] = molecules[currentMol].atoms[primaryIndex].y / nl->lengthCell[1];
 	vectorCells[2] = molecules[currentMol].atoms[primaryIndex].z / nl->lengthCell[2];
-	
-	// Store the molecules to include for calculation (this is done separtely to use openMP)
-	int molsToInclude[enviro->numOfMolecules];
-	int molsIndex = 0;
 	
 	// Scan the neighbor cells (including itself) of cell c
 	int neighborCells[3];			/* Neighbor cells */
@@ -238,8 +235,7 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 								// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 								if (rr < nl->rrCut)
 								{	
-									molsToInclude[molsIndex] = otherMol;
-									molsIndex++;
+									neighbors.push_back(otherMol);
 									
 									included = true;
 									break;
@@ -256,12 +252,18 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(NeighborList *nl, Molecule
 					otherMol = nl->linkedCellList[otherMol];
 				} /* Endwhile otherMol not empty */
 			} /* Endfor neighbor cells, c1 */
+	enviro->neighbors = neighbors;
+}
+
+Real SerialCalcs::calcMolecularEnergyContribution_NLC(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge, int currentMol, std::vector<int> neighbors) {
+	Real totalEnergy = 0.0;			/* Total nonbonded energy x fudge factor */
+	Real fValue = 1.0;				/* Holds 1,4-fudge factor value */
 	
 	#pragma omp parallel for
-	for (int index = 0; index < molsIndex; index++)
+	for (int index = 0; index < neighbors.size(); index++)
 	{
 		Real lj_energy = 0, charge_energy = 0;
-		Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, molsToInclude[index], enviro, lj_energy, charge_energy) * fValue;
+		Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, neighbors[index], enviro, lj_energy, charge_energy) * fValue;
 									
 		#pragma omp critical
 		{
