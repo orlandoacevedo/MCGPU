@@ -155,6 +155,7 @@ void Box::copyMolecule(Molecule *mol_dst, Molecule *mol_src)
     }
 }
 
+
 Real Box::wrapBox(Real x, Real boxDim)
 {
 

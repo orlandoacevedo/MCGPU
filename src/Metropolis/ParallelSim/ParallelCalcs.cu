@@ -287,8 +287,17 @@ Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int st
 	{
 		return 0;
 	}
+
+	Real energyContribution = 0;
+	if (box->environment->neighbors.size() > 0)
+	{
+		pBox->writeMoleculesWithinCutoffToDevice(box->environment);
+		energyContribution = calcNeighborListBatchEnergy(pBox, box->environment, molIdx);
+	}
+	else
+		energyContribution = calcBatchEnergy(pBox, createMolBatch(pBox, molIdx, startIdx), molIdx);
 	
-	return calcBatchEnergy(pBox, createMolBatch(pBox, molIdx, startIdx), molIdx);
+	return energyContribution;
 }
 
 struct isThisTrue {
@@ -332,6 +341,21 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 	return reduction;
 }
 
+Real ParallelCalcs::calcNeighborListBatchEnergy(ParallelBox *box, Environment *enviro, int molIdx)
+{
+        //There will only be as many energy segments filled in as there are molecules in the batch.
+        int validEnergies = enviro->neighbors.size() * box->maxMolSize * box->maxMolSize;
+
+        //calculate interatomic energies between changed molecule and all molecules in batch
+        calcInterMolecularEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
+        (box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->moleculesWithinCutoffD, box->maxMolSize);
+
+        //Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
+        thrust::device_ptr<Real> energiesOnDevice = thrust::device_pointer_cast(&box->energiesD[0]);
+        Real reduction = thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
+        cudaMemset(box->energiesD, 0, validEnergies * sizeof(Real));
+        return reduction;
+}
 __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff)
 {
 	int otherMol = blockIdx.x * blockDim.x + threadIdx.x;
