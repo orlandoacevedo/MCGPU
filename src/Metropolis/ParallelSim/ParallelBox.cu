@@ -117,8 +117,6 @@ void ParallelBox::copyDataToDevice()
 	//initialize energies to 0
 	cudaMemset(energiesD, 0, energyCount * sizeof(Real));
 	
-	cudaMemset(moleculesWithinCutoffD, 0, environment->neighbors.size() * sizeof(int));
-	
 	//copy Environment to device
 	cudaMalloc(&(environmentD), sizeof(Environment));
 	cudaMemcpy(environmentD, environment, sizeof(Environment), cudaMemcpyHostToDevice);
@@ -148,7 +146,7 @@ void ParallelBox::writeMoleculesWithinCutoffToDevice(Environment *enviro)
 	if (first)
 	{
 		first = false;
-		cudaMalloc(&(moleculesWithinCutoffD), environment->neighbors.size() * sizeof(int));
+		cudaMalloc(&(moleculesWithinCutoffD), moleculeCount * sizeof(int));
 	}
 	
 	for (int i = 0; i < enviro->neighbors.size(); i++)
