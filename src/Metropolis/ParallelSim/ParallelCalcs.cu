@@ -453,7 +453,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 
 	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter*pBox->maxMolSize * pBox->maxMolSize, pointer_d2, pBox->maxMolSize);
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
-	cudaFree(d_pair);
+	cudaFree(d_pair_d1);
 
 	return total_energy;
 }
