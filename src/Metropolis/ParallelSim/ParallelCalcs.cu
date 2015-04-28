@@ -386,16 +386,16 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	int pair[enviro->numOfMolecules];
 	thrust::device_vector<Real> part_energy(maxThreads, 0);
 	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
-	
+
 	// Find the vector cell for the currentMol (based on 1st primary index)
 	std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
 	int primaryIndex = currentMolPrimaryIndexArray[0]; // Use first primary index to determine cell placement
-		
+
 	int vectorCells[3];			
 	vectorCells[0] = molecules[currentMol].atoms[primaryIndex].x / nl->lengthCell[0]; 
 	vectorCells[1] = molecules[currentMol].atoms[primaryIndex].y / nl->lengthCell[1];
 	vectorCells[2] = molecules[currentMol].atoms[primaryIndex].z / nl->lengthCell[2];
-	
+
 	// Scan the neighbor cells (including itself) of cell c
 	int neighborCells[3];			/* Neighbor cells */
 	//#pragma omp parallel for collapse(3)
@@ -403,27 +403,10 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 		for (neighborCells[1] = vectorCells[1]-1; neighborCells[1] <= vectorCells[1]+1; (neighborCells[1])++)
 			for (neighborCells[2] = vectorCells[2]-1; neighborCells[2] <= vectorCells[2]+1; (neighborCells[2])++)
 			{
-				// Periodic boundary condition by shifting coordinates
-				Real rshift[3];	  		/* Shift coordinates for periodicity */
-				for (int a = 0; a < 3; a++)
-				{
-					if (neighborCells[a] < 0)
-					{
-						rshift[a] = -nl->region[a];
-					}
-					else if (neighborCells[a] >= nl->numCells[a])
-					{
-						rshift[a] = nl->region[a];
-					}
-					else
-					{
-						rshift[a] = 0.0;
-					}
-				}
 				// Calculate the scalar cell index of the neighbor cell
 				int c1 = ((neighborCells[0] + nl->numCells[0]) % nl->numCells[0]) * nl->numCellsYZ
-					+((neighborCells[1] + nl->numCells[1]) % nl->numCells[1]) * nl->numCells[2]
-					+((neighborCells[2] + nl->numCells[2]) % nl->numCells[2]);
+						+((neighborCells[1] + nl->numCells[1]) % nl->numCells[1]) * nl->numCells[2]
+						                                                                         +((neighborCells[2] + nl->numCells[2]) % nl->numCells[2]);
 				// Skip this neighbor cell if empty
 				if (nl->head[c1] == EMPTY) continue;
 
@@ -434,22 +417,22 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 					if (currentMol != otherMol){	
 						pair[counter] = otherMol;
 						counter++;
-					}
+					}					
 					otherMol = nl->linkedCellList[otherMol];
 				} /* Endwhile otherMol not empty */
 			} /* Endfor neighbor cells, c1 */
-	
-	
+
+
 	int *d_pair_d1;
 	cudaMalloc((void **)&d_pair_d1, sizeof(int)*enviro->numOfMolecules);
 	cudaMemcpy(d_pair_d1, pair, sizeof(int)*enviro->numOfMolecules, cudaMemcpyHostToDevice);
-	
+
 	thrust::device_vector<int> d_pair_d2(enviro->numOfMolecules, NO);
 	int *pointer_d2 = thrust::raw_pointer_cast(&d_pair_d2[0]);
 	int maxThreads_2 = enviro->numOfMolecules;
-	pairFilter<<<maxThreads_2 / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, d_pair_d1, pointer_d2, currentMol, counter);
-	
-	CUDA_CHECK(cudaDeviceSynchronize());
+	pairFilter<<<maxThreads_2 / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, d_enviro, d_pair_d1, pointer_d2, currentMol, counter);
+
+	cudaDeviceSynchronize();
 
 	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter*pBox->maxMolSize * pBox->maxMolSize, pointer_d2, pBox->maxMolSize);
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
@@ -458,11 +441,12 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	return total_energy;
 }
 
-__global__ void ParallelCalcs::pairFilter(MoleculeData *molecules, AtomData *atoms, int *pair_input, int *pair_output, int currentMol, int cap){
+__global__ void ParallelCalcs::pairFilter(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int *pair_input, int *pair_output, int currentMol, int cap){
 	int threadId = blockIdx.x * blockDim.x + threadIdx.x;
 	if(threadId < cap){
+		Real rrCut = enviro->cutoff * enviro->cutoff;
 		bool included = false;
-		othertMol = pair_input[threadId];
+		otherMol = pair_input[threadId];
 		for (int w = 0; w < molecules->totalPrimaryIndexSize; w++)
 		{
 			int currentMoleculeIndexCount = molecules->primaryIndexes[w];
@@ -493,9 +477,9 @@ __global__ void ParallelCalcs::pairFilter(MoleculeData *molecules, AtomData *ato
 								int atom1 = molecules->atomsIdx[currentMol] + *(currentMolPrimaryIndexArray + m);
 								int atom2 = molecules->atomsIdx[otherMol] + *(otherMolPrimaryIndexArray + n);
 
-								dr[0] = atoms->x[atom1] - (atoms->x[atom2] + rshift[0]);
-								dr[1] = atoms->y[atom1] - (atoms->y[atom2] + rshift[1]);
-								dr[2] = atoms->z[atom1] - (atoms->z[atom2] + rshift[2]);
+								dr[0] = atoms->x[atom1] - atoms->x[atom2];
+								dr[1] = atoms->y[atom1] - atoms->y[atom2];
+								dr[2] = atoms->z[atom1] - atoms->z[atom2];
 								const Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);
 
 								// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
