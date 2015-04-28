@@ -383,7 +383,7 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 	Environment *d_enviro = pBox->environmentD;
 	int counter = 0;//count how many iterations
 	int maxThreads = enviro->numOfMolecules * pBox->maxMolSize * pBox->maxMolSize;
-	int pair[enviro->numOfMolecules];
+	int pair[enviro->numOfMolecules*2];
 	thrust::device_vector<Real> part_energy(maxThreads, 0);
 	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
 
@@ -424,12 +424,12 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 
 
 	int *d_pair_d1;
-	cudaMalloc((void **)&d_pair_d1, sizeof(int)*enviro->numOfMolecules);
-	cudaMemcpy(d_pair_d1, pair, sizeof(int)*enviro->numOfMolecules, cudaMemcpyHostToDevice);
+	cudaMalloc((void **)&d_pair_d1, sizeof(int)*enviro->numOfMolecules*2);
+	cudaMemcpy(d_pair_d1, pair, sizeof(int)*enviro->numOfMolecules*2, cudaMemcpyHostToDevice);
 
-	thrust::device_vector<int> d_pair_d2(enviro->numOfMolecules, NO);
+	thrust::device_vector<int> d_pair_d2(enviro->numOfMolecules*2, NO);
 	int *pointer_d2 = thrust::raw_pointer_cast(&d_pair_d2[0]);
-	int maxThreads_2 = enviro->numOfMolecules;
+	int maxThreads_2 = enviro->numOfMolecules*2;
 	pairFilter<<<maxThreads_2 / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, d_enviro, d_pair_d1, pointer_d2, currentMol, counter);
 
 	cudaDeviceSynchronize();
