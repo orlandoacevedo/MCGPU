@@ -431,68 +431,97 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol
 				int otherMol = nl->head[c1];
 				while (otherMol != EMPTY)
 				{
-					bool included = false;
-
-					// For other molecules (and if total system calc, then avoid double counting of pairs)
-					if (currentMol != otherMol)
-					{	
-						std::vector<int> otherMolPrimaryIndexArray;
-						if (molecules[currentMol].type == molecules[otherMol].type)
-						{
-							otherMolPrimaryIndexArray = currentMolPrimaryIndexArray;
-						}
-						else 
-						{
-							otherMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[otherMol].type]);
-						}
-
-						for (int i1 = 0; i1 < currentMolPrimaryIndexArray.size(); i1++)
-						{
-							for (int i2 = 0; i2 < otherMolPrimaryIndexArray.size(); i2++)
-							{
-								int primaryIndex1 = currentMolPrimaryIndexArray[i1];
-								int primaryIndex2 = otherMolPrimaryIndexArray[i2];
-								Atom atom1 = molecules[currentMol].atoms[primaryIndex1];
-								Atom atom2 = molecules[otherMol].atoms[primaryIndex2];
-							
-								Real dr[3];		  /* Pair vector dr = atom[currentMol]-atom[otherMol] */
-								dr[0] = atom1.x - (atom2.x + rshift[0]);
-								dr[1] = atom1.y - (atom2.y + rshift[1]);
-								dr[2] = atom1.z - (atom2.z + rshift[2]);
-								Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
-								
-								// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
-								if (rr < nl->rrCut)
-								{
-									
-									pair[counter] = otherMol;
-									counter++;
-									included = true;
-									break;
-								} /* Endif rr < rrCut */
-									
-							}
-							if (included)
-							{
-								break;
-							}
-						}
-					} /* Endif i<j */
-			
+					if (currentMol != otherMol){	
+						pair[counter] = otherMol;
+						counter++;
+					}
 					otherMol = nl->linkedCellList[otherMol];
 				} /* Endwhile otherMol not empty */
 			} /* Endfor neighbor cells, c1 */
 	
 	
-	int *d_pair;
-	cudaMalloc((void **)&d_pair, sizeof(int)*enviro->numOfMolecules);
-	cudaMemcpy(d_pair, pair, sizeof(int)*enviro->numOfMolecules, cudaMemcpyHostToDevice);
+	int *d_pair_d1;
+	cudaMalloc((void **)&d_pair_d1, sizeof(int)*enviro->numOfMolecules);
+	cudaMemcpy(d_pair_d1, pair, sizeof(int)*enviro->numOfMolecules, cudaMemcpyHostToDevice);
+	
+	thrust::device_vector<int> d_pair_d2(enviro->numOfMolecules, NO);
+	int *pointer_d2 = thrust::raw_pointer_cast(&d_pair_d2[0]);
+	int maxThreads_2 = enviro->numOfMolecules;
+	pairFilter<<<maxThreads_2 / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, d_pair_d1, pointer_d2, currentMol, counter);
+	
+	CUDA_CHECK(cudaDeviceSynchronize());
 
-	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter*pBox->maxMolSize * pBox->maxMolSize, d_pair, pBox->maxMolSize);
+	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter*pBox->maxMolSize * pBox->maxMolSize, pointer_d2, pBox->maxMolSize);
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 	cudaFree(d_pair);
 
 	return total_energy;
+}
+
+__global__ void ParallelCalcs::pairFilter(MoleculeData *molecules, AtomData *atoms, int *pair_input, int *pair_output, int currentMol, int cap){
+	int threadId = blockIdx.x * blockDim.x + threadIdx.x;
+	if(threadId < cap){
+		bool included = false;
+		othertMol = pair_input[threadId];
+		for (int w = 0; w < molecules->totalPrimaryIndexSize; w++)
+		{
+			int currentMoleculeIndexCount = molecules->primaryIndexes[w];
+			int currentTypeIndex = w+1;
+			int potentialCurrentMoleculeType = molecules->primaryIndexes[currentTypeIndex];
+
+			if (potentialCurrentMoleculeType == molecules->type[currentMol])
+			{
+				int *currentMolPrimaryIndexArray = molecules->primaryIndexes + currentTypeIndex + 1;
+				int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount - 1;
+
+				for (int k = 0; k < molecules->totalPrimaryIndexSize; k++)
+				{
+					int otherMoleculeIndexCount = molecules->primaryIndexes[k];
+					int otherTypeIndex = k+1;
+					int potentialOtherMoleculeType = molecules->primaryIndexes[otherTypeIndex];
+
+					if (potentialOtherMoleculeType == molecules->type[otherMol])
+					{
+						int *otherMolPrimaryIndexArray = molecules->primaryIndexes + otherTypeIndex + 1;
+						int otherMolPrimaryIndexArrayLength = otherMoleculeIndexCount - 1;
+
+						for (int m = 0; m < currentMolPrimaryIndexArrayLength; m++)
+						{
+							for (int n = 0; n < otherMolPrimaryIndexArrayLength; n++)
+							{
+								//find primary atom indices for this pair of molecules
+								int atom1 = molecules->atomsIdx[currentMol] + *(currentMolPrimaryIndexArray + m);
+								int atom2 = molecules->atomsIdx[otherMol] + *(otherMolPrimaryIndexArray + n);
+
+								dr[0] = atoms->x[atom1] - (atoms->x[atom2] + rshift[0]);
+								dr[1] = atoms->y[atom1] - (atoms->y[atom2] + rshift[1]);
+								dr[2] = atoms->z[atom1] - (atoms->z[atom2] + rshift[2]);
+								const Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);
+
+								// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
+
+								if (rr < rrCut) {
+									included = true;
+									pair_output[threadId] = otherMol;
+									break;
+								}
+							}
+							if (included)
+								break;
+						}
+					}
+					if (included)
+						break;
+					else
+						k += otherMoleculeIndexCount;
+				}
+			}   
+			if (included)
+				break;
+			else
+				w += currentMoleculeIndexCount;
+		}
+	}
 }
 
 __global__ void ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
