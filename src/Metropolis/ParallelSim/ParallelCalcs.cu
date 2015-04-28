@@ -446,7 +446,7 @@ __global__ void ParallelCalcs::pairFilter(MoleculeData *molecules, AtomData *ato
 	if(threadId < cap){
 		Real rrCut = enviro->cutoff * enviro->cutoff;
 		bool included = false;
-		otherMol = pair_input[threadId];
+		int otherMol = pair_input[threadId];
 		for (int w = 0; w < molecules->totalPrimaryIndexSize; w++)
 		{
 			int currentMoleculeIndexCount = molecules->primaryIndexes[w];
@@ -476,7 +476,7 @@ __global__ void ParallelCalcs::pairFilter(MoleculeData *molecules, AtomData *ato
 								//find primary atom indices for this pair of molecules
 								int atom1 = molecules->atomsIdx[currentMol] + *(currentMolPrimaryIndexArray + m);
 								int atom2 = molecules->atomsIdx[otherMol] + *(otherMolPrimaryIndexArray + n);
-
+								Real dr[3];
 								dr[0] = atoms->x[atom1] - atoms->x[atom2];
 								dr[1] = atoms->y[atom1] - atoms->y[atom2];
 								dr[2] = atoms->z[atom1] - atoms->z[atom2];
