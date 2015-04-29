@@ -153,19 +153,9 @@ void Simulation::run()
 	{	
 		if (args.simulationMode == SimulationMode::Parallel)
         {
-		//	if (args.useNeighborList)
-		//	{
-		//		std::cout << "Using neighbor-list for parallel energy calculation" << std::endl;
-				// TODO: update for refactored/renamed parallel function
-		//		oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
-				//oldEnergy = ParallelCalcs::calcSystemEnergy(box);				
-		//	}
-		//	else
-			{
-				std::cout << "Using original parallel energy calculation" << std::endl;
-				oldEnergy = ParallelCalcs::calcSystemEnergy(box);
-			}
-        }
+			std::cout << "Using original parallel energy calculation" << std::endl;
+			oldEnergy = ParallelCalcs::calcSystemEnergy(box);
+		}
 		else
 		{
 			if (args.useNeighborList)
