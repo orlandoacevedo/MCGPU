@@ -152,7 +152,11 @@ CUDA_BIN_PATH ?= $(CUDA_PATH)/bin
 #
 # NOTE: If the 32-bit cuda installation was used, this value may have to be
 # set to point to the 'lib' directory instead of the 'lib64' directory.
-CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
+ifeq ($(MAC),1)
+	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib
+else
+	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
+endif
 
 
 ##############################
