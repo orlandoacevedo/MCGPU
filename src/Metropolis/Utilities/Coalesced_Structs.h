@@ -74,12 +74,6 @@ struct MoleculeData
 		    index += 2 + (*(*enviro->primaryAtomIndexArray)[i]).size();
 		}
 
-		printf("TotalPrimaryIndexSize: %d\n", totalPrimaryIndexCount);
-		for (int i = 0; i < totalPrimaryIndexCount; i++)
-		{
-		    printf("%d ", primaryIndexes[i]);
-		}
-	
 		moleculeCount = numM;
 		totalPrimaryIndexSize = totalPrimaryIndexCount;
 	}

@@ -58,8 +58,8 @@ namespace ParallelCalcs
 	Real getEnergyFromDevice(ParallelBox *box, int validEnergies);
 	
 	/// Each thread of this kernel checks the distance between
-	///   the chosen molecule (constant across threads) and one
-	///   other molecule. If within cutoff, store index of other
+	///   the chosen molecule's cutoff(s) (constant across threads) and one
+	///   other molecule's . If within cutoff, store index of other
 	///   molecule in the 'inCutoff' array. This array will be
 	///   compacted to form the molecule batch for the energy
 	///   calculations.
@@ -71,15 +71,12 @@ namespace ParallelCalcs
 	/// @param enviro Device pointer to Environment struct.
 	/// @param inCutoff Device pointer to valid neighbor molecules
 	///   array.
+        __global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);
+	
 	Real calcEnergyContribution(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int currentMol, int otherMol, int startIdx);
-	Real calcIntramolEnergy_NLC(Environment *enviro, MoleculeData *molecules, AtomData *atoms);
-    __device__ __host__ Real calcAtomDist(Atom atom1, Atom atom2, Environment *enviro);
-    __device__ __host__ Real calcAtomDist(AtomData *atoms, int atom1, int atom2, Environment *enviro);
-    __device__ __host__ Real calc_lj(Atom atom1, Atom atom2, Real r2);
-    __device__ Real calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro);
-    __global__ void calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real *part_energy, MoleculeData *molecules, AtomData *atoms, Environment *enviro, int limit);
-	__global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);
-    ///__global__ void pairFilter(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int *pair_input, int *pair_output, int currentMol, int cap);
+        __device__ __host__ Real calcAtomDist(AtomData *atoms, int atom1, int atom2, Environment *enviro);
+        __device__ Real calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro);
+        __global__ void calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real *part_energy, MoleculeData *molecules, AtomData *atoms, Environment *enviro, int limit);
 	
 	/// Each thread in this kernel calculates the inter-atomic
 	///   energy between one pair of atoms in the molecule pair

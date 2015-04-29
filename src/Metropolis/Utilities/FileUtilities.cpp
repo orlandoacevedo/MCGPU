@@ -1990,9 +1990,9 @@ Atom StateScanner::getAtomFromLine(string line)
             case 6:
                 atom.charge = atof(tokens);
                 break;
-	        case 7:
-		        *atom.name = std::string(tokens);
-		        break;
+            case 7:
+	        *atom.name = std::string(tokens);
+ 	        break;
         }
 
         tokens = strtok(NULL, " ");
@@ -2244,7 +2244,7 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
                 << currentAtom.sigma << " "
                 << currentAtom.epsilon << " "
                 << currentAtom.charge << " " 
-		        << currentAtom.name << " " << std::endl;
+		        << *currentAtom.name << " " << std::endl;
         }
 
         // Write bonds

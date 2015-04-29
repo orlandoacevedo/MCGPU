@@ -155,14 +155,14 @@ void Simulation::run()
 	{	
 		if (args.simulationMode == SimulationMode::Parallel)
         {
-			if (args.useNeighborList)
-			{
-				std::cout << "Using neighbor-list for parallel energy calculation" << std::endl;
+		//	if (args.useNeighborList)
+		//	{
+		//		std::cout << "Using neighbor-list for parallel energy calculation" << std::endl;
 				// TODO: update for refactored/renamed parallel function
-				oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
+		//		oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
 				//oldEnergy = ParallelCalcs::calcSystemEnergy(box);				
-			}
-			else
+		//	}
+		//	else
 			{
 				std::cout << "Using original parallel energy calculation" << std::endl;
 				oldEnergy = ParallelCalcs::calcSystemEnergy(box);
@@ -451,7 +451,7 @@ int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMolecul
 			pdbFile.width(5);
 			pdbFile << currentAtom.id + 1;
 			pdbFile.width(3); // change from 5
-			pdbFile << currentAtom.name;
+			pdbFile << *currentAtom.name;
 			pdbFile.width(6); // change from 4
 			pdbFile << "UNK";
 			pdbFile.width(6);

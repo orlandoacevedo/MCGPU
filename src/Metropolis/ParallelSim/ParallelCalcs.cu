@@ -307,6 +307,7 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 	    	        int *currentMolPrimaryIndexArray = molecules->primaryIndexes + currentTypeIndex + 1;
 		        int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount - 1;		
 
+			//search for correct otherMolecule type
 			for (int k = 0; k < molecules->totalPrimaryIndexSize; k++)
 			{
 		    	    int otherMoleculeIndexCount = molecules->primaryIndexes[k];
@@ -317,7 +318,9 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 			    {
 				int *otherMolPrimaryIndexArray = molecules->primaryIndexes + otherTypeIndex + 1;
 				int otherMolPrimaryIndexArrayLength = otherMoleculeIndexCount - 1;
-					
+			
+				//If any otherMol primary atoms are within currentMol cutoffs, 
+				//otherMol will be included in the energy contribution calculation		
 				for (int m = 0; m < currentMolPrimaryIndexArrayLength; m++)
 				{
 				    for (int n = 0; n < otherMolPrimaryIndexArrayLength; n++)
@@ -507,9 +510,4 @@ __device__ int ParallelCalcs::getXFromIndex(int idx)
     int discriminant = 1 - 4 * c;
     int qv = (-1 + sqrtf(discriminant)) / 2;
     return qv + 1;
-}
-
-__device__ int ParallelCalcs::getYFromIndex(int x, int idx)
-{
-    return idx - (x * x - x) / 2;
 }
