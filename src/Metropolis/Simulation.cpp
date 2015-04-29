@@ -334,7 +334,7 @@ void Simulation::run()
 	
 	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
 
-	if (args.simulationMode == SimulationMode::Serial)
+	if (args.simulationMode != SimulationMode::Parallel)
 	{
 		fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
 		fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
@@ -381,6 +381,13 @@ void Simulation::run()
 	resultsFile << "Steps = " << simSteps << std::endl;
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;
 	resultsFile << "[Results]" << std::endl;
+
+	if (args.simulationMode != SimulationMode::Parallel)
+	{
+		resultsFile << "LJ-Energy Subtotal: " << lj_energy);
+		resultsFile << "Charge Energy Subtotal: " << charge_energy);
+	}
+
 	resultsFile << "Final-Energy = " << currentEnergy << std::endl;
 	resultsFile << "Run-Time = " << diffTime << " seconds" << std::endl;
 	resultsFile << "Accepted-Moves = " << accepted << std::endl;
