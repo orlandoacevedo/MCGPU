@@ -95,7 +95,7 @@ namespace ParallelCalcs
 	///   molecule indexes.
 	/// @param maxMolSize The size (in Atoms) of the largest molecule.
 	///   Used for energy segmentation size calculation.
-	__global__ void calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int curentMol, Environment *enviro, Real *energies, int numEnergies, int *molBatch, int maxMolSize);
+	__global__ void calcInterAtomicEnergy(MoleculeData *molecules, AtomData *atoms, int curentMol, Environment *enviro, Real *energies, int numEnergies, int *molBatch, int maxMolSize);
 	
 	/// This kernel performs parallel energy aggregation,
 	///   and also performs the service of resetting energies
