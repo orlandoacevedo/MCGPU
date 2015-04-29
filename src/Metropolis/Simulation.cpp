@@ -35,31 +35,31 @@
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
 
-//Constructor & Destructor
 Simulation::Simulation(SimulationArgs simArgs)
 {
 	args = simArgs;
 
 	stepStart = 0;
 	
-	if (args.simulationMode == SimulationMode::Parallel) {
-		//we need to set this to 1 in parallel mode because it is irrelevant BUT is used in the 
-		//runtime calculation. See summary equation for explanation.
+	if (args.simulationMode == SimulationMode::Parallel) 
+	{
+		/*We need to set this to 1 in parallel mode because it is irrelevant BUT is used in the 
+		  runtime calculation. See summary equation for explanation.*/
 		threadsToSpawn = 1;
-	} else {
+	} 
+	else 
+	{
 		int processorCount = omp_get_num_procs();
-		//We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
-		//We could do performance tuning to get more information on what the ideal number might be.
+		/*We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
+		  We could do performance tuning to get more information on what the ideal number might be.*/
 		threadsToSpawn = max(processorCount / 2, 1);
-		if (simArgs.threadCount > 0) {
-			threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
-		}
 		
+		if (simArgs.threadCount > 0) 
+			threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
 		
 		std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
 		omp_set_num_threads(threadsToSpawn);
 		omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
-		//std::cout << "Sysconf Processors Detected: " << sysconf(_SC_NPROCESSORS_ONLN) << endl;
 	}
 
 	if (simArgs.simulationMode == SimulationMode::Parallel)
@@ -89,13 +89,12 @@ Simulation::~Simulation()
 		delete box;
 		box = NULL;
 	}
-	
-	
 }
 
 void Simulation::run()
 {
 	std::cout << "Simulation Name: " << args.simulationName << std::endl;
+	
 	//declare variables common to both parallel and serial
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
@@ -124,9 +123,9 @@ void Simulation::run()
 	std::string mc ("MCGPU");
 	std::size_t found = directory.find(mc);
 	
-	if (found != std::string::npos) {
+	if (found != std::string::npos) 
 		directory = directory.substr(0,found+6);
-	}
+	
 	std::string MCGPU = directory;
 
 	MCGPU.append("bin/pdbFiles");
@@ -140,14 +139,13 @@ void Simulation::run()
     clock_t function_time_start, function_time_end;
 	function_time_start = clock();
 	
-	//Set the output depending on the verbose flag
 	std::streambuf* cout_sbuf;
 	if (!args.verboseOutput)
 	{
-		std::cout << "Silent run, integration test started..." << endl; // save original sbuf
+		std::cout << "Silent run, integration test started..." << endl;
 		std::streambuf* cout_sbuf = std::cout.rdbuf();
 		std::ofstream fout("/dev/null");
-		std::cout.rdbuf(fout.rdbuf()); // redirect 'cout' to a 'fout'
+		std::cout.rdbuf(fout.rdbuf());
 	}
 
 	//Calculate original starting energy for the entire system
@@ -192,14 +190,9 @@ void Simulation::run()
 	//for testing/debug purposes
 	std::cout << "Duration of system energy calculation function: " << duration << " seconds" << std::endl;
 	std::cout << "Threads to spawn: " << threadsToSpawn << std::endl;
-
-	//REMOVE
-	if (args.useNeighborList)
-		std::cout << "NeighborList Interval: " << args.neighborListInterval << std::endl;
 	
 	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
 	
-	//determine where we want the state file to go
 	std::string baseStateFile = "";	
 	if (!args.simulationName.empty())
 	{
@@ -330,35 +323,36 @@ void Simulation::run()
 		else
 		{
 			rejected++;
-			//restore previous configuration
 			box->rollback(changeIdx);
 		}
 	}
 	writePDB(enviro, molecules);
 	endTime = clock();
-	//This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
-	//However, it is a good enough estimation without adding unnecessary complexity.
+	
+	/*This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
+	  However, it is a good enough estimation without adding unnecessary complexity.*/
 	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 	
 	currentEnergy = oldEnergy;
 	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << currentEnergy << std::endl;
 
-	// Save the final state of the simulation
 	if (args.stateInterval >= 0)
-	{
 		saveState(baseStateFile, (stepStart + simSteps));
-	}
 
-if (!args.verboseOutput)
-	{
+	if (!args.verboseOutput)
 		std::cout.rdbuf(cout_sbuf); // restore the original stream buffer
-	}
 	
 	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
-	fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
-	fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
+
+	if (args.simulationMode == SimulationMode::Serial)
+	{
+		fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
+		fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
+	}
+
 	fprintf(stdout, "Energy Long-range Correcton: %.3f\n", energy_LRC);
 	//fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
+
 	fprintf(stdout, "Final Energy: %.3f\n", currentEnergy);
 	fprintf(stdout, "Run Time: %.3f seconds\n", diffTime);
 	fprintf(stdout, "Accepted Moves: %d\n", accepted);
@@ -366,10 +360,12 @@ if (!args.verboseOutput)
 	fprintf(stdout, "Acceptance Raio: %.2f%%\n", 100.0 * accepted / (accepted + rejected));
 
 	std::string resultsName;
+
 	if (args.simulationName.empty())
 		resultsName = RESULTS_FILE_DEFAULT;
 	else
 		resultsName = args.simulationName;
+
 	resultsName.append(RESULTS_FILE_EXT);
 
 	// Save the simulation results.
@@ -379,15 +375,18 @@ if (!args.verboseOutput)
 	resultsFile << "######### MCGPU Results File #############" << std::endl;
 	resultsFile << "[Information]" << std::endl;
 	resultsFile << "Timestamp = " << currentDateTime() << std::endl;
+	
 	if (!args.simulationName.empty())
 		resultsFile << "Simulation-Name = " << args.simulationName << std::endl;
 
-	if (args.simulationMode == SimulationMode::Parallel) {
+	if (args.simulationMode == SimulationMode::Parallel)
 		resultsFile << "Simulation-Mode = GPU" << std::endl;
-	} else {
+	else 
+	{
 		resultsFile << "Simulation-Mode = CPU" << std::endl;
 		resultsFile << "Threads-Used = " << threadsToSpawn << std::endl;
 	}
+
 	resultsFile << "Starting-Step = " << stepStart << std::endl;
 	resultsFile << "Steps = " << simSteps << std::endl;
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;
@@ -399,8 +398,6 @@ if (!args.verboseOutput)
 	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;
 
 	resultsFile.close();
-
-
 }
 
 void Simulation::saveState(const std::string& baseFileName, int simStep)
@@ -423,17 +420,16 @@ void Simulation::saveState(const std::string& baseFileName, int simStep)
 
 int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection)
 {
-        //determine PDB file path
-        std::string pdbName;
-        if (args.simulationName.empty())
-                pdbName = RESULTS_FILE_DEFAULT;
-        else
-                pdbName = args.simulationName;
-        pdbName.append(".pdb");
+    std::string pdbName;
 
-        std::ofstream pdbFile;
+    if (args.simulationName.empty())
+        pdbName = RESULTS_FILE_DEFAULT;
+    else
+        pdbName = args.simulationName;
 
-        pdbFile.open(pdbName.c_str());
+    pdbName.append(".pdb");
+    std::ofstream pdbFile;
+    pdbFile.open(pdbName.c_str());
 
 	int numOfMolecules = sourceEnvironment.numOfMolecules;
 	pdbFile << "REMARK Created by MCGPU" << std::endl;
@@ -479,8 +475,6 @@ const std::string Simulation::currentDateTime()
     struct tm  tstruct;
     char       buf[80];
     tstruct = *localtime(&now);
-    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
-    // for more information about date/time format
     strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
 
     return buf;
