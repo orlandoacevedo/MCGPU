@@ -184,11 +184,11 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	}
 	int *d_pair_i;
 	int *d_pair_j;
-	cudaMalloc((void **)&d_pair_i, sizeof(int)*maxPairs);
-	cudaMalloc((void **)&d_pair_j, sizeof(int)*maxPairs);
-	cudaMemcpy(d_pair_i, pair_i, sizeof(int)*maxPairs, cudaMemcpyHostToDevice);
-	cudaMemcpy(d_pair_j, pair_j, sizeof(int)*maxPairs, cudaMemcpyHostToDevice);
-	thrust::device_vector<Real> part_energy(maxPairs, 0);//this will store the result
+	cudaMalloc((void **)&d_pair_i, sizeof(int)*iterater_i);
+	cudaMalloc((void **)&d_pair_j, sizeof(int)*iterater_i);
+	cudaMemcpy(d_pair_i, pair_i, sizeof(int)*iterater_i, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_pair_j, pair_j, sizeof(int)*iterater_i, cudaMemcpyHostToDevice);
+	thrust::device_vector<Real> part_energy(iterater_i, 0);//this will store the result
 	ParallelBox *pBox = (ParallelBox*) box;
 	if (pBox == NULL)
 	{
@@ -198,12 +198,12 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 	AtomData *d_atoms = pBox->atomsD;
 	Environment *d_enviro = pBox->environmentD;
 	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
-	int blocksPerGrid = maxPairs/THREADS_PER_BLOCK;
+	int blocksPerGrid = iterater_i/THREADS_PER_BLOCK + 1;
 	calcEnergy_NLC<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_pair_i, d_pair_j, raw_ptr, d_molecules, d_atoms, d_enviro, iterater_i);
 	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
 	cudaFree(d_pair_i);
 	cudaFree(d_pair_j);
-	return total_energy;// + calcIntramolEnergy_NLC(enviro, pBox->moleculesD, pBox->atomsD);
+	return total_energy;
 }
 
 __global__ void ParallelCalcs::calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real *part_energy, MoleculeData *molecules, AtomData *atoms, Environment *enviro, int limit)
