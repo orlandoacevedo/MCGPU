@@ -384,8 +384,8 @@ void Simulation::run()
 
 	if (args.simulationMode != SimulationMode::Parallel)
 	{
-		resultsFile << "LJ-Energy Subtotal: " << lj_energy);
-		resultsFile << "Charge Energy Subtotal: " << charge_energy);
+		resultsFile << "LJ-Energy Subtotal: " << lj_energy;
+		resultsFile << "Charge Energy Subtotal: " << charge_energy;
 	}
 
 	resultsFile << "Final-Energy = " << currentEnergy << std::endl;
