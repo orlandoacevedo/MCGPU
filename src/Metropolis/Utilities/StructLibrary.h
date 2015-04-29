@@ -254,7 +254,6 @@ struct Environment
 	int primaryAtomIndexDefinitions;
 	int primaryAtomIndex;
 	std::vector< std::vector<int>* >* primaryAtomIndexArray;
-	std::vector<int> neighbors;
 	int randomseed; //--Albert
 	
 	Environment() //constructor/initialize all values to 0 or some other default, where applicable

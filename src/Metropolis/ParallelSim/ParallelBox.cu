@@ -94,7 +94,7 @@ void ParallelBox::copyDataToDevice()
 	//data structures for neighbor batch in energy calculation
 	nbrMolsH = (int*) malloc(moleculeCount * sizeof(int));
 	molBatchH = (int*) malloc(moleculeCount * sizeof(int));
-	moleculesWithinCutoffH = (int*) malloc(environment->neighbors.size() * sizeof(int));
+	moleculesWithinCutoffH = (int*) malloc(moleculeCount * sizeof(int));
 	cudaMalloc(&(nbrMolsD), moleculeCount * sizeof(int));
 	cudaMalloc(&(molBatchD), moleculeCount * sizeof(int));
 	
@@ -141,7 +141,7 @@ void ParallelBox::writeChangeToDevice(int changeIdx)
 	//sigma, epsilon, and charge will not change, so there is no need to update those arrays
 }
 
-void ParallelBox::writeMoleculesWithinCutoffToDevice(Environment *enviro)
+void ParallelBox::writeMoleculesWithinCutoffToDevice(vector<int> neighbors)
 {
 	if (first)
 	{
@@ -149,8 +149,8 @@ void ParallelBox::writeMoleculesWithinCutoffToDevice(Environment *enviro)
 		cudaMalloc(&(moleculesWithinCutoffD), moleculeCount * sizeof(int));
 	}
 	
-	for (int i = 0; i < enviro->neighbors.size(); i++)
-		moleculesWithinCutoffH[i] = enviro->neighbors[i];
+	for (int i = 0; i < neighbors.size(); i++)
+		moleculesWithinCutoffH[i] = neighbors[i];
 
-	cudaMemcpy(moleculesWithinCutoffD, moleculesWithinCutoffH, enviro->neighbors.size() * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(moleculesWithinCutoffD, moleculesWithinCutoffH, neighbors.size() * sizeof(int), cudaMemcpyHostToDevice);
 }

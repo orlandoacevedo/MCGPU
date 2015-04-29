@@ -150,14 +150,9 @@ CUDA_BIN_PATH ?= $(CUDA_PATH)/bin
 # are located. This location can change depending on the cuda installation and
 # the type of operating system (32 bit vs. 64 bit).
 #
-# NOTE: If the 64-bit cuda installation was used, this value may have to be
-# set to point to the 'lib64' directory instead of the 'lib' directory.
-ifeq ($(LOCAL_INSTALL),1)
-	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib
-else
-	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
-endif
-
+# NOTE: If the 32-bit cuda installation was used, this value may have to be
+# set to point to the 'lib' directory instead of the 'lib64' directory.
+CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
 
 
 ##############################
@@ -168,7 +163,11 @@ endif
 # CC will be used to compile C++ files, and NVCC will be used to
 # compile CUDA files.
 CC := g++
-NVCC := nvcc
+ifeq ($(LOCAL_INSTALL),1)
+	NVCC := $(CUDA_BIN_PATH)/nvcc
+else
+	NVCC := nvcc
+endif
 
 # Defines the types of files that the Makefile knows how to compile
 # and link. Specify the filetype by using a modulus (percent sign),

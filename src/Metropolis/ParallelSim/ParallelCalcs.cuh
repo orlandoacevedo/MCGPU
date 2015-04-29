@@ -46,7 +46,7 @@ namespace ParallelCalcs
         /// @param molIdx The index of the current changed molecule.
         /// @return Returns total molecular energy contribution, without
         ///   intramolecular energy.
-        Real calcNeighborListBatchEnergy(ParallelBox *box, Environment *enviro, int molIdx);
+        Real calcNeighborListBatchEnergy(ParallelBox *box, int molIdx, vector<int> neighbors);
 
 	/// Given an array of calculated energies on the device, get
 	///   the total energy and return it on the host.

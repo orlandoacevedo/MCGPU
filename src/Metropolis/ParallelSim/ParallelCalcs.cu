@@ -245,15 +245,23 @@ Real ParallelCalcs::calcMolecularEnergyContribution(Box *box, int molIdx, int st
 		return 0;
 	}
 
-	Real energyContribution = 0;
-	if (box->environment->neighbors.size() > 0)
-	{
-		pBox->writeMoleculesWithinCutoffToDevice(box->environment);
-		energyContribution = calcNeighborListBatchEnergy(pBox, box->environment, molIdx);
-	}
-	else
-		energyContribution = calcBatchEnergy(pBox, createMolBatch(pBox, molIdx, startIdx), molIdx);
+	Real energyContribution = calcBatchEnergy(pBox, createMolBatch(pBox, molIdx, startIdx), molIdx);
 	
+	return energyContribution;
+}
+
+Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int molIdx, vector<int> neighbors)
+{
+	ParallelBox *pBox = (ParallelBox*) box;
+	
+	if (pBox == NULL)
+	{
+		return 0;
+	}
+
+	pBox->writeMoleculesWithinCutoffToDevice(neighbors);
+	Real energyContribution = calcNeighborListBatchEnergy(pBox, molIdx, neighbors);
+
 	return energyContribution;
 }
 
@@ -303,10 +311,10 @@ Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
 	return reduction;
 }
 
-Real ParallelCalcs::calcNeighborListBatchEnergy(ParallelBox *box, Environment *enviro, int molIdx)
+Real ParallelCalcs::calcNeighborListBatchEnergy(ParallelBox *box, int molIdx, vector<int> neighbors)
 {
         //There will only be as many energy segments filled in as there are molecules in the batch.
-        int validEnergies = enviro->neighbors.size() * box->maxMolSize * box->maxMolSize;
+        int validEnergies = neighbors.size() * box->maxMolSize * box->maxMolSize;
 
         //calculate interatomic energies between changed molecule and all molecules in batch
         calcInterMolecularEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
@@ -390,133 +398,6 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 		}
 	
 	}
-}
-
-Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int currentMol) {
-	NeighborList *nl = box->neighborList; 
-	Molecule *molecules = box->getMolecules();
-	Environment *enviro = box->getEnvironment();
-
-	ParallelBox *pBox = (ParallelBox*) box;
-	if (pBox == NULL)
-	{
-		return 0;
-	}
-	MoleculeData *d_molecules = pBox->moleculesD;
-	AtomData *d_atoms = pBox->atomsD;
-	Environment *d_enviro = pBox->environmentD;
-	int counter = 0;//count how many iterations
-	int maxThreads = enviro->numOfMolecules * pBox->maxMolSize * pBox->maxMolSize;
-	int pair[enviro->numOfMolecules];
-	thrust::device_vector<Real> part_energy(maxThreads, 0);
-	Real *raw_ptr = thrust::raw_pointer_cast(&part_energy[0]);
-	
-	// Find the vector cell for the currentMol (based on 1st primary index)
-	std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
-	int primaryIndex = currentMolPrimaryIndexArray[0]; // Use first primary index to determine cell placement
-		
-	int vectorCells[3];			
-	vectorCells[0] = molecules[currentMol].atoms[primaryIndex].x / nl->lengthCell[0]; 
-	vectorCells[1] = molecules[currentMol].atoms[primaryIndex].y / nl->lengthCell[1];
-	vectorCells[2] = molecules[currentMol].atoms[primaryIndex].z / nl->lengthCell[2];
-	
-	// Scan the neighbor cells (including itself) of cell c
-	int neighborCells[3];			/* Neighbor cells */
-	//#pragma omp parallel for collapse(3)
-	for (neighborCells[0] = vectorCells[0]-1; neighborCells[0] <= vectorCells[0]+1; (neighborCells[0])++)
-		for (neighborCells[1] = vectorCells[1]-1; neighborCells[1] <= vectorCells[1]+1; (neighborCells[1])++)
-			for (neighborCells[2] = vectorCells[2]-1; neighborCells[2] <= vectorCells[2]+1; (neighborCells[2])++)
-			{
-				// Periodic boundary condition by shifting coordinates
-				Real rshift[3];	  		/* Shift coordinates for periodicity */
-				for (int a = 0; a < 3; a++)
-				{
-					if (neighborCells[a] < 0)
-					{
-						rshift[a] = -nl->region[a];
-					}
-					else if (neighborCells[a] >= nl->numCells[a])
-					{
-						rshift[a] = nl->region[a];
-					}
-					else
-					{
-						rshift[a] = 0.0;
-					}
-				}
-				// Calculate the scalar cell index of the neighbor cell
-				int c1 = ((neighborCells[0] + nl->numCells[0]) % nl->numCells[0]) * nl->numCellsYZ
-					+((neighborCells[1] + nl->numCells[1]) % nl->numCells[1]) * nl->numCells[2]
-					+((neighborCells[2] + nl->numCells[2]) % nl->numCells[2]);
-				// Skip this neighbor cell if empty
-				if (nl->head[c1] == EMPTY) continue;
-
-				// Scan atom otherMol in cell c1
-				int otherMol = nl->head[c1];
-				while (otherMol != EMPTY)
-				{
-					bool included = false;
-
-					// For other molecules (and if total system calc, then avoid double counting of pairs)
-					if (currentMol != otherMol)
-					{	
-						std::vector<int> otherMolPrimaryIndexArray;
-						if (molecules[currentMol].type == molecules[otherMol].type)
-						{
-							otherMolPrimaryIndexArray = currentMolPrimaryIndexArray;
-						}
-						else 
-						{
-							otherMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[otherMol].type]);
-						}
-
-						for (int i1 = 0; i1 < currentMolPrimaryIndexArray.size(); i1++)
-						{
-							for (int i2 = 0; i2 < otherMolPrimaryIndexArray.size(); i2++)
-							{
-								int primaryIndex1 = currentMolPrimaryIndexArray[i1];
-								int primaryIndex2 = otherMolPrimaryIndexArray[i2];
-								Atom atom1 = molecules[currentMol].atoms[primaryIndex1];
-								Atom atom2 = molecules[otherMol].atoms[primaryIndex2];
-							
-								Real dr[3];		  /* Pair vector dr = atom[currentMol]-atom[otherMol] */
-								dr[0] = atom1.x - (atom2.x + rshift[0]);
-								dr[1] = atom1.y - (atom2.y + rshift[1]);
-								dr[2] = atom1.z - (atom2.z + rshift[2]);
-								Real rr = (dr[0] * dr[0]) + (dr[1] * dr[1]) + (dr[2] * dr[2]);			
-								
-								// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
-								if (rr < nl->rrCut)
-								{
-									
-									pair[counter] = otherMol;
-									counter++;
-									included = true;
-									break;
-								} /* Endif rr < rrCut */
-									
-							}
-							if (included)
-							{
-								break;
-							}
-						}
-					} /* Endif i<j */
-			
-					otherMol = nl->linkedCellList[otherMol];
-				} /* Endwhile otherMol not empty */
-			} /* Endfor neighbor cells, c1 */
-	
-	
-	int *d_pair;
-	cudaMalloc((void **)&d_pair, sizeof(int)*enviro->numOfMolecules);
-	cudaMemcpy(d_pair, pair, sizeof(int)*enviro->numOfMolecules, cudaMemcpyHostToDevice);
-
-	calcInterMolecularEnergy<<<maxThreads / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_molecules, d_atoms, currentMol, d_enviro, raw_ptr, counter*pBox->maxMolSize * pBox->maxMolSize, d_pair, pBox->maxMolSize);
-	Real total_energy = thrust::reduce(part_energy.begin(), part_energy.end());
-	cudaFree(d_pair);
-
-	return total_energy;
 }
 
 __global__ void ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)

@@ -75,7 +75,7 @@ class ParallelBox : public Box
 		///   over to the device. Called after neighborlist structure
 		/// is updated.
 		/// @param moleculesWithinCutoff - pointer to the array containing the molcules
-		void writeMoleculesWithinCutoffToDevice(Environment *enviro);
+		void writeMoleculesWithinCutoffToDevice(vector<int> neighbors);
 
 
 };

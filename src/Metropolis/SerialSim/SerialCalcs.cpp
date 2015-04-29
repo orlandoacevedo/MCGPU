@@ -254,7 +254,6 @@ void SerialCalcs::getNeighbors_NLC(NeighborList *nl, Molecule *molecules, Enviro
 					otherMol = nl->linkedCellList[otherMol];
 				} /* Endwhile otherMol not empty */
 			} /* Endfor neighbor cells, c1 */
-	enviro->neighbors = neighbors;
 }
 
 Real SerialCalcs::calcMolecularEnergyContribution_NLC(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge, int currentMol, std::vector<int> neighbors) {
