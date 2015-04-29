@@ -158,7 +158,6 @@ Real ParallelCalcs::calcSystemEnergy_NLC(Box *box){
 												// Calculate energy for entire molecule interaction if rij < Cutoff for atom index
 												if (rr < nl->rrCut)
 												{	
-													//totalEnergy += calcInterMolecularEnergy(molecules, i, j, enviro, subLJ, subCharge) * fValue;
 													pair_i[iterater_i] = i;
 													pair_j[iterater_i] = j;
 													iterater_i++;
@@ -265,11 +264,6 @@ Real ParallelCalcs::calcMolecularEnergyContribution_NLC(Box *box, int molIdx, ve
 	return energyContribution;
 }
 
-
-
-
-
-
 struct isThisTrue {
 	__device__ bool operator()(const int &x) {
 	  return x != NO;
@@ -293,39 +287,6 @@ int ParallelCalcs::createMolBatch(ParallelBox *box, int currentMol, int startIdx
 	return lastElementFound - moleculesInBatchOnDevice;
 }
 
-Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
-{
-	if (numMols <= 0) return 0;
-	
-	//There will only be as many energy segments filled in as there are molecules in the batch.
-	int validEnergies = numMols * box->maxMolSize * box->maxMolSize;
-	
-	//calculate interatomic energies between changed molecule and all molecules in batch
-	calcInterMolecularEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
-	(box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->molBatchD, box->maxMolSize);
-	
-	//Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
-	thrust::device_ptr<Real> energiesOnDevice = thrust::device_pointer_cast(&box->energiesD[0]);
-	double reduction = thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
-	cudaMemset(box->energiesD, 0, validEnergies * sizeof(Real));
-	return reduction;
-}
-
-Real ParallelCalcs::calcNeighborListBatchEnergy(ParallelBox *box, int molIdx, vector<int> neighbors)
-{
-        //There will only be as many energy segments filled in as there are molecules in the batch.
-        int validEnergies = neighbors.size() * box->maxMolSize * box->maxMolSize;
-
-        //calculate interatomic energies between changed molecule and all molecules in batch
-        calcInterMolecularEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
-        (box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->moleculesWithinCutoffD, box->maxMolSize);
-
-        //Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
-        thrust::device_ptr<Real> energiesOnDevice = thrust::device_pointer_cast(&box->energiesD[0]);
-        Real reduction = thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
-        cudaMemset(box->energiesD, 0, validEnergies * sizeof(Real));
-        return reduction;
-}
 __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff)
 {
 	int otherMol = blockIdx.x * blockDim.x + threadIdx.x;
@@ -333,7 +294,8 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 	//checks validity of molecule pair
 	if (otherMol < molecules->moleculeCount && otherMol >= startIdx && otherMol != currentMol)
 	{
-		bool included = false;    	
+		bool included = false;
+		//search for correct currentMolecule type    	
 		for (int i = 0; i < molecules->totalPrimaryIndexSize; i++)
 		{
 		    int currentMoleculeIndexCount = molecules->primaryIndexes[i];
@@ -345,6 +307,7 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 	    	        int *currentMolPrimaryIndexArray = molecules->primaryIndexes + currentTypeIndex + 1;
 		        int currentMolPrimaryIndexArrayLength = currentMoleculeIndexCount - 1;		
 
+			//search for correct otherMolecule type
 			for (int k = 0; k < molecules->totalPrimaryIndexSize; k++)
 			{
 		    	    int otherMoleculeIndexCount = molecules->primaryIndexes[k];
@@ -355,7 +318,9 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 			    {
 				int *otherMolPrimaryIndexArray = molecules->primaryIndexes + otherTypeIndex + 1;
 				int otherMolPrimaryIndexArrayLength = otherMoleculeIndexCount - 1;
-					
+			
+				//If any otherMol primary atoms are within currentMol cutoffs, 
+				//otherMol will be included in the energy contribution calculation		
 				for (int m = 0; m < currentMolPrimaryIndexArrayLength; m++)
 				{
 				    for (int n = 0; n < otherMolPrimaryIndexArrayLength; n++)
@@ -365,13 +330,7 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 					int atom2 = molecules->atomsIdx[otherMol] + *(otherMolPrimaryIndexArray + n);
 			
 					//calculate periodic difference in coordinates
-					Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
-					Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
-					Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
-		
-					Real r2 = (deltaX * deltaX) +
-							    (deltaY * deltaY) + 
-							    (deltaZ * deltaZ);
+					Real r2 = calcAtomDist(atoms, atom1, atom2, enviro);
 		
 					//if within curoff, write index to inCutoff
 					if (r2 < enviro->cutoff * enviro->cutoff)
@@ -400,7 +359,42 @@ __global__ void ParallelCalcs::checkMoleculeDistances(MoleculeData *molecules, A
 	}
 }
 
-__global__ void ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
+
+Real ParallelCalcs::calcBatchEnergy(ParallelBox *box, int numMols, int molIdx)
+{
+	if (numMols <= 0) return 0;
+	
+	//There will only be as many energy segments filled in as there are molecules in the batch.
+	int validEnergies = numMols * box->maxMolSize * box->maxMolSize;
+	
+	//calculate interatomic energies between changed molecule and all molecules in batch
+	calcInterAtomicEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
+	(box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->molBatchD, box->maxMolSize);
+	
+	//Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
+	thrust::device_ptr<Real> energiesOnDevice = thrust::device_pointer_cast(&box->energiesD[0]);
+	Real reduction = thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
+	cudaMemset(box->energiesD, 0, validEnergies * sizeof(Real));
+	return reduction;
+}
+
+Real ParallelCalcs::calcNeighborListBatchEnergy(ParallelBox *box, int molIdx, vector<int> neighbors)
+{
+        //There will only be as many energy segments filled in as there are molecules in the batch.
+        int validEnergies = neighbors.size() * box->maxMolSize * box->maxMolSize;
+
+        //calculate interatomic energies between changed molecule and all molecules in batch
+        calcInterAtomicEnergy<<<validEnergies / BATCH_BLOCK + 1, BATCH_BLOCK>>>
+        (box->moleculesD, box->atomsD, molIdx, box->environmentD, box->energiesD, validEnergies, box->moleculesWithinCutoffD, box->maxMolSize);
+
+        //Using Thrust here for a sum reduction on all of the individual energy contributions in box->energiesD.
+        thrust::device_ptr<Real> energiesOnDevice = thrust::device_pointer_cast(&box->energiesD[0]);
+        Real reduction = thrust::reduce(energiesOnDevice, energiesOnDevice + validEnergies, (Real) 0, thrust::plus<Real>());
+        cudaMemset(box->energiesD, 0, validEnergies * sizeof(Real));
+        return reduction;
+}
+
+__global__ void ParallelCalcs::calcInterAtomicEnergy(MoleculeData *molecules, AtomData *atoms, int currentMol, Environment *enviro, Real *energies, int energyCount, int *molBatch, int maxMolSize)
 {
 	int energyIdx = blockIdx.x * blockDim.x + threadIdx.x;
 	int segmentSize = maxMolSize * maxMolSize;
@@ -428,13 +422,7 @@ __global__ void ParallelCalcs::calcInterMolecularEnergy(MoleculeData *molecules,
 				Real totalEnergy = 0;
 
 				//calculate periodic distance between atoms
-				Real deltaX = makePeriodic(atoms->x[atom1] - atoms->x[atom2], enviro->x);
-				Real deltaY = makePeriodic(atoms->y[atom1] - atoms->y[atom2], enviro->y);
-				Real deltaZ = makePeriodic(atoms->z[atom1] - atoms->z[atom2], enviro->z);
-
-				Real r2 = (deltaX * deltaX) +
-						(deltaY * deltaY) + 
-						(deltaZ * deltaZ);
+				Real r2 = calcAtomDist(atoms, atom1, atom2, enviro);
 
 				//calculate interatomic energies
 				totalEnergy += calc_lj(atoms, atom1, atom2, r2);
@@ -522,9 +510,4 @@ __device__ int ParallelCalcs::getXFromIndex(int idx)
     int discriminant = 1 - 4 * c;
     int qv = (-1 + sqrtf(discriminant)) / 2;
     return qv + 1;
-}
-
-__device__ int ParallelCalcs::getYFromIndex(int x, int idx)
-{
-    return idx - (x * x - x) / 2;
 }

@@ -56,6 +56,14 @@ namespace ParallelCalcs
 	/// @param box A ParallelBox cast as a Box, passed from Simulation.
 	/// @return Returns total system energy.
 	Real calcSystemEnergy_NLC(Box *box);
+
+	/// Calculates the inter-molecular energy contribution of a given molecule,
+        ///   without intramolecular energy, using a batch method (neighborlist version).
+        /// @param box A ParallelBox cast as a Box, passed from Simulation.
+        /// @param molIdx the index of the current changed molecule.
+        /// @param neighbors A vector of the neighbors of the current molecules.
+        /// @return Returns total molecular energy contribution, without
+        ///   intramolecular energy.
 	
 	Real calcMolecularEnergyContribution_NLC(Box *box, int molIdx, vector<int> neighbors);
 }

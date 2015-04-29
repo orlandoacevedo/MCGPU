@@ -61,7 +61,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 	    bool included = false;
 
 		if (otherMol != currentMol)
-		{	
+		{
+			//grab the primary indexes for the current and other molecules	
 			std::vector<int> currentMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[currentMol].type]);
 			std::vector<int> otherMolPrimaryIndexArray;
 			if (molecules[currentMol].type == molecules[otherMol].type)
@@ -73,6 +74,8 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 				otherMolPrimaryIndexArray = (*(*(enviro->primaryAtomIndexArray))[molecules[otherMol].type]);
 			}
 
+			//If any of otherMol's primary index atoms are within any of currentMol's
+			//cutoffs, the inter-molecular energy between the two molcules will be calculated
 			for (int i = 0; i < currentMolPrimaryIndexArray.size(); i++)
 			{
 			    for (int j = 0; j < otherMolPrimaryIndexArray.size(); j++)
