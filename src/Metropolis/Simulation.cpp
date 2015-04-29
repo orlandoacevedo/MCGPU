@@ -62,6 +62,7 @@ Simulation::Simulation(SimulationArgs simArgs)
 		//std::cout << "Sysconf Processors Detected: " << sysconf(_SC_NPROCESSORS_ONLN) << endl;
 	}
 
+
 	if (simArgs.simulationMode == SimulationMode::Parallel)
 		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
 	else
@@ -98,12 +99,6 @@ void Simulation::run()
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
 	
-	NeighborList *neighborList = NULL;
-	if (args.useNeighborList) 
-	{
-		neighborList = new NeighborList(molecules, enviro);
-	}
-
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont = 0, oldEnergyCont = 0;
 	Real lj_energy = 0, charge_energy = 0;
@@ -157,8 +152,8 @@ void Simulation::run()
 			{
 				std::cout << "Using neighbor-list for parallel energy calculation" << std::endl;
 				// TODO: update for refactored/renamed parallel function
-				//oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
-				oldEnergy = ParallelCalcs::calcSystemEnergy(box);				
+				oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
+				//oldEnergy = ParallelCalcs::calcSystemEnergy(box);
 			}
 			else
 			{
@@ -171,7 +166,7 @@ void Simulation::run()
 			if (args.useNeighborList)
 			{
 				std::cout << "Using neighbor-list for energy calculation" << std::endl;
-				oldEnergy = SerialCalcs::calcSystemEnergy_NLC(neighborList, molecules, enviro, lj_energy, charge_energy);		
+				oldEnergy = SerialCalcs::calcSystemEnergy_NLC(box->neighborList, molecules, enviro, lj_energy, charge_energy);		
 			}
 			else
 			{
@@ -211,9 +206,17 @@ void Simulation::run()
 	//Loop for each individual step
 	for (int move = stepStart; move < (stepStart + simSteps); move++)
 	{
+<<<<<<< HEAD
 		std::vector<int> neighbors;
 		new_lj = 0, old_lj = 0;
 		new_charge = 0, old_charge = 0;
+=======
+		// update neighbor-list every 100 steps
+		if (args.useNeighborList && (move % 100 == 0))
+		{
+			box->neighborList = new NeighborList(molecules, enviro);
+		}
+>>>>>>> Parallel_Integration
 		
 		//provide printouts at each pre-determined interval (not at each step)
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
@@ -246,8 +249,14 @@ void Simulation::run()
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
 			if (args.useNeighborList)
+<<<<<<< HEAD
 			{	
 				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+=======
+			{
+				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);
+				//oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+>>>>>>> Parallel_Integration
 			}
 			else
 			{
@@ -258,7 +267,11 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
+<<<<<<< HEAD
 				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, old_lj, old_charge, changeIdx, neighbors);
+=======
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(box->neighborList, molecules, enviro, lj_energy, charge_energy, changeIdx);
+>>>>>>> Parallel_Integration
 			}
 			else
 			{
@@ -274,8 +287,8 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				//newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);	
-				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx);
+                //newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(neighborList, box, changeIdx);
 			}
 			else
 			{
@@ -286,7 +299,11 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
+<<<<<<< HEAD
 				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(molecules, enviro, new_lj, new_charge, changeIdx, neighbors);
+=======
+				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(box->neighborList, molecules, enviro, lj_energy, charge_energy, changeIdx);
+>>>>>>> Parallel_Integration
 			}
 			else
 			{
@@ -337,7 +354,38 @@ void Simulation::run()
 	//However, it is a good enough estimation without adding unnecessary complexity.
 	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 	
+<<<<<<< HEAD
 	currentEnergy = oldEnergy;
+=======
+	double diffTime = 0.0;
+	if (args.useNeighborList)
+	{
+		diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC);
+	}
+	else
+	{
+		diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
+	}
+	
+	lj_energy = 0, charge_energy = 0;
+	if (args.simulationMode == SimulationMode::Parallel)
+	{
+		// TODO: update parallelCalcs for detailed energy printout
+		currentEnergy = oldEnergy;
+	}
+	else
+	{
+		if (args.useNeighborList)
+		{
+			currentEnergy = SerialCalcs::calcSystemEnergy_NLC(box->neighborList, molecules, enviro, lj_energy, charge_energy);
+		}
+		else
+		{
+			currentEnergy = SerialCalcs::calcSystemEnergy(molecules, enviro, lj_energy, charge_energy);
+		}
+	}
+	
+>>>>>>> Parallel_Integration
 	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << currentEnergy << std::endl;
 
 	// Save the final state of the simulation
@@ -352,12 +400,20 @@ if (!args.verboseOutput)
 	}
 	
 	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
+	
+	fprintf(stdout, "Final Energy: %.3f\n", currentEnergy);
+	fprintf(stdout, "Run Time: %.3f seconds\n", diffTime);
+	
 	fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
 	fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
 	fprintf(stdout, "Energy Long-range Correcton: %.3f\n", energy_LRC);
+<<<<<<< HEAD
 	//fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
 	fprintf(stdout, "Final Energy: %.3f\n", currentEnergy);
 	fprintf(stdout, "Run Time: %.3f seconds\n", diffTime);
+=======
+	fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
+>>>>>>> Parallel_Integration
 	fprintf(stdout, "Accepted Moves: %d\n", accepted);
 	fprintf(stdout, "Rejected Moves: %d\n", rejected);
 	fprintf(stdout, "Acceptance Raio: %.2f%%\n", 100.0 * accepted / (accepted + rejected));
@@ -389,8 +445,14 @@ if (!args.verboseOutput)
 	resultsFile << "Steps = " << simSteps << std::endl;
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;
 	resultsFile << "[Results]" << std::endl;
+	
 	resultsFile << "Final-Energy = " << currentEnergy << std::endl;
 	resultsFile << "Run-Time = " << diffTime << " seconds" << std::endl;
+
+	resultsFile << "LJ-Energy Subtotal = " << lj_energy << std::endl;
+	resultsFile << "Charge Energy Subtotal = " << charge_energy << std::endl;
+	resultsFile << "Energy Long-range Correcton = " << energy_LRC << std::endl;
+	resultsFile << "Intramolecular Energy = " << intraMolEnergy << std::endl;
 	resultsFile << "Accepted-Moves = " << accepted << std::endl;
 	resultsFile << "Rejected-Moves = " << rejected << std::endl;
 	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;

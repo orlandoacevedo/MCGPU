@@ -20,6 +20,7 @@
 #include "Utilities/MathLibrary.h"
 #include "Metropolis/DataTypes.h"
 #include "Utilities/StructLibrary.h"
+#include "SerialSim/NeighborList.h"
 
 #define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
 
@@ -40,6 +41,7 @@ class Box
 		Angle *angles;
 		Dihedral *dihedrals;
 		Hop *hops;
+		NeighborList *neighborList;
 		int atomCount, moleculeCount, bondCount, angleCount, dihedralCount, hopCount;
 		
 		Box();

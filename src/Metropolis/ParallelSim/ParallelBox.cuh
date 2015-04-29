@@ -27,7 +27,7 @@ class ParallelBox : public Box
 		///   molecule in the simulation.
 		/// @param changeIdx The index of the changed molecule.
 		void writeChangeToDevice(int changeIdx);
-		
+
 	public:
 		AtomData *atomsH, *atomsD;
 		Environment *environmentD;

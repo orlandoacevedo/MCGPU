@@ -191,15 +191,17 @@ void SerialCalcs::getNeighbors_NLC(NeighborList *nl, Molecule *molecules, Enviro
 						rshift[a] = 0.0;
 					}
 				}
+		
 				// Calculate the scalar cell index of the neighbor cell
 				int c1 = ((neighborCells[0] + nl->numCells[0]) % nl->numCells[0]) * nl->numCellsYZ
 					+((neighborCells[1] + nl->numCells[1]) % nl->numCells[1]) * nl->numCells[2]
 					+((neighborCells[2] + nl->numCells[2]) % nl->numCells[2]);
+				
 				// Skip this neighbor cell if empty
 				if (nl->head[c1] == EMPTY) continue;
-
-				// Scan atom otherMol in cell c1
+				
 				int otherMol = nl->head[c1];
+				
 				while (otherMol != EMPTY)
 				{
 					bool included = false;
@@ -371,7 +373,7 @@ Real SerialCalcs::calcIntraMolecularEnergy(Molecule *molecules, Environment *env
 	}
 
 	totalEnergy *= (enviro->numOfMolecules / NMOL);
-	
+
     return totalEnergy;
 }
 
