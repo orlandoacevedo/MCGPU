@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <cmath>
 
 #include <math.h>
 #include <string>
@@ -53,9 +54,9 @@ NeighborList::NeighborList(Molecule *molecules, Environment *enviro)
 		int primaryIndex = molPrimaryIndexArray[0]; // Use first primary index to determine cell placement
 		
 		int vectorCells[3];			
-		vectorCells[0] = molecules[i].atoms[primaryIndex].x / lengthCell[0]; 
-		vectorCells[1] = molecules[i].atoms[primaryIndex].y / lengthCell[1];
-		vectorCells[2] = molecules[i].atoms[primaryIndex].z / lengthCell[2];
+		vectorCells[0] = std::abs( molecules[i].atoms[primaryIndex].x / lengthCell[0] ); 
+		vectorCells[1] = std::abs( molecules[i].atoms[primaryIndex].y / lengthCell[1] );
+		vectorCells[2] = std::abs( molecules[i].atoms[primaryIndex].z / lengthCell[2] );
 		
 		// Translate the vector cell index to a scalar cell index
 		int c = vectorCells[0] * numCellsYZ 

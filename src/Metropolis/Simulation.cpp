@@ -147,7 +147,14 @@ void Simulation::run()
 		std::ofstream fout("/dev/null");
 		std::cout.rdbuf(fout.rdbuf());
 	}
+	
+	
 
+	for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++)
+        {
+		box->keepMoleculeInBox(molIdx);
+	}	
+	
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
 	{	
@@ -279,7 +286,7 @@ void Simulation::run()
 				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(molecules, enviro, new_lj, new_charge, changeIdx);
 			}
 		}
-		
+
 		// Compare new energy and old energy to decide if we should accept or not
 		bool accept = false;
 		

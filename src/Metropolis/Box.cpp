@@ -80,11 +80,11 @@ void Box::keepMoleculeInBox(int molIdx)
 		for (int j = 0; j < molecules[molIdx].numOfAtoms; j++)
         {
 		    //X axis
-			wrapBox(molecules[molIdx].atoms[j].x, environment->x);
+			molecules[molIdx].atoms[j].x = wrapBox(molecules[molIdx].atoms[j].x, environment->x);
             //Y axis
-			wrapBox(molecules[molIdx].atoms[j].y, environment->y);
+			molecules[molIdx].atoms[j].y = wrapBox(molecules[molIdx].atoms[j].y, environment->y);
             //Z axis
-			wrapBox(molecules[molIdx].atoms[j].z, environment->z);
+			molecules[molIdx].atoms[j].z = wrapBox(molecules[molIdx].atoms[j].z, environment->z);
 		}
 }
 
