@@ -99,6 +99,11 @@ void Simulation::run()
 	Molecule *molecules = box->getMolecules();
 	Environment *enviro = box->getEnvironment();
 	
+	for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++)
+        {
+		box->keepMoleculeInBox(molIdx);
+	}
+
 	NeighborList *neighborList = NULL;
 	if (args.useNeighborList) 
 	{
@@ -150,10 +155,7 @@ void Simulation::run()
 	
 	
 
-	for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++)
-        {
-		box->keepMoleculeInBox(molIdx);
-	}	
+		
 	
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
@@ -212,6 +214,10 @@ void Simulation::run()
 		{
 			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;		
 		}
+
+		if ((move - stepStart) == 60886)
+		    int x = 0;
+	
 		
 		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0)
 		{

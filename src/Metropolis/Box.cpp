@@ -1,5 +1,6 @@
 /*
-	Represents a simulation box, holding environment and molecule data.
+	aepresents a simulation box, holding environment and molecule data.
+
 	Superclass to SerialBox and ParallelBox.
 
 	Author: Nathan Coleman
@@ -76,16 +77,33 @@ int Box::changeMolecule(int molIdx)
 }
 
 void Box::keepMoleculeInBox(int molIdx)
-{		
-		for (int j = 0; j < molecules[molIdx].numOfAtoms; j++)
-        {
-		    //X axis
-			molecules[molIdx].atoms[j].x = wrapBox(molecules[molIdx].atoms[j].x, environment->x);
-            //Y axis
-			molecules[molIdx].atoms[j].y = wrapBox(molecules[molIdx].atoms[j].y, environment->y);
-            //Z axis
-			molecules[molIdx].atoms[j].z = wrapBox(molecules[molIdx].atoms[j].z, environment->z);
-		}
+{
+    int primaryIndex = (*(*(environment->primaryAtomIndexArray))[molecules[molIdx].type])[0]; 
+    Atom primaryAtom = molecules[molIdx].atoms[primaryIndex];
+
+    int positionX = isOutOfBounds(primaryAtom.x, environment->x);
+    int positionY = isOutOfBounds(primaryAtom.y, environment->y);
+    int positionZ = isOutOfBounds(primaryAtom.z, environment->z);
+
+    for (int i = 0; i < molecules[molIdx].numOfAtoms; i++)
+    {	
+        //X axis
+	molecules[molIdx].atoms[i].x = wrapBox(molecules[molIdx].atoms[i].x, environment->x, positionX);
+	//Y axis
+	molecules[molIdx].atoms[i].y = wrapBox(molecules[molIdx].atoms[i].y, environment->y, positionY);
+	//Z axis
+        molecules[molIdx].atoms[i].z = wrapBox(molecules[molIdx].atoms[i].z, environment->z, positionZ);
+    }
+}
+
+int Box::isOutOfBounds(Real coor, Real boxDim)
+{
+    if (coor < 0)
+	return BELOW_ZERO;
+    else if (coor > boxDim)
+	return ABOVE_BOX_DIM;
+    
+    return IN_BOX;
 }
 
 int Box::rollback(int molIdx)
@@ -156,17 +174,15 @@ void Box::copyMolecule(Molecule *mol_dst, Molecule *mol_src)
 }
 
 
-Real Box::wrapBox(Real x, Real boxDim)
+Real Box::wrapBox(Real x, Real boxDim, int position)
 {
 
-    while(x > boxDim)
-    {
+    if (position == IN_BOX)
+	return x;
+    else if(position == ABOVE_BOX_DIM)
         x -= boxDim;
-    }
-    while(x < 0)
-    {
+    else if (position == BELOW_ZERO)
         x += boxDim;
-    }
 
     return x;
 }

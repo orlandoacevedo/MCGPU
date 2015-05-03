@@ -95,7 +95,9 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 					{
 						Real lj_energy = 0, charge_energy = 0;
 						Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, otherMol, enviro, lj_energy, charge_energy);
-		
+						
+						if (tempEnergy > 1000000)
+							cout << "currentMol: " << currentMol << ", otherMol: " << otherMol << ", tempEnergy: " << tempEnergy << endl;	
 						//this addition needs to be atomic since multiple threads will be modifying totalEnergy
 						#pragma omp critical
 						{
@@ -268,7 +270,11 @@ Real SerialCalcs::calcMolecularEnergyContribution_NLC(Molecule *molecules, Envir
 	{
 		Real lj_energy = 0, charge_energy = 0;
 		Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, neighbors[index], enviro, lj_energy, charge_energy) * fValue;
-									
+		
+		if (tempEnergy > 1000000)
+		{
+			cout << "OtherMol: " << index << ", tempEnergy: " << tempEnergy << endl;
+		}							
 		#pragma omp critical
 		{
 			totalEnergy += tempEnergy;
@@ -502,12 +508,12 @@ Real SerialCalcs::calcCharge(Real charge1, Real charge2, Real r)
 Real SerialCalcs::makePeriodic(Real x, Real boxDim)
 {
     
-    while(x < -0.5 * boxDim)
+    if(x < -0.5 * boxDim)
     {
         x += boxDim;
     }
 
-    while(x > 0.5 * boxDim)
+    else if(x > 0.5 * boxDim)
     {
         x -= boxDim;
     }
