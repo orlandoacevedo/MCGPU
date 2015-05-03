@@ -215,9 +215,6 @@ void Simulation::run()
 			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;		
 		}
 
-		if ((move - stepStart) == 60886)
-		    int x = 0;
-	
 		
 		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0)
 		{
