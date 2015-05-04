@@ -30,7 +30,7 @@ class Box
 {
 	private:
 		bool first;
-	    static const int IN_BOX = 0;
+		static const int IN_BOX = 0;
 		static const int BELOW_ZERO = -1;
 		static const int ABOVE_BOX_DIM = 1;
 	protected:

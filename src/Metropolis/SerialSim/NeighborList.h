@@ -33,8 +33,6 @@ class NeighborList
 		
 		Real region[3];
 		Real rrCut;
-		
-		Real keepInBox(Real a, Real boxDim);
 };
 
 #endif
