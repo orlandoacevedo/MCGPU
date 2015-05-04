@@ -34,24 +34,28 @@ Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long
 			return NULL;
 		}
 	}
+	
 	return (Box*) box;
 }
 
-Real SerialCalcs::calcSystemEnergy(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge)
+Real SerialCalcs::calcSystemEnergy(Box* box, Real &subLJ, Real &subCharge)
 {
     Real totalEnergy = 0;
 
 	//for each molecule
-	for (int mol = 0; mol < enviro->numOfMolecules; mol++)
+	for (int mol = 0; mol < box->getEnvironment()->numOfMolecules; mol++)
 	{
-		totalEnergy += calcMolecularEnergyContribution(molecules, enviro, subLJ, subCharge, mol, mol);
+		totalEnergy += calcMolecularEnergyContribution(box, subLJ, subCharge, mol, mol);
 	}
 	
     return totalEnergy;
 }
 
-Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge, int currentMol, int startIdx)
+Real SerialCalcs::calcMolecularEnergyContribution(Box* box, Real &subLJ, Real &subCharge, int currentMol, int startIdx)
 {
+	Molecule *molecules = box->getMolecules();
+	Environment *enviro = box->getEnvironment();
+	
     Real totalEnergy = 0;
 
 	//for every other molecule
@@ -123,8 +127,10 @@ Real SerialCalcs::calcMolecularEnergyContribution(Molecule *molecules, Environme
 
 /* ------ Neighbor-List System Energy Calculation Functions ------ */
 
-Real SerialCalcs::calcSystemEnergy_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge)
+Real SerialCalcs::calcSystemEnergy_NLC(Box* box, Real &subLJ, Real &subCharge)
 {
+	NeighborList *nl = box->getNeighborList();
+	
 	Real totalEnergy = 0.0;			/* Total system energy */
 	
   /* Calculate pair interaction-----------------------------------------------*/
@@ -149,8 +155,8 @@ Real SerialCalcs::calcSystemEnergy_NLC(NeighborList *nl, Molecule *molecules, En
 				{
 					// Add the molecular energy contribution to the system total
 					std::vector<int> neighbors;
-					getNeighbors_NLC(nl, molecules, enviro, i, neighbors, true);
-					totalEnergy += calcMolecularEnergyContribution_NLC(molecules, enviro, subLJ, subCharge, i, neighbors);
+					getNeighbors_NLC(box, i, neighbors, true);
+					totalEnergy += calcMolecularEnergyContribution_NLC(box, subLJ, subCharge, i, neighbors);
 					
 					i = nl->linkedCellList[i];
 				} /* Endwhile i not empty */
@@ -159,7 +165,11 @@ Real SerialCalcs::calcSystemEnergy_NLC(NeighborList *nl, Molecule *molecules, En
 	return totalEnergy;
 }
 
-void SerialCalcs::getNeighbors_NLC(NeighborList *nl, Molecule *molecules, Environment *enviro, int currentMol, std::vector<int>& neighbors, bool isSysCalc) {
+void SerialCalcs::getNeighbors_NLC(Box* box, int currentMol, std::vector<int>& neighbors, bool isSysCalc) {
+	Molecule *molecules = box->getMolecules();
+	Environment *enviro = box->getEnvironment();
+	NeighborList *nl = box->getNeighborList();
+	
 	// Find the vector cell for the currentMol (based on 1st primary index)
 	// NOTE: for multiple solvents each with multiple primary indexes, this is slightly off for
 	//	special cases when a molecule has primary indexes across cell boundaries
@@ -259,15 +269,17 @@ void SerialCalcs::getNeighbors_NLC(NeighborList *nl, Molecule *molecules, Enviro
 			} /* Endfor neighbor cells, c1 */
 }
 
-Real SerialCalcs::calcMolecularEnergyContribution_NLC(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge, int currentMol, std::vector<int> neighbors) {
+Real SerialCalcs::calcMolecularEnergyContribution_NLC(Box* box, Real &subLJ, Real &subCharge, int currentMol, std::vector<int> neighbors) {
+	Molecule *molecules = box->getMolecules();
+	Environment *enviro = box->getEnvironment();
+	
 	Real totalEnergy = 0.0;			/* Total nonbonded energy x fudge factor */
-	Real fValue = 1.0;				/* Holds 1,4-fudge factor value */
 	
 	#pragma omp parallel for
 	for (int index = 0; index < neighbors.size(); index++)
 	{
 		Real lj_energy = 0, charge_energy = 0;
-		Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, neighbors[index], enviro, lj_energy, charge_energy) * fValue;
+		Real tempEnergy = calcInterMolecularEnergy(molecules, currentMol, neighbors[index], enviro, lj_energy, charge_energy);
 		
 		#pragma omp critical
 		{
@@ -315,8 +327,11 @@ Real SerialCalcs::calcInterMolecularEnergy(Molecule *molecules, int mol1, int mo
 	return totalEnergy;
 }
 
-Real SerialCalcs::calcIntraMolecularEnergy(Molecule *molecules, Environment *enviro, Real &subLJ, Real &subCharge)
+Real SerialCalcs::calcIntraMolecularEnergy(Box* box, Real &subLJ, Real &subCharge)
 {
+	Molecule *molecules = box->getMolecules();
+	Environment *enviro = box->getEnvironment();
+	
     Real totalEnergy = 0, lj_energy = 0, charge_energy = 0, nonbonded_energy = 0;
 	
     // NOTE: Current code only handles one or two solvent type systems. ****
@@ -379,8 +394,11 @@ Real SerialCalcs::calcIntraMolecularEnergy(Molecule *molecules, Environment *env
     return totalEnergy;
 }
 
-Real SerialCalcs::calcEnergy_LRC(Molecule *molecules, Environment *enviro)
+Real SerialCalcs::calcEnergy_LRC(Box* box)
 {
+	Molecule *molecules = box->getMolecules();
+	Environment *enviro = box->getEnvironment();
+	
 	Real Ecut = 0.0;		// Holds LJ long-range cutoff energy correction 
 	
 	Real Vnew = enviro->x * enviro->y * enviro->z;	// Volume of box in Ang^3

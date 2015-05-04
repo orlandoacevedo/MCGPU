@@ -21,6 +21,7 @@ Box::Box()
 	environment = NULL;
 	atoms = NULL;
 	molecules = NULL;
+	neighborList = NULL;
 	
 	bonds = NULL;
 	angles = NULL;
@@ -37,11 +38,17 @@ Box::~Box()
 	FREE(environment);
 	FREE(atoms);
 	FREE(molecules);
+	FREE(neighborList);
 
 	FREE(bonds);
 	FREE(angles);
 	FREE(dihedrals);
 	FREE(hops);
+}
+
+void Box::createNeighborList() 
+{
+	neighborList = new NeighborList(molecules, environment);
 }
 
 int Box::chooseMolecule()
@@ -88,10 +95,10 @@ void Box::keepMoleculeInBox(int molIdx)
     for (int i = 0; i < molecules[molIdx].numOfAtoms; i++)
     {	
         //X axis
-	molecules[molIdx].atoms[i].x = wrapBox(molecules[molIdx].atoms[i].x, environment->x, positionX);
-	//Y axis
-	molecules[molIdx].atoms[i].y = wrapBox(molecules[molIdx].atoms[i].y, environment->y, positionY);
-	//Z axis
+		molecules[molIdx].atoms[i].x = wrapBox(molecules[molIdx].atoms[i].x, environment->x, positionX);
+		//Y axis
+		molecules[molIdx].atoms[i].y = wrapBox(molecules[molIdx].atoms[i].y, environment->y, positionY);
+		//Z axis
         molecules[molIdx].atoms[i].z = wrapBox(molecules[molIdx].atoms[i].z, environment->z, positionZ);
     }
 }
@@ -176,9 +183,8 @@ void Box::copyMolecule(Molecule *mol_dst, Molecule *mol_src)
 
 Real Box::wrapBox(Real x, Real boxDim, int position)
 {
-
     if (position == IN_BOX)
-	return x;
+		return x;
     else if(position == ABOVE_BOX_DIM)
         x -= boxDim;
     else if (position == BELOW_ZERO)
