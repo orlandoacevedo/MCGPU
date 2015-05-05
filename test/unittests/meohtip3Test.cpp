@@ -402,7 +402,7 @@ TEST (meohtip3Test, NeighborListFunctionMulSolvent)
 
         //launch MCGPU in serial
         system(ss.str().c_str());
-        double expected = -2270;
+        double expected = -2400;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/meohtip3MulSolvent-NL.results").c_str());
@@ -444,7 +444,7 @@ TEST (meohtip3Test,NeighborListFunctionMulSolvent_GPU)
 
         //launch MCGPU in parallel
         system(ss.str().c_str());
-        double expected = -2270;
+        double expected = -2400;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/meohtip3MulSolvent-NL-GPU.results").c_str());

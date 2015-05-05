@@ -38,7 +38,7 @@ TEST (Indole4000Test, OnePrimaryIndex)
                 << "#temperature in Kelvin\n"
                 << "298.15\n"
                 << "#max translation\n"
-                << ".12\n"
+                << ".06\n"
                 << "#number of steps\n"
                 << "100000\n"
                 << "#number of molecules\n"
@@ -54,7 +54,7 @@ TEST (Indole4000Test, OnePrimaryIndex)
                 << "#pdb output path\n"
                 << MCGPU << "test/unittests/MultipleSolvents/indole4000Tests\n"
                 << "#cutoff distance in angstroms\n"
-                << "11.0\n"
+                << "12.0\n"
                 << "#max rotation\n"
                 << "6.0\n"
                 << "#Random Seed Input\n"
@@ -71,7 +71,7 @@ TEST (Indole4000Test, OnePrimaryIndex)
 
         //launch MCGPU in serial
          system(ss.str().c_str());
-        double expected = 480016;
+        double expected = 588107;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/indole4000-1MPI.results").c_str());
@@ -113,7 +113,7 @@ TEST (Indole4000Test, OnePrimaryIndex_GPU)
 
         //launch MCGPU in parallel
          system(ss.str().c_str());
-        double expected = 480016;
+        double expected = 588107;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/indole4000-1MPI-GPU.results").c_str());
@@ -153,11 +153,11 @@ TEST (Indole4000Test, NeighborListFunction1MPI)
         std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
                 << " "
-                << MCGPU << "/test/unittests/MultipleSolvents/indole4000Tests/indole4000-1MPI.config -s --threads 12 --name indole4000-1MPI-NL -i 10000 -l";
+                << MCGPU << "/test/unittests/MultipleSolvents/indole4000Tests/indole4000-1MPI.config -s --threads 12 --name indole4000-1MPI-NL -i 10000 -l 1";
 
         //launch MCGPU in parallel
          system(ss.str().c_str());
-        double expected = 500239;
+        double expected = 530000;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/indole4000-1MPI-NL.results").c_str());
@@ -196,11 +196,11 @@ TEST (Indole4000Test, NeighborListFunction1MPI_GPU)
         std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
                 << " "
-                << MCGPU << "/test/unittests/MultipleSolvents/indole4000Tests/indole4000-1MPI.config -p --threads 12 --name indole4000-1MPI-NL-GPU -i 10000 -l";
+                << MCGPU << "/test/unittests/MultipleSolvents/indole4000Tests/indole4000-1MPI.config -p --threads 12 --name indole4000-1MPI-NL-GPU -i 10000 -l 1";
 
         //launch MCGPU in parallel
          system(ss.str().c_str());
-        double expected = 500239;
+        double expected = 530000;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/indole4000-1MPI-NL-GPU.results").c_str());
@@ -250,7 +250,7 @@ TEST (Indole4000Test, TwoPrimaryIndex)
                 << "#temperature in Kelvin\n"
                 << "298.15\n"
                 << "#max translation\n"
-                << ".12\n"
+                << ".06\n"
                 << "#number of steps\n"
                 << "100000\n"
                 << "#number of molecules\n"
@@ -266,7 +266,7 @@ TEST (Indole4000Test, TwoPrimaryIndex)
                 << "#pdb output path\n"
                 << MCGPU << "test/unittests/MultipleSolvents/indole4000Tests\n"
                 << "#cutoff distance in angstroms\n"
-                << "11.0\n"
+                << "12.0\n"
                 << "#max rotation\n"
                 << "6.0\n"
                 << "#Random Seed Input\n"
@@ -283,7 +283,7 @@ TEST (Indole4000Test, TwoPrimaryIndex)
 
         //launch MCGPU in serial
          system(ss.str().c_str());
-        double expected = 449963;
+        double expected = 557412;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/indole4000-2MPI.results").c_str());
@@ -325,7 +325,7 @@ TEST (Indole4000Test, TwoPrimaryIndex_GPU)
 
         //launch MCGPU in parallel
          system(ss.str().c_str());
-        double expected = 449963;
+        double expected = 557412;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/indole4000-2MPI-GPU.results").c_str());
@@ -365,11 +365,11 @@ TEST (Indole4000Test, NeighborListFunction2MPI)
          std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
                 << " "
-                << MCGPU << "/test/unittests/MultipleSolvents/indole4000Tests/indole4000-2MPI.config -s --threads 12 --name indole4000-2MPI-NL -i 10000 -l";
+                << MCGPU << "/test/unittests/MultipleSolvents/indole4000Tests/indole4000-2MPI.config -s --threads 12 --name indole4000-2MPI-NL -i 10000 -l 1";
 
         //launch MCGPU in serial
          system(ss.str().c_str());
-        double expected = 499427;
+        double expected = 547878;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/indole4000-2MPI-NL.results").c_str());
@@ -408,11 +408,11 @@ TEST (Indole4000Test, NeighborListFunction2MPI_GPU)
          std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
                 << " "
-                << MCGPU << "/test/unittests/MultipleSolvents/indole4000Tests/indole4000-2MPI.config -p --threads 12 --name indole4000-2MPI-NL-GPU -i 10000 -l";
+                << MCGPU << "/test/unittests/MultipleSolvents/indole4000Tests/indole4000-2MPI.config -p --threads 12 --name indole4000-2MPI-NL-GPU -i 10000 -l 1";
 
         //launch MCGPU in parallel
          system(ss.str().c_str());
-        double expected = 499427;
+        double expected = 547878;
         double energyResult = -1;
 
         std::ifstream infile(std::string(MCGPU + "bin/indole4000-2MPI-NL-GPU.results").c_str());
