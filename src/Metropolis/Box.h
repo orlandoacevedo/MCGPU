@@ -30,8 +30,13 @@ class Box
 {
 	private:
 		bool first;
+		static const int IN_BOX = 0;
+		static const int BELOW_ZERO = -1;
+		static const int ABOVE_BOX_DIM = 1;
 	protected:
 		Molecule changedMol;
+
+		int isOutOfBounds(Real coor, Real boxDim);
 
 	public:
 		Environment *environment;
@@ -51,6 +56,9 @@ class Box
 		Molecule *getMolecules(){return molecules;};
 		int getMoleculeCount(){return moleculeCount;};
 		Environment *getEnvironment(){return environment;};
+		
+		NeighborList *getNeighborList() {return neighborList;};
+		void createNeighborList();
 		
 		/// Chooses a random molecule to be changed for a given
 		///   simulation step.
@@ -89,7 +97,7 @@ class Box
 		/// @param x The position to be made periodic.
 		/// @param boxDim The magnitude of the periodic range.
 		/// @return Returns the periodic position.
-	 	Real wrapBox(Real x, Real boxDim);
+	 	Real wrapBox(Real x, Real boxDim, int position);
 		
 };
 

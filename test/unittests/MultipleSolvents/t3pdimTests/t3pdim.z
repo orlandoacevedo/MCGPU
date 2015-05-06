@@ -1,0 +1,32 @@
+     TIP3P Water Dimer                                      Tot. E =     -6.5396
+   1  O   111  111    0     .000000   0     .000000   0     .000000        0    
+   2  DU   -1   -1    1    1.000000   0     .000000   0     .000000        0    
+   3  DU   -1   -1    2    1.000000   1   90.000000   0     .000000        0    
+   4  HO  112  112    1     .957200   2  127.740000   3   90.000000        0    
+   5  HO  112  112    1     .957200   4  104.520000   2  180.000000        0    
+   6  X    -1   -1    1     .150000   4   52.260000   5     .000000        0    
+TERZ                                                                            
+   7  O   111  111    1    2.751259   2  131.716186   3  269.946364        0    
+   8  DU   -1   -1    7    1.000000   1   21.472391   2  179.887530        0    
+   9  DU   -1   -1    8    1.000000   7   90.000000   1  179.624613        0    
+  10  HO  112  112    7     .957200   8  127.740000   9   90.000000        0    
+  11  HO  112  112    7     .957200  10  104.520000   8  180.000000        0    
+  12  X    -1   -1    7     .150000  10   52.260000  11     .000000        0    
+                    Geometry Variations Follow                                  
+                    Variable Bonds follow         (I4 or I4-I4)                 
+0007                                                                            
+                    Additional Bonds follow       (2I4)                         
+                    Harmonic Constraints follow                                 
+                    Variable Bond Angles follow   (I4 or I4-I4)                 
+0007                                                                            
+0008                                                                            
+                    Additional Bond Angles follow (3I4)                         
+                    Variable Dihedrals follow     (3I4,F12.6)                   
+000700000000  10.                                                               
+000800000000  10.                                                               
+000900000000  10.                                                               
+                    Additional Dihedrals follow   (6I4)                         
+                    Domain Definitions follow     (4I4)                         
+                    Conformational Search                                       
+                    Final blank line                                            
+                                                                                
