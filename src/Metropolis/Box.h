@@ -20,6 +20,7 @@
 #include "Utilities/MathLibrary.h"
 #include "Metropolis/DataTypes.h"
 #include "Utilities/StructLibrary.h"
+#include "SerialSim/NeighborList.h"
 
 #define FREE(ptr) if(ptr!=NULL) { free(ptr);ptr=NULL;}
 
@@ -27,8 +28,15 @@ using namespace std;
 
 class Box
 {
+	private:
+		bool first;
+		static const int IN_BOX = 0;
+		static const int BELOW_ZERO = -1;
+		static const int ABOVE_BOX_DIM = 1;
 	protected:
 		Molecule changedMol;
+
+		int isOutOfBounds(Real coor, Real boxDim);
 
 	public:
 		Environment *environment;
@@ -38,6 +46,7 @@ class Box
 		Angle *angles;
 		Dihedral *dihedrals;
 		Hop *hops;
+		NeighborList *neighborList;
 		int atomCount, moleculeCount, bondCount, angleCount, dihedralCount, hopCount;
 		
 		Box();
@@ -47,6 +56,9 @@ class Box
 		Molecule *getMolecules(){return molecules;};
 		int getMoleculeCount(){return moleculeCount;};
 		Environment *getEnvironment(){return environment;};
+		
+		NeighborList *getNeighborList() {return neighborList;};
+		void createNeighborList();
 		
 		/// Chooses a random molecule to be changed for a given
 		///   simulation step.
@@ -80,12 +92,12 @@ class Box
 		/// @param mol_dst A pointer to the destination molecule.
 		/// @param mol_src A pointer to the source molecule.
 		void copyMolecule(Molecule *mol_dst, Molecule *mol_src);
-		
+
 		/// Makes a position periodic within a specified range.
 		/// @param x The position to be made periodic.
 		/// @param boxDim The magnitude of the periodic range.
 		/// @return Returns the periodic position.
-	 	Real wrapBox(Real x, Real boxDim);
+	 	Real wrapBox(Real x, Real boxDim, int position);
 		
 };
 

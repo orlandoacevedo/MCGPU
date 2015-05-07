@@ -81,7 +81,13 @@ struct SimulationArgs
 	
 	/// Whether or not program prints to cout 
 	///		(silenced for integration tests)
-	bool silencedOutput;
+	bool verboseOutput;
+
+	/// Enables or disables use of linked-list neigborlist in calcs
+	bool useNeighborList;
+
+	/// The number of simultion steps between updating the neighborlist
+	int neighborListInterval;
 
 	/// The number of simulation steps between status updates printed to
 	/// the console. A value of 0 means that status updates are only
@@ -94,8 +100,6 @@ struct SimulationArgs
 	///    at the very end of the simulation (which is the default
 	///    behavior with no interval specified).
 	int stateInterval;
-	
-	
 };
 
 #endif

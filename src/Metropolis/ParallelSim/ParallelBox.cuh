@@ -20,7 +20,7 @@ class ParallelBox : public Box
 {
 	private:
 		Real *xD, *yD, *zD, *sigmaD, *epsilonD, *chargeD;
-		int *atomsIdxD, *numOfAtomsD;
+		int *atomsIdxD, *numOfAtomsD, *typeD, *primaryIndexesD;
 		
 		/// Copies a specified molecule and all of its atoms
 		///   over to the device. Called after changing a
@@ -32,9 +32,10 @@ class ParallelBox : public Box
 		AtomData *atomsH, *atomsD;
 		Environment *environmentD;
 		MoleculeData *moleculesH, *moleculesD;
-		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD;
+		int *nbrMolsH, *nbrMolsD, *molBatchH, *molBatchD, *moleculesWithinCutoffH, *moleculesWithinCutoffD;
 		Real *energiesD;
 		int energyCount, maxMolSize;
+		bool first;
 		
 		ParallelBox();
 		~ParallelBox();
@@ -69,6 +70,14 @@ class ParallelBox : public Box
 		///   necessary data to copy over, and so it is a separate
 		///   method for now.
 		void copyDataToDevice();
+		
+		/// Copies molecules within cutoff that neighborlist calculates
+		///   over to the device. Called after neighborlist structure
+		/// is updated.
+		/// @param moleculesWithinCutoff - pointer to the array containing the molcules
+		void writeMoleculesWithinCutoffToDevice(vector<int> neighbors);
+
+
 };
 
 #endif

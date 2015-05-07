@@ -11,7 +11,6 @@
 
 #include "StructLibrary.h"
 #include "Metropolis/DataTypes.h" //AlbertExcludes
-//#include "../../Metropolis/DataTypes.h" //AlbertIncludes
 
 using namespace std;
 
@@ -38,7 +37,7 @@ Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsil
 	return atom;
 }
 
-Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, char name)
+Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, std::string name)
 {
 	Atom atom;
 	atom.id = id;
@@ -48,15 +47,13 @@ Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsil
 	atom.sigma = sigma;
 	atom.epsilon = epsilon;
 	atom.charge = charge;
-	atom.name = name;
+	*atom.name = name;
 	return atom;	
 }
 
 void printAtoms(Atom *atoms, int count){}
 
 void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, int accepts, int rejects, Real totalEnergy){}
-
-
 
 //Environment
 Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real temp, int numOfAtoms, Real cutoff, Real maxRotation)
@@ -73,8 +70,6 @@ Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real 
 	return environment;
 }
 
-
-
 //Molecule
 Molecule createMolecule(Atom *atoms, int numOfAtoms)
 {
@@ -84,11 +79,12 @@ Molecule createMolecule(Atom *atoms, int numOfAtoms)
 	return molecule;
 }
 
-Molecule createMolecule(int id, Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals, 
+Molecule createMolecule(int id, int type, Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals, 
                         int atomCount, int angleCount, int bondCount, int dihedralCount)
 {
     Molecule molecule;
     molecule.id = id;
+    molecule.type = type;
 
     molecule.atoms = atoms;
     molecule.angles = angles;
@@ -106,5 +102,6 @@ Molecule createMolecule(int id, Atom *atoms, Angle *angles, Bond *bonds, Dihedra
 void copyMolecule(Molecule *destination, Molecule *source){}
 
 void printMolecule(Molecule *molecule){}
+
 
 #endif

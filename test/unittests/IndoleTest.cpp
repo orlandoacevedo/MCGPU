@@ -75,7 +75,7 @@ TEST(IndoleTest, FrontToEndIntegrationTest)
     // Launch MCGPU application in serial, expect output files in /MCGPU/ directory   
 	system(ss.str().c_str());
 	
-	double expected = 58900;
+	double expected = 59800;
 	double energyResult = -1;
 	
 	std::ifstream infile( std::string(MCGPU + "bin/indoleCPU.results").c_str() );

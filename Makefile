@@ -33,6 +33,10 @@
 #					 path to 'opt/asn/apps/cuda_5.5'. This is the directory 
 #					 used by the ASC machines that we test on.
 #
+# MAC=1  : Sets up compilation for Mac OS X environment. Sets the default directory for the CUDA_GCC installation
+#					 path to ‘/opt/local/bin’
+# MAC=0  : Sets up compilation for Linux. This is set by default. 
+#
 # CUDA_PATH=path/to/dir  : The relative path to the cuda install directory
 #						   on the current machine.
 #
@@ -46,6 +50,9 @@
 #							   installed on the current machine. NOTE: If 64
 #							   bit libraries are installed, this field will
 #							   need to be updated to point to the 64 bit libs
+#
+# CUDA_GCC_PATH=path/to/dir  : The path to the compatible GCC compiler for CUDA. 
+#
 # SHELL=path/to/file  : The relative path to the shell executable program on
 #						the current machine. This shell program will allow the
 #						makefile to execute system commands
@@ -110,6 +117,16 @@ UnitTestName := metrotest
 # CUDA Location Settings #
 ##########################
 
+# The path to the gcc compiler for cuda. This location can change depending on the 
+# compatible gcc version (preferable to use gcc-4.4.7).
+
+ifeq ($(MAC),1) 
+	CUDA_GCC_PATH ?= /opt/local/bin
+	LOCAL_INSTALL=1
+else
+	CUDA_GCC_PATH ?= NULL
+endif
+
 # Sets the directory where the main cuda libraries and include folders
 # are installed. The user can override this value by specifying
 # 'CUDA_PATH=/path/to/dir' in the GNU make command to build the program.
@@ -133,13 +150,14 @@ CUDA_BIN_PATH ?= $(CUDA_PATH)/bin
 # are located. This location can change depending on the cuda installation and
 # the type of operating system (32 bit vs. 64 bit).
 #
-# NOTE: If the 64-bit cuda installation was used, this value may have to be
-# set to point to the 'lib64' directory instead of the 'lib' directory.
-ifeq ($(LOCAL_INSTALL),1)
+# NOTE: If the 32-bit cuda installation was used, this value may have to be
+# set to point to the 'lib' directory instead of the 'lib64' directory.
+ifeq ($(MAC),1)
 	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib
 else
 	CUDA_LIB_PATH ?= $(CUDA_PATH)/lib64
 endif
+
 
 ##############################
 # Compiler Specific Settings #
@@ -149,7 +167,11 @@ endif
 # CC will be used to compile C++ files, and NVCC will be used to
 # compile CUDA files.
 CC := g++
-NVCC := nvcc
+ifeq ($(LOCAL_INSTALL),1)
+	NVCC := $(CUDA_BIN_PATH)/nvcc
+else
+	NVCC := nvcc
+endif
 
 # Defines the types of files that the Makefile knows how to compile
 # and link. Specify the filetype by using a modulus (percent sign),
@@ -186,8 +208,12 @@ CuFlags := -c -rdc=true $(CudaArchitecture)
 # Linker specific flags for the C++ compiler
 LCxxFlags := 
 
-# Linker specific flags for the CUDA compiler
-LCuFlags := -rdc=true $(CudaArchitecture) -lgomp
+# Linker specific flags for the CUDA compiler. CUDA GCC path is specified on Macintosh. 
+ifeq ($(CUDA_GCC_PATH),NULL)
+	LCuFlags := -rdc=true $(CudaArchitecture) -lgomp
+else
+	LCuFlags := --compiler-bindir=$(CUDA_GCC_PATH) -rdc=true $(CudaArchitecture) -lgomp
+endif
 
 # The debug compiler flags that add symbol and profiling hooks to the
 # executable for C++ code

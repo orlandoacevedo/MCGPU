@@ -52,6 +52,8 @@ using std::map;
 
 void seed(int seed);
 Real randomReal(const Real start, const Real end);
+void adjustAtomIDs(Molecule* molec, int m);
+void revertAtomIDs(Molecule* molec, int m);
 
 /**
   Structure representing a geometic point.

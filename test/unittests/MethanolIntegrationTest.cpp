@@ -76,7 +76,7 @@ TEST(MethanolTest, FrontToEndIntegrationTest)
     // Launch MCGPU application in serial, expect output files in /MCGPU/ directory   
 	system(ss.str().c_str());
 	
-	double expected = -1800;
+	double expected = -1900;
 	double energyResult = -1;
 	
 	std::ifstream infile( std::string(MCGPU + "/bin/methanolCPU.results").c_str() );

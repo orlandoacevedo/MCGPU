@@ -38,6 +38,16 @@ namespace ParallelCalcs
 	///   intramolecular energy.
 	Real calcBatchEnergy(ParallelBox *box, int numMols, int molIdx);
 	
+	/// Given a box with a filled-in molecule batch, calculate the
+        ///   inter-molecular energy contribution of a given molecule,
+        ///   with every molecule specified in the batch.
+        /// @param box A ParallelBox containing the molecule data.
+        /// @param numMols The number of molecules within the cutoff.
+        /// @param molIdx The index of the current changed molecule.
+        /// @return Returns total molecular energy contribution, without
+        ///   intramolecular energy.
+        Real calcNeighborListBatchEnergy(ParallelBox *box, int molIdx, vector<int> neighbors);
+
 	/// Given an array of calculated energies on the device, get
 	///   the total energy and return it on the host.
 	/// @param box  A ParallelBox containing the molecule data.
@@ -48,8 +58,8 @@ namespace ParallelCalcs
 	Real getEnergyFromDevice(ParallelBox *box, int validEnergies);
 	
 	/// Each thread of this kernel checks the distance between
-	///   the chosen molecule (constant across threads) and one
-	///   other molecule. If within cutoff, store index of other
+	///   the chosen molecule's cutoff(s) (constant across threads) and one
+	///   other molecule's . If within cutoff, store index of other
 	///   molecule in the 'inCutoff' array. This array will be
 	///   compacted to form the molecule batch for the energy
 	///   calculations.
@@ -61,7 +71,12 @@ namespace ParallelCalcs
 	/// @param enviro Device pointer to Environment struct.
 	/// @param inCutoff Device pointer to valid neighbor molecules
 	///   array.
-	__global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);
+        __global__ void checkMoleculeDistances(MoleculeData *molecules, AtomData *atoms, int currentMol, int startIdx, Environment *enviro, int *inCutoff);
+	
+	Real calcEnergyContribution(MoleculeData *molecules, AtomData *atoms, Environment *enviro, int currentMol, int otherMol, int startIdx);
+        __device__ __host__ Real calcAtomDist(AtomData *atoms, int atom1, int atom2, Environment *enviro);
+        __device__ Real calcInterMolecularEnergy(MoleculeData *molecules, AtomData *atoms, int mol1, int mol2, Environment *enviro);
+        __global__ void calcEnergy_NLC(int* d_pair_i, int* d_pair_j, Real *part_energy, MoleculeData *molecules, AtomData *atoms, Environment *enviro, int limit);
 	
 	/// Each thread in this kernel calculates the inter-atomic
 	///   energy between one pair of atoms in the molecule pair
@@ -103,27 +118,27 @@ namespace ParallelCalcs
 	/// @param r2 The distance between the two atoms, squared.
 	/// @return Returns the LJ energy between the two specified
 	///   atoms.
-	__device__ Real calc_lj(AtomData *atoms, int atom1, int atom2, Real r2);
+	__device__ __host__ Real calc_lj(AtomData *atoms, int atom1, int atom2, Real r2);
 	
 	/// Calculates the charge energy between two atoms.
 	/// @param charge1 The charge of atom 1.
 	/// @param charge2 The charge of atom 2.
 	/// @param r The distance between the two atoms.
 	/// @returns Returns the charge energy between two atoms.
-	__device__ Real calcCharge(Real charge1, Real charge2, Real r);
+	__device__ __host__ Real calcCharge(Real charge1, Real charge2, Real r);
 	
 	/// Makes a distance periodic within a specified range.
 	/// @param x The distance to be made periodic.
 	/// @param boxDim The magnitude of the periodic range.
 	/// @return Returns the periodic distance.
-	__device__ Real makePeriodic(Real x, Real boxDim);
+	__device__ __host__ Real makePeriodic(Real x, Real boxDim);
 	
 	/// Calculates the geometric mean of two values.
 	/// @param d1 The first value.
 	/// @param d2 The second value.
 	/// @return Returns the geometric mean of the two supplied
 	///   values.
-	__device__ Real calcBlending(Real d1, Real d2);
+	__device__ __host__ Real calcBlending(Real d1, Real d2);
 	
 	/// This method, combined with getYFromIndex(),
 	///   provides functionality to generate a non-overlapping

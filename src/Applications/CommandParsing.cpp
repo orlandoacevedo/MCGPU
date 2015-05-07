@@ -49,7 +49,7 @@ using std::string;
 		opterr = 0;
 
 		// The short options recognized by the program
-		const char* short_options = ":i:I:n:i:d:sphQVkt";
+		const char* short_options = ":i:I:n:i:d:sphQVktl:";
 
 		// The long options recognized by the program
 		struct option long_options[] = 
@@ -64,7 +64,8 @@ using std::string;
 			{"list-devices",		no_argument,		0,	'Q'},
 			{"device",				required_argument,	0,	'd'},
 			{"version",				no_argument,		0,	'V'},
-			{"silent",				no_argument,		0,	'k'},
+			{"verbose",				no_argument,		0,	'k'},
+			{"neighbor",			required_argument,	0,	'l'},
 			{"name",				required_argument,	0,	LONG_NAME},
 			{0, 0, 0, 0} 
 		};
@@ -152,9 +153,22 @@ using std::string;
 				case 'p':	/* run parallel */
 					params->parallelFlag = true;
 					break;
-				case 'k': 	/* Silence cout */
-					params->silentOutputFlag = true;
+				case 'k': 	/* Verbose cout */
+					params->verboseOutputFlag = true;
 					break;
+				case 'l': 	/* use neighbor list */
+					params->neighborListFlag = true;
+					if (!fromString<int>(optarg, params->neighborListInterval))
+					{
+						params->neighborListInterval = DEFAULT_NEIGHBORLIST_INTERVAL;
+					}
+					if (params->neighborListInterval < 1)
+					{
+						std::cerr << APP_NAME << ": ";
+						std::cerr << " --neighborlist_interval (-l): Neighborlist Interval must be greater than 0" << std::endl;
+						return false;
+					}
+					break;	
 				case 'h':	/* print help */
 					printHelpScreen();
 					return false;
@@ -165,12 +179,6 @@ using std::string;
 					break;
 				case 'd':
 					params->deviceFlag = true;
-					if (!fromString<int>(optarg, params->deviceIndex))
-					{
-						std::cerr << APP_NAME << ": ";
-						std::cerr << " --device (-d): Device index must be a valid integer" << std::endl;
-						return false;
-					}
 					if (params->deviceIndex < 0)
 					{
 						std::cerr << APP_NAME << ": ";
@@ -179,17 +187,23 @@ using std::string;
 					}
 					break;
 				case ':':	/* missing argument */
-					if (sizeof(argv[optind-1]) > 2 && argv[optind-1][0] == '-' && argv[optind-1][1] == '-')
+					if (optopt == 'l')
+					{
+						params->neighborListFlag = true;
+						params->neighborListInterval = DEFAULT_NEIGHBORLIST_INTERVAL;
+					}
+					else if (sizeof(argv[optind-1]) > 2 && argv[optind-1][0] == '-' && argv[optind-1][1] == '-')
 					{
 						std::cerr << APP_NAME << ": A required argument is missing for ";
 						std::cerr << argv[optind-1] << std::endl;
+						return false;
 					}
 					else
 					{
 						std::cerr << APP_NAME << ": A required argument is missing for ";
 						std::cerr << "-" << (char) optopt << std::endl;
+						return false;
 					}
-					return false;
 					break;
 				case '?':	/* unknown option */
 					if (optopt)
@@ -270,7 +284,9 @@ using std::string;
 		args->stepCount = params->stepCount;
 		args->threadCount = params->threadCount;
 		args->simulationName = params->simulationName;
-		args->silencedOutput = params->silentOutputFlag;
+		args->verboseOutput = params->verboseOutputFlag;
+		args->useNeighborList = params->neighborListFlag;
+		args->neighborListInterval = params->neighborListInterval;
 
 		if (!params->parallelFlag && params->deviceFlag)
 		{
@@ -355,8 +371,8 @@ using std::string;
 		cout << "--serial\t(-s)\n";
 		cout << "\tRun the simulation in serial on the host CPU. If you specify this\n"
 			  "\tflag you cannot also specify the --parallel flag.\n\n";
-		cout << "--silent\t(-k)\n";
-		cout << "\tRun the simulation without printing to std::cout.\n\n";
+		cout << "--verbose\t(-k)\n";
+		cout << "\tRun the simulation printing regular step updates to std::cout.\n\n";
 		cout << "--list-devices\t(-Q)\n";
 		cout << "\tQueries the host machine for available CUDA capable devices. The\n"
 			  "\tentries will contain the following information about each\n"
@@ -389,6 +405,14 @@ using std::string;
 		cout << "\tSpecifies how many simulation steps to execute in the Monte\n"
 				"\tCarlo Metropolis algorithm. This value must a valid integer\n"
 				"\tthat is greater than zero.\n\n";
+		cout << "--neighbor <interval>\t\t(-l)\n";
+		cout << "\tSpecifies using the linked-cell neighborlist structure for molecule\n"
+				"\torganization. The neighborlist is generally faster for large\n"
+				"\tsimulations. Interval dicatates how many steps are executed\n"
+				"\tinbetween updating the neighborlist structure. Having the\n"
+				"\tneighborlist update more often will result in a more accurate\n"
+				"\tsimulation but some performance will be lost. The default is set\n"
+				"\tat 100 and the given interval must be greater than 0.\n\n";
 		cout << "--status-interval <interval>\t(-i)\n";
 		cout << "\tSpecifies the number of simulation steps between status updates.\n"
 				"\tThese status updates will periodically be printed out that list\n"

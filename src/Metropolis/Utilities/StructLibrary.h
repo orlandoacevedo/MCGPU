@@ -11,9 +11,9 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
+#include <memory>
 #include "../DataTypes.h"
-
-
 //Forward declaration so that each can be used in methods below
 
 /**
@@ -215,11 +215,12 @@ struct Fourier
 
 struct Atom
 {
-	char name;
+	std::string *name;
 	Real x, y, z, sigma, epsilon, charge;
 	unsigned long id;
-	Atom(){
-		name = '0';
+	Atom()
+    {
+		name = new std::string("000");
 		x = 0;
 		y = 0;
 		z = 0;
@@ -229,7 +230,7 @@ struct Atom
 		id = 0;
 	}
 	
-	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, char inName = 0)
+	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, std::string inName = 0)
 	{
 		x = inX;
 		y = inY;
@@ -237,9 +238,11 @@ struct Atom
 		sigma = inSigma;
 		epsilon = inEpsilon;
 		charge = inCharge;
-		name = inName;
-        id = inID;
+		*name = inName;
+        	id = inID;
 	}
+	
+	
 };
 
 struct Environment
@@ -247,8 +250,10 @@ struct Environment
 	Real x, y, z, cutoff, temp, maxTranslation, maxRotation;
 	int numOfAtoms;
 	int numOfMolecules; //this line was added in by Albert to make IOUtilities compile
+	std::string* primaryAtomIndexConfigLine;
+	int primaryAtomIndexDefinitions;
 	int primaryAtomIndex;
-
+	std::vector< std::vector<int>* >* primaryAtomIndexArray;
 	int randomseed; //--Albert
 	
 	Environment() //constructor/initialize all values to 0 or some other default, where applicable
@@ -262,7 +267,10 @@ struct Environment
 		maxRotation = 0.0;
 		numOfAtoms = 0;
 		numOfMolecules = 0;
+		primaryAtomIndexConfigLine = new std::string("0");
+		primaryAtomIndexDefinitions = 0;
 		primaryAtomIndex = 0;
+		primaryAtomIndexArray = new std::vector< std::vector<int>* >;
 		randomseed = 0;
 	}
 
@@ -282,13 +290,18 @@ struct Environment
         maxRotation = environment->maxRotation;
         numOfAtoms = environment->numOfAtoms;
         numOfMolecules = environment->numOfMolecules;
-        primaryAtomIndex = environment->primaryAtomIndex;
-        randomseed = environment->randomseed;
+        primaryAtomIndexConfigLine = environment->primaryAtomIndexConfigLine;
+	   primaryAtomIndexDefinitions = environment->primaryAtomIndexDefinitions;
+	   primaryAtomIndex = environment->primaryAtomIndex;
+	   primaryAtomIndexArray = (environment->primaryAtomIndexArray);
+	   randomseed = environment->randomseed;
     }
+
 };
 
 struct Molecule
 {
+	int type;
 	/*
 	The number of atoms in the molecule.
 	*/
@@ -337,9 +350,10 @@ struct Molecule
     /*
     Constructor(s) for the molecule
     */
-    Molecule(int idIn, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
-    	{
+    Molecule(int idIn, int typeIn, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
+    {
 		id = idIn;
+		type = typeIn;
 
 		atoms = atomsIn;
 		angles = anglesIn;
@@ -352,10 +366,12 @@ struct Molecule
 		numOfBonds = bondCount;
 		numOfDihedrals = dihedralCount;
 		numOfHops = hopCount; 	
-		}
+	}
 		
-	Molecule() {
+	Molecule() 
+    {
 		id = 0;
+		type = 0;
 
 		atoms = new Atom[0];
 		angles = new Angle[0];
@@ -368,14 +384,14 @@ struct Molecule
 		numOfBonds = 0;
 		numOfDihedrals = 0;
 		numOfHops = 0; 	
-		}    
+	}    
 };
 
 
 //Atom
 Atom createAtom(unsigned long id, Real x, Real y, Real z);
 Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon);
-Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, char name);
+Atom createAtom(unsigned long id, Real x, Real y, Real z, Real sigma, Real epsilon, Real charge, std::string name);
 void printAtoms(Atom *atoms, int count);
 void writeOutAtoms(Atom *atoms, Environment *environment, std::string filename, int accepts, int rejects, Real totalEnergy);
 
@@ -384,7 +400,7 @@ Environment createEnvironment(Real x, Real y, Real z, Real maxTranslation, Real 
 
 //Molecule
 Molecule createMolecule(int id, Atom *atoms, int atomCount);
-Molecule createMolecule(int id, Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals,
+Molecule createMolecule(int id, int type,  Atom *atoms, Angle *angles, Bond *bonds, Dihedral *dihedrals,
                         int atomCount, int angleCount, int bondCount, int dihedralCount);
 void copyMolecule(Molecule *destination, Molecule *source);
 void printMolecule(Molecule *molecule);

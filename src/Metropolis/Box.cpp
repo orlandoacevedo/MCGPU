@@ -1,5 +1,6 @@
 /*
-	Represents a simulation box, holding environment and molecule data.
+	aepresents a simulation box, holding environment and molecule data.
+
 	Superclass to SerialBox and ParallelBox.
 
 	Author: Nathan Coleman
@@ -20,6 +21,7 @@ Box::Box()
 	environment = NULL;
 	atoms = NULL;
 	molecules = NULL;
+	neighborList = NULL;
 	
 	bonds = NULL;
 	angles = NULL;
@@ -28,6 +30,7 @@ Box::Box()
 
 	atomCount = 0;
 	moleculeCount = 0;
+	first = true;
 }
 
 Box::~Box()
@@ -35,11 +38,17 @@ Box::~Box()
 	FREE(environment);
 	FREE(atoms);
 	FREE(molecules);
+	FREE(neighborList);
 
 	FREE(bonds);
 	FREE(angles);
 	FREE(dihedrals);
 	FREE(hops);
+}
+
+void Box::createNeighborList() 
+{
+	neighborList = new NeighborList(molecules, environment);
 }
 
 int Box::chooseMolecule()
@@ -75,16 +84,33 @@ int Box::changeMolecule(int molIdx)
 }
 
 void Box::keepMoleculeInBox(int molIdx)
-{		
-		for (int j = 0; j < molecules[molIdx].numOfAtoms; j++)
-        {
-		    //X axis
-			wrapBox(molecules[molIdx].atoms[j].x, environment->x);
-            //Y axis
-			wrapBox(molecules[molIdx].atoms[j].y, environment->y);
-            //Z axis
-			wrapBox(molecules[molIdx].atoms[j].z, environment->z);
-		}
+{
+    int primaryIndex = (*(*(environment->primaryAtomIndexArray))[molecules[molIdx].type])[0]; 
+    Atom primaryAtom = molecules[molIdx].atoms[primaryIndex];
+
+    int positionX = isOutOfBounds(primaryAtom.x, environment->x);
+    int positionY = isOutOfBounds(primaryAtom.y, environment->y);
+    int positionZ = isOutOfBounds(primaryAtom.z, environment->z);
+
+    for (int i = 0; i < molecules[molIdx].numOfAtoms; i++)
+    {	
+		//X axis
+		molecules[molIdx].atoms[i].x = wrapBox(molecules[molIdx].atoms[i].x, environment->x, positionX);
+		//Y axis
+		molecules[molIdx].atoms[i].y = wrapBox(molecules[molIdx].atoms[i].y, environment->y, positionY);
+		//Z axis
+		molecules[molIdx].atoms[i].z = wrapBox(molecules[molIdx].atoms[i].z, environment->z, positionZ);
+    }
+}
+
+int Box::isOutOfBounds(Real coor, Real boxDim)
+{
+    if (coor < 0)
+	return BELOW_ZERO;
+    else if (coor > boxDim)
+	return ABOVE_BOX_DIM;
+    
+    return IN_BOX;
 }
 
 int Box::rollback(int molIdx)
@@ -99,12 +125,14 @@ void Box::saveChangedMol(int molIdx)
 	Molecule *mol_src = &molecules[molIdx];
 
 	//free memory of changedMol before allocate memory
-	delete[] changedMol.atoms;
-	delete[] changedMol.bonds;
-	delete[] changedMol.angles;
-	delete[] changedMol.dihedrals;
-	delete[] changedMol.hops;
-
+	if (changedMol.numOfAtoms != 0) {
+		delete[] changedMol.atoms;
+		delete[] changedMol.bonds;
+		delete[] changedMol.angles;
+		delete[] changedMol.dihedrals;
+		delete[] changedMol.hops;
+	}
+	
 	memcpy(&changedMol,mol_src,sizeof(changedMol));
 
 	changedMol.atoms = new Atom[mol_src->numOfAtoms];
@@ -124,6 +152,7 @@ void Box::copyMolecule(Molecule *mol_dst, Molecule *mol_src)
     mol_dst->numOfDihedrals = mol_src->numOfDihedrals;
     mol_dst->numOfHops = mol_src->numOfHops;
     mol_dst->id = mol_src->id;
+    mol_dst->type = mol_src->type;
     
     for(int i = 0; i < mol_src->numOfAtoms; i++)
     {
@@ -151,17 +180,15 @@ void Box::copyMolecule(Molecule *mol_dst, Molecule *mol_src)
     }
 }
 
-Real Box::wrapBox(Real x, Real boxDim)
-{
 
-    while(x > boxDim)
-    {
-        x -= boxDim;
-    }
-    while(x < 0)
-    {
-        x += boxDim;
-    }
+Real Box::wrapBox(Real x, Real boxDim, int position)
+{
+	if (position == IN_BOX)
+		return x;
+	else if(position == ABOVE_BOX_DIM)
+		x -= boxDim;
+	else if (position == BELOW_ZERO)
+		x += boxDim;
 
     return x;
 }

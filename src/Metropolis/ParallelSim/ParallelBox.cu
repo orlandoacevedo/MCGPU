@@ -15,7 +15,7 @@ using namespace std;
 
 ParallelBox::ParallelBox(): Box()
 {
-	//Is anything really needed here?
+	first = true;//Is anything really needed here?
 }
 
 ParallelBox::~ParallelBox()
@@ -69,23 +69,32 @@ void ParallelBox::copyDataToDevice()
 	cudaMemcpy(atomsD, tempAD, sizeof(AtomData), cudaMemcpyHostToDevice);
 	
 	//create MoleculeData on host, and fill molecular data arrays on device
-	moleculesH = new MoleculeData(molecules, moleculeCount);
+	moleculesH = new MoleculeData(molecules, moleculeCount, environment);
 	cudaMalloc(&atomsIdxD, moleculeCount * sizeof(int));
 	cudaMalloc(&numOfAtomsD, moleculeCount * sizeof(int));
+	cudaMalloc(&typeD, moleculeCount * sizeof(int));
+	cudaMalloc(&primaryIndexesD, moleculesH->totalPrimaryIndexSize * sizeof(int));
 	cudaMemcpy(atomsIdxD, moleculesH->atomsIdx, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(numOfAtomsD, moleculesH->numOfAtoms, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(typeD, moleculesH->type, moleculeCount * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(primaryIndexesD, moleculesH->primaryIndexes, moleculesH->totalPrimaryIndexSize * sizeof(int), cudaMemcpyHostToDevice);
 	
 	//create device MoleculeData struct with pointers to filled-in molecular data arrays
 	MoleculeData *tempMD = (MoleculeData*) malloc(sizeof(MoleculeData));
 	tempMD->atomsIdx = atomsIdxD;
 	tempMD->numOfAtoms = numOfAtomsD;
+	tempMD->type = typeD;
+	tempMD->primaryIndexes = primaryIndexesD;
 	tempMD->moleculeCount = moleculesH->moleculeCount;
+	tempMD->totalPrimaryIndexSize = moleculesH->totalPrimaryIndexSize;
+
 	cudaMalloc(&moleculesD, sizeof(MoleculeData));
 	cudaMemcpy(moleculesD, tempMD, sizeof(MoleculeData), cudaMemcpyHostToDevice);
 	
 	//data structures for neighbor batch in energy calculation
 	nbrMolsH = (int*) malloc(moleculeCount * sizeof(int));
 	molBatchH = (int*) malloc(moleculeCount * sizeof(int));
+	moleculesWithinCutoffH = (int*) malloc(moleculeCount * sizeof(int));
 	cudaMalloc(&(nbrMolsD), moleculeCount * sizeof(int));
 	cudaMalloc(&(molBatchD), moleculeCount * sizeof(int));
 	
@@ -104,7 +113,7 @@ void ParallelBox::copyDataToDevice()
 	//possible interatomic energies for one pair of molecules
 	energyCount = moleculesH->moleculeCount * maxMolSize * maxMolSize;
 	cudaMalloc(&(energiesD), energyCount * sizeof(Real));
-	
+
 	//initialize energies to 0
 	cudaMemset(energiesD, 0, energyCount * sizeof(Real));
 	
@@ -130,4 +139,18 @@ void ParallelBox::writeChangeToDevice(int changeIdx)
 	cudaMemcpy(yD + startIdx, atomsH->y + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
 	cudaMemcpy(zD + startIdx, atomsH->z + startIdx, moleculesH->numOfAtoms[changeIdx] * sizeof(Real), cudaMemcpyHostToDevice);
 	//sigma, epsilon, and charge will not change, so there is no need to update those arrays
+}
+
+void ParallelBox::writeMoleculesWithinCutoffToDevice(vector<int> neighbors)
+{
+	if (first)
+	{
+		first = false;
+		cudaMalloc(&(moleculesWithinCutoffD), moleculeCount * sizeof(int));
+	}
+	
+	for (int i = 0; i < neighbors.size(); i++)
+		moleculesWithinCutoffH[i] = neighbors[i];
+
+	cudaMemcpy(moleculesWithinCutoffD, moleculesWithinCutoffH, neighbors.size() * sizeof(int), cudaMemcpyHostToDevice);
 }

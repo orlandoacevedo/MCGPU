@@ -18,6 +18,7 @@
 #endif
 
 #define DEFAULT_STATUS_INTERVAL 100
+#define DEFAULT_NEIGHBORLIST_INTERVAL 100
 
 	/// Contains the intermediate values and flags read in from the command
 	/// line.
@@ -90,9 +91,17 @@
 		/// Declares whether the parallel execution option was specified.
 		bool parallelFlag;
 		
-		/// Declares whether or not to silence the printed run 
+		/// Declares whether or not to display the printed run 
 		/// information to standard cout.
-		bool silentOutputFlag;
+		bool verboseOutputFlag;
+
+		/// Declares whether the use of the Neighbor-list is enabled.
+		bool neighborListFlag;
+
+		/// The number of simulation steps between updating the neighborlist.
+		/// @note This interval must be a non-negative number, and specifying
+		///     an interval of 0 means the initial neighborlist will not be updated
+		int neighborListInterval;
 
 		/// Default constructor
 		CommandParameters() :	statusInterval(DEFAULT_STATUS_INTERVAL),
@@ -111,7 +120,9 @@
 								threadFlag(false),
 								serialFlag(false),
 								parallelFlag(false),
-								silentOutputFlag(false) {}
+								verboseOutputFlag(false),
+								neighborListFlag(false),
+								neighborListInterval(DEFAULT_NEIGHBORLIST_INTERVAL)		{}
 	};
 
 	/// Goes through each argument specified from the command line and checks
