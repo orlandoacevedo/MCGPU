@@ -95,7 +95,7 @@ For more information, see the Alabama Supercomputer Center manual.
 ##Running With Multiple Solvents
 MCGPU currently supports the simulaton of two solvents within one z-matrix file where separate solvents are separated by TERZ.
 
-When using multiple solvents, the primary index array (Configuration File line 30), must contan at least one primary index array for each molecule, with the arrays enclosed in brackets and comma separated. For example [2],[0,3] represents the primary index structure for two molecules where the first molecule (defined above TERZ) has the primary index of '2' and the second molecule (defined below TERZ) has the primary indexes of '0' and '3'.
+When using multiple solvents, the primary index array (Configuration File line 30), must contan at least one primary index array for each molecule, with the arrays enclosed in brackets and comma separated. For example [2],[1,3] represents the primary index structure for two molecules where the first molecule (defined above TERZ) has the primary index of '2' and the second molecule (defined below TERZ) has the primary indexes of '1' and '3'.
 
 
 ##Available Command-line Options
