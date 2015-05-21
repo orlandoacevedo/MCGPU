@@ -152,7 +152,7 @@ Line numbers are important
 
 **Contributing Authors**: Scott Aldige, Jared Brown, Matt Campbell, William Champion, Nathan Coleman, Yitong Dai, Seth Denney, Matthew Hardwick, Andrew Lewis, Alexander Luchs, Jennifer Lynch, Tavis Maclellan, Joshua Mosby, Jeffrey Overbey, Robert Sanek, Riley Spahn, Kalan Stowe, Ashley Tolbert, Albert Wallace, Seth Wooten, James Young, Francis Zayek, Xiao (David) Zhang, and Orlando Acevedo*
 
-**Software License**
+**Software License**:
 MCGPU. Computational Chemistry: Highly Parallel Monte Carlo Simulations on CPUs and GPUs.
 Copyright (C) 2015  Orlando Acevedo
 
