@@ -2403,6 +2403,25 @@ bool SBScanner::readInSB(string filename) {
     }
 	return true;
 }
+
+map<string, BondData> SBScanner::getBondMap(string atom1) {
+	if(bondDataMap.count(atom1) == 0) {
+		map<string, BondData> blankMap;
+		return blankMap;
+	} else {
+		return bondDataMap[atom1];
+	}
+}
+
+map<string, map<string, AngleData> > SBScanner::getAngleMap(string endpoint1) {
+	if(angleDataMap.count(endpoint1) == 0) {
+		map<string, map<string, AngleData> > blankMap;
+		return blankMap;
+	} else {
+		return angleDataMap[endpoint1];
+	}
+}
+
 		
 Real SBScanner::getKBond(string atom1, string atom2) {
 	if(bondDataMap.count(atom1) == 0)

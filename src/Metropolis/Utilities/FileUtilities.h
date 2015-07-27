@@ -602,6 +602,21 @@ class SBScanner {
 		 */
 		Real getEqAngle(string endpoint1, string middleAtom, string endpoint2);
 		
+		/**
+		 * Given an atom's name, returns the corresponding bond map.
+		 * @param atom1 The name of the atom at one end of a bond.
+		 * @return A map from the name of another atom to data about the bond these atoms share.
+		 */
+		map<string, BondData> getBondMap(string atom1);
+		
+		/**
+		 * Given an atom's name, returns the corresponding angle map.
+		 * @param endpoint1 The name of the atom at one end of an angle.
+		 * @return A map from from the names of midpoints in angles to the other endpoint of 
+		 * an angle to data about the angle these atoms form.
+		 */
+		map<string, map<string, AngleData> > getAngleMap(string endpoint1);
+		
 };
 
 
