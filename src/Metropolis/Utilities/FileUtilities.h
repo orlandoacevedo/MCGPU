@@ -510,69 +510,6 @@ class StateScanner
     void outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename);
 };
 
-/**
- * This struct contains data about the bond between two atoms. 
- */
-struct bondData {
-	
-	/**
-	 * The force constant of this bond.
-	 */
-	Real kBond;
-	
-	/**
-	 * The equilibrium bond distance of this bond.
-	 */
-	Real eqBondDist;
-	
-	/**
-	 * Default constructor. Used when creating a map to bondData.
-	 */
-	bondData() {}
-	
-	/**
-	 * Preferred constructor. Initializes variables.
-	 * @param init_kBond The value to initialize the bond's force constant to.
-	 * @param init_eqBondDist The value to initialize the bond's equilibrium distance to.
-	 */
-	bondData(Real init_kBond, Real init_eqBondDist) {
-		kBond = init_kBond;
-		eqBondDist = init_eqBondDist;
-	}
-};
-
-/**
- * This struct holds data about the angle formed by three atoms.
- */
-struct angleData {
-	
-	/**
-	 * The force constant of the angle.
-	 */
-	Real kAngle;
-	
-	/**
-	 * The equilibrium size of the angle formed by the three atoms.
-	 * This is measured in degrees.
-	 */
-	Real eqAngle;
-	
-	/** 
-	 * Default constructor for angleData. Used when creating a map to angleData.
-	 */
-	angleData() {}
-	
-	/**
-	 * Preferred constructor for angleData. Initializes variables.
-	 * @param init_kAngle The value to initialize the angle's force constant to.
-	 * @param init_eqAngle The value to initialize the angle's size to.
-	 */
-	angleData(Real init_kAngle, Real init_eqAngle) {
-		kAngle = init_kAngle;
-		eqAngle = init_eqAngle;
-	}
-};
-
 class SBScanner {
 	
 	private: 
@@ -580,12 +517,12 @@ class SBScanner {
 		/**
 		 * Double map from one atom to another atom to data about the bond between the two atoms.
 		 */
-		map<string, map<string, bondData> > bondDataMap;
+		map<string, map<string, BondData> > bondDataMap;
 		
 		/**
 		 * Triple map from one atom to another atom to a third atom about the angle formed by those three atoms.
 		 */
-		map<string, map<string, map<string, angleData> > > angleDataMap;
+		map<string, map<string, map<string, AngleData> > > angleDataMap;
 	
 		/**
 		 * Contains the path to the oplsaa.sb file.

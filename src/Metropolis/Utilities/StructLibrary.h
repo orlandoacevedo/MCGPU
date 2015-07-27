@@ -13,8 +13,73 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
 #include "../DataTypes.h"
 //Forward declaration so that each can be used in methods below
+
+
+/**
+ * This struct contains data about the bond between two atoms. 
+ */
+struct BondData {
+	
+	/**
+	 * The force constant of this bond.
+	 */
+	Real kBond;
+	
+	/**
+	 * The equilibrium bond distance of this bond.
+	 */
+	Real eqBondDist;
+	
+	/**
+	 * Default constructor. Used when creating a map to bondData.
+	 */
+	BondData() {}
+	
+	/**
+	 * Preferred constructor. Initializes variables.
+	 * @param init_kBond The value to initialize the bond's force constant to.
+	 * @param init_eqBondDist The value to initialize the bond's equilibrium distance to.
+	 */
+	BondData(Real init_kBond, Real init_eqBondDist) {
+		kBond = init_kBond;
+		eqBondDist = init_eqBondDist;
+	}
+};
+
+/**
+ * This struct holds data about the angle formed by three atoms.
+ */
+struct AngleData {
+	
+	/**
+	 * The force constant of the angle.
+	 */
+	Real kAngle;
+	
+	/**
+	 * The equilibrium size of the angle formed by the three atoms.
+	 * This is measured in degrees.
+	 */
+	Real eqAngle;
+	
+	/** 
+	 * Default constructor for angleData. Used when creating a map to angleData.
+	 */
+	AngleData() {}
+	
+	/**
+	 * Preferred constructor for angleData. Initializes variables.
+	 * @param init_kAngle The value to initialize the angle's force constant to.
+	 * @param init_eqAngle The value to initialize the angle's size to.
+	 */
+	AngleData(Real init_kAngle, Real init_eqAngle) {
+		kAngle = init_kAngle;
+		eqAngle = init_eqAngle;
+	}
+};
 
 /**
 	Used in box consturction. The tables are used to look up hop values between
@@ -218,6 +283,9 @@ struct Atom
 	std::string *name;
 	Real x, y, z, sigma, epsilon, charge;
 	unsigned long id;
+	map<string, BondData> bonds;
+	map<string, map<string, AngleData> > angles;
+	
 	Atom()
     {
 		name = new std::string("000");
