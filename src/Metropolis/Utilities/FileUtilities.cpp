@@ -25,6 +25,10 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 		return false;
 	}
 
+	//Getting bond and angle data from OPLSAA.sb file.
+	SBScanner sb_scanner = SBScanner();
+	sb_scanner.readInSB(inputPath + "/oplsaa.sb");
+	
     Environment* enviro;
     vector<Molecule> moleculeVector;
 
