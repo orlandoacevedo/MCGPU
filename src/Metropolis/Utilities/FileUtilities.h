@@ -268,6 +268,10 @@ class ZmatrixScanner
         Opls_Scan object used to assign sigma, epsilon and charge values.
       */
       OplsScanner* oplsScanner;
+	  /**
+	    SB_Scan object used to assign force constants and equilibrium bond distances / angles.
+	   */
+	  SBScanner* sbScanner;
       /**
         Vector that holds example molecules.
       */
@@ -309,11 +313,13 @@ class ZmatrixScanner
 		/**
           Scans in the z-matrix File calls sub-function parseLine
           @param filename - the name/path of the z-matrix file
+		  @param scanner - points to the oplsScanner to get sigma, epsilon, and charge values from.
+		  @param sbScanner_in - points to the SBScanner to get force constants and equilibrium bond distances / angles from.
           @return - success code
                     0: Valid z-matrix path
                     1: Invalid z-matrix path
 		*/
-        bool readInZmatrix(string filename, OplsScanner* oplsScanner); 
+        bool readInZmatrix(string filename, OplsScanner* scanner, SBScanner* sbScanner_in); 
 		
 		/**
           Parses out a line from the zmatrix file and gets the atom from the OPLS hash

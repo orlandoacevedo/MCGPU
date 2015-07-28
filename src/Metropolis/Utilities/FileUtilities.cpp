@@ -59,7 +59,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
         }
 
         ZmatrixScanner zmatrix_scanner = ZmatrixScanner();        
-        if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
+        if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner, &sb_scanner))
         {
             std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;
             return false;
@@ -1134,6 +1134,7 @@ Fourier OplsScanner::getFourier(string hashNum)
 
 ZmatrixScanner::ZmatrixScanner()
 {
+	sbScanner = NULL;
     oplsScanner = NULL;
     startNewMolecule = false;
     previousFormat = 0;
@@ -1143,10 +1144,11 @@ ZmatrixScanner::~ZmatrixScanner()
 {
 }
 
-bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
+bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner, SBScanner* sbScanner_in)
 {
 	fileName = filename;
 	oplsScanner = scanner;
+	sbScanner = sbScanner_in;
 	startNewMolecule = false;
 
 	if (fileName.empty())
@@ -1209,6 +1211,12 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
                 for (int i = 0; i < bondVector.size(); i++)
                 {
                     bondArray[i] = bondVector[i];
+					int atom1Idx = bondArray[i].atom1 - atomArray[0].id;
+					int atom2Idx = bondArray[i].atom2 - atomArray[0].id;
+					std::string atom1Name = *(atomArray[atom1Idx].name);
+					std::string atom2Name = *(atomArray[atom2Idx].name);
+					bondArray[i].forceConstant =  sbScanner->getKBond(atom1Name, atom2Name);
+					bondArray[i].eqBondDist = sbScanner->getEqBondDist(atom1Name, atom2Name);
                 }
                 for (int i = 0; i < angleVector.size(); i++)
                 {

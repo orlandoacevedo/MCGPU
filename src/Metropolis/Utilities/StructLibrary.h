@@ -127,12 +127,12 @@ struct Bond
 	/** 
 	 * The force constant K of the bond.
 	 */
-	int forceConstant;
+	Real forceConstant;
 	
 	/**
 	 * The equilibrium bond distance of this bond.
 	 */
-	int eqBondDist;
+	Real eqBondDist;
 	
 	/**
 	 * Parameterless constructor for the Bond struct.
