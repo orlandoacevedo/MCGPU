@@ -24,10 +24,6 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 		std::cerr << "Error: loadBoxData(): Box is NULL" << std::endl;
 		return false;
 	}
-
-	//Getting bond and angle data from OPLSAA.sb file.
-	SBScanner sb_scanner = SBScanner();
-	sb_scanner.readInSB(inputPath + "/oplsaa.sb");
 	
     Environment* enviro;
     vector<Molecule> moleculeVector;
@@ -35,6 +31,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
     if (inputType == InputFile::Configuration)
     {
 
+		
         ConfigScanner config_scanner = ConfigScanner();
         if (!config_scanner.readInConfig(inputPath))
         {
@@ -42,6 +39,18 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             return false;
         }
 
+		//Getting bond and angle data from OPLSAA.sb file.
+		SBScanner sb_scanner = SBScanner();
+		std::string sb_path = config_scanner.getOplsusaparPath();
+		std::size_t slash_index= sb_scanner.find_last_of('/');
+		sb_path = sb_path.substr(0, slash_index);
+		if(!sb_scanner.readInSB(sb_path + "/oplsaa.sb"))
+		{
+			std::cerr << "Error: loadBoxData(): Could not read OPLS SB file" << std::endl;
+			return false;
+		}
+
+		
         OplsScanner opls_scanner = OplsScanner();
         if (!opls_scanner.readInOpls(config_scanner.getOplsusaparPath()))
         {
