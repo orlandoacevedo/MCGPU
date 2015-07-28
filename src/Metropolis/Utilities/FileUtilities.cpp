@@ -98,7 +98,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             std::cerr << "Error: Unable to read environment from State File" << std::endl;
             return false;
         }
-        moleculeVector = state_scanner.readInMolecules();
+        moleculeVector = state_scanner.readInMolecules(&sb_scanner);
 
         if (moleculeVector.size() == 0)
         {
@@ -1725,6 +1725,7 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
 StateScanner::StateScanner(string filename)
 {
 	universal_filename = filename;
+	sbScanner = NULL;
 }
 
 StateScanner::~StateScanner()
@@ -1771,8 +1772,9 @@ long StateScanner::readInStepNumber()
     return -1;
 }
 
-vector<Molecule> StateScanner::readInMolecules()
+vector<Molecule> StateScanner::readInMolecules(SBScanner* sbScanner_in)
 {
+	sbScanner = sbScanner_in;
 	std::string filename = universal_filename;
 	
     vector<Molecule> molecules;
@@ -1838,7 +1840,14 @@ vector<Molecule> StateScanner::readInMolecules()
                     }
                     else
                     {
-                       bonds.push_back(getBondFromLine(line)); 
+					   Bond newBond = getBondFromLine(line);
+                       int atom1Idx = newBond.atom1 - atoms[0].id;
+					   int atom2Idx = newBond.atom2 - atoms[0].id;
+					   string atom1Name = *(atoms[atom1Idx].name);
+					   string atom2Name = *(atoms[atom2Idx].name);
+					   newBond.forceConstant = sbScanner.getKBond(atom1Name, atom2Name);
+					   newBond.eqBondDist = sbScanner.getEqBondDist(atom1Name, atom2Name);
+					   bonds.push_back(newBond); 
                     }
                     break;
                 case 4: // dihedral

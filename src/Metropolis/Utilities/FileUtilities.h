@@ -409,6 +409,7 @@ class ZmatrixScanner
 class StateScanner
 {
   private:
+	SBScanner* sbScanner;
     std::string universal_filename;
     void parsePrimaryIndexDefinitions(Environment* enviro, string definitions);
 
@@ -423,10 +424,10 @@ class StateScanner
     Environment* readInEnvironment();
 
     /**
-      @pararm filename - the name of the state file
+      @pararm sbScanner_in - points to the sbScanner holding various constants pertaining to bonds and angles.
       @return - an array of molecules
     */
-    vector<Molecule> readInMolecules();
+    vector<Molecule> readInMolecules(SBScanner* sbScanner_in);
 
     /**
       @return - the starting step number in the state file
