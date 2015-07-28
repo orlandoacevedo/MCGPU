@@ -124,6 +124,19 @@ struct Bond
     */
     bool variable;
     
+	/** 
+	 * The force constant K of the bond.
+	 */
+	int forceConstant;
+	
+	/**
+	 * The equilibrium bond distance of this bond.
+	 */
+	int eqBondDist;
+	
+	/**
+	 * Parameterless constructor for the Bond struct.
+	 */
     Bond()
 	{
     	atom1 = 0;
@@ -131,7 +144,14 @@ struct Bond
     	distance = 0;
     	variable = true;
 	}
-    	
+    
+    /**
+	 * Standard constructor for the Bond struct.
+	 * @param a1 The first atom in the Bond.
+	 * @param a2 The second atom in thee Bond.
+	 * @param distance The bond distacne.
+	 * @param varied True if the bond can be varied, false otherwise.
+	 */
     Bond(int a1, int a2, Real dist, bool varied)
 	{
         atom1 = a1;
