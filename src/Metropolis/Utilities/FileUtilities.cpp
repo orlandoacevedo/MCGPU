@@ -1895,14 +1895,22 @@ vector<Molecule> StateScanner::readInMolecules(SBScanner* sbScanner_in)
                         {
                             bondArray[i] = bonds[i];
                         }
-                        for(int i = 0; i < angles.size(); i++)
-                        {
-                            angleArray[i] = angles[i];
-                        }
-                        for(int i = 0; i < atoms.size(); i++)
+						for(int i = 0; i < atoms.size(); i++)
                         {
                             atomArray[i] = atoms[i];
                         }
+                        for(int i = 0; i < angles.size(); i++)
+                        {
+                            angleArray[i] = angles[i];
+							int atom1Id = angleArray[i].atom1;
+							int atom2Id = angleArray[i].atom2;
+							int midAtomId = (int) getCommonAtom(bonds, atom1Id, atom2Id);
+							std::string atom1Name = *(atomArray[atom1Id - atomArray[0].id].name); 
+							std::string atom2Name = *(atomArray[atom2Id - atomArray[0].id].name);
+							std::string midAtomName = *(atomArray[midAtomId - atomArray[0].id].name);
+							angleArray[i].eqAngle = sbScanner->getEqAngle(atom1Name, midAtomName, atom2Name);
+							angleArray[i].forceConstant = sbScanner->getKAngle(atom1Name, midAtomName, atom2Name);
+						}
                         for(int i = 0; i < dihedrals.size(); i++)
                         {
                             dihedralArray[i] = dihedrals[i];
