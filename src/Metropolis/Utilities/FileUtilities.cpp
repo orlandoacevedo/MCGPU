@@ -1,11 +1,11 @@
 #include "FileUtilities.h"
 
-#include <iostream>
-#include <fstream>
-#include <stdlib.h>
+//#include <iostream>
+//#include <fstream>
+//#include <stdlib.h>
 #include <exception>
 #include <stdexcept>
-#include <sstream>
+//#include <sstream>
 #include "Parsing.h"
 #include "StructLibrary.h"
 #include "Metropolis/Box.h"
@@ -1221,6 +1221,14 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner, SBScan
                 for (int i = 0; i < angleVector.size(); i++)
                 {
                     angleArray[i] = angleVector[i];
+					int atom1Id = angleArray[i].atom1;
+					int atom2Id = angleArray[i].atom2;
+					int midAtomId = (int) getCommonAtom(bondVector, atom1Id, atom2Id);
+					std::string atom1Name = *(atomArray[atom1Id-atomArray[0].id].name);
+					std::string atom2Name = *(atomArray[atom2Id-atomArray[0].id].name);
+					std::string midAtomName = *(atomArray[midAtomId-atomArray[0].id].name);
+					angleArray[i].eqAngle = sbScanner->getEqAngle(atom1Name, midAtomName, atom2Name);
+					angleArray[i].forceConstant = sbScanner->getKAngle(atom1Name, midAtomName, atom2Name);
                 }
                 for (int i = 0; i < dihedralVector.size(); i++)
                 {

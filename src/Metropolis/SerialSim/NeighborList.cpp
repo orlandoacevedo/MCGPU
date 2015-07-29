@@ -12,7 +12,7 @@
 #include <cmath>
 
 #include <math.h>
-#include <string>
+//#include <string>
 #include "Metropolis/DataTypes.h"
 #include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/FileUtilities.h"

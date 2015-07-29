@@ -191,6 +191,16 @@ struct Angle
     */
     bool variable;
     
+	/**
+	 * The equilibrium angle of this set of atoms.
+	 */
+	Real eqAngle;
+	
+	/**
+	 * The force constant k of this angle.
+	 */
+	Real forceConstant;
+	
     Angle()
 	{
     	atom1 = 0;
