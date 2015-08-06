@@ -549,3 +549,198 @@ Real SerialCalcs::calcAtomDist(Atom atom1, Atom atom2, Environment *enviro)
 	//calculate squared distance (r2 value) and return
 	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
 }
+
+void SerialCalcs::invert_3x3_Matrix(Real m[3][3], Real out[3][3]) {
+	Real A = m[1][1]*m[2][2] - m[1][2]*m[2][1];
+	Real B = m[1][2]*m[2][0] - m[1][0]*m[2][2];
+	Real C = m[1][0]*m[2][1] - m[1][1]*m[2][0];
+	Real D = m[0][2]*m[2][1] - m[0][1]*m[2][2];
+	Real E = m[0][0]*m[2][2] - m[0][2]*m[2][0];
+	Real F = m[0][1]*m[2][0] - m[0][0]*m[2][1];
+	Real G = m[0][1]*m[1][2] - m[0][2]*m[1][1];
+	Real H = m[0][2]*m[1][0] - m[0][0]*m[1][2];
+	Real I = m[0][0]*m[1][1] - m[0][1]*m[1][0];
+	
+	Real det = m[0][0]*A + m[0][1]*B + m[0][2]*C;
+	Real invDet = 1.0 / det;
+	out[0][0] = invDet * A;
+	out[0][1] = invDet * D;
+	out[0][2] = invDet * G;
+	out[1][0] = invDet * B;
+	out[1][1] = invDet * E;
+	out[1][2] = invDet * H;
+	out[2][0] = invDet * C;
+	out[2][1] = invDet * F;
+	out[2][2] = invDet * I;
+}
+
+void SerialCalcs::multiply_matrices(Real iMat[3][3], Real coords[3], Real out[3]) {
+	out[0] = iMat[0][0] * coords[0] + iMat[0][1] * coords[1] + iMat[0][2] * coords[2]; 
+	out[1] = iMat[1][0] * coords[0] + iMat[1][1] * coords[1] + iMat[1][2] * coords[2];
+	out[2] = iMat[2][0] * coords[0] + iMat[2][1] * coords[1] + iMat[2][2] * coords[2];
+}
+
+void SerialCalcs::getP_Next(Real vSet[3][3], Real origin[3], Real cosFactor, Real sinFactor, Real abc[3], Real out[3]) {
+	for(int i = 0; i < 3; i++) {
+		out[i] = origin[i] + cosFactor * abc[i] * vSet[i][0] + sinFactor * abc[1] * vSet[i][1] + abc[2] * vSet[i][2];
+	}
+}
+
+void SerialCalcs::cross_3d_Vectors(Real v1[3], Real v2[3], Real out[3]) {
+	out[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	out[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	out[2] = v1[0] * v2[1] - v1[1] * v2[0];
+}
+
+Real SerialCalcs::len(Real vector[3]) {
+	return sqrt (vector[0]*vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
+}
+
+void SerialCalcs::makeVector(Real from[3], Real to[3], Real result[3]) {
+	for(int i = 0; i < 3; i++) {
+		result[i] = to[i] - from[i];
+	}
+}
+
+void SerialCalcs::calc_v1_and_v2(Real origin[3], Real anglePoint1[3], Real anglePoint2[3], Real v1[3], Real v2[3]) {
+	Real oq[3], op[3], r[3], m[3];
+	makeVector(origin, anglePoint2, oq);
+	makeVector(origin, anglePoint1, op);
+	Real oqLen = len(oq), opLen = len(op);
+	Real stretchConstant = opLen / oqLen;
+	for(int i = 0; i < 3; i++) {
+		r[i] = origin[i] + oq[i] * (stretchConstant);
+	}
+	for(int i = 0; i < 3; i++) {
+		m[i] = 0.5 * (r[i] + anglePoint1[i]); 
+	}
+	makeVector(origin, m, v1);
+	makeVector(m, anglePoint1, v2);
+}
+
+void SerialCalcs::get_V_Inverse_Matrix(Real o[3], Real p[3], Real q[3], Real vInverseMatrix[3][3], Real vMatrix[3][3]) {
+	Real v1[3], v2[3], v3[3];
+	calc_v1_and_v2(o, p, q, v1, v2);
+	cross_3d_Vectors(v1, v2, v3);
+	//Real vTranspose[3][3] = {v1, v2, v3}; 
+	//Real vMatrix[3][3];
+	for(int i = 0; i < 3; i++) {
+		vMatrix[i][0] = v1[i];
+		vMatrix[i][1] = v2[i];
+		vMatrix[i][2] = v3[i];
+	}
+	invert_3x3_Matrix(vMatrix, vInverseMatrix);
+}
+
+Real SerialCalcs::getAngle(Real o[3], Real p[3], Real q[3]) {
+	Real po[3], qo[3];
+	makeVector(p, o, po);
+	makeVector(q, o, qo);
+	Real po_dot_qo = 0;
+	for(int i = 0; i < 3; i++) {
+		po_dot_qo += po[i] * qo[i];
+	}
+	Real lenProduct = len(po) * len (qo);
+	Real angleRad = acos(po_dot_qo / lenProduct);
+	const Real RAD2DEG = 180 * 3.14159265358979;
+	return angleRad * RAD2DEG;
+}
+
+void SerialCalcs::expandAngle(Real o[3], Real p[3], Real q[3], Atom pAtoms[], Atom qAtoms[], Real newAngle) {
+	Real oldAngle = getAngle(o, p, q);
+	Real vInverseMatrix[3][3], vMatrix[3][3];
+	get_V_Inverse_Matrix(o, p, q, vInverseMatrix, vMatrix);
+	const Real deg2rad = 3.14159265358979 / 180.0;
+	Real cosFactor = cos (newAngle * deg2rad) - cos(oldAngle * deg2rad);
+	Real sinFactor = sin (newAngle * deg2rad) - sin(oldAngle * deg2rad);
+	
+	Real pAtomSize = sizeof(pAtoms) / sizeof(*pAtoms);
+	for(int i = 0; i < pAtomSize; i++) {
+		Atom a = pAtoms[i];
+		Real abc[3], xyz[3], newCoordinates[3];
+		xyz[0] = a.x;
+		xyz[1] = a.y;
+		xyz[2] = a.z;
+		multiply_matrices(vInverseMatrix, xyz, abc);
+		getP_Next(vMatrix, o, cosFactor, sinFactor, abc, newCoordinates);
+		a.x = newCoordinates[0];
+		a.y = newCoordinates[1];
+		a.z = newCoordinates[2];
+	}
+	Real qAtomSize = sizeof(qAtoms) / sizeof(*qAtoms);
+	for(int i = 0; i < qAtomSize; i++) {
+		Atom a = qAtoms[i];
+		Real abc[3], xyz[3], newCoordinates[3];
+		xyz[0] = a.x;
+		xyz[1] = a.y;
+		xyz[2] = a.z;
+		multiply_matrices(vInverseMatrix, xyz, abc);
+		getP_Next(vMatrix, o, cosFactor, sinFactor, abc, newCoordinates);
+		a.x = newCoordinates[0];
+		a.y = newCoordinates[1];
+		a.z = newCoordinates[2];
+	}
+	
+}
+
+bool SerialCalcs::expandMoleculeAngle(Molecule* m, Angle* a, int commonAtom, Real thetaChange) {
+	int size = m->numOfAtoms;
+	int edgeListSize = m->numOfBonds;
+	int end1 = a->atom1;
+	int end2 = a->atom2;
+	int offset = m->atoms[0].id;
+	int atomStatus[size];
+	for(int i = 0; i < size; i++) {
+		atomStatus[i] = 0;
+	}
+	atomStatus[commonAtom - offset] = -1;
+	DFS(m->bonds, end1, offset, atomStatus, 1, edgeListSize);
+	DFS(m->bonds, end2, offset, atomStatus, 2, edgeListSize);
+	int numType1 = 0;
+	for(int i = 0; i < size; i++) {
+		if(atomStatus[i] == 1)
+			numType1++;
+		if(atomStatus[i] == 3)
+			return false;
+	}
+	Real o[3], p[3], q[3];
+	o[0] = m->atoms[commonAtom - offset].x;
+	o[1] = m->atoms[commonAtom - offset].y;
+	o[2] = m->atoms[commonAtom - offset].z;
+	p[0] = m->atoms[end1 - offset].x;
+	p[1] = m->atoms[end1 - offset].y;
+	p[2] = m->atoms[end1 - offset].z;
+	q[0] = m->atoms[end2 - offset].x;
+	q[1] = m->atoms[end2 - offset].y;
+	q[2] = m->atoms[end2 - offset].z;
+	Real newAngle = thetaChange + a->value;
+	Atom pAtoms[numType1], qAtoms[size - numType1 -1];
+	int pCounter = 0, qCounter = 0;
+	for(int i = 0; i < size; i++) {
+		if(atomStatus[i] == 1)
+			pAtoms[pCounter++] = m->atoms[i];
+		else if(atomStatus[i] == 2)
+			qAtoms[qCounter++] = m->atoms[i];
+	}
+	expandAngle(o, p, q, pAtoms, qAtoms, newAngle);
+	return true;
+}
+
+void SerialCalcs::DFS(Bond edgeList[], int currentAtom, int offset, int atomStatus[], int type, int edgeListSize) {
+	atomStatus[currentAtom - offset] = type;
+	for(int i = 0; i < edgeListSize; i++) {
+		int other = -1;
+		if(edgeList[i].atom1 == currentAtom)
+			other = edgeList[i].atom2 - offset;
+		if (edgeList[i].atom2 == currentAtom)
+			other = edgeList[i].atom1 - offset;
+		if(other != -1) {
+			if(type == 2 && atomStatus[other] == 1) {
+				atomStatus[other] += type;
+			}
+			if(atomStatus[other] == 0) {
+				DFS(edgeList, other + offset, offset, atomStatus, type, edgeListSize);
+			}
+		}
+	}
+}
