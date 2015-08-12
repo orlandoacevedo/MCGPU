@@ -28,6 +28,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
     Environment* enviro;
     vector<Molecule> moleculeVector;
 
+	SBScanner sb_scanner;
     if (inputType == InputFile::Configuration)
     {
 
@@ -40,9 +41,9 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
         }
 
 		//Getting bond and angle data from OPLSAA.sb file.
-		SBScanner sb_scanner = SBScanner();
+		sb_scanner = SBScanner();
 		std::string sb_path = config_scanner.getOplsusaparPath();
-		std::size_t slash_index= sb_scanner.find_last_of('/');
+		std::size_t slash_index= sb_path.find_last_of('/');
 		sb_path = sb_path.substr(0, slash_index);
 		if(!sb_scanner.readInSB(sb_path + "/oplsaa.sb"))
 		{
@@ -1853,8 +1854,8 @@ vector<Molecule> StateScanner::readInMolecules(SBScanner* sbScanner_in)
 					   int atom2Idx = newBond.atom2 - atoms[0].id;
 					   string atom1Name = *(atoms[atom1Idx].name);
 					   string atom2Name = *(atoms[atom2Idx].name);
-					   newBond.forceConstant = sbScanner.getKBond(atom1Name, atom2Name);
-					   newBond.eqBondDist = sbScanner.getEqBondDist(atom1Name, atom2Name);
+					   newBond.forceConstant = sbScanner->getKBond(atom1Name, atom2Name);
+					   newBond.eqBondDist = sbScanner->getEqBondDist(atom1Name, atom2Name);
 					   bonds.push_back(newBond); 
                     }
                     break;
