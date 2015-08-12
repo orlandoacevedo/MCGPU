@@ -145,7 +145,9 @@ void Simulation::run()
 		std::cout << "Silent run, integration test started..." << endl;
 		cout_sbuf = std::cout.rdbuf();
 		std::ofstream fout("/dev/null");
-		std::cout.rdbuf(fout.rdbuf());
+		// The below line causes a segmentation fault when running with non-verbose output in production mode.
+		// TODO: Replace with Logger.
+		//std::cout.rdbuf(fout.rdbuf());
 	}
 	
 	//Calculate original starting energy for the entire system
