@@ -143,7 +143,7 @@ void Simulation::run()
 	if (!args.verboseOutput)
 	{
 		std::cout << "Silent run, integration test started..." << endl;
-		std::streambuf* cout_sbuf = std::cout.rdbuf();
+		cout_sbuf = std::cout.rdbuf();
 		std::ofstream fout("/dev/null");
 		std::cout.rdbuf(fout.rdbuf());
 	}
