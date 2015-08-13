@@ -48,6 +48,7 @@ Simulation::Simulation(SimulationArgs simArgs)
 		/*We need to set this to 1 in parallel mode because it is irrelevant BUT is used in the 
 		  runtime calculation. See summary equation for explanation.*/
 		threadsToSpawn = 1;
+		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
 	} 
 	else 
 	{
@@ -62,12 +63,8 @@ Simulation::Simulation(SimulationArgs simArgs)
 		std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
 		omp_set_num_threads(threadsToSpawn);
 		omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
-	}
-
-	if (simArgs.simulationMode == SimulationMode::Parallel)
-		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
-	else
 		box = SerialCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
+	}
 
 	if (box == NULL)
 	{
@@ -98,7 +95,7 @@ void Simulation::run()
 	std::cout << "Simulation Name: " << args.simulationName << std::endl;
 	
 	for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++)
-        {
+    {
 		box->keepMoleculeInBox(molIdx);
 	}
 

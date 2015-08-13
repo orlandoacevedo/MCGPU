@@ -765,8 +765,9 @@ bool ConfigScanner::readInConfig(string configpath)
                     }
                     else
 					{
-						throwScanError("Configuration file not well formed. Missing random seed value.");
-						return false;
+						enviro.randomseed = (unsigned int) time(NULL);
+						//throwScanError("Configuration file not well formed. Missing random seed value.");
+						//return false;
 					}
                 	break;
                 case 30:
