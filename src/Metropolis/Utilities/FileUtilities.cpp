@@ -60,7 +60,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
         }
 
         ZmatrixScanner zmatrix_scanner = ZmatrixScanner();        
-        if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner, &sb_scanner))
+        if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
         {
             std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;
             return false;
@@ -99,7 +99,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             std::cerr << "Error: Unable to read environment from State File" << std::endl;
             return false;
         }
-        moleculeVector = state_scanner.readInMolecules(&sb_scanner);
+        moleculeVector = state_scanner.readInMolecules();
 
         if (moleculeVector.size() == 0)
         {
@@ -1136,7 +1136,6 @@ Fourier OplsScanner::getFourier(string hashNum)
 
 ZmatrixScanner::ZmatrixScanner()
 {
-	sbScanner = NULL;
     oplsScanner = NULL;
     startNewMolecule = false;
     previousFormat = 0;
@@ -1146,11 +1145,10 @@ ZmatrixScanner::~ZmatrixScanner()
 {
 }
 
-bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner, SBScanner* sbScanner_in)
+bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
 {
 	fileName = filename;
 	oplsScanner = scanner;
-	sbScanner = sbScanner_in;
 	startNewMolecule = false;
 
 	if (fileName.empty())
@@ -1213,24 +1211,10 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner, SBScan
                 for (int i = 0; i < bondVector.size(); i++)
                 {
                     bondArray[i] = bondVector[i];
-					int atom1Idx = bondArray[i].atom1 - atomArray[0].id;
-					int atom2Idx = bondArray[i].atom2 - atomArray[0].id;
-					std::string atom1Name = *(atomArray[atom1Idx].name);
-					std::string atom2Name = *(atomArray[atom2Idx].name);
-					bondArray[i].forceConstant =  sbScanner->getKBond(atom1Name, atom2Name);
-					bondArray[i].eqBondDist = sbScanner->getEqBondDist(atom1Name, atom2Name);
                 }
                 for (int i = 0; i < angleVector.size(); i++)
                 {
                     angleArray[i] = angleVector[i];
-					int atom1Id = angleArray[i].atom1;
-					int atom2Id = angleArray[i].atom2;
-					int midAtomId = (int) getCommonAtom(bondVector, atom1Id, atom2Id);
-					std::string atom1Name = *(atomArray[atom1Id-atomArray[0].id].name);
-					std::string atom2Name = *(atomArray[atom2Id-atomArray[0].id].name);
-					std::string midAtomName = *(atomArray[midAtomId-atomArray[0].id].name);
-					angleArray[i].eqAngle = sbScanner->getEqAngle(atom1Name, midAtomName, atom2Name);
-					angleArray[i].forceConstant = sbScanner->getKAngle(atom1Name, midAtomName, atom2Name);
                 }
                 for (int i = 0; i < dihedralVector.size(); i++)
                 {
@@ -1735,7 +1719,6 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
 StateScanner::StateScanner(string filename)
 {
 	universal_filename = filename;
-	sbScanner = NULL;
 }
 
 StateScanner::~StateScanner()
@@ -1782,9 +1765,8 @@ long StateScanner::readInStepNumber()
     return -1;
 }
 
-vector<Molecule> StateScanner::readInMolecules(SBScanner* sbScanner_in)
+vector<Molecule> StateScanner::readInMolecules()
 {
-	sbScanner = sbScanner_in;
 	std::string filename = universal_filename;
 	
     vector<Molecule> molecules;
@@ -1850,14 +1832,7 @@ vector<Molecule> StateScanner::readInMolecules(SBScanner* sbScanner_in)
                     }
                     else
                     {
-					   Bond newBond = getBondFromLine(line);
-                       int atom1Idx = newBond.atom1 - atoms[0].id;
-					   int atom2Idx = newBond.atom2 - atoms[0].id;
-					   string atom1Name = *(atoms[atom1Idx].name);
-					   string atom2Name = *(atoms[atom2Idx].name);
-					   newBond.forceConstant = sbScanner->getKBond(atom1Name, atom2Name);
-					   newBond.eqBondDist = sbScanner->getEqBondDist(atom1Name, atom2Name);
-					   bonds.push_back(newBond); 
+					   bonds.push_back(getBondFromLine(line)); 
                     }
                     break;
                 case 4: // dihedral
@@ -1897,22 +1872,14 @@ vector<Molecule> StateScanner::readInMolecules(SBScanner* sbScanner_in)
                         {
                             bondArray[i] = bonds[i];
                         }
+						for(int i = 0; i < angles.size(); i++)
+                        {
+                            angleArray[i] = angles[i];
+                        }
 						for(int i = 0; i < atoms.size(); i++)
                         {
                             atomArray[i] = atoms[i];
                         }
-                        for(int i = 0; i < angles.size(); i++)
-                        {
-                            angleArray[i] = angles[i];
-							int atom1Id = angleArray[i].atom1;
-							int atom2Id = angleArray[i].atom2;
-							int midAtomId = (int) getCommonAtom(bonds, atom1Id, atom2Id);
-							std::string atom1Name = *(atomArray[atom1Id - atomArray[0].id].name); 
-							std::string atom2Name = *(atomArray[atom2Id - atomArray[0].id].name);
-							std::string midAtomName = *(atomArray[midAtomId - atomArray[0].id].name);
-							angleArray[i].eqAngle = sbScanner->getEqAngle(atom1Name, midAtomName, atom2Name);
-							angleArray[i].forceConstant = sbScanner->getKAngle(atom1Name, midAtomName, atom2Name);
-						}
                         for(int i = 0; i < dihedrals.size(); i++)
                         {
                             dihedralArray[i] = dihedrals[i];
