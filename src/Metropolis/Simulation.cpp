@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sstream>
 
 #include "Simulation.h"
 #include "SimulationArgs.h"
@@ -31,6 +32,7 @@
 #include "SerialSim/NeighborList.h"
 #include "ParallelSim/ParallelCalcs.h"
 #include "Utilities/FileUtilities.h"
+
 
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
@@ -46,6 +48,7 @@ Simulation::Simulation(SimulationArgs simArgs)
 		/*We need to set this to 1 in parallel mode because it is irrelevant BUT is used in the 
 		  runtime calculation. See summary equation for explanation.*/
 		threadsToSpawn = 1;
+		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
 	} 
 	else 
 	{
@@ -60,12 +63,8 @@ Simulation::Simulation(SimulationArgs simArgs)
 		std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
 		omp_set_num_threads(threadsToSpawn);
 		omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
-	}
-
-	if (simArgs.simulationMode == SimulationMode::Parallel)
-		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
-	else
 		box = SerialCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
+	}
 
 	if (box == NULL)
 	{
@@ -96,7 +95,7 @@ void Simulation::run()
 	std::cout << "Simulation Name: " << args.simulationName << std::endl;
 	
 	for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++)
-        {
+    {
 		box->keepMoleculeInBox(molIdx);
 	}
 
@@ -138,14 +137,11 @@ void Simulation::run()
 
     clock_t function_time_start, function_time_end;
 	function_time_start = clock();
-	
-	std::streambuf* cout_sbuf;
-	if (!args.verboseOutput)
-	{
-		std::cout << "Silent run, integration test started..." << endl;
-		std::streambuf* cout_sbuf = std::cout.rdbuf();
-		std::ofstream fout("/dev/null");
-		std::cout.rdbuf(fout.rdbuf());
+
+	if(args.verboseOutput) {
+		log = Logger(VERBOSE);
+	} else {
+		log = Logger(NON_VERBOSE);
 	}
 	
 	//Calculate original starting energy for the entire system
@@ -155,12 +151,12 @@ void Simulation::run()
         {
 			if (args.useNeighborList)
 			{
-				std::cout << "Using neighbor-list for energy calculation" << std::endl;
+				log.verbose("Using neighbor-list for energy calculation");
 				oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);		
 			}
 			else
 			{
-				std::cout << "Using original parallel energy calculation" << std::endl;
+				log.verbose("Using original parallel energy calculation");
 				oldEnergy = ParallelCalcs::calcSystemEnergy(box);
 			}
 		}
@@ -168,12 +164,12 @@ void Simulation::run()
 		{
 			if (args.useNeighborList)
 			{
-				std::cout << "Using neighbor-list for energy calculation" << std::endl;
+				log.verbose("Using neighbor-list for energy calculation");
 				oldEnergy = SerialCalcs::calcSystemEnergy_NLC(box, lj_energy, charge_energy);		
 			}
 			else
 			{
-				std::cout << "Using original system energy calculation" << std::endl;
+				log.verbose("Using original system energy calculation");
 				oldEnergy = SerialCalcs::calcSystemEnergy(box, lj_energy, charge_energy);
 			}
 		}
@@ -186,10 +182,14 @@ void Simulation::run()
 	double duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC * threadsToSpawn);
 
 	//for testing/debug purposes
-	std::cout << "Duration of system energy calculation function: " << duration << " seconds" << std::endl;
-	std::cout << "Threads to spawn: " << threadsToSpawn << std::endl;
-	
-	std::cout << std::endl << "Running " << simSteps << " steps" << std::endl << std::endl;
+	std::stringstream durationConv;
+	durationConv << "Duration of system energy calculation function: " << duration << " seconds."; 
+	log.verbose(durationConv.str());
+	log.verbose("Threads to spawn: " + threadsToSpawn);
+
+	std::stringstream simStepsConv;
+	simStepsConv << "\nRunning " << (simSteps) << " steps\n"; 
+	log.verbose(simStepsConv.str());
 	
 	std::string baseStateFile = "";	
 	if (!args.simulationName.empty())
@@ -211,15 +211,17 @@ void Simulation::run()
 		//provide printouts at each pre-determined interval (not at each step)
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
 		{
-			std::cout << "Step " << move << ":\n--Current Energy: " << oldEnergy << std::endl;		
+			stringstream moveConv;
+			moveConv << "Step " << (move) << ":\n--Current Energy: " << oldEnergy << "\n";
+			log.verbose(moveConv.str());		
 		}
 
 		
 		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0)
 		{
-			std::cout << std::endl;
+			log.verbose("");
 			saveState(baseStateFile, move);
-			std::cout << std::endl;
+			log.verbose("");
 		}
 		
 		//Randomly select index of a molecule for changing
@@ -331,13 +333,12 @@ void Simulation::run()
 	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 	
 	currentEnergy = oldEnergy;
-	std::cout << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << currentEnergy << std::endl;
+	stringstream startConv;
+	startConv << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << currentEnergy;
+	log.verbose(startConv.str());
 
 	if (args.stateInterval >= 0)
 		saveState(baseStateFile, (stepStart + simSteps));
-
-	if (!args.verboseOutput)
-		std::cout.rdbuf(cout_sbuf); // restore the original stream buffer
 	
 	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
 
@@ -417,7 +418,7 @@ void Simulation::saveState(const std::string& baseFileName, int simStep)
 	stateOutputPath.append(stepCount); //add the step number to the name of the output file
 	stateOutputPath.append(".state");
 
-	std::cout << "Saving state file " << stateOutputPath << std::endl;
+	log.verbose("Saving state file " + stateOutputPath );
 
 	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath);
 }

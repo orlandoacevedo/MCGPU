@@ -22,6 +22,115 @@
 #define TRIMMED_CHARS " \n\r\t"
 #define COMMENT_DELIM ';'
 
+class SBScanner {
+	
+	private: 
+		
+		/**
+		 * Double map from one atom to another atom to data about the bond between the two atoms.
+		 */
+		map<string, map<string, BondData> > bondDataMap;
+		
+		/**
+		 * Triple map from one atom to another atom to a third atom about the angle formed by those three atoms.
+		 */
+		map<string, map<string, map<string, AngleData> > > angleDataMap;
+	
+		/**
+		 * Contains the path to the oplsaa.sb file.
+		 */
+		string fileName;
+		
+		/**
+		 * Given a line of input that specifies the data pertaining to a bond, stores the data in the bondDataMap.
+		 * @param line A line of data from the OPLSAA.sb file.
+		 */
+		void processBond(string line);
+		
+		/**
+		 * Given a line of input that specifies the data pertaining to an angle, stores the data in the angleDataMap.
+		 * @param line A line of data from the OPLSAA.sb file.
+		 */
+		void processAngle(string line);
+		
+		/**
+		 * Given a line of input, stores the data in the pertinent map.
+		 * @param line A line of data from the OPLSAA.sb file.
+		 */
+		void processLine(string line);
+		
+	public:
+
+		/**
+		 * Constructor for SBScanner;
+		 */
+		SBScanner();
+		
+		/**
+		 * Destructor for SBScanner;
+		 */
+		~SBScanner();
+		
+		/**
+		 * Reads in OPLS.sb and stores the bond and angle data.
+		 * @param fileName The path and name of the file to read from.
+		 * @return - success code
+		 * 			 0: successful
+		 *		     1: error
+		 */
+		bool readInSB(string filename);
+		
+		/**
+		 * Given a pair of atoms, returns the kBond between them.
+		 * @param atom1 One of the atoms in the bond.
+		 * @param atom2 The other atom in the bond.
+		 * @return The force constant of the bond.
+		 */
+		Real getKBond(string atom1, string atom2);
+		
+		/**
+		 * Given a pair of atoms, returns the eqBondDist between them.
+		 * @param atom1 One of the atoms in the bond.
+		 * @param atom2 The other atom in the bond.
+		 * @return The equilibrium bond distance.
+		 */
+		Real getEqBondDist(string atom1, string atom2);
+		
+		/**
+		 * Given three atoms, returns the kAngle of the angle that they form.
+		 * @param endpoint1 The atom at one end of the angle.
+		 * @param middleAtom The atom in the middle of the angle.
+		 * @param endpoint2 The atom at the other end of the angle.
+		 * @return The force constant of the angle.
+		 */
+		Real getKAngle(string endpoint1, string middleAtom, string endpoint2);
+		
+		/**
+		 * Given three atoms, returns the eqAngle of the angle that they form.
+		 * @param endpoint1 The atom at one end of the angle.
+		 * @param middleAtom The atom in the middle of the angle.
+		 * @param endpoint2 The atom at the other end of the angle.
+		 * @return The equilibrium angle formed by the three atoms (in degrees).
+		 */
+		Real getEqAngle(string endpoint1, string middleAtom, string endpoint2);
+		
+		/**
+		 * Given an atom's name, returns the corresponding bond map.
+		 * @param atom1 The name of the atom at one end of a bond.
+		 * @return A map from the name of another atom to data about the bond these atoms share.
+		 */
+		map<string, BondData> getBondMap(string atom1);
+		
+		/**
+		 * Given an atom's name, returns the corresponding angle map.
+		 * @param endpoint1 The name of the atom at one end of an angle.
+		 * @return A map from from the names of midpoints in angles to the other endpoint of 
+		 * an angle to data about the angle these atoms form.
+		 */
+		map<string, map<string, AngleData> > getAngleMap(string endpoint1);
+		
+};
+
 class ConfigScanner
 {
     private:
@@ -268,6 +377,10 @@ class ZmatrixScanner
         Opls_Scan object used to assign sigma, epsilon and charge values.
       */
       OplsScanner* oplsScanner;
+	  /**
+	    SB_Scan object used to assign force constants and equilibrium bond distances / angles.
+	   */
+	  SBScanner* sbScanner;
       /**
         Vector that holds example molecules.
       */
@@ -309,11 +422,13 @@ class ZmatrixScanner
 		/**
           Scans in the z-matrix File calls sub-function parseLine
           @param filename - the name/path of the z-matrix file
+		  @param scanner - points to the oplsScanner to get sigma, epsilon, and charge values from.
+		  @param sbScanner_in - points to the SBScanner to get force constants and equilibrium bond distances / angles from.
           @return - success code
                     0: Valid z-matrix path
                     1: Invalid z-matrix path
 		*/
-        bool readInZmatrix(string filename, OplsScanner* oplsScanner); 
+        bool readInZmatrix(string filename, OplsScanner* scanner, SBScanner* sbScanner_in); 
 		
 		/**
           Parses out a line from the zmatrix file and gets the atom from the OPLS hash
@@ -403,6 +518,7 @@ class ZmatrixScanner
 class StateScanner
 {
   private:
+	SBScanner* sbScanner;
     std::string universal_filename;
     void parsePrimaryIndexDefinitions(Environment* enviro, string definitions);
 
@@ -417,10 +533,10 @@ class StateScanner
     Environment* readInEnvironment();
 
     /**
-      @pararm filename - the name of the state file
+      @pararm sbScanner_in - points to the sbScanner holding various constants pertaining to bonds and angles.
       @return - an array of molecules
     */
-    vector<Molecule> readInMolecules();
+    vector<Molecule> readInMolecules(SBScanner* sbScanner_in);
 
     /**
       @return - the starting step number in the state file

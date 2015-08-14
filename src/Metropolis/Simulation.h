@@ -15,6 +15,7 @@
 
 #include "SimulationArgs.h"
 #include "Box.h"
+#include "Utilities/Logger.h"
 
 #define OUT_INTERVAL 100
 
@@ -33,7 +34,7 @@ class Simulation
 		long simSteps;
 		long stepStart;
 		int threadsToSpawn;
-
+		Logger log;
 		int writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection);
 		void saveState(const std::string& simName, int simStep);
 		const std::string currentDateTime();
