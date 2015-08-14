@@ -313,8 +313,8 @@ struct Atom
 	std::string *name;
 	Real x, y, z, sigma, epsilon, charge;
 	unsigned long id;
-	std::map<std::string, BondData> bonds;
-	std::map<std::string, std::map<std::string, AngleData> > angles;
+	//std::map<std::string, BondData> bonds;
+	//std::map<std::string, std::map<std::string, AngleData> > angles;
 	
 	Atom()
     {

@@ -377,10 +377,6 @@ class ZmatrixScanner
         Opls_Scan object used to assign sigma, epsilon and charge values.
       */
       OplsScanner* oplsScanner;
-	  /**
-	    SB_Scan object used to assign force constants and equilibrium bond distances / angles.
-	   */
-	  SBScanner* sbScanner;
       /**
         Vector that holds example molecules.
       */
@@ -423,12 +419,11 @@ class ZmatrixScanner
           Scans in the z-matrix File calls sub-function parseLine
           @param filename - the name/path of the z-matrix file
 		  @param scanner - points to the oplsScanner to get sigma, epsilon, and charge values from.
-		  @param sbScanner_in - points to the SBScanner to get force constants and equilibrium bond distances / angles from.
           @return - success code
                     0: Valid z-matrix path
                     1: Invalid z-matrix path
 		*/
-        bool readInZmatrix(string filename, OplsScanner* scanner, SBScanner* sbScanner_in); 
+        bool readInZmatrix(string filename, OplsScanner* scanner); 
 		
 		/**
           Parses out a line from the zmatrix file and gets the atom from the OPLS hash
@@ -518,7 +513,6 @@ class ZmatrixScanner
 class StateScanner
 {
   private:
-	SBScanner* sbScanner;
     std::string universal_filename;
     void parsePrimaryIndexDefinitions(Environment* enviro, string definitions);
 
@@ -533,10 +527,10 @@ class StateScanner
     Environment* readInEnvironment();
 
     /**
-      @pararm sbScanner_in - points to the sbScanner holding various constants pertaining to bonds and angles.
+      @param sbScanner_in - points to the sbScanner holding various constants pertaining to bonds and angles.
       @return - an array of molecules
     */
-    vector<Molecule> readInMolecules(SBScanner* sbScanner_in);
+    vector<Molecule> readInMolecules();
 
     /**
       @return - the starting step number in the state file
