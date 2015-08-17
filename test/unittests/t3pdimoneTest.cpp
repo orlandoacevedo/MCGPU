@@ -8,62 +8,68 @@
 #include <string>
 #include <cmath>
 
+void createConfigFile(std::string MCGPU_path, std::string fileName, std::string primaryAtomIndexString) {
+	ofstream configFile;
+	std::string configFilePath (std::string (MCGPU + "test/unittests/MultipleSolvents/t3pdimoneTests/" + fileName));
+	configFile.open(configFilePath.c_str());
+	std::stringstream cfg;
+	cfg << ""
+		<< "#size of periodic box (x, y, z in angstroms)\n"
+		<< "26.15\n"
+		<< "26.15\n"
+		<< "26.15\n"
+		<< "#temperature in Kelvin\n"
+		<< "298.15\n"
+		<< "#max translation\n"
+		<< ".12\n"
+		<< "#number of steps\n"
+		<< "100000\n"
+		<< "#number of molecules\n"
+		<< "256\n"
+		<< "#path to opla.par file\n"
+		<< MCGPU << "resources/bossFiles/oplsaa.par\n"
+		<< "#path to z matrix file\n"
+		<< MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone.z\n"
+		<< "#path to state input\n"
+		<< MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
+        << "#path to state output\n"
+        << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
+        << "#pdb output path\n"
+        << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
+        << "#cutoff distance in angstroms\n"
+        << "11.0\n"
+        << "#max rotation\n"
+        << "12.0\n"
+        << "#Random Seed Input\n"
+        << "12345\n"
+        << "#Primary Atom Index\n"
+        << primaryAtomIndexString;
+        configFile << cfg.str();
+        configFile.close();
+}
+
+std::string getMCGPU_path () {
+	string directory = get_current_dir_name();
+	std::string mc ("MCGPU");
+	std::size_t found = directory.find(mc);
+	
+	if(found != std::string::npos) {
+		directory = directory.substr(0, found + 6);
+	}
+	std::string MCGPU = directory + "/";
+	return MCGPU;
+}
+
 //Test t3pdimone with 1 primary index on CPU
 TEST (t3pdimoneTest, OnePrimaryIndex)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //create test config file 
         //hardcode since file path will change on each user
 
-        ofstream configFile;
-        std::string configFilePath (std::string (MCGPU + "/test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone1MPI.config"));
-        configFile.open(configFilePath.c_str());
-        std::stringstream cfg;
-        cfg << ""
-                << "#size of periodic box (x, y, z in angstroms)\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "#temperature in Kelvin\n"
-                << "298.15\n"
-                << "#max translation\n"
-                << ".12\n"
-                << "#number of steps\n"
-                << "100000\n"
-                << "#number of molecules\n"
-                << "256\n"
-                << "#path to opls.par file\n"
-                << MCGPU << "resources/bossFiles/oplsaa.par\n"
-                << "#path to z matrix file\n"
-		<< MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone.z\n"
-                << "#path to state input\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#path to state output\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#pdb output path\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#cutoff distance in angstroms\n"
-                << "11.0\n"
-                << "#max rotation\n"
-                << "12.0\n"
-                << "#Random Seed Input\n"
-                << "12345\n"
-                << "#Primary Atom Index\n"
-                << "1";
-        configFile << cfg.str();
-        configFile.close();
-
+		createConfigFile(MCGPU, "t3pdimone1MPI.config", "1");		
+		
         std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
                 << " "
@@ -80,7 +86,6 @@ TEST (t3pdimoneTest, OnePrimaryIndex)
                 std::string str2 ("Final-Energy");
                 std::string result;
                 found = line.find(str2);
-
                 if (found != std::string::npos) {
                         result = line.substr(15);
                         energyResult = strtod(result.c_str(), NULL);
@@ -94,22 +99,12 @@ TEST (t3pdimoneTest, OnePrimaryIndex)
 //Test t3pdimone with 1 primary index on GPU
 TEST (t3pdimoneTest, PrimaryIndexGPU)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-	std::string MCGPU = directory;
+	std::string MCGPU = getMCGPU_path();
 
         std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
                 << " "
-                << MCGPU << "/test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone1MPI.config -p --threads 12 --name t3pdimone1MPI-GPU -i 10000";
+                << MCGPU << "/test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone1MPI.config -p --name t3pdimone1MPI-GPU -i 10000";
 
         //launch MCGPU in parallel
         system(ss.str().c_str());
@@ -137,17 +132,7 @@ TEST (t3pdimoneTest, PrimaryIndexGPU)
 //Using neighborlist
 TEST (t3pdimoneTest, NeighborListFunction1MPI)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
@@ -180,17 +165,7 @@ TEST (t3pdimoneTest, NeighborListFunction1MPI)
 //Using neighborlist
 TEST (t3pdimoneTest, NeighborListFunction1MPI_GPU)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
@@ -222,58 +197,11 @@ TEST (t3pdimoneTest, NeighborListFunction1MPI_GPU)
 //Test t3pdimone with 1 primary [1,2] index on CPU
 TEST (t3pdimoneTest, TwoPrimaryIndex)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //create test config file 
         //hardcode since file path will change on each user
-
-        ofstream configFile;
-        std::string configFilePath (std::string (MCGPU + "/test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone2MPI.config"));
-        configFile.open(configFilePath.c_str());
-        std::stringstream cfg;
-        cfg << ""
-                << "#size of periodic box (x, y, z in angstroms)\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "#temperature in Kelvin\n"
-                << "298.15\n"
-                << "#max translation\n"
-                << ".12\n"
-                << "#number of steps\n"
-                << "100000\n"
-                << "#number of molecules\n"
-                << "256\n"
-                << "#path to opls.par file\n"
-                << MCGPU << "resources/bossFiles/oplsaa.par\n"
-                << "#path to z matrix file\n"
-	        << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone.z\n"
-                << "#path to state input\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#path to state output\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#pdb output path\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#cutoff distance in angstroms\n"
-                << "11.0\n"
-                << "#max rotation\n"
-                << "12.0\n"
-                << "#Random Seed Input\n"
-                << "12345\n"
-                << "#Primary Atom Index\n"
-                << "[1,2]";
-        configFile << cfg.str();
-        configFile.close();
+		createConfigFile(MCGPU, "t3pdimone2MPI.config", "[1,2]");
 
         std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
@@ -305,17 +233,7 @@ TEST (t3pdimoneTest, TwoPrimaryIndex)
 //Test t3pdimone with 1 primary [1,2] index on GPU
 TEST (t3pdimoneTest, TwoPrimaryIndexGPU)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
@@ -348,57 +266,12 @@ TEST (t3pdimoneTest, TwoPrimaryIndexGPU)
 TEST (t3pdimoneTest, MultipleSolventDefinition)
 {
 
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //create test config file 
         //hardcode since file path will change on each user
 
-        ofstream configFile;
-        std::string configFilePath (std::string (MCGPU + "/test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimoneMulSolvent.config"));
-        configFile.open(configFilePath.c_str());
-        std::stringstream cfg;
-        cfg << ""
-                << "#size of periodic box (x, y, z in angstroms)\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "#temperature in Kelvin\n"
-                << "298.15\n"
-                << "#max translation\n"
-                << ".12\n"
-                << "#number of steps\n"
-                << "100000\n"
-                << "#number of molecules\n"
-                << "256\n"
-                << "#path to opls.par file\n"
-                << MCGPU << "resources/bossFiles/oplsaa.par\n"
-                << "#path to z matrix file\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone.z\n"
-                << "#path to state input\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#path to state output\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#pdb output path\n"
-		<< MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#cutoff distance in angstroms\n"
-                << "11.0\n"
-                << "#max rotation\n"
-                << "12.0\n"
-                << "#Random Seed Input\n"
-                << "12345\n"
-                << "#Primary Atom Index\n"
-                << "1,2";
-        configFile << cfg.str();
-        configFile.close();
+		createConfigFile(MCGPU, "t3pdimoneMulSolvent.config", "1,2");
 	
         //Since this case results in an error it does not print to a '.results' file.
         //So the commandline error output is pipelined to a text file
@@ -430,17 +303,7 @@ TEST (t3pdimoneTest, MultipleSolventDefinition)
 //Test t3pdimone with multiple solvents 1,2 primary indexes on GPU
 TEST (t3pdimoneTest, MultipleSolventDefinition_GPU)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //Since this case results in an error it does not print to a '.results' file.
         //So the commandline error output is pipelined to a text file
@@ -472,58 +335,12 @@ TEST (t3pdimoneTest, MultipleSolventDefinition_GPU)
 //Test t3pdimone with multiple solvents ([1,2],[3,4]) primary indexes on CPU
 TEST (t3pdimoneTest, MultipleSolventDefinitionMPI)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //create test config file 
         //hardcode since file path will change on each user
 
-        ofstream configFile;
-        std::string configFilePath (std::string (MCGPU + "/test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimoneMulSolventMPI.config"));
-        configFile.open(configFilePath.c_str());
-        std::stringstream cfg;
-        cfg << ""
-                << "#size of periodic box (x, y, z in angstroms)\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "#temperature in Kelvin\n"
-                << "298.15\n"
-                << "#max translation\n"
-                << ".12\n"
-                << "#number of steps\n"
-                << "100000\n"
-                << "#number of molecules\n"
-                << "256\n"
-                << "#path to opls.par file\n"
-                << MCGPU << "resources/bossFiles/oplsaa.par\n"
-                << "#path to z matrix file\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone.z\n"
-                << "#path to state input\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#path to state output\n"
-	        << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#pdb output path\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#cutoff distance in angstroms\n"
-                << "11.0\n"
-                << "#max rotation\n"
-                << "12.0\n"
-                << "#Random Seed Input\n"
-                << "12345\n"
-                << "#Primary Atom Index\n"
-                << "[1,2],[3,4]";
-        configFile << cfg.str();
-        configFile.close();
+		createConfigFile(MCGPU, "t3pdimoneMulSolventMPI.config", "[1,2],[3,4]");
 
         //Since this case results in an error it does not print to a '.results' file.
         //So the commandline error output is pipelined to a text file
@@ -555,17 +372,7 @@ TEST (t3pdimoneTest, MultipleSolventDefinitionMPI)
 //Test t3pdimone with multiple solvents ([1,2],[3,4]) primary indexes on GPU
 TEST (t3pdimoneTest, MultipleSolventDefinitionMPI_GPU)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //Since this case results in an error it does not print to a '.results' file.
         //So the commandline error output is pipelined to a text file
@@ -597,58 +404,12 @@ TEST (t3pdimoneTest, MultipleSolventDefinitionMPI_GPU)
 //Test t3pdimone with multiple solvents (1,[1,2]) primary indexes on CPU
 TEST (t3pdimoneTest, SingleMultipleIndexes)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //create test config file 
         //hardcode since file path will change on each user
 
-        ofstream configFile;
-        std::string configFilePath (std::string (MCGPU + "/test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimoneSingleMultipleIndexes.config"));
-        configFile.open(configFilePath.c_str());
-        std::stringstream cfg;
-        cfg << ""
-                << "#size of periodic box (x, y, z in angstroms)\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "#temperature in Kelvin\n"
-                << "298.15\n"
-                << "#max translation\n"
-                << ".12\n"
-                << "#number of steps\n"
-                << "100000\n"
-                << "#number of molecules\n"
-                << "256\n"
-                << "#path to opls.par file\n"
-                << MCGPU << "resources/bossFiles/oplsaa.par\n"
-                << "#path to z matrix file\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone.z\n"
-		<< "#path to state input\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#path to state output\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#pdb output path\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#cutoff distance in angstroms\n"
-                << "11.0\n"
-                << "#max rotation\n"
-                << "12.0\n"
-                << "#Random Seed Input\n"
-                << "12345\n"
-                << "#Primary Atom Index\n"
-                << "1,[1,2]";
-        configFile << cfg.str();
-        configFile.close();
+		createConfigFile(MCGPU, "t3pdimoneSingleMultipleIndexes.config", "1,[1,2]");
 
         //Since this case results in an error it does not print to a '.results' file.
         //So the commandline error output is pipelined to a text file
@@ -680,17 +441,7 @@ TEST (t3pdimoneTest, SingleMultipleIndexes)
 //Test t3pdimone with multiple solvents (1,[1,2]) primary indexes on GPU
 TEST (t3pdimoneTest, SingleMultipleIndexes_GPU)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //Since this case results in an error it does not print to a '.results' file.
         //So the commandline error output is pipelined to a text file
@@ -722,58 +473,12 @@ TEST (t3pdimoneTest, SingleMultipleIndexes_GPU)
 //Test t3pdimone with multiple solvents ([1,2],1) primary indexes on CPU
 TEST (t3pdimoneTest, SingleMultipleIndexes2)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //create test config file 
         //hardcode since file path will change on each user
 
-        ofstream configFile;
-        std::string configFilePath (std::string (MCGPU + "/test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimoneSingleMultipleIndexes2.config"));
-        configFile.open(configFilePath.c_str());
-        std::stringstream cfg;
-        cfg << ""
-                << "#size of periodic box (x, y, z in angstroms)\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "26.15\n"
-                << "#temperature in Kelvin\n"
-                << "298.15\n"
-                << "#max translation\n"
-                << ".12\n"
-                << "#number of steps\n"
-                << "100000\n"
-                << "#number of molecules\n"
-                << "256\n"
-                << "#path to opls.par file\n"
-                << MCGPU << "resources/bossFiles/oplsaa.par\n"
-                << "#path to z matrix file\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests/t3pdimone.z\n"
-                << "#path to state input\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#path to state output\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#pdb output path\n"
-                << MCGPU << "test/unittests/MultipleSolvents/t3pdimoneTests\n"
-                << "#cutoff distance in angstroms\n"
- 		<< "11.0\n"
-                << "#max rotation\n"
-                << "12.0\n"
-                << "#Random Seed Input\n"
-                << "12345\n"
-                << "#Primary Atom Index\n"
-                << "[1,2],1";
-        configFile << cfg.str();
-        configFile.close();
+		createConfigFile(MCGPU, "t3pdimoneSingleMultipleIndexes2.config", "[1,2],1");
 
         //Since this case results in an error it does not print to a '.results' file.
         //So the commandline error output is pipelined to a text file
@@ -805,17 +510,7 @@ TEST (t3pdimoneTest, SingleMultipleIndexes2)
 //Test t3pdimone with multiple solvents ([1,2],1) primary indexes on GPU
 TEST (t3pdimoneTest, SingleMultipleIndexes2_GPU)
 {
-
-        string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory;
+        std::string MCGPU = getMCGPU_path();
 
         //Since this case results in an error it does not print to a '.results' file.
         //So the commandline error output is pipelined to a text file
