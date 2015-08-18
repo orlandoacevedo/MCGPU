@@ -14,7 +14,7 @@
  * @param fileName The name of the configuration file to generate.
  * @param primaryAtomIndexString The entry for the Primary Atom Index line of the config file.
  */
-void createConfigFile(std::string MCGPU_path, std::string fileName, std::string primaryAtomIndexString) {
+void createConfigFile(std::string MCGPU, std::string fileName, std::string primaryAtomIndexString) {
 	ofstream configFile;
 	std::string configFilePath (std::string (MCGPU + "test/unittests/MultipleSolvents/t3pdimoneTests/" + fileName));
 	configFile.open(configFilePath.c_str());
@@ -93,10 +93,10 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 		ss << "-l ";				//Add the neighborlist flag if applicable.
 	}
 	
-	if(error) {
-		ss << "-i 10000 > " << MCGPU << "bin/" << outputName << " 2>&1 "	//If we expect an error, pipe cerr to a textfile where it can be read.
+	if(errorExpected) {
+		ss << "-i 10000 > " << MCGPU << "bin/" << outputName << " 2>&1 ";	//If we expect an error, pipe cerr to a textfile where it can be read.
 	} else {
-		ss << "--name " << name << " -i 10000 ";							//If we do not expect an error, simply give the name for the results file.
+		ss << "--name " << outputName << " -i 10000 ";							//If we do not expect an error, simply give the name for the results file.
 	}
 
 	return ss.str();
@@ -110,6 +110,7 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
  */
 double getEnergyResult(std::string MCGPU, std::string resultsFile) {
 	std::ifstream infile(std::string(MCGPU + "bin/" + resultsFile).c_str());
+	std::size_t found;
 	
 	for(std::string line; getline(infile, line);) {
 		std::string str2 ("Final-Energy");
@@ -132,7 +133,8 @@ double getEnergyResult(std::string MCGPU, std::string resultsFile) {
  */
 std::string getErrorResult(std::string MCGPU, std::string errorFile) {
     std::ifstream infile(std::string(MCGPU + "bin/" + errorFile).c_str());
-
+	std::size_t found;
+	
     for(std::string line; getline(infile, line);) {
         std::string str2 ("Error");
         found = line.find(str2);
