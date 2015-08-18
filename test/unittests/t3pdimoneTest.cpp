@@ -98,8 +98,9 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 	} else {
 		ss << "--name " << outputName << " -i 10000 ";							//If we do not expect an error, simply give the name for the results file.
 	}
-
-	return ss.str();
+	std::string output = ss.str();
+	std::cout << "RUNNING: " << output << std::endl;
+	return output;
 }
 
 /**
@@ -214,7 +215,7 @@ TEST (t3pdimoneTest, MultipleSolventDefinition)
 {
 	std::string MCGPU = getMCGPU_path();
 	createConfigFile(MCGPU, "t3pdimoneMulSolvent.config", "1,2");
-    system(buildCommand(MCGPU, "t3pdimoneMulSolvent.config", "t3pdimoneMulSolvent.txt", true, false, false).c_str());
+    system(buildCommand(MCGPU, "t3pdimoneMulSolvent.config", "t3pdimoneMulSolvent.txt", true, false, true).c_str());
     std::string errorResult = getErrorResult(MCGPU, "t3pdimoneMulSolvent.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
