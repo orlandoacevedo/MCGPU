@@ -89,7 +89,7 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 		ss << "-p ";				//If testing in parallel, give the corresponding flag.
 	}
 	
-	if(neighborlist)
+	if(neighborlist) {
 		ss << "-l ";				//Add the neighborlist flag if applicable.
 	}
 	
