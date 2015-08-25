@@ -90,7 +90,7 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 	}
 	
 	if(neighborlist) {
-		ss << "-l ";				//Add the neighborlist flag if applicable.
+		ss << "-l 100 ";				//Add the neighborlist flag if applicable.
 	}
 	
 	if(errorExpected) {

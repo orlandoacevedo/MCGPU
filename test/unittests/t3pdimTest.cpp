@@ -8,12 +8,8 @@
 #include <string>
 #include <cmath>
 
-//Test t3pdim with 1 primary index on CPU
-//Should result in an error since t3pdim has two molecules
-TEST (t3pdimTest, OnePrimaryIndex) 
-{
-
-        string directory = get_current_dir_name();
+std::string getMCGPU_t3pdim_path() {
+	    string directory = get_current_dir_name();
         std::string mc ("MCGPU");
         std::size_t found = directory.find(mc);
 
@@ -22,7 +18,16 @@ TEST (t3pdimTest, OnePrimaryIndex)
 
         }
 
-        std::string MCGPU = directory;
+        std::string MCGPU = directory + "/";
+		return MCGPU;
+}
+
+//Test t3pdim with 1 primary index on CPU
+//Should result in an error since t3pdim has two molecules
+TEST (t3pdimTest, OnePrimaryIndex) 
+{
+		std::size_t found;
+		std::string MCGPU = getMCGPU_t3pdim_path();
 
         //create test config file 
         //hardcode since file path will change on each user
