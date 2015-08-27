@@ -1,4 +1,5 @@
 #include "Applications/Application.h"
+#include "TestUtil.h"
 #include "gtest/gtest.h"
 #include <iostream>
 #include <cstdlib>
@@ -8,26 +9,12 @@
 #include <string>
 #include <cmath>
 
-std::string getMCGPU_t3pdim_path() {
-	    string directory = get_current_dir_name();
-        std::string mc ("MCGPU");
-        std::size_t found = directory.find(mc);
-
-        if(found != std::string::npos) {
-                directory = directory.substr(0,found+6);
-
-        }
-
-        std::string MCGPU = directory + "/";
-		return MCGPU;
-}
-
 //Test t3pdim with 1 primary index on CPU
 //Should result in an error since t3pdim has two molecules
 TEST (t3pdimTest, OnePrimaryIndex) 
 {
 		std::size_t found;
-		std::string MCGPU = getMCGPU_t3pdim_path();
+		std::string MCGPU = getMCGPU_path();
 
         //create test config file 
         //hardcode since file path will change on each user
