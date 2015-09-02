@@ -328,7 +328,7 @@ struct Atom
 		id = 0;
 	}
 	
-	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, std::string inName = 0)
+	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, std::string inName = "")
 	{
 		x = inX;
 		y = inY;
@@ -336,8 +336,8 @@ struct Atom
 		sigma = inSigma;
 		epsilon = inEpsilon;
 		charge = inCharge;
-		*name = inName;
-        	id = inID;
+		name = new std::string(inName);
+        id = inID;
 	}
 	
 	

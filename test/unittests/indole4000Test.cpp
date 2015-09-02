@@ -41,7 +41,7 @@ TEST (Indole4000Test, OnePrimaryIndex)
 {
 	std::string MCGPU = getMCGPU_path();
 	createIndole4000ConfigFile(MCGPU, "indole4000-1MPI.config", "1");
-    system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI", true, false, false));
+    system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI", true, false, false).c_str());
     double expected = 588107;
     double energyResult = getEnergyResult(MCGPU, "indole4000-1MPI.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -51,7 +51,7 @@ TEST (Indole4000Test, OnePrimaryIndex)
 TEST (Indole4000Test, OnePrimaryIndex_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-	system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI-GPU", false, false, false));
+	system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI-GPU", false, false, false).c_str());
     double expected = 588107;
     double energyResult = getEnergyResult(MCGPU, "indole4000-1MPI-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -63,7 +63,7 @@ TEST (Indole4000Test, OnePrimaryIndex_GPU)
 TEST (Indole4000Test, NeighborListFunction1MPI)
 {
     std::string MCGPU = getMCGPU_path();
-	system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI-NL", true, true, false));
+	system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI-NL", true, true, false).c_str());
     double expected = 530000;
     double energyResult = getEnergyResult(MCGPU, "indole4000-1MPI-NL.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -74,7 +74,7 @@ TEST (Indole4000Test, NeighborListFunction1MPI)
 TEST (Indole4000Test, NeighborListFunction1MPI_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-    system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI-NL-GPU", false, true, false));
+    system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI-NL-GPU", false, true, false).c_str());
     double expected = 530000;
     double energyResult = getEnergyResult(MCGPU, "indole4000-1MPI-NL-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -85,7 +85,7 @@ TEST (Indole4000Test, TwoPrimaryIndex)
 {
     std::string MCGPU = getMCGPU_path();
     createIndole4000ConfigFile(MCGPU, "indole4000-2MPI.config", "[1,2]");
-    system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI", true, false, false));
+    system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI", true, false, false).c_str());
     double expected = 557412;
     double energyResult = getEnergyResult(MCGPU, "indole4000-2MPI.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -95,7 +95,7 @@ TEST (Indole4000Test, TwoPrimaryIndex)
 TEST (Indole4000Test, TwoPrimaryIndex_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-	system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI-GPU", false, false, false);
+	system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI-GPU", false, false, false).c_str());
     double expected = 557412;
     double energyResult = getEnergyResult(MCGPU, "indole4000-2MPI-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -107,7 +107,7 @@ TEST (Indole4000Test, TwoPrimaryIndex_GPU)
 TEST (Indole4000Test, NeighborListFunction2MPI)
 {
     std::string MCGPU = getMCGPU_path();
-    system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI-NL", true, true, false));
+    system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI-NL", true, true, false).c_str());
     double expected = 547878;
     double energyResult = getEnergyResult(MCGPU, "indole4000-2MPI-NL.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -118,7 +118,7 @@ TEST (Indole4000Test, NeighborListFunction2MPI)
 TEST (Indole4000Test, NeighborListFunction2MPI_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-    system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI-NL-GPU", false, true, false));
+    system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI-NL-GPU", false, true, false).c_str());
     double expected = 547878;
     double energyResult = getEnergyResult(MCGPU, "indole4000-2MPI-NL-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -129,7 +129,7 @@ TEST (Indole4000Test, MultipleSolventsDefinition)
 {
     std::string MCGPU = getMCGPU_path();
 	createIndole4000ConfigFile(MCGPU, "indole4000MulSolvent.config", "1,2");
-    system(buildIndole4000Command(MCGPU, "indole4000MulSolvent.config", "indole4000MulSolvent.txt", true, false, true));
+    system(buildIndole4000Command(MCGPU, "indole4000MulSolvent.config", "indole4000MulSolvent.txt", true, false, true).c_str());
 	std::string errorResult = getErrorResult(MCGPU, "indole4000MulSolvent.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -139,7 +139,7 @@ TEST (Indole4000Test, MultipleSolventsDefinition)
 TEST (Indole4000Test, MultipleSolventsDefinition_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-    system(buildIndole4000Command(MCGPU, "indole4000MulSolvent.config", "indole4000MulSolvent-GPU.txt", false, false, true));
+    system(buildIndole4000Command(MCGPU, "indole4000MulSolvent.config", "indole4000MulSolvent-GPU.txt", false, false, true).c_str());
 	std::string errorResult = getErrorResult(MCGPU, "indole4000MulSolvent-GPU.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -149,7 +149,7 @@ TEST (Indole4000Test, MultipleSolventsDefinitionMPI)
 {
     std::string MCGPU = getMCGPU_path();
 	createIndole4000ConfigFile(MCGPU, "indole4000MulSolvent-MPI.config", "[1,2],[3,4]");
-    system(buildIndole4000Command(MCGPU, "indole4000MulSolvent-MPI.config", "indole4000MulSolvent-MPI.txt", true, false, true));
+    system(buildIndole4000Command(MCGPU, "indole4000MulSolvent-MPI.config", "indole4000MulSolvent-MPI.txt", true, false, true).c_str());
 	std::string errorResult = getErrorResult(MCGPU, "indole4000MulSolvent.txt-MPI");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -158,7 +158,7 @@ TEST (Indole4000Test, MultipleSolventsDefinitionMPI)
 TEST (Indole4000Test, MultipleSolventsDefinitionMPI_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-    system(buildIndole4000Command(MCGPU, "indole4000MulSolvent-MPI.config", "indole4000MulSolvent-MPI-GPU.txt", false, false, true));
+    system(buildIndole4000Command(MCGPU, "indole4000MulSolvent-MPI.config", "indole4000MulSolvent-MPI-GPU.txt", false, false, true).c_str());
 	std::string errorResult = getErrorResult(MCGPU, "indole4000MulSolvent-MPI-GPU.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -168,7 +168,7 @@ TEST (Indole4000Test, SingleMultipleIndexes)
 {
     std::string MCGPU = getMCGPU_path();
 	createIndole4000ConfigFile(MCGPU, "indole4000SingleMultipleIndexes.config", "1,[1,2]");
-    system(buildIndole4000Command(MCGPU, "indole4000SingleMultipleIndexes.config", "indole4000SingleMultipleIndexes.txt", true, false, true));
+    system(buildIndole4000Command(MCGPU, "indole4000SingleMultipleIndexes.config", "indole4000SingleMultipleIndexes.txt", true, false, true).c_str());
 	std::string errorResult = getErrorResult(MCGPU, "indole4000SingleMultipleIndexes.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -177,7 +177,7 @@ TEST (Indole4000Test, SingleMultipleIndexes)
 TEST (Indole4000Test, SingleMultipleIndexes_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-    system(buildIndole4000Command(MCGPU, "indole4000SingleMultipleIndexes.config", "indole4000SingleMultipleIndexes-GPU.txt", false, false, true));
+    system(buildIndole4000Command(MCGPU, "indole4000SingleMultipleIndexes.config", "indole4000SingleMultipleIndexes-GPU.txt", false, false, true).c_str());
 	std::string errorResult = getErrorResult(MCGPU, "indole4000SingleMultipleIndexes-GPU.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -187,7 +187,7 @@ TEST (Indole4000Test, SingleMultipleIndexes2)
 {
     std::string MCGPU = getMCGPU_path();
 	createIndole4000ConfigFile(MCGPU, "indole4000SingleMultipleIndexes.config", "[1,2],1");
-    system(buildIndole4000Command(MCGPU, "indole4000SingleMultipleIndexes2.config", "indole4000SingleMultipleIndexes2.txt", true, false, true));
+    system(buildIndole4000Command(MCGPU, "indole4000SingleMultipleIndexes2.config", "indole4000SingleMultipleIndexes2.txt", true, false, true).c_str());
 	std::string errorResult = getErrorResult(MCGPU, "indole4000SingleMultipleIndexes2.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -196,7 +196,7 @@ TEST (Indole4000Test, SingleMultipleIndexes2)
 TEST (Indole4000Test, SingleMultipleIndexes2_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-    system(buildIndole4000Command(MCGPU, "indole4000SingleMultipleIndexes2.config", "indole4000SingleMultipleIndexes2-GPU.txt", true, false, true));
+    system(buildIndole4000Command(MCGPU, "indole4000SingleMultipleIndexes2.config", "indole4000SingleMultipleIndexes2-GPU.txt", true, false, true).c_str());
 	std::string errorResult = getErrorResult(MCGPU, "indole4000SingleMultipleIndexes2-GPU.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }

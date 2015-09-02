@@ -40,7 +40,7 @@ TEST (meohtip3Test, OnePrimaryIndex)
 {
     std::string MCGPU = getMCGPU_path();
 	createMeohTip3ConfigFile(MCGPU, "meohtip31MPI.config", "1");
-	system(buildMeohTip3Command(MCGPU, "meohtip31MPI.config", "meohtip31MPI.txt", true, false, true));
+	system(buildMeohTip3Command(MCGPU, "meohtip31MPI.config", "meohtip31MPI.txt", true, false, true).c_str());
     std::string errorResult = getErrorResult(MCGPU, "meohtip31MPI.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -49,7 +49,7 @@ TEST (meohtip3Test, OnePrimaryIndex)
 TEST (meohtip3Test, OnePrimaryIndexGPU)
 {
     std::string MCGPU = getMCGPU_path();
-	system(buildMeohTip3Command(MCGPU, "meohtip31MPI.config", "meohtip31MPI-GPU.txt", false, false, true));
+	system(buildMeohTip3Command(MCGPU, "meohtip31MPI.config", "meohtip31MPI-GPU.txt", false, false, true).c_str());
     std::string errorResult = getErrorResult(MCGPU, "meohtip31MPI-GPU.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -59,7 +59,7 @@ TEST (meohtip3Test, TwoPrimaryIndex)
 {
     std::string MCGPU = getMCGPU_path();
 	createMeohTip3ConfigFile(MCGPU, "meohtip32MPI.config", "[1,2]");
-	system(buildMeohTip3Command(MCGPU, "meohtip32MPI.config", "meohtip32MPI.txt", true, false, true));
+	system(buildMeohTip3Command(MCGPU, "meohtip32MPI.config", "meohtip32MPI.txt", true, false, true).c_str());
     std::string errorResult = getErrorResult(MCGPU, "meohtip32MPI.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -68,7 +68,7 @@ TEST (meohtip3Test, TwoPrimaryIndex)
 TEST (meohtip3Test, TwoPrimaryIndexGPU)
 {
     std::string MCGPU = getMCGPU_path();
-	system(buildMeohTip3Command(MCGPU, "meohtip32MPI.config", "meohtip32MPI-GPU.txt", false, false, true));
+	system(buildMeohTip3Command(MCGPU, "meohtip32MPI.config", "meohtip32MPI-GPU.txt", false, false, true).c_str());
     std::string errorResult = getErrorResult(MCGPU, "meohtip32MPI-GPU.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
@@ -78,7 +78,7 @@ TEST (meohtip3Test, MultpleSolventDefinition)
 {
     std::string MCGPU = getMCGPU_path();
 	createMeohTip3ConfigFile(MCGPU, "meohtip3MulSolvent.config", "1,2");
-	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent", true, false, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent", true, false, false).c_str());
     double expected = -1980;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3MulSolvent.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -88,7 +88,7 @@ TEST (meohtip3Test, MultpleSolventDefinition)
 TEST (meohtip3Test, MultpleSolventDefinition_GPU)
  {
     std::string MCGPU = getMCGPU_path();
-	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent-GPU", false, false, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent-GPU", false, false, false).c_str());
     double expected = -1980;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3MulSolvent-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -99,7 +99,7 @@ TEST (meohtip3Test, MultpleSolventDefinition_GPU)
 TEST (meohtip3Test, NeighborListFunctionMulSolvent) 
  {
     std::string MCGPU = getMCGPU_path();
-	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent-NL", true, true, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent-NL", true, true, false).c_str());
     double expected = -2400;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3MulSolvent-NL.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -110,7 +110,7 @@ TEST (meohtip3Test, NeighborListFunctionMulSolvent)
 TEST (meohtip3Test,NeighborListFunctionMulSolvent_GPU)
  {
     std::string MCGPU = getMCGPU_path();
-	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent-NL-GPU", false, true, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent-NL-GPU", false, true, false).c_str());
     double expected = -2400;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3MulSolvent-NL-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);	 
@@ -122,7 +122,7 @@ TEST (meohtip3Test, MultpleSolventDefinitionMPI)
  {
 	std::string MCGPU = getMCGPU_path();
 	createMeohTip3ConfigFile(MCGPU, "meohtip3MulSolventMPI.config", "[1,2],[3,4]");
-	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolventMPI.config", "meohtip3MulSolventMPI", true, false, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolventMPI.config", "meohtip3MulSolventMPI", true, false, false).c_str());
     double expected = -2040;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3MulSolventMPI.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -132,7 +132,7 @@ TEST (meohtip3Test, MultpleSolventDefinitionMPI)
 TEST (meohtip3Test, MultpleSolventDefinitionMPI_GPU)
  {
 	std::string MCGPU = getMCGPU_path();
-	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolventMPI.config", "meohtip3MulSolventMPI-GPU", false, false, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolventMPI.config", "meohtip3MulSolventMPI-GPU", false, false, false).c_str());
     double expected = -2040;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3MulSolventMPI-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -143,7 +143,7 @@ TEST (meohtip3Test, SingleMultipleIndexes)
  {
 	std::string MCGPU = getMCGPU_path();
 	createMeohTip3ConfigFile(MCGPU, "meohtip3SingleMultipleIndexes.config", "1,[1,2]");
-	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes.config", "meohtip3SingleMultipleIndexes", true, false, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes.config", "meohtip3SingleMultipleIndexes", true, false, false).c_str());
     double expected = -1990;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3SingleMultipleIndexes.results");
     EXPECT_NEAR(expected, energyResult, 100);	 
@@ -153,7 +153,7 @@ TEST (meohtip3Test, SingleMultipleIndexes)
 TEST (meohtip3Test, SingleMultipleIndexes_GPU)
  {
 	std::string MCGPU = getMCGPU_path();
-	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes.config", "meohtip3SingleMultipleIndexes-GPU", false, false, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes.config", "meohtip3SingleMultipleIndexes-GPU", false, false, false).c_str());
     double expected = -1990;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3SingleMultipleIndexes-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);         
@@ -164,7 +164,7 @@ TEST (meohtip3Test, SingleMultipleIndexes2)
  {
 	std::string MCGPU = getMCGPU_path();
 	createMeohTip3ConfigFile(MCGPU, "meohtip3SingleMultipleIndexes2.config", "[1,2],1");
-	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes2.config", "meohtip3SingleMultipleIndexes2", true, false, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes2.config", "meohtip3SingleMultipleIndexes2", true, false, false).c_str());
     double expected = -2010;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3SingleMultipleIndexes2.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -174,7 +174,7 @@ TEST (meohtip3Test, SingleMultipleIndexes2)
 TEST (meohtip3Test, SingleMultipleIndexes2_GPU)
  {
 	std::string MCGPU = getMCGPU_path();
-	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes2.config", "meohtip3SingleMultipleIndexes2-GPU", false, false, false));
+	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes2.config", "meohtip3SingleMultipleIndexes2-GPU", false, false, false).c_str());
     double expected = -2010;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3SingleMultipleIndexes2-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);

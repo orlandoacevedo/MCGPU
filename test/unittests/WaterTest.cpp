@@ -41,7 +41,7 @@ TEST(WaterTest, FrontToEndIntegrationTest)
 	double expected = -14000;
 	double energyResult = getEnergyResult(MCGPU, "waterCPU.results");
 	
-	remove(configFilePath.c_str());
+	remove(  std::string(MCGPU + "test/unittests/Integration/WaterTest.config").c_str());
 	remove(  std::string(MCGPU + "/waterCPU.pdb").c_str()  );
 	remove(  std::string(MCGPU + "/waterCPU.results").c_str()  );
 	remove(  std::string(MCGPU + "/waterCPU_1000.state").c_str()  );

@@ -43,7 +43,7 @@ TEST(MethanolTest, FrontToEndIntegrationTest)
 	double energyResult = getEnergyResult(MCGPU, "methanolCPU.results");
 	
 	// Clean up
-	remove(configFilePath.c_str());
+	remove(  std::string(MCGPU + "/test/unittests/Integration/MethanolTest/MethanolTest.config").c_str());
 	remove(  std::string(MCGPU + "/bin/methanolCPU.pdb").c_str()  );
 	remove(  std::string(MCGPU + "/bin/methanolCPU.results").c_str()  );
 	remove(  std::string(MCGPU + "/bin/methanolCPU_100000.state").c_str()  );

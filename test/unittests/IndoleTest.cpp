@@ -41,7 +41,7 @@ TEST(IndoleTest, FrontToEndIntegrationTest)
 	double expected = 59800;
 	double energyResult = getEnergyResult(MCGPU, "indoleCPU.results");
 	// Clean up
-	remove(configFilePath.c_str());
+	remove(  std::string(MCGPU + "test/unittests/Integration/IndoleTest/IndoleTest.config").c_str());
 	remove(  std::string(MCGPU + "/indoleCPU.pdb").c_str()  );
 	remove(  std::string(MCGPU + "/indoleCPU.results").c_str()  );
 	remove(  std::string(MCGPU + "/indoleCPU_40000.state").c_str()  );
