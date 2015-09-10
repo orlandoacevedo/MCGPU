@@ -75,7 +75,7 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 		ss << "--name " << outputName << " -i 10000 ";							//If we do not expect an error, simply give the name for the results file.
 	}
 	std::string output = ss.str();
-	std::cout << "RUNNING: " << output << std::endl;
+	// std::cout << "RUNNING: " << output << std::endl;
 	return output;
 }
 
@@ -97,7 +97,7 @@ double getEnergyResult(std::string MCGPU, std::string resultsFile) {
 }
 
 std::string getErrorResult(std::string MCGPU, std::string errorFile) {
-    std::ifstream infile(std::string(MCGPU + "bin/" + errorFile).c_str());
+  std::ifstream infile(std::string(MCGPU + "bin/" + errorFile).c_str());
 	std::size_t found;
 
     for(std::string line; getline(infile, line);) {
