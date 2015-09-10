@@ -16,8 +16,8 @@
  * @param primaryAtomIndexString The entry for the Primary Atom Index line of the config file.
  */
 void createT3pDimConfigFile(std::string MCGPU, std::string fileName, std::string primaryAtomIndexString) {
-	ConfigFileData settings = ConfigFileData(26.15, 26.15, 26.15, 298.15, .12, 100000, 256, "resources/bossFiles/oplsaa.par", 
-	"test/unittests/MultipleSolvents/t3pdimTests/t3pdim.z", "test/unittests/MultipleSolvents/t3pdimTests", 11.0, 
+	ConfigFileData settings = ConfigFileData(26.15, 26.15, 26.15, 298.15, .12, 100000, 256, "resources/bossFiles/oplsaa.par",
+	"test/unittests/MultipleSolvents/t3pdimTests/t3pdim.z", "test/unittests/MultipleSolvents/t3pdimTests", 11.0,
 	12.0, 12345);
 	createConfigFile(MCGPU, fileName, primaryAtomIndexString, settings);
 }
@@ -37,7 +37,7 @@ std::string buildT3pDimCommand(std::string MCGPU, std::string configFile, std::s
 
 //Test t3pdim with 1 primary index on CPU
 //Should result in an error since t3pdim has two molecules
-TEST (t3pdimTest, OnePrimaryIndex) 
+TEST (t3pdimTest, OnePrimaryIndex)
 {
 	std::string MCGPU = getMCGPU_path();
 	createT3pDimConfigFile(MCGPU, "t3pdim1MPI.config", "1");
@@ -56,7 +56,7 @@ TEST (t3pdimTest, OnePrimaryIndexGPU)
 	EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
 
- 
+
 //Test t3pdim with [1,2] primary index on CPU
 //Should result in an error since t3pdim has two molecules
 TEST (t3pdimTest, TwoPrimaryIndex)

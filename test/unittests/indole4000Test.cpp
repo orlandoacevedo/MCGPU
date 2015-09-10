@@ -16,8 +16,8 @@
  * @param primaryAtomIndexString The entry for the Primary Atom Index line of the config file.
  */
 void createIndole4000ConfigFile(std::string MCGPU, std::string fileName, std::string primaryAtomIndexString) {
-	ConfigFileData settings = ConfigFileData(87.17, 87.17, 87.17, 298.15, .06, 100000, 4000, "resources/bossFiles/oplsaa.par", 
-	"test/unittests/MultipleSolvents/indole4000Tests/indole.z", "test/unittests/MultipleSolvents/indole4000Tests", 12.0, 
+	ConfigFileData settings = ConfigFileData(87.17, 87.17, 87.17, 298.15, .06, 100000, 4000, "resources/bossFiles/oplsaa.par",
+	"test/unittests/MultipleSolvents/indole4000Tests/indole.z", "test/unittests/MultipleSolvents/indole4000Tests", 12.0,
 	6.0, 12345);
 	createConfigFile(MCGPU, fileName, primaryAtomIndexString, settings);
 }
@@ -77,7 +77,7 @@ TEST (Indole4000Test, NeighborListFunction1MPI_GPU)
     system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI-NL-GPU", false, true, false).c_str());
     double expected = 530000;
     double energyResult = getEnergyResult(MCGPU, "indole4000-1MPI-NL-GPU.results");
-    EXPECT_NEAR(expected, energyResult, 100);
+    EXPECT_NEAR(expected, energyResult, 300);
 }
 
 //Test indole with 4000 molecules and a primary index of [1,2] on CPU
@@ -133,7 +133,7 @@ TEST (Indole4000Test, MultipleSolventsDefinition)
 	std::string errorResult = getErrorResult(MCGPU, "indole4000MulSolvent.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
-        
+
 
 //Test indole with 4000 molecules and multiple solvent primary indexes of 1,2 on GPU
 TEST (Indole4000Test, MultipleSolventsDefinition_GPU)
@@ -150,7 +150,7 @@ TEST (Indole4000Test, MultipleSolventsDefinitionMPI)
     std::string MCGPU = getMCGPU_path();
 	createIndole4000ConfigFile(MCGPU, "indole4000MulSolvent-MPI.config", "[1,2],[3,4]");
     system(buildIndole4000Command(MCGPU, "indole4000MulSolvent-MPI.config", "indole4000MulSolvent-MPI.txt", true, false, true).c_str());
-	std::string errorResult = getErrorResult(MCGPU, "indole4000MulSolvent.txt-MPI");
+	std::string errorResult = getErrorResult(MCGPU, "indole4000MulSolvent-MPI.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }
 
@@ -186,7 +186,7 @@ TEST (Indole4000Test, SingleMultipleIndexes_GPU)
 TEST (Indole4000Test, SingleMultipleIndexes2)
 {
     std::string MCGPU = getMCGPU_path();
-	createIndole4000ConfigFile(MCGPU, "indole4000SingleMultipleIndexes.config", "[1,2],1");
+	createIndole4000ConfigFile(MCGPU, "indole4000SingleMultipleIndexes2.config", "[1,2],1");
     system(buildIndole4000Command(MCGPU, "indole4000SingleMultipleIndexes2.config", "indole4000SingleMultipleIndexes2.txt", true, false, true).c_str());
 	std::string errorResult = getErrorResult(MCGPU, "indole4000SingleMultipleIndexes2.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());

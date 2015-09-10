@@ -30,17 +30,17 @@ std::string buildMeoh500Command(std::string MCGPU, std::string configFile, std::
  * @param primaryAtomIndexString The entry for the Primary Atom Index line of the config file.
  */
 void createMeoh500ConfigFile(std::string MCGPU, std::string fileName, std::string primaryAtomIndexString) {
-	
-	ConfigFileData settings = ConfigFileData(32.91, 32.91, 32.91, 298.15, .12, 100000, 500, "resources/bossFiles/oplsaa.par", 
-	"test/unittests/MultipleSolvents/MethanolTests/meoh.z", "test/unittests/MultipleSolvents/Methanol500Tests", 11.0, 
+
+	ConfigFileData settings = ConfigFileData(32.91, 32.91, 32.91, 298.15, .12, 100000, 500, "resources/bossFiles/oplsaa.par",
+	"test/unittests/MultipleSolvents/MethanolTests/meoh.z", "test/unittests/MultipleSolvents/Methanol500Tests", 11.0,
 	12.0, 12345);
-	
+
 	createConfigFile(MCGPU, fileName, primaryAtomIndexString, settings);
 }
 
 //Test methanol with 500 molecules and a  primary index of 1 on CPU
 TEST (Meoh500Test, OnePrimaryIndex)
-{   
+{
 	std::string MCGPU = getMCGPU_path();
 	createMeoh500ConfigFile(MCGPU, "meoh5001MPI.config", "1");
     system(buildMeoh500Command(MCGPU, "meoh5001MPI.config", "meoh5001MPI", true, false, false).c_str());
@@ -53,7 +53,7 @@ TEST (Meoh500Test, OnePrimaryIndex)
 
 //Test methanol with 500 molecules and a  primary index of 1 on GPU
 TEST (Meoh500Test, OnePrimaryIndex_GPU)
-{   
+{
 	std::string MCGPU = getMCGPU_path();
     system(buildMeoh500Command(MCGPU, "meoh5001MPI.config", "meoh5001MPI-GPU", false, false, false).c_str());
     double expected = -3454;
@@ -120,7 +120,7 @@ TEST (Meoh500Test, NeighborListFunction2MPI)
 TEST (Meoh500Test, NeighborListFunction2MPI_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-    system(buildMeoh500Command(MCGPU, "meoh5002MPI.config", "meoh5002MPI-NL-GPU", false, true, false).c_str()); 
+    system(buildMeoh500Command(MCGPU, "meoh5002MPI.config", "meoh5002MPI-NL-GPU", false, true, false).c_str());
 	double expected = -3433;
     double energyResult = getEnergyResult(MCGPU, "meoh5002MPI-NL-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);
@@ -129,18 +129,18 @@ TEST (Meoh500Test, NeighborListFunction2MPI_GPU)
 //Test methanol with 500 molecules and multiple solvent primary indexes 1,2  on CPU
 TEST (Meoh500Test, MultipleSolventDefinition)
 {
-    std::string MCGPU = getMCGPU_path();	
+    std::string MCGPU = getMCGPU_path();
 	createMeoh500ConfigFile(MCGPU, "meoh500MulSolvent.config", "1,2");
     system(buildMeoh500Command(MCGPU, "meoh500MulSolvent.config", "meoh500MulSolvent.txt", true, false, true).c_str());
     std::string errorResult = getErrorResult(MCGPU, "meoh500MulSolvent.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
-}        
+}
 
 //Test methanol with 500 molecules and multiple solvent primary indexes 1,2  on GPU
 TEST (Meoh500Test, MultipleSolventDefinition_GPU)
 {
     std::string MCGPU = getMCGPU_path();
-    system(buildMeoh500Command(MCGPU, "meoh500MulSolvent.config", "meoh500MulSolvent-GPU", false, false, true).c_str());
+    system(buildMeoh500Command(MCGPU, "meoh500MulSolvent.config", "meoh500MulSolvent-GPU.txt", false, false, true).c_str());
     std::string errorResult = getErrorResult(MCGPU, "meoh500MulSolvent-GPU.txt");
     EXPECT_STREQ("loadBoxData()", errorResult.c_str());
 }

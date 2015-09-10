@@ -4,7 +4,7 @@ void createConfigFile(std::string MCGPU, std::string fileName, std::string prima
 	std::ofstream configFile;
 	//std::cout << "CREATING CONFIG FILE: " << MCGPU << settings.working_path << "/" << fileName;
 	std::string configFilePath (std::string (MCGPU + settings.working_path + "/" + fileName));
-	
+
 	configFile.open(configFilePath.c_str());
 	std::stringstream cfg;
 	cfg << ""
@@ -46,7 +46,7 @@ std::string getMCGPU_path () {
 	std::string directory = get_current_dir_name();
 	std::string mc ("MCGPU");
 	std::size_t found = directory.find(mc);
-	
+
 	if(found != std::string::npos) {
 		directory = directory.substr(0, found + 6);
 	}
@@ -58,17 +58,17 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 	//Setting up standard build command.
 	std::stringstream ss;
 	ss << MCGPU << "/bin/metrosim " << MCGPU << working_path << "/" << configFile << " ";
-	
+
 	if(series) {
 		ss << "-s --threads 12 ";	//If testing in series, give the flag and specify a the number of threads.
 	} else {
 		ss << "-p ";				//If testing in parallel, give the corresponding flag.
 	}
-	
+
 	if(neighborlist) {
-		ss << "-l 100 ";				//Add the neighborlist flag if applicable.
+		ss << "-l 10 ";				//Add the neighborlist flag if applicable.
 	}
-	
+
 	if(errorExpected) {
 		ss << "-i 10000 > " << MCGPU << "bin/" << outputName << " 2>&1 ";	//If we expect an error, pipe cerr to a textfile where it can be read.
 	} else {
@@ -82,7 +82,7 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 double getEnergyResult(std::string MCGPU, std::string resultsFile) {
 	std::ifstream infile(std::string(MCGPU + "bin/" + resultsFile).c_str());
 	std::size_t found;
-	
+
 	for(std::string line; getline(infile, line);) {
 		std::string str2 ("Final-Energy");
 		std::string result;
@@ -92,14 +92,14 @@ double getEnergyResult(std::string MCGPU, std::string resultsFile) {
 			return strtod(result.c_str(), NULL);
 		}
 	}
-	
+
 	return -1;
 }
 
 std::string getErrorResult(std::string MCGPU, std::string errorFile) {
     std::ifstream infile(std::string(MCGPU + "bin/" + errorFile).c_str());
 	std::size_t found;
-	
+
     for(std::string line; getline(infile, line);) {
         std::string str2 ("Error");
         found = line.find(str2);
