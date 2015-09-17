@@ -97,7 +97,13 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 }
 
 double getEnergyResult(std::string MCGPU, std::string resultsFile) {
-	std::ifstream infile(std::string(MCGPU + "bin/" + resultsFile).c_str());
+	std::string dir;
+	if(inDebugMode())
+		dir = "bin/debug/";
+	else
+		dir = "bin/";
+
+	std::ifstream infile(std::string(MCGPU + dir + resultsFile).c_str());
 	std::size_t found;
 
 	for(std::string line; getline(infile, line);) {
