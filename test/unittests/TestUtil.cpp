@@ -54,10 +54,27 @@ std::string getMCGPU_path () {
 	return MCGPU;
 }
 
+bool inDebugMode() {
+	std::string directory = get_current_dir_name();
+	std::string mcdebug ("MCGPU/bin/debug");
+	std::size_t found = directory.find(mcdebug);
+
+	if(found != std::string::npos) {
+		return true;
+	}
+	return false;
+}
+
 std::string buildCommand(std::string MCGPU, std::string configFile, std::string outputName, bool series, bool neighborlist, bool errorExpected, std::string working_path) {
 	//Setting up standard build command.
 	std::stringstream ss;
-	ss << MCGPU << "/bin/metrosim " << MCGPU << working_path << "/" << configFile << " ";
+	std::string metrosimCommand;
+	if(inDebugMode())
+		metrosimCommand = "bin/debug/metrosim ";
+	else
+		metrosimCommand = "bin/metrosim ";
+
+	ss << MCGPU << metrosimCommand << MCGPU << working_path << "/" << configFile << " ";
 
 	if(series) {
 		ss << "-s --threads 12 ";	//If testing in series, give the flag and specify a the number of threads.
@@ -97,7 +114,7 @@ double getEnergyResult(std::string MCGPU, std::string resultsFile) {
 }
 
 std::string getErrorResult(std::string MCGPU, std::string errorFile) {
-  std::ifstream infile(std::string(MCGPU + "bin/" + errorFile).c_str());
+	std::ifstream infile(std::string(MCGPU + "bin/" + errorFile).c_str());
 	std::size_t found;
 
     for(std::string line; getline(infile, line);) {

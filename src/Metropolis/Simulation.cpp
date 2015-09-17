@@ -4,7 +4,7 @@
 
 	Author: Nathan Coleman
 	Created: February 21, 2014
-	
+
 	-> February 26, by Albert Wallace
 	-> March 28, by Joshua Mosby
 	-> April 21, by Nathan Coleman
@@ -42,24 +42,24 @@ Simulation::Simulation(SimulationArgs simArgs)
 	args = simArgs;
 
 	stepStart = 0;
-	
-	if (args.simulationMode == SimulationMode::Parallel) 
+
+	if (args.simulationMode == SimulationMode::Parallel)
 	{
-		/*We need to set this to 1 in parallel mode because it is irrelevant BUT is used in the 
+		/*We need to set this to 1 in parallel mode because it is irrelevant BUT is used in the
 		  runtime calculation. See summary equation for explanation.*/
 		threadsToSpawn = 1;
 		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
-	} 
-	else 
+	}
+	else
 	{
 		int processorCount = omp_get_num_procs();
 		/*We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
 		  We could do performance tuning to get more information on what the ideal number might be.*/
 		threadsToSpawn = max(processorCount / 2, 1);
-		
-		if (simArgs.threadCount > 0) 
+
+		if (simArgs.threadCount > 0)
 			threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
-		
+
 		std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
 		omp_set_num_threads(threadsToSpawn);
 		omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
@@ -93,13 +93,13 @@ Simulation::~Simulation()
 void Simulation::run()
 {
 	std::cout << "Simulation Name: " << args.simulationName << std::endl;
-	
+
 	for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++)
     {
 		box->keepMoleculeInBox(molIdx);
 	}
 
-	if (args.useNeighborList) 
+	if (args.useNeighborList)
 	{
 		box->createNeighborList();
 	}
@@ -109,26 +109,26 @@ void Simulation::run()
 	Real lj_energy = 0, charge_energy = 0;
 	Real new_lj = 0, old_lj = 0;
 	Real new_charge = 0, old_charge = 0;
-	
+
 	Real energy_LRC = SerialCalcs::calcEnergy_LRC(box);
 	//Real intraMolEnergy = SerialCalcs::calcIntraMolecularEnergy(box lj_energy, charge_energy);
-	
+
 	Real kT = kBoltz * box->getEnvironment()->temp;
 	int accepted = 0;
 	int rejected = 0;
 
 	string directory = getcwd(NULL, 0);
-	
+
 	std::string mc ("MCGPU");
 	std::size_t found = directory.find(mc);
-	
-	if (found != std::string::npos) 
+
+	if (found != std::string::npos)
 		directory = directory.substr(0,found+6);
-	
+
 	std::string MCGPU = directory;
 
 	MCGPU.append("bin/pdbFiles");
-	
+
 	mkdir(MCGPU.data(), 0777);
 
 	clock_t startTime, endTime;
@@ -143,16 +143,16 @@ void Simulation::run()
 	} else {
 		log = Logger(NON_VERBOSE);
 	}
-	
+
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
-	{	
+	{
 		if (args.simulationMode == SimulationMode::Parallel)
         {
 			if (args.useNeighborList)
 			{
 				log.verbose("Using neighbor-list for energy calculation");
-				oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);		
+				oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
 			}
 			else
 			{
@@ -165,7 +165,7 @@ void Simulation::run()
 			if (args.useNeighborList)
 			{
 				log.verbose("Using neighbor-list for energy calculation");
-				oldEnergy = SerialCalcs::calcSystemEnergy_NLC(box, lj_energy, charge_energy);		
+				oldEnergy = SerialCalcs::calcSystemEnergy_NLC(box, lj_energy, charge_energy);
 			}
 			else
 			{
@@ -173,25 +173,25 @@ void Simulation::run()
 				oldEnergy = SerialCalcs::calcSystemEnergy(box, lj_energy, charge_energy);
 			}
 		}
-		
+
 		//oldEnergy += energy_LRC + intraMolEnergy; // add in long-range correction value and intramol energy
 		oldEnergy += energy_LRC;
 	}
 	function_time_end = clock();
-	
+
 	double duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC * threadsToSpawn);
 
 	//for testing/debug purposes
 	std::stringstream durationConv;
-	durationConv << "Duration of system energy calculation function: " << duration << " seconds."; 
+	durationConv << "Duration of system energy calculation function: " << duration << " seconds.";
 	log.verbose(durationConv.str());
 	log.verbose("Threads to spawn: " + threadsToSpawn);
 
 	std::stringstream simStepsConv;
-	simStepsConv << "\nRunning " << (simSteps) << " steps\n"; 
+	simStepsConv << "\nRunning " << (simSteps) << " steps\n";
 	log.verbose(simStepsConv.str());
-	
-	std::string baseStateFile = "";	
+
+	std::string baseStateFile = "";
 	if (!args.simulationName.empty())
 	{
 		baseStateFile.append(args.simulationName);
@@ -200,49 +200,49 @@ void Simulation::run()
 	{
 		baseStateFile.append("untitled");
 	}
-	
+
 	//Loop for each individual step
 	for (int move = stepStart; move < (stepStart + simSteps); move++)
 	{
 		std::vector<int> neighbors;
 		new_lj = 0, old_lj = 0;
 		new_charge = 0, old_charge = 0;
-		
+
 		//provide printouts at each pre-determined interval (not at each step)
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0)
 		{
 			stringstream moveConv;
 			moveConv << "Step " << (move) << ":\n--Current Energy: " << oldEnergy << "\n";
-			log.verbose(moveConv.str());		
+			log.verbose(moveConv.str());
 		}
 
-		
+
 		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0)
 		{
 			log.verbose("");
 			saveState(baseStateFile, move);
 			log.verbose("");
 		}
-		
+
 		//Randomly select index of a molecule for changing
 		int changeIdx = box->chooseMolecule();
-		
+
 		// get neighbors and update neighbor-list on interval
 		if (args.useNeighborList)
 		{
-			if (move % args.neighborListInterval == 0) 
+			if (move % args.neighborListInterval == 0)
 			{
 				box->createNeighborList();
 			}
-			
+
 			SerialCalcs::getNeighbors_NLC(box, changeIdx, neighbors, false);
 		}
-		
+
 		//Calculate the current/original/old energy contribution for the current molecule
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
 			if (args.useNeighborList)
-			{	
+			{
 				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx, neighbors);
 			}
 			else
@@ -261,16 +261,16 @@ void Simulation::run()
 				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, old_lj, old_charge, changeIdx);
 			}
 		}
-		
-		//Actually translate the molecule at the preselected index	
+
+		//Actually translate the molecule at the preselected index
 		box->changeMolecule(changeIdx);
-		
+
 		//Calculate the new energy after translation
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
 			if (args.useNeighborList)
 			{
-				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx, neighbors);	
+				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx, neighbors);
 			}
 			else
 			{
@@ -291,7 +291,7 @@ void Simulation::run()
 
 		// Compare new energy and old energy to decide if we should accept or not
 		bool accept = false;
-		
+
 		if(newEnergyCont < oldEnergyCont)
 		{
 			// Always accept decrease in energy
@@ -301,7 +301,7 @@ void Simulation::run()
 		{
 			// Otherwise use statistics+random number to determine weather to accept increase in energy
 			Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
-			
+
 			if(x >= randomReal(0.0, 1.0))
 			{
 				accept = true;
@@ -311,7 +311,7 @@ void Simulation::run()
 				accept = false;
 			}
 		}
-		
+
 		if(accept)
 		{
 			accepted++;
@@ -327,11 +327,11 @@ void Simulation::run()
 	}
 	writePDB(box->getEnvironment(), box->getMolecules());
 	endTime = clock();
-	
+
 	/*This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
 	  However, it is a good enough estimation without adding unnecessary complexity.*/
 	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
-	
+
 	currentEnergy = oldEnergy;
 	stringstream startConv;
 	startConv << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << currentEnergy;
@@ -339,7 +339,7 @@ void Simulation::run()
 
 	if (args.stateInterval >= 0)
 		saveState(baseStateFile, (stepStart + simSteps));
-	
+
 	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
 
 	if (args.simulationMode != SimulationMode::Parallel)
@@ -348,14 +348,14 @@ void Simulation::run()
 		fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
 	}
 
-	fprintf(stdout, "Energy Long-range Correcton: %.3f\n", energy_LRC);
+	fprintf(stdout, "Energy Long-range Correction: %.3f\n", energy_LRC);
 	//fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
 
 	fprintf(stdout, "Final Energy: %.3f\n", currentEnergy);
 	fprintf(stdout, "Run Time: %.3f seconds\n", diffTime);
 	fprintf(stdout, "Accepted Moves: %d\n", accepted);
 	fprintf(stdout, "Rejected Moves: %d\n", rejected);
-	fprintf(stdout, "Acceptance Raio: %.2f%%\n", 100.0 * accepted / (accepted + rejected));
+	fprintf(stdout, "Acceptance Ratio: %.2f%%\n", 100.0 * accepted / (accepted + rejected));
 
 	std::string resultsName;
 
@@ -373,13 +373,13 @@ void Simulation::run()
 	resultsFile << "######### MCGPU Results File #############" << std::endl;
 	resultsFile << "[Information]" << std::endl;
 	resultsFile << "Timestamp = " << currentDateTime() << std::endl;
-	
+
 	if (!args.simulationName.empty())
 		resultsFile << "Simulation-Name = " << args.simulationName << std::endl;
 
 	if (args.simulationMode == SimulationMode::Parallel)
 		resultsFile << "Simulation-Mode = GPU" << std::endl;
-	else 
+	else
 	{
 		resultsFile << "Simulation-Mode = CPU" << std::endl;
 		resultsFile << "Threads-Used = " << threadsToSpawn << std::endl;
@@ -438,10 +438,10 @@ int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMolecul
 
 	int numOfMolecules = sourceEnvironment.numOfMolecules;
 	pdbFile << "REMARK Created by MCGPU" << std::endl;
-	
+
 	for (int i = 0; i < numOfMolecules; i++)
 	{
-		Molecule currentMol = sourceMoleculeCollection[i];    	
+		Molecule currentMol = sourceMoleculeCollection[i];
         for (int j = 0; j < currentMol.numOfAtoms; j++)
         {
 			Atom currentAtom = currentMol.atoms[j];
