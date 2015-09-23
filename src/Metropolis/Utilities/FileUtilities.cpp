@@ -24,15 +24,15 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 		std::cerr << "Error: loadBoxData(): Box is NULL" << std::endl;
 		return false;
 	}
-	
+
     Environment* enviro;
     vector<Molecule> moleculeVector;
 
-	SBScanner sb_scanner;
+		SBScanner sb_scanner;
     if (inputType == InputFile::Configuration)
     {
 
-		
+
         ConfigScanner config_scanner = ConfigScanner();
         if (!config_scanner.readInConfig(inputPath))
         {
@@ -40,18 +40,17 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             return false;
         }
 
-		//Getting bond and angle data from OPLSAA.sb file.
-		sb_scanner = SBScanner();
-		std::string sb_path = config_scanner.getOplsusaparPath();
-		std::size_t slash_index= sb_path.find_last_of('/');
-		sb_path = sb_path.substr(0, slash_index);
-		if(!sb_scanner.readInSB(sb_path + "/oplsaa.sb"))
-		{
-			std::cerr << "Error: loadBoxData(): Could not read OPLS SB file" << std::endl;
-			return false;
-		}
+				//Getting bond and angle data from OPLSAA.sb file.
+				SBScanner sb_scanner = SBScanner();
+				std::string sb_path = config_scanner.getOplsusaparPath();
+				std::size_t slash_index= sb_path.find_last_of('/');
+				sb_path = sb_path.substr(0, slash_index);
+				if(!sb_scanner.readInSB(sb_path + "/oplsaa.sb"))
+				{
+					std::cerr << "Error: loadBoxData(): Could not read OPLS SB file" << std::endl;
+					return false;
+				}
 
-		
         OplsScanner opls_scanner = OplsScanner();
         if (!opls_scanner.readInOpls(config_scanner.getOplsusaparPath()))
         {
@@ -59,29 +58,29 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
             return false;
         }
 
-        ZmatrixScanner zmatrix_scanner = ZmatrixScanner();        
+        ZmatrixScanner zmatrix_scanner = ZmatrixScanner();
         if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
         {
             std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;
             return false;
         }
 
-        moleculeVector = zmatrix_scanner.buildMolecule(0);        
+        moleculeVector = zmatrix_scanner.buildMolecule(0);
         enviro = config_scanner.getEnviro();
         *steps = config_scanner.getSteps();
         *startStep = 0;
 
-	if (moleculeVector.size() != enviro->primaryAtomIndexDefinitions) 
+	if (moleculeVector.size() != enviro->primaryAtomIndexDefinitions)
         {
-            std::cerr << "Error: loadBoxData(): The number of molecules read from the Z Matrix file (" << moleculeVector.size() 
-	    << ") does not equal the number of primary index definitions in the config file (" 
+            std::cerr << "Error: loadBoxData(): The number of molecules read from the Z Matrix file (" << moleculeVector.size()
+	    << ") does not equal the number of primary index definitions in the config file ("
 	    << enviro->primaryAtomIndexDefinitions << ")" << std::endl;
             return false;
         }
 
         box->environment = new Environment(enviro);
 
-        if (!buildBoxData(enviro, moleculeVector, box))
+        if (!buildBoxData(enviro, moleculeVector, box, sb_scanner))
         {
             std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
             return false;
@@ -177,7 +176,7 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
     for(int j = 0; j < molecVec.size(); j++)
     {
           //Copy data from vector to molecule
-        Molecule molec1 = molecVec[j];   
+        Molecule molec1 = molecVec[j];
 
         box->molecules[j].atoms = (Atom *)(box->atoms+count[0]);
         box->molecules[j].bonds = (Bond *)(box->bonds+count[1]);
@@ -203,12 +202,12 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
         for(int k = 0; k < molec1.numOfAtoms; k++)
         {
             box->molecules[j].atoms[k] = molec1.atoms[k];
-        }               
-           
+        }
+
         //assign bonds
         for(int k = 0; k < molec1.numOfBonds; k++)
         {
-            box->molecules[j].bonds[k] = molec1.bonds[k];
+						box->molecules[j].bonds[k] = molec1.bonds[k];
         }
 
         //assign angles
@@ -235,18 +234,18 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
     return true;
 }
 
-bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
+bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBScanner& sb_scanner)
 {
     //Convert molecule vectors into an array
     int moleculeIndex = 0;
     int atomCount = 0;
-   
+
     if (!enviro || !box || molecVec.size() < 1) //if the vector of molecules has no contents...
     {
         std::cerr << "Error: buildBoxData(): Could not load molecule data." << std::endl;
         return false;
     }
-	
+
     int molecMod = enviro->numOfMolecules % molecVec.size();
     if (molecMod != 0)
     {
@@ -255,18 +254,18 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
 
     box->moleculeCount = enviro->numOfMolecules;
     box->molecules = (Molecule *)malloc(sizeof(Molecule) * box->moleculeCount);
-    
+
     if(box->moleculeCount < 1 || molecVec.size() < 1)
     {
     	std::cerr << "The simulation environment should have at least 1 molecule. (The current count? " << box->moleculeCount <<")." << std::endl;
     	return false;
     }
-    
-    
+
+
     int molecDiv = enviro->numOfMolecules / molecVec.size();
     int molecTypenum=molecVec.size();
 
-    
+
     int count[5];//sum up number of atoms,bonds,angles,dihedrals,hops
 	Table* tables = new Table[molecVec.size()];
     memset(count,0,sizeof(count));
@@ -274,7 +273,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
 
     for(int j = 0; j < molecVec.size(); j++)
     {
-  		Molecule molec1 = molecVec[j];   
+  		Molecule molec1 = molecVec[j];
 
          //Copy data from vector to molecule
   		count[0]+=molec1.numOfAtoms;
@@ -282,7 +281,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
   		count[2]+=molec1.numOfAngles;
   		count[3]+=molec1.numOfDihedrals;
   		count[4]+=molec1.numOfHops;
-  		
+
   		Hop *myHop = molec1.hops;
   		int **table;
   		table = new int*[molec1.numOfAtoms];
@@ -296,7 +295,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
   				table[test][test1] = 0;
   			}
 		}
-		
+
 		for(int k2 = 0; k2<molec1.numOfHops;k2++)
         {
 			int atom1 = myHop->atom1;
@@ -305,7 +304,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
 			table[atom2-currentAtomCount][atom1-currentAtomCount] = myHop->hop;
 			myHop++;
 		}
-	  
+
 	   tables[j] = Table(table);
 	   currentAtomCount += molec1.numOfAtoms;
     }
@@ -315,7 +314,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
     box->angleCount = molecDiv * count[2];
     box->dihedralCount = molecDiv * count[3];
     box->hopCount = molecDiv * count[4];
-     
+
     box->atoms 	   = (Atom *)malloc(sizeof(Atom)*box->atomCount);
     box->bonds     = (Bond *)malloc(sizeof(Bond)*box->bondCount);
     box->angles    = (Angle *)malloc(sizeof(Angle)*box->angleCount);
@@ -334,7 +333,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
  	for(int j = 0; j < molecVec.size(); j++)
     {
  	      //Copy data from vector to molecule
-        Molecule molec1 = molecVec[j];   
+        Molecule molec1 = molecVec[j];
 
         box->molecules[j].atoms = (Atom *)(box->atoms+count[0]);
         box->molecules[j].bonds = (Bond *)(box->bonds+count[1]);
@@ -360,12 +359,21 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
         for(int k = 0; k < molec1.numOfAtoms; k++)
         {
             box->molecules[j].atoms[k] = molec1.atoms[k];
-        }               
-           
+        }
+
         //assign bonds
         for(int k = 0; k < molec1.numOfBonds; k++)
         {
-            box->molecules[j].bonds[k] = molec1.bonds[k];
+					std::cout << molec1.bonds[k].atom1 << " to " << molec1.bonds[k].atom2 << endl;
+					int a1Idx = molec1.bonds[k].atom1;
+					int a2Idx = molec1.bonds[k].atom2;
+					std::string a1Name = *(molec1.atoms[a1Idx].name);
+					std::string a2Name = *(molec1.atoms[a2Idx].name);
+					std::cout << a1Name << " to " << a2Name << std::endl;
+					std::cout << "K Bond: " << sb_scanner.getKBond(a1Name, a2Name);
+					std::cout << " Eq Dist: " << sb_scanner.getEqBondDist(a1Name, a2Name);
+					std::cout << std::endl;
+					box->molecules[j].bonds[k] = molec1.bonds[k];
         }
 
         //assign angles
@@ -395,7 +403,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
 	   for(int n=0;n<molecTypenum;n++)
         {
     	   box->molecules[offset+n].id=offset+n;
-            box->molecules[offset+n].atoms = box->molecules[n].atoms+count[0]*m;                
+            box->molecules[offset+n].atoms = box->molecules[n].atoms+count[0]*m;
             box->molecules[offset+n].bonds =  box->molecules[n].bonds+count[1]*m;
             box->molecules[offset+n].angles =  box->molecules[n].angles+count[2]*m;
             box->molecules[offset+n].dihedrals =  box->molecules[n].dihedrals+count[3]*m;
@@ -406,38 +414,38 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
 	    memcpy(&(box->angles[m*count[2]]),box->angles,sizeof(Angle)*count[2]);
 	    memcpy(&(box->dihedrals[m*count[3]]),box->dihedrals,sizeof(Dihedral)*count[3]);
 	    memcpy(&(box->hops[m*count[4]]),box->hops,sizeof(Hop)*count[4]);
- 
+
         for(int k=0;k<count[0];k++)
         {
             box->atoms[m*count[0]+k].id=offset*count[0]+k;
         }
-        
+
         for(int k=0;k<count[1];k++)
         {
             box->bonds[m*count[1]+k].atom1+=m*count[0];
             box->bonds[m*count[1]+k].atom2+=m*count[0];
         }
-        
+
         for(int k=0;k<count[2];k++)
         {
             box->angles[m*count[2]+k].atom1+=m*count[0];
             box->angles[m*count[2]+k].atom2+=m*count[0];
         }
-        
+
         for(int k=0;k<count[3];k++)
         {
             box->dihedrals[m*count[3]+k].atom1+=m*count[0];
             box->dihedrals[m*count[3]+k].atom2+=m*count[0];
         }
-        
+
         for(int k=0;k<count[4];k++)
         {
             box->hops[m*count[4]+k].atom1+=m*count[0];
             box->hops[m*count[4]+k].atom2+=m*count[0];
         }
     }
- 
-    enviro->numOfAtoms = count[0]*molecDiv;     
+
+    enviro->numOfAtoms = count[0]*molecDiv;
 
     if (!generatefccBox(box)) //generate fcc lattice box
     {
@@ -455,26 +463,26 @@ bool generatefccBox(Box* box)
 		std::cerr << "Error: generatefccBox(): Box environment or molecules array NULL" << std::endl;
 		return false;
 	}
-	
+
 	Real cells, dcells, cellL, halfcellL;
 	Environment* enviro = box->environment;
 	Molecule* molecules = box->molecules;
-	
+
 	//Determine the number of unit cells in each coordinate direction
 	dcells = pow(0.25 * (Real) enviro->numOfMolecules, 1.0/3.0);
 	cells = (int)(dcells + 0.5);
-		
+
 	//Check if numOfMolecules is a non-fcc number of molecules
 	//and increase the number of cells if necessary
 	while((4 * cells * cells * cells) < enviro->numOfMolecules)
     {
 		cells++;
     }
-			
+
 	//Determine length of unit cell
 	cellL = enviro->x/ (Real) cells;
 	halfcellL = 0.5 * cellL;
-	
+
 	//Construct the unit cell
 	for (int j = 0; j < molecules[0].numOfAtoms; j++)
     {
@@ -482,28 +490,28 @@ bool generatefccBox(Box* box)
         molecules[0].atoms[j].y += 0.0;
         molecules[0].atoms[j].z += 0.0;
 	}
-	
+
 	for (int j = 0; j < molecules[1].numOfAtoms; j++)
     {
     	molecules[1].atoms[j].x += halfcellL;
         molecules[1].atoms[j].y += halfcellL;
         molecules[1].atoms[j].z += 0.0;
     }
-    
+
     for (int j = 0; j < molecules[2].numOfAtoms; j++)
-    {	
+    {
         molecules[2].atoms[j].x += 0.0;
         molecules[2].atoms[j].y += halfcellL;
         molecules[2].atoms[j].z += halfcellL;
     }
-    
+
     for (int j = 0; j < molecules[3].numOfAtoms; j++)
     {
         molecules[3].atoms[j].x += halfcellL;
         molecules[3].atoms[j].y += 0.0;
         molecules[3].atoms[j].z += halfcellL;
     }
-    
+
 	//Init all other molecules to initial coordinates
 	//Build the lattice from the unit cell by repeatedly translating
 	//the four vectors of the unit cell through a distance cellL in
@@ -515,9 +523,9 @@ bool generatefccBox(Box* box)
 			molecules[i].atoms[j].x += 0.0;
     		molecules[i].atoms[j].y += 0.0;
    	 		molecules[i].atoms[j].z += 0.0;
-   	 	}		
+   	 	}
 	}
-	
+
 	int offset = 0;
 	for(int z = 1; z <= cells; z++)
 		for(int y = 1; y <= cells; y++)
@@ -527,7 +535,7 @@ bool generatefccBox(Box* box)
                 {
 					int i = a + offset;
 					if(i < enviro->numOfMolecules)
-                    {								
+                    {
 						for (int j = 0; j < molecules[i].numOfAtoms; j++)
                         {
 							molecules[i].atoms[j].x = molecules[a].atoms[j].x + cellL * (x-1);
@@ -538,7 +546,7 @@ bool generatefccBox(Box* box)
 				}
 				offset += 4;
 			}
-	
+
 	//Shift center of box to the origin
 	for(int i = 0; i < enviro->numOfMolecules; i++)
     {
@@ -710,7 +718,7 @@ bool ConfigScanner::readInConfig(string configpath)
 						return false; //preferable to simply exiting, as we want to give the program a chance to do...whatever?
 					}
 					else
-					{	
+					{
 						throwScanError("INFO: Value pointing to prior state file path not found in main config file. Environment setup defaulting to clean simulation.");
 						useZMatrixSetup = true; //revert to using the Zmatrix file for all setup
 						useStatefileSetup = false;
@@ -773,7 +781,7 @@ bool ConfigScanner::readInConfig(string configpath)
                 case 30:
                     if(line.length() > 0){
 						// Convert to a zero-based index
-						parsePrimaryIndexDefinitions(line);	
+						parsePrimaryIndexDefinitions(line);
                     }
 					else
 					{
@@ -782,7 +790,7 @@ bool ConfigScanner::readInConfig(string configpath)
 					}
                 	break;
             }
-			
+
 			currentLine++;
         }
     }
@@ -799,7 +807,7 @@ void ConfigScanner::parsePrimaryIndexDefinitions(string definitions)
     char *charLine = (char *) malloc(sizeof(char) * (definitions.size()+1));
     strcpy(charLine, definitions.c_str());
     indexVector = strtok(charLine, ",");
-					
+
     for (int i = 0; indexVector ; i++)
     {
 	std::string sIndexVector = indexVector;
@@ -818,7 +826,7 @@ void ConfigScanner::parsePrimaryIndexDefinitions(string definitions)
 	    *c = '\0';
 	    int currentPrimaryIndex = atoi(indexVector);
 	    (*(enviro.primaryAtomIndexArray)).push_back(new std::vector<int>);
-	    (*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);	
+	    (*(*(enviro.primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
 	    indexVector =strtok(NULL, ",");
 	    continue;
 	}
@@ -851,7 +859,7 @@ long ConfigScanner::getSteps()
 {
     return numOfSteps;
 }
-    
+
 string ConfigScanner::getOplsusaparPath()
 {
     return oplsuaparPath;
@@ -908,9 +916,9 @@ bool OplsScanner::readInOpls(string filename)
     	std::cerr << "Error: readInOpls(): could not open file (" << filename << ")" << std::endl;
         return false;
     }
-    else 
+    else
     {
-        string line; 
+        string line;
         while (oplsScanner.good())
         {
             numOfLines++;
@@ -947,14 +955,14 @@ void OplsScanner::addLineToTable(string line, int numOfLines)
 
     //check to see what format it is opls, V value, or neither
     int format = checkFormat(line);
-              
+
     if(format == 1)
-    {      	
+    {
         ss >> hashNum >> secCol >> name >> charge >> sigma >> epsilon;
 	   char *atomType = (char *)name.c_str();
-	
+
         Atom temp = createAtom(0, -1, -1, -1, sigma, epsilon, charge, name);
-	
+
         pair<map<string,Atom>::iterator,bool> ret;
         ret = oplsTable.insert( pair<string,Atom>(hashNum,temp) );
 
@@ -973,8 +981,8 @@ void OplsScanner::addLineToTable(string line, int numOfLines)
 
         if (ret2.second==false)
         {
-            errHashesFourier.push_back(hashNum);	
-        }	  
+            errHashesFourier.push_back(hashNum);
+        }
     }
     else
     {
@@ -983,7 +991,7 @@ void OplsScanner::addLineToTable(string line, int numOfLines)
 }
 
 int OplsScanner::checkFormat(string line)
-{   	 
+{
     int hashNum, secCol;
     Real charge,sigma,epsilon;
     string name, extra;
@@ -1123,7 +1131,7 @@ Fourier OplsScanner::getFourier(string hashNum)
         return temp;
     }
     else
-    {	    
+    {
         cerr << "Index does not exist: "<< hashNum <<endl;
         Fourier temp ={-1,-1,-1,-1};
         return temp;
@@ -1168,7 +1176,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
     }
     else
     {
-        string line; 
+        string line;
 	    int moleculeNum = -1;
 
         while( zmatrixScanner.good() )
@@ -1195,7 +1203,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
                 Dihedral* dihedralArray;
                 moleculeNum++;
                 workingMolecule.type = moleculeNum;
-                
+
 		        double atomVectorSize = atomVector.size();
 		        int sizeOfAtom = sizeof(Atom);
 
@@ -1221,7 +1229,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
                     dihedralArray[i] = dihedralVector[i];
                 }
 
-                moleculePattern.push_back(createMolecule(-1, moleculeNum, atomArray, angleArray, bondArray, dihedralArray, 
+                moleculePattern.push_back(createMolecule(-1, moleculeNum, atomArray, angleArray, bondArray, dihedralArray,
                      atomVector.size(), angleVector.size(), bondVector.size(), dihedralVector.size()));
 
                 atomVector.clear();
@@ -1230,11 +1238,11 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner)
                 dihedralVector.clear();
 
                 startNewMolecule = false;
-            } 
+            }
         }
     }
 
-    zmatrixScanner.close();    	 
+    zmatrixScanner.close();
 
     return true;
 }
@@ -1252,7 +1260,7 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
     if(format == 1)
     {
         //read in strings in columns and store the data in temporary variables
-        ss << line;    	
+        ss << line;
         ss >> atomID >> atomType >> oplsA >> oplsB >> bondWith >> bondDistance >> angleWith >> angleMeasure >> dihedralWith >> dihedralMeasure;
 
 	    //setup structures for permanent encapsulation
@@ -1260,7 +1268,7 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
         Bond lineBond;
         Angle lineAngle;
         Dihedral lineDihedral;
-		  
+
         if (oplsA.compare("-1") != 0)
         {
             lineAtom = oplsScanner->getAtom(oplsA);
@@ -1274,7 +1282,7 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
         {
             lineAtom = createAtom(atoi(atomID.c_str()), -1, -1, -1, -1, -1, -1, atomType);
         }
-	
+
 	    atomVector.push_back(lineAtom);
 
         if (bondWith.compare("0") != 0)
@@ -1312,7 +1320,7 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
     {
         startNewMolecule = true;
     }
-    
+
     if (previousFormat >= 3 && format == -1)
     {
         handleZAdditions(line, previousFormat);
@@ -1320,18 +1328,18 @@ void ZmatrixScanner::parseLine(string line, int numOfLines)
 
     previousFormat = format;
 }
-    
+
 int ZmatrixScanner::checkFormat(string line)
 {
-    int format =-1; 
+    int format =-1;
     stringstream iss(line);
     stringstream iss2(line);
     string atomType, someLine;
     int atomID, oplsA, oplsB, bondWith, angleWith,dihedralWith,extra;
-    Real bondDistance, angleMeasure, dihedralMeasure;	 
+    Real bondDistance, angleMeasure, dihedralMeasure;
 
     // check if it is the normal 11 line format
-    if (iss >> atomID >> atomType >> oplsA >> oplsB >> bondWith >> bondDistance >> 
+    if (iss >> atomID >> atomType >> oplsA >> oplsB >> bondWith >> bondDistance >>
             angleWith >> angleMeasure >> dihedralWith >> dihedralMeasure >> extra)
     {
         format = 1;
@@ -1381,7 +1389,7 @@ int ZmatrixScanner::checkFormat(string line)
         }
         else if(someLine.find("Final blank line")!=string::npos)
         {
-            format = -2;  
+            format = -2;
         }
     }
 
@@ -1414,7 +1422,7 @@ void ZmatrixScanner::handleZAdditions(string line, int cmdFormat)
         if( atomIds.size()== 1)
         {
             start = atomIds[0];
-            end = atomIds[0]; 
+            end = atomIds[0];
         }
         else if(atomIds.size() == 2)
         {
@@ -1424,7 +1432,7 @@ void ZmatrixScanner::handleZAdditions(string line, int cmdFormat)
         switch(cmdFormat)
         {
             case 3:
-                // Geometry Variations follow 
+                // Geometry Variations follow
             break;
             case 4:
                 // Variable Bonds follow
@@ -1437,10 +1445,10 @@ void ZmatrixScanner::handleZAdditions(string line, int cmdFormat)
                 }
                 break;
             case 5:
-                //  Additional Bonds follow 
+                //  Additional Bonds follow
                 break;
             case 6:
-                // Harmonic Constraints follow 
+                // Harmonic Constraints follow
                 break;
             case 7:
                 //  Variable Bond Angles follow
@@ -1492,12 +1500,12 @@ vector<Hop> ZmatrixScanner::calculateHops(Molecule molec)
             if(distance >=3)
             {
 				Hop tempHop = Hop(atom1+startId,atom2+startId,distance); //+startId because atoms may not start at 1
-                newHops.push_back(tempHop);			
-            }  		      
+                newHops.push_back(tempHop);
+            }
         }
     }
 
-    return newHops; 
+    return newHops;
 }
 
 bool ZmatrixScanner::contains(vector<int> &vect, int item)
@@ -1524,7 +1532,7 @@ int ZmatrixScanner::findHopDistance(int atom1,int atom2,int size, int **graph)
 
     Queue.push(atom1);
     checked.push_back(atom1);
-    distance.insert( pair<int,int>(atom1,0) );	
+    distance.insert( pair<int,int>(atom1,0) );
 
     while(!Queue.empty())
     {
@@ -1570,7 +1578,7 @@ void ZmatrixScanner::buildAdjacencyMatrix(int **&graph, Molecule molec)
     graph =  new int*[size]; //create colums
     for(int i=0; i<size; i++) //create rows
     {
-        graph[i]=new int[size];	
+        graph[i]=new int[size];
     }
 
     //fill with zero
@@ -1592,7 +1600,7 @@ void ZmatrixScanner::buildAdjacencyMatrix(int **&graph, Molecule molec)
         {
 			graph[bond.atom1-startId][bond.atom2-startId]=1;
             graph[bond.atom2-startId][bond.atom1-startId]=1;
-		}       
+		}
     }
 }
 
@@ -1600,7 +1608,7 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
 {
 	int numOfMolec = moleculePattern.size();
 	Molecule newMolecules[numOfMolec];
-	 
+
     //need a deep copy of molecule pattern incase it is modified.
     for (int i = 0; i < moleculePattern.size(); i++)
     {
@@ -1638,20 +1646,20 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
             hopCopy[a] = calculatedHops[a];
         }
 
-        Molecule molecCopy = Molecule(-1, moleculePattern[i].type, atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy, 
-                                    moleculePattern[i].numOfAtoms, 
+        Molecule molecCopy = Molecule(-1, moleculePattern[i].type, atomCopy, angleCopy, bondCopy, dihedCopy, hopCopy,
+                                    moleculePattern[i].numOfAtoms,
                                     moleculePattern[i].numOfAngles,
                                     moleculePattern[i].numOfBonds,
                                     moleculePattern[i].numOfDihedrals,
-                                    numOfHops);	
-		newMolecules[i] = molecCopy; 
-             
+                                    numOfHops);
+		newMolecules[i] = molecCopy;
+
     }
-				
-	//Assign/calculate the appropiate x,y,z positions to the molecules. 									
+
+	//Assign/calculate the appropiate x,y,z positions to the molecules.
 	//buildMoleculeInSpace(newMolecules, numOfMolec);
 	buildMoleculeXYZ(newMolecules, numOfMolec);
-	 
+
 
     for (int i = 0; i < numOfMolec; i++)
     {
@@ -1664,7 +1672,7 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID)
 	       newMolecules[i].id = newMolecules[i-1].id + newMolecules[i-1].numOfAtoms;
         }
     }
-	 
+
     for (int j = 0; j < numOfMolec; j++)
     {
         Molecule newMolecule = newMolecules[j];
@@ -1729,7 +1737,7 @@ StateScanner::~StateScanner()
 Environment* StateScanner::readInEnvironment()
 {
 	std::string filename = universal_filename;
-	
+
     ifstream inFile;
     inFile.open(filename.c_str());
     string line;
@@ -1740,7 +1748,7 @@ Environment* StateScanner::readInEnvironment()
         getline(inFile, line);
         environment = getEnvironmentFromLine(line);
     }
-    
+
     return environment;
 }
 
@@ -1768,11 +1776,11 @@ long StateScanner::readInStepNumber()
 vector<Molecule> StateScanner::readInMolecules()
 {
 	std::string filename = universal_filename;
-	
+
     vector<Molecule> molecules;
     ifstream inFile(filename.c_str());
     string line;
-    
+
     if(inFile.is_open())
     {
         vector<Bond> bonds;
@@ -1785,7 +1793,7 @@ vector<Molecule> StateScanner::readInMolecules()
         getline(inFile, line); // envrionment
         getline(inFile, line); // step number
         getline(inFile, line); //blank
-        
+
         Molecule currentMol;
         int section = 0; // 0 = id, 1 = type, 2 = atom, 3 = bond, 4 = dihedral, 5 = hop, 6 = angle 7 = name
         int molNum = 0;
@@ -1822,7 +1830,7 @@ vector<Molecule> StateScanner::readInMolecules()
                     }
                     else
                     {
-                       atoms.push_back(getAtomFromLine(line)); 
+                       atoms.push_back(getAtomFromLine(line));
                     }
                     break;
                 case 3: // bond
@@ -1832,7 +1840,7 @@ vector<Molecule> StateScanner::readInMolecules()
                     }
                     else
                     {
-					   bonds.push_back(getBondFromLine(line)); 
+					   bonds.push_back(getBondFromLine(line));
                     }
                     break;
                 case 4: // dihedral
@@ -1842,7 +1850,7 @@ vector<Molecule> StateScanner::readInMolecules()
                     }
                     else
                     {
-                       dihedrals.push_back(getDihedralFromLine(line)); 
+                       dihedrals.push_back(getDihedralFromLine(line));
                     }
                     break;
                 case 5: // hop
@@ -1860,7 +1868,7 @@ vector<Molecule> StateScanner::readInMolecules()
                     {
                         section = 0;
                         molNum++;
-                        
+
                         //convert all vectors to arrays
                         Bond *bondArray = (Bond *) malloc(sizeof(Bond) * bonds.size());
                         Angle *angleArray = (Angle *) malloc(sizeof(Angle) * angles.size());
@@ -1888,14 +1896,14 @@ vector<Molecule> StateScanner::readInMolecules()
                         {
                             hopArray[i] = hops[i];
                         }
-                       
+
                         //assign arrays to molecule
                         currentMol.atoms = atomArray;
                         currentMol.numOfAtoms = atoms.size();
-                        
+
                         currentMol.bonds = bondArray;
                         currentMol.numOfBonds = bonds.size();
-                        
+
                         currentMol.angles = angleArray;
                         currentMol.numOfAngles = angles.size();
 
@@ -1904,10 +1912,10 @@ vector<Molecule> StateScanner::readInMolecules()
 
                         currentMol.hops = hopArray;
                         currentMol.numOfHops = hops.size();
-                        
+
                         //add molecule to array of returned molecules
-                        molecules.push_back(currentMol); 
-                        
+                        molecules.push_back(currentMol);
+
                         Molecule newMolec;
                         currentMol = newMolec;
 
@@ -1919,7 +1927,7 @@ vector<Molecule> StateScanner::readInMolecules()
                     }
                     else
                     {
-                       angles.push_back(getAngleFromLine(line)); 
+                       angles.push_back(getAngleFromLine(line));
                     }
                     break;
             }
@@ -1929,7 +1937,7 @@ vector<Molecule> StateScanner::readInMolecules()
     {
         return molecules;
     }
-    
+
    return molecules;
 }
 
@@ -2163,7 +2171,7 @@ void StateScanner::parsePrimaryIndexDefinitions(Environment* enviro, string defi
     char *charLine = (char *) malloc(sizeof(char) * (definitions.size()+1));
     strcpy(charLine, definitions.c_str());
     indexVector = strtok(charLine, ",");
-					
+
     for (int i = 0; indexVector ; i++)
     {
     	std::string sIndexVector = indexVector;
@@ -2182,7 +2190,7 @@ void StateScanner::parsePrimaryIndexDefinitions(Environment* enviro, string defi
     	    *c = '\0';
     	    int currentPrimaryIndex = atoi(indexVector);
     	    (*(enviro->primaryAtomIndexArray)).push_back(new std::vector<int>);
-    	    (*(*(enviro->primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);	
+    	    (*(*(enviro->primaryAtomIndexArray))[i]).push_back(currentPrimaryIndex - 1);
     	    indexVector =strtok(NULL, ",");
     	    continue;
     	}
@@ -2232,7 +2240,7 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
 {
     ofstream outFile;
     outFile.open(filename.c_str());
-    outFile << environment->x << " " << environment->y << " " 
+    outFile << environment->x << " " << environment->y << " "
         << environment->z << " " << environment->numOfMolecules << " "
         << environment->numOfAtoms << " " << environment->temp << " "
         << environment->cutoff << " " << environment->maxTranslation << " "
@@ -2258,7 +2266,7 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
                 << " " << currentAtom.z << " "
                 << currentAtom.sigma << " "
                 << currentAtom.epsilon << " "
-                << currentAtom.charge << " " 
+                << currentAtom.charge << " "
 		        << *currentAtom.name << " " << std::endl;
         }
 
@@ -2270,7 +2278,7 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
             outFile << currentBond.atom1 << " "
                 << currentBond.atom2 << " "
                 << currentBond.distance << " ";
-            
+
             if(currentBond.variable)
             {
                 outFile << "1" << std::endl;
@@ -2341,8 +2349,17 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
 //======================== SB Scanner - Reads OPLSAA.sb =======================
 //=============================================================================
 void SBScanner::processBond(string line) {
-	string atom1 = line.substr(0,2);
-	string atom2 = line.substr(3,2);
+	string atom1, atom2;
+	if(line.substr(1,1) == " ") {
+		atom1 = line.substr(0,1);
+	} else {
+		atom1 = line.substr(0,2);
+	}
+	if(line.substr(4,1) == " ") {
+		atom2 = line.substr(3,1);
+	} else {
+		atom2 = line.substr(3,2);
+	}
 	double forceK, bondDist;
 	string rest_of_line = line.substr(6, line.size()-6);
 	stringstream ss(rest_of_line);
@@ -2350,9 +2367,9 @@ void SBScanner::processBond(string line) {
 	bondDataMap[atom1][atom2].kBond = forceK;
 	bondDataMap[atom2][atom1].kBond = forceK;
 	bondDataMap[atom1][atom2].eqBondDist = bondDist;
-	bondDataMap[atom2][atom1].eqBondDist = bondDist;		
+	bondDataMap[atom2][atom1].eqBondDist = bondDist;
 }
-	
+
 void SBScanner::processAngle(string line) {
 	string end1 = line.substr(0, 2);
 	string midAtom = line.substr(3, 2);
@@ -2370,14 +2387,14 @@ void SBScanner::processAngle(string line) {
 void SBScanner::processLine(string line) {
 	if(line.at(5) == '-')
 		processAngle(line);
-	else 
-		processBond(line);	
+	else
+		processBond(line);
 }
-	
+
 SBScanner::SBScanner() {
-	
+
 }
-		
+
 SBScanner::~SBScanner() {
 	bondDataMap.clear();
 	angleDataMap.clear();
@@ -2385,19 +2402,19 @@ SBScanner::~SBScanner() {
 
 bool SBScanner::readInSB(string filename) {
 	fileName = filename;
-	
+
 	if (filename.empty()) {
 		std::cerr << "Error: readInOpls(): empty filename given" << std::endl;
 		return false;
 	}
-	
+
 	int numOfLines=0;
     ifstream oplsScanner(filename.c_str());
     if (!oplsScanner.is_open()) {
     	std::cerr << "Error: readInOpls(): could not open file (" << filename << ")" << std::endl;
         return false;
     } else {
-        string line; 
+        string line;
         while (oplsScanner.good()) {
             numOfLines++;
             getline(oplsScanner,line);
@@ -2437,7 +2454,7 @@ map<string, map<string, AngleData> > SBScanner::getAngleMap(string endpoint1) {
 	}
 }
 
-		
+
 Real SBScanner::getKBond(string atom1, string atom2) {
 	if(bondDataMap.count(atom1) == 0)
 		return -1;
@@ -2484,26 +2501,26 @@ void writeToLog(string text,int stamp)
     string filename = "OutputLog";
 	ofstream logFile;
 	logFile.open(filename.c_str(),ios::out|ios::app);
-	 
+
 	string hash ="";
 	time_t current_time;
     struct tm * time_info;
     char timeString[9];  // space for "HH:MM:SS\0"
-	 
+
 	switch(stamp)
     {
         case START:
             //The start of a new simulation
             logFile << "\n\n\n\n\n\n" << endl;
             logFile << "======================================================================"<<endl;
-            logFile << "                       Starting Simulation: ";				
+            logFile << "                       Starting Simulation: ";
             time(&current_time);
             time_info = localtime(&current_time);
             strftime(timeString, sizeof(timeString), "%H:%M:%S", time_info);
             logFile << timeString << endl;
             logFile << "----------------------------------------------------------------------"<<endl;
             break;
-		case END: 
+		case END:
             //The end of a running simulation
             logFile << "----------------------------------------------------------------------"<<endl;
             logFile << "                       Ending Simulation: ";
@@ -2512,7 +2529,7 @@ void writeToLog(string text,int stamp)
             strftime(timeString, sizeof(timeString), "%H:%M:%S", time_info);
             logFile << timeString << endl;
             logFile << "======================================================================"<<endl;
-            break;		
+            break;
         case OPLS:
             //OPLS error
             logFile << "--OPLS: ";
@@ -2527,10 +2544,10 @@ void writeToLog(string text,int stamp)
             break;
         default:
             logFile << "";
-            break;		
+            break;
 	 }
 	 logFile << text << endl;
-	 logFile.close();	 
+	 logFile.close();
 }
 
 void writeToLog(stringstream& ss, int stamp)
