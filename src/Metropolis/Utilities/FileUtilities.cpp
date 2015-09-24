@@ -17,140 +17,151 @@ using std::ifstream;
 #define DEFAULT_STEP_COUNT 100
 
 
-bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps)
-{
-	if (box == NULL)
-	{
+bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps) {
+
+	if (box == NULL) {			// If box is null, print an error and return.
 		std::cerr << "Error: loadBoxData(): Box is NULL" << std::endl;
 		return false;
 	}
 
-    Environment* enviro;
-    vector<Molecule> moleculeVector;
+  Environment* enviro;
+  vector<Molecule> moleculeVector;
 
-		SBScanner sb_scanner;
-    if (inputType == InputFile::Configuration)
-    {
+  if (inputType == InputFile::Configuration) {	// Build from config/z-matrix.
 
-
-        ConfigScanner config_scanner = ConfigScanner();
-        if (!config_scanner.readInConfig(inputPath))
-        {
-            std::cerr << "Error: loadBoxData(): Could not read config file" << std::endl;
-            return false;
-        }
-
-				//Getting bond and angle data from OPLSAA.sb file.
-				SBScanner sb_scanner = SBScanner();
-				std::string sb_path = config_scanner.getOplsusaparPath();
-				std::size_t slash_index= sb_path.find_last_of('/');
-				sb_path = sb_path.substr(0, slash_index);
-				if(!sb_scanner.readInSB(sb_path + "/oplsaa.sb"))
-				{
-					std::cerr << "Error: loadBoxData(): Could not read OPLS SB file" << std::endl;
-					return false;
-				}
-
-        OplsScanner opls_scanner = OplsScanner();
-        if (!opls_scanner.readInOpls(config_scanner.getOplsusaparPath()))
-        {
-            std::cerr << "Error: loadBoxData(): Could not read OPLS file" << std::endl;
-            return false;
-        }
-
-        ZmatrixScanner zmatrix_scanner = ZmatrixScanner();
-        if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner))
-        {
-            std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;
-            return false;
-        }
-
-        moleculeVector = zmatrix_scanner.buildMolecule(0);
-        enviro = config_scanner.getEnviro();
-        *steps = config_scanner.getSteps();
-        *startStep = 0;
-
-	if (moleculeVector.size() != enviro->primaryAtomIndexDefinitions)
-        {
-            std::cerr << "Error: loadBoxData(): The number of molecules read from the Z Matrix file (" << moleculeVector.size()
-	    << ") does not equal the number of primary index definitions in the config file ("
-	    << enviro->primaryAtomIndexDefinitions << ")" << std::endl;
-            return false;
-        }
-
-        box->environment = new Environment(enviro);
-
-        if (!buildBoxData(enviro, moleculeVector, box, sb_scanner))
-        {
-            std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
-            return false;
-        }
-
-        return true;
-    }
-    else if (inputType == InputFile::State)
-    {
-        StateScanner state_scanner = StateScanner(inputPath);
-        enviro = state_scanner.readInEnvironment();
-
-        if (enviro == NULL)
-        {
-            std::cerr << "Error: Unable to read environment from State File" << std::endl;
-            return false;
-        }
-        moleculeVector = state_scanner.readInMolecules();
-
-        if (moleculeVector.size() == 0)
-        {
-            std::cerr << "Error: Unable to read molecule data from State file" << std::endl;
-            return false;
-        }
-
-        *steps = DEFAULT_STEP_COUNT;
-        *startStep = state_scanner.readInStepNumber();
-
-        if (*startStep < 0)
-        {
-            std::cerr << "Error: State file does not have a starting step number" << std::endl;
-            return false;
-        }
-
-        box->environment = new Environment(enviro);
-
-        if (!fillBoxData(enviro, moleculeVector, box))
-        {
-            std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
-            return false;
-        }
-
-        return true;
+		// Reading in config information from config file.
+		ConfigScanner config_scanner = ConfigScanner();
+    if (!config_scanner.readInConfig(inputPath)) {
+  		std::cerr << "Error: loadBoxData(): Could not read config file" << std::endl;
+      return false;
     }
 
-    std::cout << "Error: Could not recognize input file type" << std::endl;
+		// Getting bond and angle data from oplsaa.sb file.
+		SBScanner sb_scanner = SBScanner();
+		std::string sb_path = config_scanner.getOplsusaparPath();
+		std::size_t slash_index= sb_path.find_last_of('/');
+		sb_path = sb_path.substr(0, slash_index);
 
+		if(!sb_scanner.readInSB(sb_path + "/oplsaa.sb")) {
+			std::cerr << "Error: loadBoxData(): Could not read OPLS SB file" << std::endl;
+			return false;
+		}
+
+		// Getting atom data from the oplsaa.par / oplsua.par files.
+    OplsScanner opls_scanner = OplsScanner();
+    if (!opls_scanner.readInOpls(config_scanner.getOplsusaparPath())) {
+    	std::cerr << "Error: loadBoxData(): Could not read OPLS file" << std::endl;
+      return false;
+    }
+
+		// Reading in molecule information from the z-matrix.
+    ZmatrixScanner zmatrix_scanner = ZmatrixScanner();
+    if (!zmatrix_scanner.readInZmatrix(config_scanner.getZmatrixPath(), &opls_scanner)) {
+    	std::cerr << "Error: loadBoxData(): Could not read Z-Matrix file" << std::endl;
+      return false;
+    }
+
+		// Initialize moleculeVector, environment and steps.
+    moleculeVector = zmatrix_scanner.buildMolecule(0);
+    enviro = config_scanner.getEnviro();
+    *steps = config_scanner.getSteps();
+    *startStep = 0;
+
+		// Verify that the # of molecules is consitent in z-matrix and config files.
+		if (moleculeVector.size() != enviro->primaryAtomIndexDefinitions) {
+
+			std::cerr << "Error: loadBoxData(): The number of molecules read "
+								<< "from the Z Matrix file (" << moleculeVector.size()
+	    					<< ") does not equal the number of primary index "
+								<< "definitions in the config file ("
+	    					<< enviro->primaryAtomIndexDefinitions << ")"
+								<< std::endl;
+            return false;
+    }
+
+		// Instantiate the box's environment.
+    box->environment = new Environment(enviro);
+
+		// Build the box's data.
+    if (!buildBoxData(enviro, moleculeVector, box, sb_scanner)) {
+    	std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
+      return false;
+    }
+
+  	return true;
+
+  } else if (inputType == InputFile::State) {		// Build from state file.
+
+		// Instantiate a state scanner and read in the environment.
+		StateScanner state_scanner = StateScanner(inputPath);
+    enviro = state_scanner.readInEnvironment();
+
+		// Validate the environment
+    if (enviro == NULL) {
+    	std::cerr << "Error: Unable to read environment from State File" << std::endl;
+      return false;
+    }
+
+		// Get the molecule vector from the state scanner.
+		moleculeVector = state_scanner.readInMolecules();
+
+		// Validate the molecule vector.
+    if (moleculeVector.size() == 0) {
+    	std::cerr << "Error: Unable to read molecule data from State file" << std::endl;
+      return false;
+    }
+
+		// Instantiate steps / start step.
+    *steps = DEFAULT_STEP_COUNT;
+    *startStep = state_scanner.readInStepNumber();
+
+		// Validate start step.
+    if (*startStep < 0) {
+  		std::cerr << "Error: State file does not have a starting step number" << std::endl;
+      return false;
+  	}
+
+		// If environment is validated, set the box's environment.
+    box->environment = new Environment(enviro);
+
+		// Populate the box with data.
+    if (!fillBoxData(enviro, moleculeVector, box)) {
+    	std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
+      return false;
+    }
+
+    return true;
+  }
+
+	// If we are neither building from config/z-matrix or state file, print error.
+  std::cout << "Error: Could not recognize input file type" << std::endl;
 	return false;
 }
 
-bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
-{
-    if (!enviro || !box || molecVec.size() < 1) //if the vector of molecules has no contents...
-    {
-        std::cerr << "Error: fillBoxData(): Could not fill molecule data." << std::endl;
-        return false;
-    }
 
-    int count[5];//sum up number of atoms,bonds,angles,dihedrals,hops
-    memset(count,0,sizeof(count));
+bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box) {
 
-    box->moleculeCount = 0;
-    box->atomCount = 0;
-    box->bondCount = 0;
-    box->angleCount = 0;
-    box->dihedralCount = 0;
-    box->hopCount = 0;
+	//if the vector of molecules has no contents, print an error and return.
+	if (!enviro || !box || molecVec.size() < 1) {
+  	std::cerr << "Error: fillBoxData(): Could not fill molecule data." << std::endl;
+    return false;
+  }
 
-    for (int i = 0; i < molecVec.size(); ++i)
-    {
+	// Holds the running number of atoms, bonds, angles, dihedrals, and hops.
+  int count[5];
+  memset(count,0,sizeof(count));	// Instantiate count.
+
+	// Instantiate the box's relevant variables.
+  box->moleculeCount = 0;
+  box->atomCount = 0;
+  box->bondCount = 0;
+  box->angleCount = 0;
+  box->dihedralCount = 0;
+  box->hopCount = 0;
+
+	// For every molecule in the vector, increment the box's count for each
+	// sub-value accordingly.
+  for (int i = 0; i < molecVec.size(); ++i) {
         Molecule mol = molecVec[i];
         box->moleculeCount += 1;
         box->atomCount += mol.numOfAtoms;
@@ -158,146 +169,155 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box)
         box->angleCount += mol.numOfAngles;
         box->dihedralCount += mol.numOfDihedrals;
         box->hopCount += mol.numOfHops;
+  }
+
+	// Allocate space for the box's various structures.
+  box->molecules = (Molecule *) malloc(sizeof(Molecule) * box->moleculeCount);
+  box->atoms     = (Atom *) malloc(sizeof(Atom) * box->atomCount);
+  box->bonds     = (Bond *) malloc(sizeof(Bond) *  box->bondCount);
+  box->angles    = (Angle *) malloc(sizeof(Angle) * box->angleCount);
+  box->dihedrals = (Dihedral *) malloc(sizeof(Dihedral) * box->dihedralCount);
+  box->hops      = (Hop *) malloc(sizeof(Hop) * box->hopCount);
+
+	// Clear the space allocated for the box's structures.
+	// Why do we not clear box->molecules?
+  memset(box->atoms, 0, sizeof(Atom) * box->atomCount);
+  memset(box->bonds, 0, sizeof(Bond) * box->bondCount);
+  memset(box->angles, 0, sizeof(Angle) * box->angleCount);
+  memset(box->dihedrals, 0, sizeof(Dihedral) * box->dihedralCount);
+  memset(box->hops, 0, sizeof(Hop) * box->hopCount);
+
+	//Copy data from vector to molecule
+  for (int j = 0; j < molecVec.size(); j++) {
+    Molecule molec1 = molecVec[j];
+
+		// Point to memory allocated to atoms, bonds, etc in the box with the
+		// atoms, bonds, etc. arrays in each molecule.
+    box->molecules[j].atoms = (Atom *) (box->atoms + count[0]);
+    box->molecules[j].bonds = (Bond *) (box->bonds + count[1]);
+    box->molecules[j].angles = (Angle *) (box->angles + count[2]);
+    box->molecules[j].dihedrals = (Dihedral *) (box->dihedrals + count[3]);
+    box->molecules[j].hops = (Hop *) (box->hops + count[4]);
+
+		// Copy over constants from each element in the molecule vector.
+    box->molecules[j].id = molec1.id;
+    box->molecules[j].type = molec1.type;
+    box->molecules[j].numOfAtoms = molec1.numOfAtoms;
+    box->molecules[j].numOfBonds = molec1.numOfBonds;
+    box->molecules[j].numOfDihedrals = molec1.numOfDihedrals;
+    box->molecules[j].numOfAngles = molec1.numOfAngles;
+    box->molecules[j].numOfHops = molec1.numOfHops;
+
+		// Increment the offset to point data to.
+    count[0] += molec1.numOfAtoms;
+    count[1] += molec1.numOfBonds;
+    count[2] += molec1.numOfAngles;
+    count[3] += molec1.numOfDihedrals;
+    count[4] += molec1.numOfHops;
+
+    // Copy over atoms from the molecule vector.
+    for (int k = 0; k < molec1.numOfAtoms; k++) {
+    	box->molecules[j].atoms[k] = molec1.atoms[k];
     }
 
-    box->molecules = (Molecule *)malloc(sizeof(Molecule) * box->moleculeCount);
-    box->atoms     = (Atom *)malloc(sizeof(Atom)*box->atomCount);
-    box->bonds     = (Bond *)malloc(sizeof(Bond)*box->bondCount);
-    box->angles    = (Angle *)malloc(sizeof(Angle)*box->angleCount);
-    box->dihedrals = (Dihedral *)malloc(sizeof(Dihedral)*box->dihedralCount);
-    box->hops      = (Hop *)malloc(sizeof(Hop)*box->hopCount);
-
-    memset(box->atoms,0,sizeof(Atom)*box->atomCount);
-    memset(box->bonds,0,sizeof(Bond)*box->bondCount);
-    memset(box->angles,0,sizeof(Angle)*box->angleCount);
-    memset(box->dihedrals,0,sizeof(Dihedral)*box->dihedralCount);
-    memset(box->hops,0,sizeof(Hop)*box->hopCount);
-
-    for(int j = 0; j < molecVec.size(); j++)
-    {
-          //Copy data from vector to molecule
-        Molecule molec1 = molecVec[j];
-
-        box->molecules[j].atoms = (Atom *)(box->atoms+count[0]);
-        box->molecules[j].bonds = (Bond *)(box->bonds+count[1]);
-        box->molecules[j].angles = (Angle *)(box->angles+count[2]);
-        box->molecules[j].dihedrals = (Dihedral *)(box->dihedrals+count[3]);
-        box->molecules[j].hops = (Hop *)(box->hops+count[4]);
-
-        box->molecules[j].id = molec1.id;
-        box->molecules[j].type = molec1.type;
-        box->molecules[j].numOfAtoms = molec1.numOfAtoms;
-        box->molecules[j].numOfBonds = molec1.numOfBonds;
-        box->molecules[j].numOfDihedrals = molec1.numOfDihedrals;
-        box->molecules[j].numOfAngles = molec1.numOfAngles;
-        box->molecules[j].numOfHops = molec1.numOfHops;
-
-        count[0]+=molec1.numOfAtoms;
-        count[1]+=molec1.numOfBonds;
-        count[2]+=molec1.numOfAngles;
-        count[3]+=molec1.numOfDihedrals;
-        count[4]+=molec1.numOfHops;
-
-        //get the atoms from the vector molecule
-        for(int k = 0; k < molec1.numOfAtoms; k++)
-        {
-            box->molecules[j].atoms[k] = molec1.atoms[k];
-        }
-
-        //assign bonds
-        for(int k = 0; k < molec1.numOfBonds; k++)
-        {
-						box->molecules[j].bonds[k] = molec1.bonds[k];
-        }
-
-        //assign angles
-        for(int k = 0; k < molec1.numOfAngles; k++)
-        {
-            box->molecules[j].angles[k] = molec1.angles[k];
-        }
-
-        //assign dihedrals
-        for(int k = 0; k < molec1.numOfDihedrals; k++)
-        {
-            box->molecules[j].dihedrals[k] = molec1.dihedrals[k];
-        }
-
-        //assign hops zx add
-        for(int k = 0; k < molec1.numOfHops; k++)
-        {
-            box->molecules[j].hops[k] = molec1.hops[k];
-        }
+    // Copy over bonds from the molecule vector.
+    for (int k = 0; k < molec1.numOfBonds; k++) {
+			box->molecules[j].bonds[k] = molec1.bonds[k];
     }
 
-    enviro->numOfAtoms = box->atomCount;
+    // Copy over angles from the molecule vector.
+    for (int k = 0; k < molec1.numOfAngles; k++) {
+    	box->molecules[j].angles[k] = molec1.angles[k];
+    }
 
-    return true;
+    // Copy over dihedrals from the molecule vector.
+    for(int k = 0; k < molec1.numOfDihedrals; k++) {
+    	box->molecules[j].dihedrals[k] = molec1.dihedrals[k];
+    }
+
+    // Copy over hops from the molecule vector.
+    for(int k = 0; k < molec1.numOfHops; k++) {
+    	box->molecules[j].hops[k] = molec1.hops[k];
+    }
+
+  } // Repeat for every molecule in the vector.
+
+  enviro->numOfAtoms = box->atomCount;
+  return true;
 }
 
-bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBScanner& sb_scanner)
-{
-    //Convert molecule vectors into an array
-    int moleculeIndex = 0;
-    int atomCount = 0;
+bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBScanner& sb_scanner) {
 
-    if (!enviro || !box || molecVec.size() < 1) //if the vector of molecules has no contents...
-    {
-        std::cerr << "Error: buildBoxData(): Could not load molecule data." << std::endl;
-        return false;
-    }
+	// Convert molecule vectors into an array
+  int moleculeIndex = 0;
+  int atomCount = 0;
 
-    int molecMod = enviro->numOfMolecules % molecVec.size();
-    if (molecMod != 0)
-    {
-       enviro->numOfMolecules += molecVec.size() - molecMod;
-    }
+	// If the vector of molecules has no contents, print an error and return.
+  if (!enviro || !box || molecVec.size() < 1) {
+    std::cerr << "Error: buildBoxData(): Could not load molecule data." << std::endl;
+    return false;
+  }
 
-    box->moleculeCount = enviro->numOfMolecules;
-    box->molecules = (Molecule *)malloc(sizeof(Molecule) * box->moleculeCount);
+	// Make nunOfMolecules divisible by the size of the molecule vector.
+  int molecMod = enviro->numOfMolecules % molecVec.size();
+  if (molecMod != 0)	{
+  	enviro->numOfMolecules += molecVec.size() - molecMod;
+  }
 
-    if(box->moleculeCount < 1 || molecVec.size() < 1)
-    {
-    	std::cerr << "The simulation environment should have at least 1 molecule. (The current count? " << box->moleculeCount <<")." << std::endl;
-    	return false;
-    }
+	// Allocate memory for the molecues in the box.
+  box->moleculeCount = enviro->numOfMolecules;
+  box->molecules = (Molecule *) malloc(sizeof(Molecule) * box->moleculeCount);
+
+	// If there aren't any molecules, return an error.
+  if(box->moleculeCount < 1 || molecVec.size() < 1) {
+  	std::cerr << "The simulation environment should have at least 1 " <<
+							<< "molecule. (The current count? " << box->moleculeCount
+							<<")." << std::endl;
+  	return false;
+  }
 
 
-    int molecDiv = enviro->numOfMolecules / molecVec.size();
-    int molecTypenum=molecVec.size();
+	int molecDiv = enviro->numOfMolecules / molecVec.size();
+  int molecTypeNum = molecVec.size();
 
+	// Holds the running number of atoms, bonds, angles, dihedrals, and hops.
+  int count[5];
+	memset(count,0,sizeof(count)); // Instantiate count.
 
-    int count[5];//sum up number of atoms,bonds,angles,dihedrals,hops
+	// Allocate memory for tables.
 	Table* tables = new Table[molecVec.size()];
-    memset(count,0,sizeof(count));
 	int currentAtomCount = 0;
 
-    for(int j = 0; j < molecVec.size(); j++)
-    {
-  		Molecule molec1 = molecVec[j];
+	//Copy data from vector to molecule
+  for (int j = 0; j < molecVec.size(); j++) {
+  	Molecule molec1 = molecVec[j];
 
-         //Copy data from vector to molecule
-  		count[0]+=molec1.numOfAtoms;
-  		count[1]+=molec1.numOfBonds;
-  		count[2]+=molec1.numOfAngles;
-  		count[3]+=molec1.numOfDihedrals;
-  		count[4]+=molec1.numOfHops;
+		// Count the number of atoms, bonds, etc.
+  	count[0] += molec1.numOfAtoms;
+  	count[1] += molec1.numOfBonds;
+  	count[2] += molec1.numOfAngles;
+  	count[3] += molec1.numOfDihedrals;
+  	count[4] += molec1.numOfHops;
 
-  		Hop *myHop = molec1.hops;
-  		int **table;
-  		table = new int*[molec1.numOfAtoms];
-  		for(int k = 0; k< molec1.numOfAtoms;k++)
-  			table[k] = new int[molec1.numOfAtoms];
+		// Begin copying hops.
+  	Hop *myHop = molec1.hops;
+  	int **table;
 
-  		for(int test = 0; test< molec1.numOfAtoms;test++)
-        {
-  			for(int test1 = 0; test1 < molec1.numOfAtoms; test1++)
-            {
-  				table[test][test1] = 0;
-  			}
+		// Allocate memory to tables.
+		table = new int*[molec1.numOfAtoms];
+  	for(int k = 0; k < molec1.numOfAtoms;k++) {
+  		table[k] = new int[molec1.numOfAtoms];
 		}
 
-		for(int k2 = 0; k2<molec1.numOfHops;k2++)
-        {
+		// Instantiate table to 0.
+  	for(int test = 0; test< molec1.numOfAtoms;test++) {
+  		for(int test1 = 0; test1 < molec1.numOfAtoms; test1++) {
+  				table[test][test1] = 0;
+  		}
+		}
+
+		// Fill table with hops.
+		for(int k2 = 0; k2<molec1.numOfHops;k2++) {
 			int atom1 = myHop->atom1;
 			int atom2 = myHop->atom2;
 			table[atom1-currentAtomCount][atom2-currentAtomCount] = myHop->hop;
@@ -305,155 +325,168 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
 			myHop++;
 		}
 
-	   tables[j] = Table(table);
-	   currentAtomCount += molec1.numOfAtoms;
+		// Put the table in tables.
+	  tables[j] = Table(table);
+		// Increase the number atoms in the molecule.
+	  currentAtomCount += molec1.numOfAtoms;
+	}
+
+	// Fill box variables.
+  box->atomCount = molecDiv * count[0];
+  box->bondCount = molecDiv * count[1];
+  box->angleCount = molecDiv * count[2];
+  box->dihedralCount = molecDiv * count[3];
+  box->hopCount = molecDiv * count[4];
+
+	// Allocate memory to box.
+  box->atoms 	   = (Atom *) malloc(sizeof(Atom) * box->atomCount);
+  box->bonds     = (Bond *) malloc(sizeof(Bond) * box->bondCount);
+  box->angles    = (Angle *) malloc(sizeof(Angle) * box->angleCount);
+  box->dihedrals = (Dihedral *) malloc(sizeof(Dihedral) * box->dihedralCount);
+  box->hops      = (Hop *) malloc(sizeof(Hop) * box->hopCount);
+
+	// Clear memory in the box.
+  memset(box->atoms, 0, sizeof(Atom) * box->atomCount);
+  memset(box->bonds, 0, sizeof(Bond) * box->bondCount);
+  memset(box->angles, 0, sizeof(Angle) * box->angleCount);
+  memset(box->dihedrals, 0, sizeof(Dihedral) * box->dihedralCount);
+  memset(box->hops, 0, sizeof(Hop) * box->hopCount);
+
+  //Clear count.
+  memset(count, 0, sizeof(count));
+
+	//Copy data from vector to molecule.
+ 	for(int j = 0; j < molecVec.size(); j++) {
+
+    Molecule molec1 = molecVec[j]; // Get the molecule from the molecule vector.
+
+		// Point to memory allocated to atoms, bonds, etc in the box with the
+		// atoms, bonds, etc. arrays in each molecule.
+    box->molecules[j].atoms = (Atom *) (box->atoms + count[0]);
+    box->molecules[j].bonds = (Bond *) (box->bonds + count[1]);
+    box->molecules[j].angles = (Angle *) (box->angles + count[2]);
+    box->molecules[j].dihedrals = (Dihedral *) (box->dihedrals + count[3]);
+    box->molecules[j].hops = (Hop *) (box->hops + count[4]);
+
+		// Copy over molecule values from the molecule in the vector.
+    box->molecules[j].id = molec1.id;
+    box->molecules[j].type = molec1.type;
+    box->molecules[j].numOfAtoms = molec1.numOfAtoms;
+    box->molecules[j].numOfBonds = molec1.numOfBonds;
+    box->molecules[j].numOfDihedrals = molec1.numOfDihedrals;
+    box->molecules[j].numOfAngles = molec1.numOfAngles;
+    box->molecules[j].numOfHops = molec1.numOfHops;
+
+		// Increment the count of atoms, bonds, etc.
+		// This will set the offset for the next pointer assignment.
+    count[0] += molec1.numOfAtoms;
+    count[1] += molec1.numOfBonds;
+    count[2] += molec1.numOfAngles;
+    count[3] += molec1.numOfDihedrals;
+    count[4] += molec1.numOfHops;
+
+    // Copy atoms from the molecule vector.
+    for (int k = 0; k < molec1.numOfAtoms; k++) {
+    	box->molecules[j].atoms[k] = molec1.atoms[k];
     }
 
-    box->atomCount = molecDiv * count[0];
-    box->bondCount = molecDiv * count[1];
-    box->angleCount = molecDiv * count[2];
-    box->dihedralCount = molecDiv * count[3];
-    box->hopCount = molecDiv * count[4];
+    // Copy bonds from the molecule vector.
+    for (int k = 0; k < molec1.numOfBonds; k++) {
 
-    box->atoms 	   = (Atom *)malloc(sizeof(Atom)*box->atomCount);
-    box->bonds     = (Bond *)malloc(sizeof(Bond)*box->bondCount);
-    box->angles    = (Angle *)malloc(sizeof(Angle)*box->angleCount);
-    box->dihedrals = (Dihedral *)malloc(sizeof(Dihedral)*box->dihedralCount);
-    box->hops      = (Hop *)malloc(sizeof(Hop)*box->hopCount);
+			int a1Idx = molec1.bonds[k].atom1;	// Get the indexes of both atoms
+			int a2Idx = molec1.bonds[k].atom2;	// in the bond.
 
-    memset(box->atoms,0,sizeof(Atom)*box->atomCount);
-    memset(box->bonds,0,sizeof(Bond)*box->bondCount);
-    memset(box->angles,0,sizeof(Angle)*box->angleCount);
-    memset(box->dihedrals,0,sizeof(Dihedral)*box->dihedralCount);
-    memset(box->hops,0,sizeof(Hop)*box->hopCount);
+			std::string a1Name = *(molec1.atoms[a1Idx].name); // Get the names of both
+			std::string a2Name = *(molec1.atoms[a2Idx].name); // atoms in the bond.
 
-    //arrange first part of molecules
-    memset(count,0,sizeof(count));
+			// Assign the forceConstant and bondDistance values for the bond
+			// based on name lookup from the oplsaa.sb file using sb_scanner.
+			molec1.bonds[k].forceConstant = sb_scanner.getKBond(a1Name, a2Name);
+			molec1.bonds[k].eqBondDist = sb_scanner.getEqBondDist(a1Name, a2Name);
 
- 	for(int j = 0; j < molecVec.size(); j++)
-    {
- 	      //Copy data from vector to molecule
-        Molecule molec1 = molecVec[j];
-
-        box->molecules[j].atoms = (Atom *)(box->atoms+count[0]);
-        box->molecules[j].bonds = (Bond *)(box->bonds+count[1]);
-        box->molecules[j].angles = (Angle *)(box->angles+count[2]);
-        box->molecules[j].dihedrals = (Dihedral *)(box->dihedrals+count[3]);
-        box->molecules[j].hops = (Hop *)(box->hops+count[4]);
-
-        box->molecules[j].id = molec1.id;
-        box->molecules[j].type = molec1.type;
-        box->molecules[j].numOfAtoms = molec1.numOfAtoms;
-        box->molecules[j].numOfBonds = molec1.numOfBonds;
-        box->molecules[j].numOfDihedrals = molec1.numOfDihedrals;
-        box->molecules[j].numOfAngles = molec1.numOfAngles;
-        box->molecules[j].numOfHops = molec1.numOfHops;
-
-        count[0]+=molec1.numOfAtoms;
-        count[1]+=molec1.numOfBonds;
-        count[2]+=molec1.numOfAngles;
-        count[3]+=molec1.numOfDihedrals;
-        count[4]+=molec1.numOfHops;
-
-        //get the atoms from the vector molecule
-        for(int k = 0; k < molec1.numOfAtoms; k++)
-        {
-            box->molecules[j].atoms[k] = molec1.atoms[k];
-        }
-
-        //assign bonds
-        for(int k = 0; k < molec1.numOfBonds; k++)
-        {
-					std::cout << molec1.bonds[k].atom1 << " to " << molec1.bonds[k].atom2 << endl;
-					int a1Idx = molec1.bonds[k].atom1;
-					int a2Idx = molec1.bonds[k].atom2;
-					std::string a1Name = *(molec1.atoms[a1Idx].name);
-					std::string a2Name = *(molec1.atoms[a2Idx].name);
-					std::cout << a1Name << " to " << a2Name << std::endl;
-					std::cout << "K Bond: " << sb_scanner.getKBond(a1Name, a2Name);
-					std::cout << " Eq Dist: " << sb_scanner.getEqBondDist(a1Name, a2Name);
-					std::cout << std::endl;
-					box->molecules[j].bonds[k] = molec1.bonds[k];
-        }
-
-        //assign angles
-        for(int k = 0; k < molec1.numOfAngles; k++)
-        {
-            box->molecules[j].angles[k] = molec1.angles[k];
-        }
-
-        //assign dihedrals
-        for(int k = 0; k < molec1.numOfDihedrals; k++)
-        {
-            box->molecules[j].dihedrals[k] = molec1.dihedrals[k];
-        }
-
-        //assign hops zx add
-        for(int k = 0; k < molec1.numOfHops; k++)
-        {
-            box->molecules[j].hops[k] = molec1.hops[k];
-        }
-    }
-    //cout << "molecDiv\n";
-    for(int m = 1; m < molecDiv; m++)
-    {
-        int offset=m*molecTypenum;
-    	memcpy(&(box->molecules[offset]),box->molecules,sizeof(Molecule) * molecTypenum);
-
-	   for(int n=0;n<molecTypenum;n++)
-        {
-    	   box->molecules[offset+n].id=offset+n;
-            box->molecules[offset+n].atoms = box->molecules[n].atoms+count[0]*m;
-            box->molecules[offset+n].bonds =  box->molecules[n].bonds+count[1]*m;
-            box->molecules[offset+n].angles =  box->molecules[n].angles+count[2]*m;
-            box->molecules[offset+n].dihedrals =  box->molecules[n].dihedrals+count[3]*m;
-            box->molecules[offset+n].hops =  box->molecules[n].hops+count[4]*m;
-        }
-        memcpy(&(box->atoms[m*count[0]]),box->atoms,sizeof(Atom)*count[0]);
-	    memcpy(&(box->bonds[m*count[1]]),box->bonds,sizeof(Bond)*count[1]);
-	    memcpy(&(box->angles[m*count[2]]),box->angles,sizeof(Angle)*count[2]);
-	    memcpy(&(box->dihedrals[m*count[3]]),box->dihedrals,sizeof(Dihedral)*count[3]);
-	    memcpy(&(box->hops[m*count[4]]),box->hops,sizeof(Hop)*count[4]);
-
-        for(int k=0;k<count[0];k++)
-        {
-            box->atoms[m*count[0]+k].id=offset*count[0]+k;
-        }
-
-        for(int k=0;k<count[1];k++)
-        {
-            box->bonds[m*count[1]+k].atom1+=m*count[0];
-            box->bonds[m*count[1]+k].atom2+=m*count[0];
-        }
-
-        for(int k=0;k<count[2];k++)
-        {
-            box->angles[m*count[2]+k].atom1+=m*count[0];
-            box->angles[m*count[2]+k].atom2+=m*count[0];
-        }
-
-        for(int k=0;k<count[3];k++)
-        {
-            box->dihedrals[m*count[3]+k].atom1+=m*count[0];
-            box->dihedrals[m*count[3]+k].atom2+=m*count[0];
-        }
-
-        for(int k=0;k<count[4];k++)
-        {
-            box->hops[m*count[4]+k].atom1+=m*count[0];
-            box->hops[m*count[4]+k].atom2+=m*count[0];
-        }
+			// Copy the bond from the molecule in the vector to the box.
+			box->molecules[j].bonds[k] = molec1.bonds[k];
     }
 
-    enviro->numOfAtoms = count[0]*molecDiv;
-
-    if (!generatefccBox(box)) //generate fcc lattice box
-    {
-    	std::cerr << "Error: buildBoxData(): Could not generate FCC box" << std::endl;
-    	return false;
+    // Copy angles from the molecule vector.
+    for (int k = 0; k < molec1.numOfAngles; k++) {
+  		box->molecules[j].angles[k] = molec1.angles[k];
     }
 
-    return true;
+    // Copy dihedrals from the molecule vector.
+    for (int k = 0; k < molec1.numOfDihedrals; k++) {
+    	box->molecules[j].dihedrals[k] = molec1.dihedrals[k];
+    }
+
+    // Copy hops from the molecule vector.
+    for (int k = 0; k < molec1.numOfHops; k++) {
+    	box->molecules[j].hops[k] = molec1.hops[k];
+    }
+
+	} // Repeat for every molecule in the molecule vector.
+
+	// Repeat for each copy of every molecule in the vector.
+  for (int m = 1; m < molecDiv; m++) {
+		// Copy the molecule into the corresponding spot in the box.
+  	int offset = m * molecTypeNum;
+    memcpy(&(box->molecules[offset]), box->molecules, sizeof(Molecule) * molecTypeNum);
+
+		// Copy atoms, bonds, etc. for each molecule.
+	  for (int n = 0; n < molecTypeNum; n++) {
+    	box->molecules[offset+n].id=offset+n;
+      box->molecules[offset+n].atoms = box->molecules[n].atoms + count[0] * m;
+      box->molecules[offset+n].bonds =  box->molecules[n].bonds + count[1] * m;
+      box->molecules[offset+n].angles =  box->molecules[n].angles + count[2] * m;
+      box->molecules[offset+n].dihedrals =  box->molecules[n].dihedrals + count[3] * m;
+      box->molecules[offset+n].hops =  box->molecules[n].hops + count[4] * m;
+    }
+
+		memcpy(&(box->atoms[m * count[0]]), box->atoms, sizeof(Atom) * count[0]);
+	  memcpy(&(box->bonds[m * count[1]]), box->bonds, sizeof(Bond) * count[1]);
+	  memcpy(&(box->angles[m * count[2]]), box->angles, sizeof(Angle) * count[2]);
+	  memcpy(&(box->dihedrals[m * count[3]]), box->dihedrals, sizeof(Dihedral) * count[3]);
+	  memcpy(&(box->hops[m * count[4]]), box->hops, sizeof(Hop) * count[4]);
+
+		// Copy atoms for each molecule.
+    for (int k = 0; k < count[0]; k++)	{
+    	box->atoms[m * count[0] + k].id = offset * count[0] + k;
+    }
+
+		// Copy bonds for each molecule.
+    for (int k = 0; k < count[1]; k++) {
+    	box->bonds[m * count[1] + k].atom1 += m * count[0];
+      box->bonds[m * count[1] + k].atom2 += m * count[0];
+    }
+
+		// Copy angles for each molecule.
+    for(int k = 0; k < count[2]; k++) {
+    	box->angles[m * count[2] + k].atom1 += m * count[0];
+      box->angles[m * count[2] + k].atom2 += m * count[0];
+    }
+
+		// Copy dihedrals for each molecule.
+    for(int k = 0; k < count[3]; k++) {
+    	box->dihedrals[m * count[3] + k].atom1+= m * count[0];
+      box->dihedrals[m * count[3] + k].atom2+= m * count[0];
+  	}
+
+		// Copy hops for each molecule.
+    for(int k = 0; k < count[4]; k++) {
+    	box->hops[m * count[4] + k].atom1 += m * count[0];
+      box->hops[m * count[4] + k].atom2 += m * count[0];
+    }
+
+  }	// Repeat for every molecule.
+
+  enviro->numOfAtoms = count[0] * molecDiv;
+
+	//generate fcc lattice box
+  if (!generatefccBox(box)) {
+  	std::cerr << "Error: buildBoxData(): Could not generate FCC box" << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 bool generatefccBox(Box* box)
