@@ -27,6 +27,8 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
   Environment* enviro;
   vector<Molecule> moleculeVector;
 
+	SBScanner sb_scanner;
+
   if (inputType == InputFile::Configuration) {	// Build from config/z-matrix.
 
 		// Reading in config information from config file.
@@ -37,7 +39,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
     }
 
 		// Getting bond and angle data from oplsaa.sb file.
-		SBScanner sb_scanner = SBScanner();
+	  sb_scanner = SBScanner();
 		std::string sb_path = config_scanner.getOplsusaparPath();
 		std::size_t slash_index= sb_path.find_last_of('/');
 		sb_path = sb_path.substr(0, slash_index);
@@ -125,7 +127,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
     box->environment = new Environment(enviro);
 
 		// Populate the box with data.
-    if (!fillBoxData(enviro, moleculeVector, box)) {
+    if (!fillBoxData(enviro, moleculeVector, box, sb_scanner)) {
     	std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
       return false;
     }
@@ -139,7 +141,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 }
 
 
-bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box) {
+bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBScanner& sb_scanner) {
 
 	//if the vector of molecules has no contents, print an error and return.
 	if (!enviro || !box || molecVec.size() < 1) {
@@ -220,13 +222,44 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box) {
     	box->molecules[j].atoms[k] = molec1.atoms[k];
     }
 
+		std::vector<Bond> bondVector;	// bondVector will hold a list of bonds.
+		// These will be used to get the common atom in every angle.
+
     // Copy over bonds from the molecule vector.
     for (int k = 0; k < molec1.numOfBonds; k++) {
+
+			int a1Idx = molec1.bonds[k].atom1;	// Get the indexes of both atoms
+			int a2Idx = molec1.bonds[k].atom2;	// in the bond.
+
+			std::string a1Name = *(molec1.atoms[a1Idx].name); // Get the names of both
+			std::string a2Name = *(molec1.atoms[a2Idx].name); // atoms in the bond.
+
+			// Assign the forceConstant and bondDistance values for the bond
+			// based on name lookup from the oplsaa.sb file using sb_scanner.
+			molec1.bonds[k].forceConstant = sb_scanner.getKBond(a1Name, a2Name);
+			molec1.bonds[k].eqBondDist = sb_scanner.getEqBondDist(a1Name, a2Name);
+
 			box->molecules[j].bonds[k] = molec1.bonds[k];
+
+			// Add the bond to bondVector
+			bondVector.push_back(molec1.bonds[k]);
     }
 
     // Copy over angles from the molecule vector.
     for (int k = 0; k < molec1.numOfAngles; k++) {
+			int a1Idx = molec1.angles[k].atom1;		// Get the indexes of the endpoints
+			int a2Idx = molec1.angles[k].atom2;
+			// Use get common atom to find the middle atom of the angle.
+			int midIdx = (int) getCommonAtom(bondVector, a1Idx, a2Idx);
+
+			std::string a1Name = *(molec1.atoms[a1Idx].name);		// Get the names
+			std::string a2Name = *(molec1.atoms[a2Idx].name);		// of all three atoms
+			std::string midName = *(molec1.atoms[midIdx].name); // in the angle.
+
+			// Assign the angle's various constants to it.
+			molec1.angles[k].eqAngle = sb_scanner.getEqAngle(a1Name, midName, a2Name);
+			molec1.angles[k].forceConstant = sb_scanner.getKAngle(a1Name, midName, a2Name);
+
     	box->molecules[j].angles[k] = molec1.angles[k];
     }
 
@@ -390,6 +423,9 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
     	box->molecules[j].atoms[k] = molec1.atoms[k];
     }
 
+		std::vector<Bond> bondVector;	// bondVector will hold a list of bonds.
+		// These will be used to get the common atom in every angle.
+
     // Copy bonds from the molecule vector.
     for (int k = 0; k < molec1.numOfBonds; k++) {
 
@@ -406,10 +442,27 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
 
 			// Copy the bond from the molecule in the vector to the box.
 			box->molecules[j].bonds[k] = molec1.bonds[k];
+
+			// Add the bond to bondVector
+			bondVector.push_back(molec1.bonds[k]);
     }
 
     // Copy angles from the molecule vector.
     for (int k = 0; k < molec1.numOfAngles; k++) {
+
+			int a1Idx = molec1.angles[k].atom1;		// Get the indexes of the endpoints
+			int a2Idx = molec1.angles[k].atom2;
+			// Use get common atom to find the middle atom of the angle.
+			int midIdx = (int) getCommonAtom(bondVector, a1Idx, a2Idx);
+
+			std::string a1Name = *(molec1.atoms[a1Idx].name);		// Get the names
+			std::string a2Name = *(molec1.atoms[a2Idx].name);		// of all three atoms
+			std::string midName = *(molec1.atoms[midIdx].name); // in the angle.
+
+			// Assign the angle's various constants to it.
+			molec1.angles[k].eqAngle = sb_scanner.getEqAngle(a1Name, midName, a2Name);
+			molec1.angles[k].forceConstant = sb_scanner.getKAngle(a1Name, midName, a2Name);
+
   		box->molecules[j].angles[k] = molec1.angles[k];
     }
 

@@ -667,7 +667,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
 * @return: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
 *		for which you should do halt the simulation
 */
-bool fillBoxData(Environment* enviro, vector<Molecule>& moleVec, Box* box);
+bool fillBoxData(Environment* enviro, vector<Molecule>& moleVec, Box* box, SBScanner& sb_scanner);
 
 /*************************
 *	Once the box has been filled with environment data, takes the data and
