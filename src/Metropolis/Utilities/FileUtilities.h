@@ -709,8 +709,8 @@ void writeToLog(string text,int stamp);
 */
 void writeToLog(stringstream& ss, int stamp);
 
-static inline std::string& rtrim(std::string& s);
-static inline std::string& ltrim(std::string& s);
-static inline std::string& trim(std::string& s);
+std::string& rtrim(std::string& s);
+std::string& ltrim(std::string& s);
+std::string& trim(std::string& s);
 
 #endif
