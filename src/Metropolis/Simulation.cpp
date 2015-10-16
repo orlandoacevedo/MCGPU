@@ -30,7 +30,7 @@
 #include "SerialSim/SerialBox.h"
 #include "SerialSim/SerialCalcs.h"
 #include "SerialSim/NeighborList.h"
-#include "ParallelSim/ParallelCalcs.h"
+//#include "ParallelSim/ParallelCalcs.h"
 #include "Utilities/FileUtilities.h"
 
 
@@ -43,12 +43,12 @@ Simulation::Simulation(SimulationArgs simArgs)
 
 	stepStart = 0;
 
-	if (args.simulationMode == SimulationMode::Parallel)
+	if (false)
 	{
 		/*We need to set this to 1 in parallel mode because it is irrelevant BUT is used in the
 		  runtime calculation. See summary equation for explanation.*/
 		threadsToSpawn = 1;
-		box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
+	//	box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
 	}
 	else
 	{
@@ -60,7 +60,7 @@ Simulation::Simulation(SimulationArgs simArgs)
 		if (simArgs.threadCount > 0)
 			threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
 
-		std:cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
+		std::cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
 		omp_set_num_threads(threadsToSpawn);
 		omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
 		box = SerialCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
@@ -132,7 +132,6 @@ void Simulation::run()
 	mkdir(MCGPU.data(), 0777);
 
 	clock_t startTime, endTime;
-	int pdbSequenceNum = 0;
 	startTime = clock();
 
     clock_t function_time_start, function_time_end;
@@ -147,17 +146,17 @@ void Simulation::run()
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0)
 	{
-		if (args.simulationMode == SimulationMode::Parallel)
+		if (false)
         {
 			if (args.useNeighborList)
 			{
 				log.verbose("Using neighbor-list for energy calculation");
-				oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
+				//oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);
 			}
 			else
 			{
 				log.verbose("Using original parallel energy calculation");
-				oldEnergy = ParallelCalcs::calcSystemEnergy(box);
+			//	oldEnergy = ParallelCalcs::calcSystemEnergy(box);
 			}
 		}
 		else
@@ -239,15 +238,15 @@ void Simulation::run()
 		}
 
 		//Calculate the current/original/old energy contribution for the current molecule
-		if (args.simulationMode == SimulationMode::Parallel)
+		if (false)
 		{
 			if (args.useNeighborList)
 			{
-				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx, neighbors);
+			//	oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx, neighbors);
 			}
 			else
 			{
-				oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+			//	oldEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
 			}
 		}
 		else
@@ -266,15 +265,15 @@ void Simulation::run()
 		box->changeMolecule(changeIdx);
 
 		//Calculate the new energy after translation
-		if (args.simulationMode == SimulationMode::Parallel)
+		if (false)
 		{
 			if (args.useNeighborList)
 			{
-				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx, neighbors);
+			//	newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution_NLC(box, changeIdx, neighbors);
 			}
 			else
 			{
-				newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
+			//	newEnergyCont = ParallelCalcs::calcMolecularEnergyContribution(box, changeIdx);
 			}
 		}
 		else
@@ -342,7 +341,7 @@ void Simulation::run()
 
 	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
 
-	if (args.simulationMode != SimulationMode::Parallel)
+	if (false)
 	{
 		fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
 		fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
@@ -377,7 +376,7 @@ void Simulation::run()
 	if (!args.simulationName.empty())
 		resultsFile << "Simulation-Name = " << args.simulationName << std::endl;
 
-	if (args.simulationMode == SimulationMode::Parallel)
+	if (false)
 		resultsFile << "Simulation-Mode = GPU" << std::endl;
 	else
 	{
@@ -390,7 +389,7 @@ void Simulation::run()
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;
 	resultsFile << "[Results]" << std::endl;
 
-	if (args.simulationMode != SimulationMode::Parallel)
+	if (false)
 	{
 		resultsFile << "LJ-Energy Subtotal: " << lj_energy << std::endl;
 		resultsFile << "Charge Energy Subtotal: " << charge_energy << std::endl;
@@ -400,7 +399,7 @@ void Simulation::run()
 	resultsFile << "Run-Time = " << diffTime << " seconds" << std::endl;
 	resultsFile << "Accepted-Moves = " << accepted << std::endl;
 	resultsFile << "Rejected-Moves = " << rejected << std::endl;
-	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << '\%' << std::endl;
+	resultsFile << "Acceptance-Rate = " << 100.0f * accepted / (float) (accepted + rejected) << "%" << std::endl;
 
 	resultsFile.close();
 }

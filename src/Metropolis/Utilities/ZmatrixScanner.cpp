@@ -63,7 +63,6 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner) {
       workingMolecule.type = moleculeNum;
 
 	    double atomVectorSize = atomVector.size();
-	    int sizeOfAtom = sizeof(Atom);
       atomArray = (Atom*) malloc(sizeof(Atom) * atomVector.size());
       bondArray = (Bond*) malloc(sizeof(Bond) * bondVector.size());
       angleArray = (Angle*) malloc(sizeof(Angle) * angleVector.size());

@@ -1,7 +1,7 @@
 ##############################################################################
 # MCGPU Makefile
 # Version 2.0
-# 
+#
 # This Makefile depends on GNU make.
 #
 ########################
@@ -30,12 +30,12 @@
 # LOCAL_INSTALL=1  : Sets the default directory for the CUDA installation
 #					 path to '/usr/local/cuda'
 # LOCAL_INSTALL=0  : Sets the default directory for the CUDA installation
-#					 path to 'opt/asn/apps/cuda_5.5'. This is the directory 
+#					 path to 'opt/asn/apps/cuda_5.5'. This is the directory
 #					 used by the ASC machines that we test on.
 #
 # MAC=1  : Sets up compilation for Mac OS X environment. Sets the default directory for the CUDA_GCC installation
 #					 path to ‘/opt/local/bin’
-# MAC=0  : Sets up compilation for Linux. This is set by default. 
+# MAC=0  : Sets up compilation for Linux. This is set by default.
 #
 # CUDA_PATH=path/to/dir  : The relative path to the cuda install directory
 #						   on the current machine.
@@ -51,7 +51,7 @@
 #							   bit libraries are installed, this field will
 #							   need to be updated to point to the 64 bit libs
 #
-# CUDA_GCC_PATH=path/to/dir  : The path to the compatible GCC compiler for CUDA. 
+# CUDA_GCC_PATH=path/to/dir  : The path to the compatible GCC compiler for CUDA.
 #
 # SHELL=path/to/file  : The relative path to the shell executable program on
 #						the current machine. This shell program will allow the
@@ -117,10 +117,10 @@ UnitTestName := metrotest
 # CUDA Location Settings #
 ##########################
 
-# The path to the gcc compiler for cuda. This location can change depending on the 
+# The path to the gcc compiler for cuda. This location can change depending on the
 # compatible gcc version (preferable to use gcc-4.4.7).
 
-ifeq ($(MAC),1) 
+ifeq ($(MAC),1)
 	CUDA_GCC_PATH ?= /opt/local/bin
 	LOCAL_INSTALL=1
 else
@@ -166,11 +166,11 @@ endif
 # Defines the compilers used to compile and link the source files.
 # CC will be used to compile C++ files, and NVCC will be used to
 # compile CUDA files.
-CC := g++
+CC := pgCC
 ifeq ($(LOCAL_INSTALL),1)
-	NVCC := $(CUDA_BIN_PATH)/nvcc
+	NVCC := $(CUDA_BIN_PATH)/pgCC
 else
-	NVCC := nvcc
+	NVCC := pgCC
 endif
 
 # Defines the types of files that the Makefile knows how to compile
@@ -195,7 +195,7 @@ CudaLibFlags := -lcudart
 
 # The target device architecture flags specified when compiling and linking
 # the CUDA device code
-CudaArchitecture := -arch=sm_21
+CudaArchitecture :=
 
 # Compiler specific flags for the C++ compiler when generating .o files
 # and when generating .d files for dependency information
@@ -203,16 +203,16 @@ CxxFlags := -c
 
 # Compiler specific flags for the CUDA compiler when generating .o files
 # and when generating .d files for dependency information
-CuFlags := -c -rdc=true $(CudaArchitecture)
+CuFlags := -c $(CudaArchitecture)
 
 # Linker specific flags for the C++ compiler
-LCxxFlags := 
+LCxxFlags :=
 
-# Linker specific flags for the CUDA compiler. CUDA GCC path is specified on Macintosh. 
+# Linker specific flags for the CUDA compiler. CUDA GCC path is specified on Macintosh.
 ifeq ($(CUDA_GCC_PATH),NULL)
-	LCuFlags := -rdc=true $(CudaArchitecture) -lgomp
+	LCuFlags := $(CudaArchitecture) -lgomp
 else
-	LCuFlags := --compiler-bindir=$(CUDA_GCC_PATH) -rdc=true $(CudaArchitecture) -lgomp
+	LCuFlags := --compiler-bindir=$(CUDA_GCC_PATH) $(CudaArchitecture) -lgomp
 endif
 
 # The debug compiler flags that add symbol and profiling hooks to the
@@ -250,8 +250,8 @@ GTestHeaders = $(GTestDir)/include/gtest/*.h \
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
 # the compiler doesn't generate warnings in Google Test headers.
-GTestFlags := -isystem $(GTestDir)/include
-GTestFlags += -pthread #-Wall -Wextra
+GTestFlags := -I$(GTestDir)/include
+#GTestFlags += -pthread #-Wall -Wextra
 
 # Builds gtest.a and gtest_main.a.
 # Usually you shouldn't tweak such internal variables, indicated by a
@@ -269,7 +269,7 @@ Definitions := APP_NAME=\"$(AppName)\"
 # is not set by the user, then the build will default to a release build. If
 # the user specifies an option other than 'debug' or 'release' then the build
 # will default to release build.
-ifeq ($(BUILD),debug)   
+ifeq ($(BUILD),debug)
 	# "Debug" build - set compiling and linking flags
 	CxxFlags += $(CxxDebugFlags)
 	LFlags += $(CxxDebugFlags)
@@ -323,7 +323,7 @@ ObjFolders := $(addprefix $(BuildDir)/,$(SourceModules))
 ObjFolders += $(BuildDir)/$(UnitTestDir)
 
 # Searches through the specified Modules list for all of the valid
-# files that it can find and compile. Once all of the files are 
+# files that it can find and compile. Once all of the files are
 # found, they are appended with an .o and prefixed with the object
 # directory path. This allows the compiled object files to be routed
 # to the proper output directory.
@@ -335,7 +335,7 @@ Objects := $(patsubst %,$(BuildDir)/%.o,$(basename $(Sources)))
 CudaSources := $(filter %.cu, $(Sources))
 CudaObjects := $(patsubst %, $(BuildDir)/%.o, $(basename $(CudaSources)))
 
-# The unit testing objects are all gathered seperately because they are 
+# The unit testing objects are all gathered seperately because they are
 # included all at once from the testing directory and are compiled into the
 # output program alongside the source objects.
 UnitTestingSources := $(filter %.cpp,$(wildcard $(UnitTestDir)/*))
@@ -386,7 +386,7 @@ $(UnitTestName) : $(Objects) $(UnitTestingObjects) $(BuildDir)/cuda_link.o $(Obj
 dirtree :
 	@mkdir -p $(ObjFolders) $(BinDir) $(ObjDir) $(AppDir) $(BuildDir)
 
-clean : 
+clean :
 	rm -rf $(ObjDir) $(BinDir)
 
 ################################
@@ -419,13 +419,13 @@ $(ObjDir)/gtest.a : $(ObjDir)/gtest-all.o | dirtree
 $(ObjDir)/gtest_main.a : $(ObjDir)/gtest-all.o $(ObjDir)/gtest_main.o | dirtree
 	$(AR) $(ARFLAGS) $@ $^
 
-# Here are the Rules that determine how to compile a CUDA and a C++ source 
+# Here are the Rules that determine how to compile a CUDA and a C++ source
 # file into an object file. Note that we have specified a special rule for
 # unit testing object files, as they use a special set of compiler flags
 # in order to meet the Google Test framework requirements.
 
 $(BuildDir)/$(UnitTestDir)/%.o : $(UnitTestDir)/%.cpp $(GTestHeaders) | dirtree
-	g++ $(CxxFlags) $(GTestFlags) $(Defines) $(Includes) $< -o $@
+	$(CC) $(CxxFlags) $(GTestFlags) $(Defines) $(Includes) $< -o $@
 
 $(BuildDir)/%.o : %.cu | dirtree
 	$(NVCC) $(CuFlags) $(Includes) $(Defines) $< -o $@

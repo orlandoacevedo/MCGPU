@@ -2,5 +2,5 @@
 
 int main(int argc, char** argv)
 {
-	metrosim::run(argc, argv);	
+	metrosim::run(argc, argv);
 }

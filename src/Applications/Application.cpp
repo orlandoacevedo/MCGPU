@@ -29,7 +29,7 @@ int metrosim::run(int argc, char** argv)
 	}
 
 	DeviceContext context = DeviceContext();
-	if (args.simulationMode == SimulationMode::Parallel)
+	if (false)
 	{
 		if (!openDeviceContext(&context, MIN_MAJOR_VER, MIN_MINOR_VER, args.deviceIndex))
 		{
@@ -37,7 +37,7 @@ int metrosim::run(int argc, char** argv)
 		}
 	}
 
-	if (args.simulationMode == SimulationMode::Parallel)
+	if (false)
 	{
 		fprintf(stdout, "Beginning simulation using GPU...\n");
 	}

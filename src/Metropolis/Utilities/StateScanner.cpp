@@ -233,7 +233,8 @@ Angle StateScanner::getAngleFromLine(string line) {
 }
 
 Atom StateScanner::getAtomFromLine(string line) {
-  Atom atom = createAtom(-1,-1,-1,-1,-1,-1);
+	unsigned long inval = (unsigned long) -1;
+  Atom atom = createAtom(inval, -1,-1,-1,-1,-1);
 
   char *tokens;
   char *charLine = (char *) malloc(sizeof(char) * (line.size()+1));
@@ -395,8 +396,7 @@ Environment* StateScanner::getEnvironmentFromLine(string line) {
   strcpy(charLine, line.c_str());
   tokens = strtok(charLine, " ");
 
-  int numOfAtoms, tokenNumber = 0;
-  Real x,y,z,cutoff;
+  int tokenNumber = 0;
 
   while (tokens != NULL) {
     switch (tokenNumber) {

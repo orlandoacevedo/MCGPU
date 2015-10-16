@@ -606,6 +606,7 @@ using ::std::tuple_size;
 // Usually it will only be available on Linux, excluding
 // Linux on the Itanium architecture.
 // Also see http://linux.die.net/man/2/clone.
+#define GTEST_HAS_CLONE 0
 #ifndef GTEST_HAS_CLONE
 // The user didn't tell us, so we need to figure it out.
 

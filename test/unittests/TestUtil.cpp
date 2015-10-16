@@ -43,7 +43,11 @@ void createConfigFile(std::string MCGPU, std::string fileName, std::string prima
 }
 
 std::string getMCGPU_path () {
-	std::string directory = get_current_dir_name();
+	char *path = (char*) malloc(4096);
+	size_t size = 4096;
+	path = getcwd(path, size);
+	//std::string directory = get_current_dir_name();
+	std::string directory(path);
 	std::string mc ("MCGPU");
 	std::size_t found = directory.find(mc);
 
@@ -55,7 +59,12 @@ std::string getMCGPU_path () {
 }
 
 bool inDebugMode() {
-	std::string directory = get_current_dir_name();
+	char *path = (char*) malloc(4096);
+	size_t size = 4096;
+	path = getcwd(path, size);
+	//std::string directory = get_current_dir_name();
+	std::string directory(path);
+	//std::string directory = get_current_dir_name();
 	std::string mcdebug ("MCGPU/bin/debug");
 	std::size_t found = directory.find(mcdebug);
 
@@ -92,7 +101,7 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 		ss << "--name " << outputName << " -i 10000 ";							//If we do not expect an error, simply give the name for the results file.
 	}
 	std::string output = ss.str();
-	// std::cout << "RUNNING: " << output << std::endl;
+  // std::cout << "RUNNING: " << output << std::endl;
 	return output;
 }
 

@@ -58,7 +58,8 @@ Atom getAtom(vector<Atom> atoms, unsigned long atomID) {
       return atoms[i];
     }
   }
-  return createAtom(-1,-1,-1,-1);
+	unsigned long inval = (unsigned long) -1;
+  return createAtom(inval,-1,-1,-1);
 }
 
 Bond getBond(const vector<Bond>& bonds, unsigned long a1, unsigned long a2) {
@@ -76,7 +77,8 @@ vector<unsigned long> getAllBonds(vector<Bond> bonds, unsigned long atomID) {
   for (int i = 0; i < bonds.size(); i++) {
     unsigned long oppositeAtom = getOppositeAtom(bonds[i], atomID);
 
-    if (oppositeAtom != -1) {
+		unsigned long inval = (unsigned long) -1;
+    if (oppositeAtom != inval) {
       toReturn.push_back(oppositeAtom);
     }
   }
@@ -121,7 +123,7 @@ unsigned long getOppositeAtom(Bond bond, unsigned long atomID) {
   } else if(bond.atom2 == atomID) {
     return bond.atom1;
   } else {
-    return -1;
+    return (unsigned long) -1;
   }
 }
 
@@ -131,7 +133,7 @@ unsigned long getOppositeAtom(Angle angle, unsigned long atomID) {
   } else if (angle.atom2 == atomID) {
     return angle.atom1;
   } else {
-    return -1;
+    return (unsigned long) -1;
   }
 }
 
@@ -141,7 +143,7 @@ unsigned long getOppositeAtom(Dihedral dihedral, unsigned long atomID) {
   } else if (dihedral.atom2 == atomID) {
     return dihedral.atom1;
   } else {
-    return -1;
+    return (unsigned long) -1;
   }
 }
 
@@ -152,11 +154,13 @@ unsigned long getCommonAtom(vector<Bond> bonds, unsigned long atom1, unsigned lo
   for (int i = 0; i < bonds.size(); i++) {
     unsigned long opp1 = getOppositeAtom(bonds[i], atom1);
     unsigned long opp2 = getOppositeAtom(bonds[i], atom2);
+		unsigned long inval = (unsigned long) -1;
 
-    if (opp1 != -1) {
+
+    if (opp1 != inval) {
       atom1Bonds.push_back(opp1);
     }
-    if (opp2 != -1) {
+    if (opp2 != inval) {
       atom2Bonds.push_back(opp2);
     }
   }
@@ -171,7 +175,7 @@ unsigned long getCommonAtom(vector<Bond> bonds, unsigned long atom1, unsigned lo
     }
   }
 
-  return -1;
+  return (unsigned long) -1;
 }
 
 bool inXZPlane(Atom atom) {
@@ -234,10 +238,11 @@ double getDistance(Atom atom0, Atom atom1, Atom atom2, Atom atom3) {
   if (fabs(getAngle(atom1, atom2, atom3)) < .00001) {
     //determine if line passes through origin
     // see : http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+		unsigned long inval = (unsigned long) -1;
 
-    Atom a1_a0 = createAtom(-1, atom1.x - atom0.x, atom1.y - atom0.y,
+    Atom a1_a0 = createAtom(inval, atom1.x - atom0.x, atom1.y - atom0.y,
         atom1.z - atom0.z);
-    Atom a2_a1 = createAtom(-1, atom2.x - atom1.x, atom2.y - atom1.y,
+    Atom a2_a1 = createAtom(inval, atom2.x - atom1.x, atom2.y - atom1.y,
         atom2.z - atom1.z);
 
     //calc dot product of a2_a0 a2_a1
@@ -265,26 +270,26 @@ Point getNormal(Atom atom1, Atom atom2, Atom atom3) {
   //atoms are co-linear
   if (fabs(getAngle(atom1, atom2, atom3)) < .00001) {
     //will try to use 0,0,0 then 1,0,0 then 0,1,0 as normals
-
+		unsigned long inval = (unsigned long) -1;
     //determine if line passes through origin
-    Atom atom0 = createAtom(-1, 0, 0, 0);
+    Atom atom0 = createAtom(inval, 0, 0, 0);
     double distance_2_origin = getDistance(atom0, atom1, atom2, atom3);
 
-    atom0 = createAtom(-1, 1,0,0);
+    atom0 = createAtom(inval, 1,0,0);
     double distance_2_x1 = getDistance(atom0, atom1, atom2, atom3);
 
-    atom0 = createAtom(-1, 0, 1, 0);
+    atom0 = createAtom(inval, 0, 1, 0);
     double distance_2_y1 = getDistance(atom0, atom1, atom2, atom3);
 
     if (distance_2_origin > .00001) {
       // use origin
-      atom0 = createAtom(-1, 0, 0, 0);
+      atom0 = createAtom(inval, 0, 0, 0);
     } else if (distance_2_x1 > .00001) {
       // use 1,0,0
-      atom0 = createAtom(-1, 1, 0, 0);
+      atom0 = createAtom(inval, 1, 0, 0);
     } else {
       // use 0,1,0
-      atom0 = createAtom(-1, 0, 1, 0);
+      atom0 = createAtom(inval, 0, 1, 0);
     }
 
     Plane p = createPlane(atom0, atom2, atom1);
@@ -300,9 +305,11 @@ double getAngle(Plane p1, Plane p2) {
   Point normal1 = getNormal(p1);
   Point normal2 = getNormal(p2);
 
-  Atom a1 = createAtom(-1, normal1.x, normal1.y, normal1.z);
-  Atom a2 = createAtom(-1, 0, 0, 0);
-  Atom a3 = createAtom(-1, normal2.x, normal2.y, normal2.z);
+	unsigned long inval = (unsigned long) -1;
+
+  Atom a1 = createAtom(inval, normal1.x, normal1.y, normal1.z);
+  Atom a2 = createAtom(inval, 0, 0, 0);
+  Atom a3 = createAtom(inval, normal2.x, normal2.y, normal2.z);
 
   return getAngle(a1, a2, a3);
 }
@@ -352,7 +359,8 @@ Atom rotateAtomInPlane(Atom atom1, Atom atom2, Atom atom3, double theta) {
     normal = getNormal(atomPlane);
   }
 
-  Atom vectorEnd = createAtom(-1, atom2.x + normal.x, atom2.y + normal.y,
+	unsigned long inval = (unsigned long) -1;
+  Atom vectorEnd = createAtom(inval, atom2.x + normal.x, atom2.y + normal.y,
       atom2.z + normal.z);
 
   //Rotate about that normal vector
@@ -378,12 +386,14 @@ Atom rotateAtomAboutVector(Atom atom1, Atom atom2, Atom atom3, double theta) {
     //determin if the rotation axis is vertical
     Atom xzVector;
 
+		unsigned long inval = (unsigned long) -1;
+
     if (compareDoubleDifference(atom2.x, atom3.x, DOUBPREC)
         && compareDoubleDifference(atom2.z, atom3.z, DOUBPREC)) {
 
-      xzVector = createAtom(-1, atom3.x + 1, atom2.y, atom3.z);
+      xzVector = createAtom(inval, atom3.x + 1, atom2.y, atom3.z);
     } else {
-      xzVector = createAtom(-1, atom3.x, 0, atom3.z);
+      xzVector = createAtom(inval, atom3.x, 0, atom3.z);
     }
     xzAngle = getAngle(atom3, atom2, xzVector);
 
@@ -395,7 +405,7 @@ Atom rotateAtomAboutVector(Atom atom1, Atom atom2, Atom atom3, double theta) {
   }
 
   //find the angle between the vector and the z axis
-  Atom zAxis = createAtom(-1, 0, 0, 1);
+  Atom zAxis = createAtom(inval, 0, 0, 1);
   double zAngle = getAngle(atom3, atom2, zAxis);
 
   //rotate about y axis so that the vector is parallel to z axis
@@ -602,7 +612,8 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded) {
       if (angleFound >=0 ) {
     		Angle lineAngle = angleVector[angleFound];
     		// Get other atom listed in angle
-        Atom otherAtom = createAtom(-1, -1, -1, -1);
+				unsigned long inval = (unsigned long) -1;
+        Atom otherAtom = createAtom(inval, -1, -1, -1);
         unsigned long otherID = getOppositeAtom(lineAngle, lineAtom.id);
         otherAtom = getAtom(atomVector, otherID);
 
@@ -674,7 +685,7 @@ void buildMoleculeInSpace(Molecule *molec, int numBonded) {
           for (int i = 0; i < bondVector.size(); i++) {
             unsigned long opposite = getOppositeAtom(bondVector[i], commonAtom);
 
-            if (opposite != -1 && opposite != otherAtom.id && opposite != lineAtom.id) {
+            if (opposite != (unsigned long) -1 && opposite != otherAtom.id && opposite != lineAtom.id) {
               linkingBond = bondVector[i];
               break;
             }

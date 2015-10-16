@@ -27,7 +27,7 @@ namespace metrosim
 	///   application.
 	/// @note The command line argument list will always have at least one entry
 	///   because the name of the program as it was entered via the command
-	///   line will always be the first entry in the arguments list (i.e. 
+	///   line will always be the first entry in the arguments list (i.e.
 	///   @e argv[0] will be the invoked program name).
 	int run(int argc, char** argv);
 }

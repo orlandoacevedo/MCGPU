@@ -61,7 +61,7 @@ void SBScanner::processAngle(string line) {
 }
 
 void SBScanner::processLine(string line) {
-	if(line.at(5) == '-')
+	if(line.size() > 5 && line.at(5) == '-')
 		processAngle(line);
 	else
 		processBond(line);
