@@ -404,6 +404,8 @@ Atom rotateAtomAboutVector(Atom atom1, Atom atom2, Atom atom3, double theta) {
     atom3 = rotateAboutZ(atom3, xzAngle);
   }
 
+	unsigned int inval = (unsigned int) -1;
+
   //find the angle between the vector and the z axis
   Atom zAxis = createAtom(inval, 0, 0, 1);
   double zAngle = getAngle(atom3, atom2, zAxis);

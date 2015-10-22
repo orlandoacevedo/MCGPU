@@ -6,6 +6,7 @@
 #include <exception>
 #include <stdexcept>
 //#include <sstream>
+#include <time.h>
 #include "Parsing.h"
 #include "StructLibrary.h"
 #include "Metropolis/Box.h"

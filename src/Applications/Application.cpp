@@ -28,6 +28,8 @@ int metrosim::run(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
+	bool parallelMode = args.simulationMode == SimulationMode::Parallel;
+
 	DeviceContext context = DeviceContext();
 	if (false)
 	{

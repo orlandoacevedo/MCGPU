@@ -18,6 +18,16 @@
 
 using namespace std;
 
+void accTest() {
+	int a[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+	int tot = 0;
+	#pragma acc kernels
+	for (int i = 0; i < 10; i++) {
+		tot += a[i];
+	}
+	std::cout << tot << std::endl;
+}
+
 Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long* startStep, long* steps)
 {
 	SerialBox* box = new SerialBox();

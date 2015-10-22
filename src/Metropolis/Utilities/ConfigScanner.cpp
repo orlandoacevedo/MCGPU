@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <stdexcept>
+#include <time.h>
 //#include <sstream>
 #include "Parsing.h"
 #include "StructLibrary.h"
