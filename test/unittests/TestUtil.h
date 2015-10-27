@@ -22,7 +22,7 @@ struct ConfigFileData {
 	double cutoffDistance;
 	double maxRotation;
 	int randomSeed;
-	
+
 	/**
 	 * Constructor for ConfigFileData.
 	 * @param sizeX_in The length of the box on the x-axis in angstroms.
@@ -39,10 +39,10 @@ struct ConfigFileData {
 	 * @param maxRotation_in The maximum amount a molecule can rotate in one step (measured in degrees).
 	 * @param randomSeed_in The random seed to use.
 	 */
-	ConfigFileData(double sizeX_in, double sizeY_in, double sizeZ_in, double tempKelvin_in, double maxTranslation_in, 
-				   int numSteps_in, int numMolecules_in, std::string oplsaa_par_path_in, std::string z_matrix_file_in, 
+	ConfigFileData(double sizeX_in, double sizeY_in, double sizeZ_in, double tempKelvin_in, double maxTranslation_in,
+				   int numSteps_in, int numMolecules_in, std::string oplsaa_par_path_in, std::string z_matrix_file_in,
 				   std::string working_path_in, double cutoffDistance_in, double maxRotation_in, int randomSeed_in) {
-	
+
 		sizeX = sizeX_in;
 		sizeY = sizeY_in;
 		sizeZ = sizeZ_in;

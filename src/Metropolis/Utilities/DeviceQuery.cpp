@@ -11,12 +11,12 @@
 
 bool openDeviceContext(struct DeviceContext* context, int major, int minor, int deviceIndex)
 {
-	return false;
+	return true;
 }
 
 bool closeDeviceContext(struct DeviceContext* context)
 {
-	return false;
+	return true;
 }
 
 void printDeviceInformation()

@@ -49,7 +49,7 @@ std::string getMCGPU_path () {
 	//std::string directory = get_current_dir_name();
 	std::string directory(path);
 	std::string mc ("MCGPU");
-	std::size_t found = directory.find(mc);
+	std::size_t found = directory.rfind(mc);
 
 	if(found != std::string::npos) {
 		directory = directory.substr(0, found + 6);
