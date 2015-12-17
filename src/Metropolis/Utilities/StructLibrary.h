@@ -18,26 +18,34 @@
 //Forward declaration so that each can be used in methods below
 
 
+
+struct NLC_Node {
+	int index; // The molecule index that this node holds.
+	struct NLC_Node* next; // The next node in this NLC chain.
+
+	NLC_Node() {};
+};
+
 /**
- * This struct contains data about the bond between two atoms. 
+ * This struct contains data about the bond between two atoms.
  */
 struct BondData {
-	
+
 	/**
 	 * The force constant of this bond.
 	 */
 	Real kBond;
-	
+
 	/**
 	 * The equilibrium bond distance of this bond.
 	 */
 	Real eqBondDist;
-	
+
 	/**
 	 * Default constructor. Used when creating a map to bondData.
 	 */
 	BondData() {}
-	
+
 	/**
 	 * Preferred constructor. Initializes variables.
 	 * @param init_kBond The value to initialize the bond's force constant to.
@@ -53,23 +61,23 @@ struct BondData {
  * This struct holds data about the angle formed by three atoms.
  */
 struct AngleData {
-	
+
 	/**
 	 * The force constant of the angle.
 	 */
 	Real kAngle;
-	
+
 	/**
 	 * The equilibrium size of the angle formed by the three atoms.
 	 * This is measured in degrees.
 	 */
 	Real eqAngle;
-	
-	/** 
+
+	/**
 	 * Default constructor for angleData. Used when creating a map to angleData.
 	 */
 	AngleData() {}
-	
+
 	/**
 	 * Preferred constructor for angleData. Initializes variables.
 	 * @param init_kAngle The value to initialize the angle's force constant to.
@@ -89,11 +97,11 @@ struct Table
 {
 
     int **hopTable;
-    
+
     Table()
     {
     }
-    
+
     Table(int **table) //constructor with parameters
 	{
 	   hopTable = table;
@@ -123,17 +131,17 @@ struct Bond
        Bool indicating if the bond can be varied.
     */
     bool variable;
-    
-	/** 
+
+	/**
 	 * The force constant K of the bond.
 	 */
 	Real forceConstant;
-	
+
 	/**
 	 * The equilibrium bond distance of this bond.
 	 */
 	Real eqBondDist;
-	
+
 	/**
 	 * Parameterless constructor for the Bond struct.
 	 */
@@ -144,7 +152,7 @@ struct Bond
     	distance = 0;
     	variable = true;
 	}
-    
+
     /**
 	 * Standard constructor for the Bond struct.
 	 * @param a1 The first atom in the Bond.
@@ -174,33 +182,33 @@ struct Angle
     /*!
     the first atom in the angle
     */
-    int atom1; 
-    
+    int atom1;
+
     /*!
     the second atom in the angle
     */
     int atom2;
-    
+
     /*!
     the angle between the atoms; used to be "value"
     */
-    Real value; 
-    
+    Real value;
+
     /*!
     if the angle is variable
     */
     bool variable;
-    
+
 	/**
 	 * The equilibrium angle of this set of atoms.
 	 */
 	Real eqAngle;
-	
+
 	/**
 	 * The force constant k of this angle.
 	 */
 	Real forceConstant;
-	
+
     Angle()
 	{
     	atom1 = 0;
@@ -208,8 +216,8 @@ struct Angle
     	value = 0;
     	variable = true;
 	}
-	
-	
+
+
     Angle(int a1, int a2, Real val, bool varied)
 	{
     	atom1 = a1;
@@ -229,23 +237,23 @@ struct Dihedral
     /**
     the first atom in the dihedral
     */
-    int atom1; 
-    
+    int atom1;
+
     /**
       the second atom in the dihedral
     */
-    int atom2; 
-    
+    int atom2;
+
     /**
     the distance between the atoms; used to be "value"
     */
-    Real value; 
-    
+    Real value;
+
     /**
     if the distance between atoms is variable
     */
-    bool variable; 
-    
+    bool variable;
+
     Dihedral()
 	{
     	atom1 = 0;
@@ -253,8 +261,8 @@ struct Dihedral
     	value = 0;
     	variable = true;
 	}
-	
-	
+
+
     Dihedral(int a1, int a2, Real val, bool varied)
 	{
     	atom1 = a1;
@@ -284,7 +292,7 @@ struct Hop
     the number of nodes between start and finish
     */
 	int hop;
-	
+
 	Hop()
     {
 		atom1 = 0;
@@ -315,7 +323,7 @@ struct Atom
 	unsigned long id;
 	//std::map<std::string, BondData> bonds;
 	//std::map<std::string, std::map<std::string, AngleData> > angles;
-	
+
 	Atom()
     {
 		name = new std::string("000");
@@ -327,7 +335,7 @@ struct Atom
 		charge = 0;
 		id = 0;
 	}
-	
+
 	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, std::string inName = "")
 	{
 		x = inX;
@@ -339,8 +347,8 @@ struct Atom
 		name = new std::string(inName);
         id = inID;
 	}
-	
-	
+
+
 };
 
 struct Environment
@@ -353,7 +361,7 @@ struct Environment
 	int primaryAtomIndex;
 	std::vector< std::vector<int>* >* primaryAtomIndexArray;
 	int randomseed; //--Albert
-	
+
 	Environment() //constructor/initialize all values to 0 or some other default, where applicable
 	{
 		x = 0.0;
@@ -444,11 +452,11 @@ struct Molecule
     array containing a list of atoms that are less than 4 nodes away
     */
     Hop *hops;
-    
+
     /*
     Constructor(s) for the molecule
     */
-    Molecule(int idIn, int typeIn, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount) 
+    Molecule(int idIn, int typeIn, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount)
     {
 		id = idIn;
 		type = typeIn;
@@ -463,10 +471,10 @@ struct Molecule
 		numOfAngles = angleCount;
 		numOfBonds = bondCount;
 		numOfDihedrals = dihedralCount;
-		numOfHops = hopCount; 	
+		numOfHops = hopCount;
 	}
-		
-	Molecule() 
+
+	Molecule()
     {
 		id = 0;
 		type = 0;
@@ -481,8 +489,8 @@ struct Molecule
 		numOfAngles = 0;
 		numOfBonds = 0;
 		numOfDihedrals = 0;
-		numOfHops = 0; 	
-	}    
+		numOfHops = 0;
+	}
 };
 
 

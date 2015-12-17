@@ -350,3 +350,70 @@ Real SimBox::calcChargeEnergy(refInt a1, refInt a2, const Real& r) {
 Real SimBox::calcBlending (const Real &a, const Real &b) {
   return sqrt(abs(a*b));
 }
+
+void SimBox::fillNLC() {
+  neighbors = new NLC_Node*[27];
+  numCells = new int[NUM_DIMENSIONS];
+  cellWidth = new Real[NUM_DIMENSIONS];
+  for (int i = 0; i < NUM_DIMENSIONS; i++) {
+    numCells[i] = (int) (size[i] / cutoff);
+    if (numCells[i] == 0)
+      numCells[i] = 1;
+    cellWidth[i] = size[i] / numCells[i];
+  }
+  neighborCells = new NLC_Node**[numCells[0]];
+  for (int i = 0; i < numCells[0]; i++) {
+    neighborCells[i] = new NLC_Node*[numCells[1]];
+    for (int j = 0; j < numCells[1]; j++) {
+      neighborCells[i][j] = new NLC_Node[numCells[2]];
+      for (int k = 0; k < numCells[2]; k++) {
+        neighborCells[i][j][k].index = -1;
+        neighborCells[i][j][k].next = NULL;
+      }
+    }
+  }
+  nlc_heap = new NLC_Node[numMolecules];
+  for (int i = 0; i < numMolecules; i++) {
+    int pIdx = moleculeData[MOL_PIDX_START][i];
+    int cloc[3];
+    for (int j = 0; j < NUM_DIMENSIONS; j++) {
+      cloc[j] = getCell(atomCoordinates[j][pIdx], j);
+    }
+    nlc_heap[i].next = &neighborCells[cloc[0]][cloc[1]][cloc[2]];
+    nlc_heap[i].index = i;
+    neighborCells[cloc[0]][cloc[1]][cloc[2]] = nlc_heap[i];
+  }
+}
+
+int SimBox::findNeighbors(int molIdx) {
+  int outIdx = 0;
+
+  int base[3];
+  for (int i = 0; i < 3; i++) {
+    base[i] = getCell(atomCoordinates[i][moleculeData[MOL_PIDX_START][molIdx]], i);
+  }
+
+  for (int i = -1; i <= 1; i++) {
+    if (i + 1 >= numCells[0]) break;
+    for (int j = -1; j <= 1; j++) {
+      if (j + 1 >= numCells[1]) break;
+      for (int k = -1; k <= 1; k++) {
+        if (k + 1 >= numCells[2]) break;
+        neighbors[outIdx] = &neighborCells[base[0] + i][base[1] + j][base[2] + k];
+        outIdx++;
+      }
+    }
+  }
+
+  return outIdx;
+}
+
+int SimBox::wrapCell(int idx, int dimension) {
+  return (idx + numCells[dimension]) % numCells[dimension];
+}
+
+int SimBox::getCell(Real loc, int dimension) {
+  int idx = (int) (loc / cellWidth[dimension]);
+  int numC = numCells[dimension];
+  return (idx + numC) % numC;
+}

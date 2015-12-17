@@ -82,6 +82,15 @@ public:
   Real*   dihedralSizes;
   const Real**  dihedralData;
 
+  bool useNLC;
+
+  NLC_Node** neighbors;
+  NLC_Node*** neighborCells;
+  NLC_Node* nlc_heap;
+
+  int* numCells;
+  Real* cellWidth;
+
   /**
    * Roll back a molecule to its original poisition. Performs translation and
    * rotation.
@@ -286,6 +295,34 @@ public:
    * Outputs: sqrt(|a*b|), the geometric mean of the two numbers.
    */
   Real calcBlending (const Real &a, const Real &b);
+
+  /**
+   * Stores all of the molecules in this simulation box in an appropriate chain
+   * of neighbor-list linked cells.
+   */
+  void fillNLC();
+
+  /**
+   * Given the index for a molecule, popuplate neighbors with the heads of
+   * linked-lists holding the molecules in neighboring cells.
+   */
+  int findNeighbors(int molIdx);
+
+  /**
+   * Given an index and a dimension, returns the index, wrapped around the box.
+   * Inputs:  idx - The index of a cell to wrap.
+   *          dimension - The dimension the index is in.
+   * Outputs: The index, wrapped around the size of the box.
+   */
+  int wrapCell(int idx, int dimension);
+
+  /**
+   * Given a location and a dimension, returns the corresponding cell index.
+   * Inputs:  location - The index of the cell to wrap.
+   *          dimension - The dimension to wrap in.
+   * Outputs: The index, wrapped around the size of the box.
+   */
+  int getCell(Real loc, int dimension);
 };
 
 typedef const SimBox & refBox;
