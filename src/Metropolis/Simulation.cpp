@@ -149,17 +149,13 @@ void Simulation::run() {
 		} else {
 			if (args.useNeighborList) {
 				log.verbose("Using neighbor-list for energy calculation");
-				oldEnergy = SerialCalcs::calcSystemEnergy_NLC(box, lj_energy, charge_energy);
+				//oldEnergy = SerialCalcs::calcSystemEnergy_NLC(box, lj_energy, charge_energy);
 			} else {
 				log.verbose("Using original system energy calculation");
-				oldEnergy = SerialCalcs::calcSystemEnergy(box, lj_energy, charge_energy);
+				//oldEnergy = SerialCalcs::calcSystemEnergy(box, lj_energy, charge_energy);
 			}
 		}
 		oldEnergy_sb = sb->calcSystemEnergy(lj_energy, charge_energy);
-		std::cout << oldEnergy_sb << " versus " << oldEnergy << std::endl;
-		//oldEnergy += energy_LRC + intraMolEnergy; // add in long-range correction value and intramol energy
-		//oldEnergy = oldEnergy_sb;
-		oldEnergy += energy_LRC;
 		oldEnergy_sb += energy_LRC;
 	}
 	function_time_end = clock();
@@ -206,14 +202,6 @@ void Simulation::run() {
 		//int changeIdx = box->chooseMolecule();
 		int changeIdx = sb->chooseMolecule();
 
-		// get neighbors and update neighbor-list on interval
-		if (args.useNeighborList) {
-			if (move % args.neighborListInterval == 0) {
-				box->createNeighborList();
-			}
-			SerialCalcs::getNeighbors_NLC(box, changeIdx, neighbors, false);
-		}
-
 		//Calculate the current/original/old energy contribution for the current molecule
 		if (false) {
 			if (args.useNeighborList) {
@@ -223,35 +211,14 @@ void Simulation::run() {
 			}
 		} else {
 			if (args.useNeighborList) {
-				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(box, old_lj, old_charge, changeIdx, neighbors);
 				oldEnergyCont_sb = sb->calcMolecularEnergyContribution(old_lj, old_charge, changeIdx, 0);
 			} else {
-				oldEnergyCont_sb = sb->calcMolecularEnergyContribution(old_lj, old_charge, changeIdx, 0);
-			  oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, old_lj, old_charge, changeIdx);
+			  oldEnergyCont_sb = sb->calcMolecularEnergyContribution(old_lj, old_charge, changeIdx, 0);
 			}
 		}
 
 		//Actually translate the molecule at the preselected index
-		//sb->changeMolecule(changeIdx);
-
-		Real maxT = sb->maxTranslate;
-		Real maxR = sb->maxRotate;
-
-		int molLen = sb->moleculeData[1][changeIdx];
-
-		int vertexIdx = (int) randomReal(0, molLen);
-
-		const Real deltaX = randomReal(-maxT, maxT);
-		const Real deltaY = randomReal(-maxT, maxT);
-		const Real deltaZ = randomReal(-maxT, maxT);
-
-		const Real rotX = randomReal(-maxR, maxR);
-		const Real rotY = randomReal(-maxR, maxR);
-		const Real rotZ = randomReal(-maxR, maxR);
-
-		box->changeMolecule(changeIdx, vertexIdx, deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
-		sb->changeMolecule(changeIdx, vertexIdx, deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
-
+   	sb->changeMolecule(changeIdx);
 
 		//Calculate the new energy after translation
 		if (false) {
@@ -262,16 +229,11 @@ void Simulation::run() {
 			}
 		} else {
 			if (args.useNeighborList) {
-				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(box, new_lj, new_charge, changeIdx, neighbors);
 				newEnergyCont_sb = sb->calcMolecularEnergyContribution(new_lj, new_charge, changeIdx, 0);
 			} else {
 				newEnergyCont_sb = sb->calcMolecularEnergyContribution(new_lj, new_charge, changeIdx, 0);
-			  newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, old_lj, old_charge, changeIdx);
 			}
 		}
-
-		//std::cout << "OLD: " << oldEnergyCont << " to " << newEnergyCont << std::endl;
-		//std::cout << "NEW: " << oldEnergyCont_sb << " to " << newEnergyCont_sb << std::endl;
 
 		// Compare new energy and old energy to decide if we should accept or not
 		bool accept = false, accept_sb = false;
@@ -298,19 +260,13 @@ void Simulation::run() {
 		} else {
 			rejected++;
 			sb->rollback(changeIdx);
-			box->rollback(changeIdx);
 		}
 
 		int firstIdx = sb->moleculeData[0][changeIdx];
 		Atom firstAtom = box->molecules[changeIdx].atoms[0];
-
-		//std::cout << "OLD: " << firstAtom.x << ", " << firstAtom.y << ", " << firstAtom.z << std::endl;
-		//std::cout << "NEW: " << sb->atomCoordinates[0][firstIdx] << ", " << sb->atomCoordinates[1][firstIdx] << ", " << sb->atomCoordinates[2][firstIdx] << std::endl;
 	}
-	writePDB(box->getEnvironment(), box->getMolecules());
 	endTime = clock();
-
-//	sb->printCoordinates();
+	writePDB(box->getEnvironment(), box->getMolecules());
 
 	/*This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
 	  However, it is a good enough estimation without adding unnecessary complexity.*/

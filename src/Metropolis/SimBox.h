@@ -83,38 +83,11 @@ public:
   const Real**  dihedralData;
 
   /**
-   * Add atoms to the Simulation Box.
-   * Inputs: atoms - A vector containing the various atoms inside the box.
-   * Outputs: true if the atoms were added successfully, false otherwise.
-   * NOTE: THIS IS DEPRECATED!
-   */
-  bool addAtoms(std::vector<Atom> atoms);
-
-  /**
-   * Roll back a molecule to its original position. Only performs translation.
-   * Inputs: molIdx - The index of the molecule to change.
-   *         dx - The amount translated in the x direction.
-   *         dy - The amount translated in the y direction.
-   *         dz - The amount translated in the z direction.
-   * NOTE: THIS IS DEPRECATED!
-   */
-  void rollBack(refInt molIdx, Real &dx, Real &dy, Real &dz);
-
-  /**
    * Roll back a molecule to its original poisition. Performs translation and
    * rotation.
    * Inputs: molIdx - The index of the molecule to change.
    */
   void rollback(int molIdx);
-
-  /**
-   * Moves a molecule. Only performs translation.
-   * Inputs: molIdx - The index of the molecule to change.
-   *         dx - The amount to translate in the x direction.
-   *         dy - The amount to translate in the y direction.
-   *         dz - The amount to translate in the z direction.
-   */
-  void moveMolecule(refInt molIdx, Real &dx, Real &dy, Real &dz);
 
   /**
    * Adds the molecules from a Box to this simulation box.
@@ -150,14 +123,6 @@ public:
    * NOTE: THIS IS FOR DEBUG ONLY.
    */
   void printCoordinates();
-
-  /**
-   * Given a value and its dimension, returns that value, modified to stay
-   * within the box.
-   * Inputs: value - A position within the box.
-   *         dimension - The dimension to contain the value within.
-   */
-  Real keepInBox(const Real& value, const int dimension);
 
   /**
    * Given a box, constructs the corresponding simulation box.

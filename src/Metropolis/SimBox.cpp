@@ -1,34 +1,5 @@
 #include "SimBox.h"
 
-
-void SimBox::rollBack(refInt molIdx, Real &dx, Real &dy, Real &dz) {
-  int startAtomIdx = moleculeData[MOL_START][molIdx];
-  int endAtomIdx = moleculeData[MOL_LEN][molIdx] + startAtomIdx;
-  for (int idx = startAtomIdx; idx < endAtomIdx; idx++) {
-    atomCoordinates[X_COORD][idx] = keepInBox(atomCoordinates[X_COORD][idx]-dx, X_COORD);
-    atomCoordinates[Y_COORD][idx] = keepInBox(atomCoordinates[Y_COORD][idx]-dy, Y_COORD);
-    atomCoordinates[Z_COORD][idx] = keepInBox(atomCoordinates[Z_COORD][idx]-dz, Z_COORD);
-  }
-}
-
-void SimBox::moveMolecule(refInt molIdx, Real &dx, Real &dy, Real &dz) {
-  dx = rand() / ((Real) RAND_MAX);
-  dx = dx * 2 * maxTranslate - maxTranslate;
-  dy = rand() / ((Real) RAND_MAX);
-  dy = dy * 2 * maxTranslate - maxTranslate;
-  dz = rand() / ((Real) RAND_MAX);
-  dz = dy * 2 * maxTranslate - maxTranslate;
-
-  int startAtomIdx = moleculeData[MOL_START][molIdx];
-  int endAtomIdx = moleculeData[MOL_LEN][molIdx] + startAtomIdx;
-
-  for (int idx = startAtomIdx; idx < endAtomIdx; idx++) {
-    atomCoordinates[X_COORD][idx] = keepInBox(atomCoordinates[X_COORD][idx]+dx, X_COORD);
-    atomCoordinates[Y_COORD][idx] = keepInBox(atomCoordinates[Y_COORD][idx]+dy, Y_COORD);
-    atomCoordinates[Z_COORD][idx] = keepInBox(atomCoordinates[Z_COORD][idx]+dz, Z_COORD);
-  }
-}
-
 void SimBox::keepMoleculeInBox(int molIdx) {
   int start = moleculeData[MOL_START][molIdx];
   int end = start + moleculeData[MOL_LEN][molIdx];
@@ -234,44 +205,6 @@ void SimBox::rotateZ(int aIdx, Real angleDeg) {
   atomCoordinates[Y_COORD][aIdx] = oldY * cos(angleRad) - oldX * sin(angleRad);
 }
 
-bool SimBox::addAtoms(std::vector<Atom> atoms) {
-
-  int numAtoms = atoms.size();
-
-  atomCoordinates = new Real*[NUM_DIMENSIONS];
-  atomData = new Real*[ATOM_DATA_SIZE];
-
-  for (int i = 0; i < NUM_DIMENSIONS; i++) {
-    atomCoordinates[i] = new Real[numAtoms];
-  }
-  for (int i = 0; i < ATOM_DATA_SIZE; i++) {
-    atomData[i] = new Real[numAtoms];
-  }
-
-  for (int i = 0; i < numAtoms; i++) {
-    atomCoordinates[X_COORD][i] = atoms.at(i).x;
-    atomCoordinates[Y_COORD][i] = atoms.at(i).y;
-    atomCoordinates[Z_COORD][i] = atoms.at(i).z;
-    atomData[ATOM_SIGMA][i] = atoms.at(i).sigma;
-    atomData[ATOM_CHARGE][i] = atoms.at(i).charge;
-    atomData[ATOM_EPSILON][i] = atoms.at(i).epsilon;
-  }
-
-  return true;
-}
-
-Real SimBox::keepInBox(const Real &value, const int dimension) {
-  Real out = value;
-  Real comparision = size[dimension];
-  while (out < 0) {
-    out += comparision;
-  }
-  while (out > comparision) {
-    out -= comparision;
-  }
-  return out;
-}
-
 void SimBox::buildBox(Box* box) {
   size = new Real[NUM_DIMENSIONS];
   size[X_COORD] = box->environment->x;
@@ -303,9 +236,6 @@ Real SimBox::calcSystemEnergy (Real &subLJ, Real &subCharge) {
 
 Real SimBox::calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, refInt currMol, refInt startMol) {
   Real total = 0;
-
-  //std::cout << "Calculating energy for " << currMol << std::endl;
-
 
   const int p1Start = moleculeData[MOL_PIDX_START][currMol];
   const int p1End   = moleculeData[MOL_PIDX_COUNT][currMol] + p1Start;
@@ -378,13 +308,6 @@ Real SimBox::calcAtomDistSquared(refInt a1, refInt a2) {
   Real dx = makePeriodic(atomCoordinates[X_COORD][a2] - atomCoordinates[X_COORD][a1], X_COORD);
   Real dy = makePeriodic(atomCoordinates[Y_COORD][a2] - atomCoordinates[Y_COORD][a1], Y_COORD);
   Real dz = makePeriodic(atomCoordinates[Z_COORD][a2] - atomCoordinates[Z_COORD][a1], Z_COORD);
-
-  /*std::cout << "(" << box.atomCoordinates[box.X_COORD][a1] << ", " <<
-    box.atomCoordinates[box.Y_COORD][a1] << ", " <<
-    box.atomCoordinates[box.Z_COORD][a1] << ") and (" <<
-    box.atomCoordinates[box.X_COORD][a2] << ", " <<
-    box.atomCoordinates[box.Y_COORD][a2] << ", " <<
-    box.atomCoordinates[box.Z_COORD][a2] << ")" << std::endl; */
 
   return dx * dx + dy * dy + dz * dz;
 }
