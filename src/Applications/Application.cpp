@@ -50,7 +50,7 @@ int metrosim::run(int argc, char** argv) {
 
 	if (parallelMode) {
 		if (!closeDeviceContext(&context)) {
-			fprintf(stdout, "Could not close device context!\n")
+			fprintf(stdout, "Could not close device context!\n");
 			exit(EXIT_FAILURE);
 		}
 	}

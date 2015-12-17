@@ -5,7 +5,7 @@
 
 	Author: Nathan Coleman
 	Created: February 21, 2014
-	
+
 	-> February 26, by Albert Wallace
 	-> March 28, by Joshua Mosby
 	-> April 21, by Nathan Coleman
@@ -22,7 +22,7 @@ Box::Box()
 	atoms = NULL;
 	molecules = NULL;
 	neighborList = NULL;
-	
+
 	bonds = NULL;
 	angles = NULL;
 	dihedrals = NULL;
@@ -46,7 +46,7 @@ Box::~Box()
 	FREE(hops);
 }
 
-void Box::createNeighborList() 
+void Box::createNeighborList()
 {
 	neighborList = new NeighborList(molecules, environment);
 }
@@ -60,9 +60,9 @@ int Box::changeMolecule(int molIdx)
 {
 	Real maxTranslation = environment->maxTranslation;
 	Real maxRotation = environment->maxRotation;
-		
+
 	saveChangedMol(molIdx);
-		
+
 	//Pick an atom in the molecule about which to rotate
 	int atomIndex = randomReal(0, molecules[molIdx].numOfAtoms);
 	Atom vertex = molecules[molIdx].atoms[atomIndex];
@@ -73,7 +73,7 @@ int Box::changeMolecule(int molIdx)
 
 	const Real degreesX = randomReal(-maxRotation, maxRotation);
 	const Real degreesY = randomReal(-maxRotation, maxRotation);
-	const Real degreesZ = randomReal(-maxRotation, maxRotation); 
+	const Real degreesZ = randomReal(-maxRotation, maxRotation);
 
 	moveMolecule(molecules[molIdx], vertex, deltaX, deltaY, deltaZ,
 		degreesX, degreesY, degreesZ);
@@ -83,9 +83,18 @@ int Box::changeMolecule(int molIdx)
 	return molIdx;
 }
 
+int Box::changeMolecule(int molIdx, int vIdx, Real dX, Real dY, Real dZ, Real rX, Real rY, Real rZ) {
+	Atom vertex = molecules[molIdx].atoms[vIdx];
+
+	saveChangedMol(molIdx);
+	moveMolecule(molecules[molIdx], vertex, dX, dY, dZ, rX, rY, rZ);
+	keepMoleculeInBox(molIdx);
+	return molIdx;
+}
+
 void Box::keepMoleculeInBox(int molIdx)
 {
-    int primaryIndex = (*(*(environment->primaryAtomIndexArray))[molecules[molIdx].type])[0]; 
+    int primaryIndex = (*(*(environment->primaryAtomIndexArray))[molecules[molIdx].type])[0];
     Atom primaryAtom = molecules[molIdx].atoms[primaryIndex];
 
     int positionX = isOutOfBounds(primaryAtom.x, environment->x);
@@ -93,7 +102,7 @@ void Box::keepMoleculeInBox(int molIdx)
     int positionZ = isOutOfBounds(primaryAtom.z, environment->z);
 
     for (int i = 0; i < molecules[molIdx].numOfAtoms; i++)
-    {	
+    {
 		//X axis
 		molecules[molIdx].atoms[i].x = wrapBox(molecules[molIdx].atoms[i].x, environment->x, positionX);
 		//Y axis
@@ -109,7 +118,7 @@ int Box::isOutOfBounds(Real coor, Real boxDim)
 	return BELOW_ZERO;
     else if (coor > boxDim)
 	return ABOVE_BOX_DIM;
-    
+
     return IN_BOX;
 }
 
@@ -132,7 +141,7 @@ void Box::saveChangedMol(int molIdx)
 		delete[] changedMol.dihedrals;
 		delete[] changedMol.hops;
 	}
-	
+
 	memcpy(&changedMol,mol_src,sizeof(changedMol));
 
 	changedMol.atoms = new Atom[mol_src->numOfAtoms];
@@ -153,7 +162,7 @@ void Box::copyMolecule(Molecule *mol_dst, Molecule *mol_src)
     mol_dst->numOfHops = mol_src->numOfHops;
     mol_dst->id = mol_src->id;
     mol_dst->type = mol_src->type;
-    
+
     for(int i = 0; i < mol_src->numOfAtoms; i++)
     {
         mol_dst->atoms[i] = mol_src->atoms[i];
@@ -173,7 +182,7 @@ void Box::copyMolecule(Molecule *mol_dst, Molecule *mol_src)
     {
         mol_dst->dihedrals[i] = mol_src->dihedrals[i];
     }
-	
+
     for(int i = 0; i < mol_src->numOfHops; i++)
     {
         mol_dst->hops[i] = mol_src->hops[i];

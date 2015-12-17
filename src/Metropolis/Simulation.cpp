@@ -32,6 +32,7 @@
 #include "SerialSim/NeighborList.h"
 //#include "ParallelSim/ParallelCalcs.h"
 #include "Utilities/FileUtilities.h"
+#include "SimBox.h"
 
 
 #define RESULTS_FILE_DEFAULT "run"
@@ -91,8 +92,10 @@ void Simulation::run() {
 		box->createNeighborList();
 	}
 
+	Real oldEnergy_sb = 0;
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont = 0, oldEnergyCont = 0;
+	Real newEnergyCont_sb = 0, oldEnergyCont_sb = 0;
 	Real lj_energy = 0, charge_energy = 0;
 	Real new_lj = 0, old_lj = 0;
 	Real new_charge = 0, old_charge = 0;
@@ -130,6 +133,9 @@ void Simulation::run() {
 		log = Logger(NON_VERBOSE);
 	}
 
+	// Build SimBox below
+	SimBox* sb = new SimBox();
+	sb->buildBox(box);
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0) {
 		if (false) {
@@ -149,9 +155,12 @@ void Simulation::run() {
 				oldEnergy = SerialCalcs::calcSystemEnergy(box, lj_energy, charge_energy);
 			}
 		}
-
+		oldEnergy_sb = sb->calcSystemEnergy(lj_energy, charge_energy);
+		std::cout << oldEnergy_sb << " versus " << oldEnergy << std::endl;
 		//oldEnergy += energy_LRC + intraMolEnergy; // add in long-range correction value and intramol energy
+		//oldEnergy = oldEnergy_sb;
 		oldEnergy += energy_LRC;
+		oldEnergy_sb += energy_LRC;
 	}
 	function_time_end = clock();
 
@@ -183,7 +192,7 @@ void Simulation::run() {
 		//provide printouts at each pre-determined interval (not at each step)
 		if (args.statusInterval > 0 && (move - stepStart) % args.statusInterval == 0) {
 			stringstream moveConv;
-			moveConv << "Step " << (move) << ":\n--Current Energy: " << oldEnergy << "\n";
+			moveConv << "Step " << (move) << ":\n--Current Energy: " << oldEnergy_sb << "\n";
 			log.verbose(moveConv.str());
 		}
 
@@ -194,7 +203,8 @@ void Simulation::run() {
 		}
 
 		//Randomly select index of a molecule for changing
-		int changeIdx = box->chooseMolecule();
+		//int changeIdx = box->chooseMolecule();
+		int changeIdx = sb->chooseMolecule();
 
 		// get neighbors and update neighbor-list on interval
 		if (args.useNeighborList) {
@@ -214,13 +224,34 @@ void Simulation::run() {
 		} else {
 			if (args.useNeighborList) {
 				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(box, old_lj, old_charge, changeIdx, neighbors);
+				oldEnergyCont_sb = sb->calcMolecularEnergyContribution(old_lj, old_charge, changeIdx, 0);
 			} else {
-				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, old_lj, old_charge, changeIdx);
+				oldEnergyCont_sb = sb->calcMolecularEnergyContribution(old_lj, old_charge, changeIdx, 0);
+			  oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, old_lj, old_charge, changeIdx);
 			}
 		}
 
 		//Actually translate the molecule at the preselected index
-		box->changeMolecule(changeIdx);
+		//sb->changeMolecule(changeIdx);
+
+		Real maxT = sb->maxTranslate;
+		Real maxR = sb->maxRotate;
+
+		int molLen = sb->moleculeData[1][changeIdx];
+
+		int vertexIdx = (int) randomReal(0, molLen);
+
+		const Real deltaX = randomReal(-maxT, maxT);
+		const Real deltaY = randomReal(-maxT, maxT);
+		const Real deltaZ = randomReal(-maxT, maxT);
+
+		const Real rotX = randomReal(-maxR, maxR);
+		const Real rotY = randomReal(-maxR, maxR);
+		const Real rotZ = randomReal(-maxR, maxR);
+
+		box->changeMolecule(changeIdx, vertexIdx, deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
+		sb->changeMolecule(changeIdx, vertexIdx, deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
+
 
 		//Calculate the new energy after translation
 		if (false) {
@@ -232,20 +263,25 @@ void Simulation::run() {
 		} else {
 			if (args.useNeighborList) {
 				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_NLC(box, new_lj, new_charge, changeIdx, neighbors);
+				newEnergyCont_sb = sb->calcMolecularEnergyContribution(new_lj, new_charge, changeIdx, 0);
 			} else {
-				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, new_lj, new_charge, changeIdx);
+				newEnergyCont_sb = sb->calcMolecularEnergyContribution(new_lj, new_charge, changeIdx, 0);
+			  newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, old_lj, old_charge, changeIdx);
 			}
 		}
 
-		// Compare new energy and old energy to decide if we should accept or not
-		bool accept = false;
+		//std::cout << "OLD: " << oldEnergyCont << " to " << newEnergyCont << std::endl;
+		//std::cout << "NEW: " << oldEnergyCont_sb << " to " << newEnergyCont_sb << std::endl;
 
-		if (newEnergyCont < oldEnergyCont) {
+		// Compare new energy and old energy to decide if we should accept or not
+		bool accept = false, accept_sb = false;
+
+		if (newEnergyCont_sb < oldEnergyCont_sb) {
 			// Always accept decrease in energy
 			accept = true;
 		} else {
 			// Otherwise use statistics+random number to determine weather to accept increase in energy
-			Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
+			Real x = exp(-(newEnergyCont_sb - oldEnergyCont_sb) / kT);
 
 			if (x >= randomReal(0.0, 1.0)) {
 				accept = true;
@@ -256,22 +292,31 @@ void Simulation::run() {
 
 		if (accept) {
 			accepted++;
-			oldEnergy += newEnergyCont - oldEnergyCont;
+			oldEnergy_sb += newEnergyCont_sb - oldEnergyCont_sb;
 			lj_energy += new_lj - old_lj;
 			charge_energy += new_charge - old_charge;
 		} else {
 			rejected++;
+			sb->rollback(changeIdx);
 			box->rollback(changeIdx);
 		}
+
+		int firstIdx = sb->moleculeData[0][changeIdx];
+		Atom firstAtom = box->molecules[changeIdx].atoms[0];
+
+		//std::cout << "OLD: " << firstAtom.x << ", " << firstAtom.y << ", " << firstAtom.z << std::endl;
+		//std::cout << "NEW: " << sb->atomCoordinates[0][firstIdx] << ", " << sb->atomCoordinates[1][firstIdx] << ", " << sb->atomCoordinates[2][firstIdx] << std::endl;
 	}
 	writePDB(box->getEnvironment(), box->getMolecules());
 	endTime = clock();
+
+//	sb->printCoordinates();
 
 	/*This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
 	  However, it is a good enough estimation without adding unnecessary complexity.*/
 	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
 
-	currentEnergy = oldEnergy;
+	currentEnergy = oldEnergy_sb;
 	stringstream startConv;
 	startConv << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << currentEnergy;
 	log.verbose(startConv.str());

@@ -4,7 +4,7 @@
 
 	Author: Nathan Coleman
 	Created: February 21, 2014
-	
+
 	-> February 26, by Albert Wallace
 	-> March 28, by Joshua Mosby
 	-> April 21, by Nathan Coleman
@@ -48,7 +48,7 @@ class Box
 		Hop *hops;
 		NeighborList *neighborList;
 		int atomCount, moleculeCount, bondCount, angleCount, dihedralCount, hopCount;
-		
+
 		Box();
 		~Box();
 		Atom *getAtoms(){return atoms;};
@@ -56,15 +56,18 @@ class Box
 		Molecule *getMolecules(){return molecules;};
 		int getMoleculeCount(){return moleculeCount;};
 		Environment *getEnvironment(){return environment;};
-		
+
 		NeighborList *getNeighborList() {return neighborList;};
 		void createNeighborList();
-		
+
 		/// Chooses a random molecule to be changed for a given
 		///   simulation step.
 		/// @return Returns the index of the chosen molecule.
 		int chooseMolecule();
-		
+
+
+		virtual int changeMolecule(int molIdx, int vIdx, Real dX, Real dY, Real dZ, Real rX, Real rY, Real rZ);
+
 		/// Changes a given molecule (specifically its Atoms)
 		///   in a random way, constrained by maxTranslation
 		///   and maxRotation.
@@ -72,22 +75,22 @@ class Box
 		/// @return Returns the index of the changed molecule.
 		/// @note This method is virtual to be overridden by an subclass.
 		virtual int changeMolecule(int molIdx);
-		
+
 		/// Makes each of the molecule's positional attributes
 		///   periodic within the dimensions of the environment.
 		/// @param molecule The index of the molecule to be fixed.
 		void keepMoleculeInBox(int molIdx);
-		
+
 		/// Rolls back the previous molecule change.
 		/// @param molIdx The index of the molecule to be reverted.
 		/// @return Returns the index of the reverted molecule.
 		/// @note This method is virtual to be overridden by an subclass.
 		virtual int rollback(int molIdx);
-		
+
 		/// Saves the unchanged version of a molecule to be changed.
 		/// @param molIdx The index of the molecule to be saved.
 		void saveChangedMol(int molIdx);
-		
+
 		/// Copies the data of one molecule to another.
 		/// @param mol_dst A pointer to the destination molecule.
 		/// @param mol_src A pointer to the source molecule.
@@ -98,7 +101,7 @@ class Box
 		/// @param boxDim The magnitude of the periodic range.
 		/// @return Returns the periodic position.
 	 	Real wrapBox(Real x, Real boxDim, int position);
-		
+
 };
 
 #endif
