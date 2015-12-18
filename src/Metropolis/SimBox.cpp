@@ -116,6 +116,10 @@ void SimBox::changeMolecule(int molIdx, int vIdx, Real dX, Real dY, Real dZ, Rea
   }
   translateAtom(molStart + vIdx, dX, dY, dZ);
   keepMoleculeInBox(molIdx);
+
+  if (useNLC) {
+    updateNLC(molIdx);
+  }
 }
 
 void SimBox::changeMolecule(int molIdx) {
@@ -149,6 +153,10 @@ void SimBox::changeMolecule(int molIdx) {
 
   keepMoleculeInBox(molIdx);
 
+  if (useNLC) {
+    updateNLC(molIdx);
+  }
+
 }
 
 void SimBox::rollback(int molIdx) {
@@ -160,6 +168,10 @@ void SimBox::rollback(int molIdx) {
     for (int j = 0; j < NUM_DIMENSIONS; j++) {
       atomCoordinates[j][molStart + i] = rollBackCoordinates[j][i];
     }
+  }
+
+  if (useNLC) {
+    updateNLC(molIdx);
   }
 }
 
@@ -218,6 +230,9 @@ void SimBox::buildBox(Box* box) {
   numMolecules = box->environment->numOfMolecules;
   addMolecules(box->molecules, numMolecules);
   addPrimaryIndexes(box->environment->primaryAtomIndexArray);
+  if (useNLC) {
+    fillNLC();
+  }
 }
 
 int SimBox::chooseMolecule() const {
@@ -234,25 +249,55 @@ Real SimBox::calcSystemEnergy (Real &subLJ, Real &subCharge) {
   return total;
 }
 
-Real SimBox::calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, refInt currMol, refInt startMol) {
+Real SimBox::calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, int currMol, int startMol) {
   Real total = 0;
 
   const int p1Start = moleculeData[MOL_PIDX_START][currMol];
   const int p1End   = moleculeData[MOL_PIDX_COUNT][currMol] + p1Start;
   int p2Start, p2End;
 
-  for (int otherMol = startMol; otherMol < numMolecules; otherMol++) {
-    if (otherMol != currMol) {
-      //std::cout << "Molecule # " << otherMol << " is ";
-      p2Start = moleculeData[MOL_PIDX_START][otherMol];
-      p2End = moleculeData[MOL_PIDX_COUNT][otherMol] + p2Start;
-      if (moleculesInRange(p1Start, p1End, p2Start, p2End)) {
-      //  std::cout << "in range." << std::endl;
-        total += calcMoleculeInteractionEnergy(subLJ, subCharge, currMol, otherMol);
-      } else {
-      //  std::cout << "not in range." << std::endl;
+  std::set<int> used;
+  used.clear();
+
+  if (useNLC) {
+    for (int i = 0; i < NUM_DIMENSIONS; i++) {
+      prevCell[i] = getCell(atomCoordinates[i][p1Start], i);
+    }
+    int neighborSize = findNeighbors(currMol);
+    for (int cellHead = 0; cellHead < neighborSize; cellHead++) {
+      NLC_Node head = *neighbors[cellHead];
+      if (head.index == currMol)
+        prevNode = &head;
+      while(head.next != NULL) {
+        if (head.next->index == currMol)
+          prevNode = &head;
+        if (head.index >= startMol && head.index != currMol) {
+          p2Start = moleculeData[MOL_PIDX_START][head.index];
+          p2End = moleculeData[MOL_PIDX_COUNT][head.index] + p2Start;
+          if (used.find(head.index) != used.end()) {
+            std::cout << "ERROR: DUPLICATE FOUND!" << std::endl;
+          }
+          used.insert(head.index);
+          if (moleculesInRange(p1Start, p1End, p2Start, p2End)) {
+            total += calcMoleculeInteractionEnergy(subLJ, subCharge, currMol, head.index);
+          }
+        }
+        head = *(head.next);
       }
     }
+
+  } else {
+
+    for (int otherMol = startMol; otherMol < numMolecules; otherMol++) {
+      if (otherMol != currMol) {
+        p2Start = moleculeData[MOL_PIDX_START][otherMol];
+        p2End = moleculeData[MOL_PIDX_COUNT][otherMol] + p2Start;
+        if (moleculesInRange(p1Start, p1End, p2Start, p2End)) {
+          total += calcMoleculeInteractionEnergy(subLJ, subCharge, currMol, otherMol);
+        }
+      }
+    }
+
   }
 
   return total;
@@ -355,20 +400,22 @@ void SimBox::fillNLC() {
   neighbors = new NLC_Node*[27];
   numCells = new int[NUM_DIMENSIONS];
   cellWidth = new Real[NUM_DIMENSIONS];
+  prevCell = new int[NUM_DIMENSIONS];
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
     numCells[i] = (int) (size[i] / cutoff);
     if (numCells[i] == 0)
       numCells[i] = 1;
     cellWidth[i] = size[i] / numCells[i];
   }
-  neighborCells = new NLC_Node**[numCells[0]];
+  neighborCells = new NLC_Node***[numCells[0]];
   for (int i = 0; i < numCells[0]; i++) {
-    neighborCells[i] = new NLC_Node*[numCells[1]];
+    neighborCells[i] = new NLC_Node**[numCells[1]];
     for (int j = 0; j < numCells[1]; j++) {
-      neighborCells[i][j] = new NLC_Node[numCells[2]];
+      neighborCells[i][j] = new NLC_Node*[numCells[2]];
       for (int k = 0; k < numCells[2]; k++) {
-        neighborCells[i][j][k].index = -1;
-        neighborCells[i][j][k].next = NULL;
+        neighborCells[i][j][k] = new NLC_Node();
+        neighborCells[i][j][k]->index = -1;
+        neighborCells[i][j][k]->next = NULL;
       }
     }
   }
@@ -379,9 +426,9 @@ void SimBox::fillNLC() {
     for (int j = 0; j < NUM_DIMENSIONS; j++) {
       cloc[j] = getCell(atomCoordinates[j][pIdx], j);
     }
-    nlc_heap[i].next = &neighborCells[cloc[0]][cloc[1]][cloc[2]];
+    nlc_heap[i].next = neighborCells[cloc[0]][cloc[1]][cloc[2]];
     nlc_heap[i].index = i;
-    neighborCells[cloc[0]][cloc[1]][cloc[2]] = nlc_heap[i];
+    neighborCells[cloc[0]][cloc[1]][cloc[2]] = &nlc_heap[i];
   }
 }
 
@@ -395,11 +442,14 @@ int SimBox::findNeighbors(int molIdx) {
 
   for (int i = -1; i <= 1; i++) {
     if (i + 1 >= numCells[0]) break;
+    int c0 = wrapCell(base[0] + i, 0);
     for (int j = -1; j <= 1; j++) {
       if (j + 1 >= numCells[1]) break;
+      int c1 = wrapCell(base[1] + j, 1);
       for (int k = -1; k <= 1; k++) {
         if (k + 1 >= numCells[2]) break;
-        neighbors[outIdx] = &neighborCells[base[0] + i][base[1] + j][base[2] + k];
+        int c2 = wrapCell(base[2] + k, 2);
+        neighbors[outIdx] = neighborCells[c0][c1][c2];
         outIdx++;
       }
     }
@@ -416,4 +466,27 @@ int SimBox::getCell(Real loc, int dimension) {
   int idx = (int) (loc / cellWidth[dimension]);
   int numC = numCells[dimension];
   return (idx + numC) % numC;
+}
+
+void SimBox::updateNLC(int molIdx) {
+  bool update = false;
+  int newCell[3];
+  int pIdx = moleculeData[MOL_PIDX_START][molIdx];
+  for (int i = 0; i < NUM_DIMENSIONS; i++) {
+    newCell[i] = getCell(atomCoordinates[i][pIdx], i);
+    if (newCell[i] != prevCell[i])
+      update = true;
+  }
+
+  if (update) {
+    if (prevNode->index == molIdx) {
+      neighborCells[prevCell[0]][prevCell[1]][prevCell[2]] = (prevNode->next);
+    } else {
+      NLC_Node* removeNode = prevNode->next;
+      prevNode->next = (prevNode->next->next);
+      removeNode->next = (neighborCells[newCell[0]][newCell[1]][newCell[2]]);
+      neighborCells[newCell[0]][newCell[1]][newCell[2]] = removeNode;
+    }
+  }
+
 }

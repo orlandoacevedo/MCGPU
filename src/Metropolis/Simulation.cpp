@@ -135,6 +135,7 @@ void Simulation::run() {
 
 	// Build SimBox below
 	SimBox* sb = new SimBox();
+	sb->useNLC = args.useNeighborList;
 	sb->buildBox(box);
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0) {
@@ -149,6 +150,7 @@ void Simulation::run() {
 		} else {
 			if (args.useNeighborList) {
 				log.verbose("Using neighbor-list for energy calculation");
+				sb->useNLC = true;
 				//oldEnergy = SerialCalcs::calcSystemEnergy_NLC(box, lj_energy, charge_energy);
 			} else {
 				log.verbose("Using original system energy calculation");

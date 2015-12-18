@@ -7,7 +7,7 @@
 
 #include <stdlib.h>
 #include <vector>
-
+#include <set>
 
 typedef double Real;
 typedef unsigned int ID;
@@ -85,8 +85,10 @@ public:
   bool useNLC;
 
   NLC_Node** neighbors;
-  NLC_Node*** neighborCells;
+  NLC_Node**** neighborCells;
   NLC_Node* nlc_heap;
+  NLC_Node* prevNode;
+  int* prevCell;
 
   int* numCells;
   Real* cellWidth;
@@ -230,7 +232,7 @@ public:
    *          subLJ - Final Lennard - Jones energy
    *          subCharge - Final Coulomb energy.
    */
-  Real calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, refInt currMol, refInt startMol);
+  Real calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, int currMol, int startMol);
 
   /**
    * moleculesInRange Determines whether or not two molecule's primaryIndexes are
@@ -323,6 +325,13 @@ public:
    * Outputs: The index, wrapped around the size of the box.
    */
   int getCell(Real loc, int dimension);
+
+  /**
+   * Given a molecule, updates the molecule's position in the neighbor linked
+   * cells (if it needs to be updated).
+   * Inputs: molIdx - The index of the moleucle to update.
+   */
+  void updateNLC(int molIdx);
 };
 
 typedef const SimBox & refBox;
