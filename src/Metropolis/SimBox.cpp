@@ -254,35 +254,29 @@ Real SimBox::calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, int c
 
   const int p1Start = moleculeData[MOL_PIDX_START][currMol];
   const int p1End   = moleculeData[MOL_PIDX_COUNT][currMol] + p1Start;
+  const int p1 = primaryIndexes[p1Start];
   int p2Start, p2End;
-
-  std::set<int> used;
-  used.clear();
 
   if (useNLC) {
     for (int i = 0; i < NUM_DIMENSIONS; i++) {
-      prevCell[i] = getCell(atomCoordinates[i][p1Start], i);
+      prevCell[i] = getCell(atomCoordinates[i][p1], i);
     }
     int neighborSize = findNeighbors(currMol);
     for (int cellHead = 0; cellHead < neighborSize; cellHead++) {
-      NLC_Node head = *neighbors[cellHead];
-      if (head.index == currMol)
-        prevNode = &head;
-      while(head.next != NULL) {
-        if (head.next->index == currMol)
-          prevNode = &head;
-        if (head.index >= startMol && head.index != currMol) {
-          p2Start = moleculeData[MOL_PIDX_START][head.index];
-          p2End = moleculeData[MOL_PIDX_COUNT][head.index] + p2Start;
-          if (used.find(head.index) != used.end()) {
-            std::cout << "ERROR: DUPLICATE FOUND!" << std::endl;
-          }
-          used.insert(head.index);
+      NLC_Node* head = neighbors[cellHead];
+      if (head->index == currMol)
+        prevNode = head;
+      while(head->next != NULL) {
+        if (head->next->index == currMol)
+          prevNode = head;
+        if (head->index >= startMol && head->index != currMol) {
+          p2Start = moleculeData[MOL_PIDX_START][head->index];
+          p2End = moleculeData[MOL_PIDX_COUNT][head->index] + p2Start;
           if (moleculesInRange(p1Start, p1End, p2Start, p2End)) {
-            total += calcMoleculeInteractionEnergy(subLJ, subCharge, currMol, head.index);
+            total += calcMoleculeInteractionEnergy(subLJ, subCharge, currMol, head->index);
           }
         }
-        head = *(head.next);
+        head = head->next;
       }
     }
 
@@ -421,7 +415,7 @@ void SimBox::fillNLC() {
   }
   nlc_heap = new NLC_Node[numMolecules];
   for (int i = 0; i < numMolecules; i++) {
-    int pIdx = moleculeData[MOL_PIDX_START][i];
+    int pIdx = primaryIndexes[moleculeData[MOL_PIDX_START][i]];
     int cloc[3];
     for (int j = 0; j < NUM_DIMENSIONS; j++) {
       cloc[j] = getCell(atomCoordinates[j][pIdx], j);
@@ -435,9 +429,11 @@ void SimBox::fillNLC() {
 int SimBox::findNeighbors(int molIdx) {
   int outIdx = 0;
 
+  int pIdx = primaryIndexes[moleculeData[MOL_PIDX_START][molIdx]];
+
   int base[3];
   for (int i = 0; i < 3; i++) {
-    base[i] = getCell(atomCoordinates[i][moleculeData[MOL_PIDX_START][molIdx]], i);
+    base[i] = getCell(atomCoordinates[i][pIdx], i);
   }
 
   for (int i = -1; i <= 1; i++) {
@@ -471,7 +467,7 @@ int SimBox::getCell(Real loc, int dimension) {
 void SimBox::updateNLC(int molIdx) {
   bool update = false;
   int newCell[3];
-  int pIdx = moleculeData[MOL_PIDX_START][molIdx];
+  int pIdx = primaryIndexes[moleculeData[MOL_PIDX_START][molIdx]];
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
     newCell[i] = getCell(atomCoordinates[i][pIdx], i);
     if (newCell[i] != prevCell[i])
@@ -480,8 +476,12 @@ void SimBox::updateNLC(int molIdx) {
 
   if (update) {
     if (prevNode->index == molIdx) {
+      //std::cout << "SPECIAL UPDATE!" << std::endl;
       neighborCells[prevCell[0]][prevCell[1]][prevCell[2]] = (prevNode->next);
+      prevNode->next = neighborCells[newCell[0]][newCell[1]][newCell[2]];
+      neighborCells[newCell[0]][newCell[1]][newCell[2]] = prevNode;
     } else {
+      //std::cout << "NORMAL UPDATE!" << std::endl;
       NLC_Node* removeNode = prevNode->next;
       prevNode->next = (prevNode->next->next);
       removeNode->next = (neighborCells[newCell[0]][newCell[1]][newCell[2]]);
