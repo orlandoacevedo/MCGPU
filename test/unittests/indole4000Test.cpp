@@ -64,7 +64,7 @@ TEST (Indole4000Test, NeighborListFunction1MPI)
 {
     std::string MCGPU = getMCGPU_path();
 	system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI-NL", true, true, false).c_str());
-    double expected = 530000;
+    double expected = 588107;
     double energyResult = getEnergyResult(MCGPU, "indole4000-1MPI-NL.results");
     EXPECT_NEAR(expected, energyResult, 100);
 }
@@ -75,7 +75,7 @@ TEST (Indole4000Test, NeighborListFunction1MPI_GPU)
 {
     std::string MCGPU = getMCGPU_path();
     system(buildIndole4000Command(MCGPU, "indole4000-1MPI.config", "indole4000-1MPI-NL-GPU", false, true, false).c_str());
-    double expected = 530000;
+    double expected = 588107;
     double energyResult = getEnergyResult(MCGPU, "indole4000-1MPI-NL-GPU.results");
     EXPECT_NEAR(expected, energyResult, 300);
 }
@@ -108,7 +108,7 @@ TEST (Indole4000Test, NeighborListFunction2MPI)
 {
     std::string MCGPU = getMCGPU_path();
     system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI-NL", true, true, false).c_str());
-    double expected = 547878;
+    double expected = 557412;
     double energyResult = getEnergyResult(MCGPU, "indole4000-2MPI-NL.results");
     EXPECT_NEAR(expected, energyResult, 100);
 }
@@ -119,7 +119,7 @@ TEST (Indole4000Test, NeighborListFunction2MPI_GPU)
 {
     std::string MCGPU = getMCGPU_path();
     system(buildIndole4000Command(MCGPU, "indole4000-2MPI.config", "indole4000-2MPI-NL-GPU", false, true, false).c_str());
-    double expected = 547878;
+    double expected = 557412;
     double energyResult = getEnergyResult(MCGPU, "indole4000-2MPI-NL-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);
 }

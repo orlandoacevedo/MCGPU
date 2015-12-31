@@ -107,7 +107,7 @@ TEST (t3pdimTest, NeighborListFunctionMulSolvents)
 {
     std::string MCGPU = getMCGPU_path();
     system(buildT3pDimCommand(MCGPU, "t3pdimMulSolvents.config", "t3pdimMulSolvents-NL", true, true, false).c_str());
-    double expected = -1727;
+    double expected = -1832;
     double energyResult = getEnergyResult(MCGPU, "t3pdimMulSolvents-NL.results");
     EXPECT_NEAR(expected, energyResult, 100);
 }
@@ -118,7 +118,7 @@ TEST (t3pdimTest, NeighborListFunctionMulSolvents_GPU)
 {
 	std::string MCGPU = getMCGPU_path();
 	system(buildT3pDimCommand(MCGPU, "t3pdimMulSolvents.config", "t3pdimMulSolvents-NL-GPU", false, true, false).c_str());
-    double expected = -1727;
+    double expected = -1832;
     double energyResult = getEnergyResult(MCGPU, "t3pdimMulSolvents-NL-GPU.results");
     EXPECT_NEAR(expected, energyResult, 100);
 }

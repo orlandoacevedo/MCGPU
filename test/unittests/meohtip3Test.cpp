@@ -16,8 +16,8 @@
  * @param primaryAtomIndexString The entry for the Primary Atom Index line of the config file.
  */
 void createMeohTip3ConfigFile(std::string MCGPU, std::string fileName, std::string primaryAtomIndexString) {
-	ConfigFileData settings = ConfigFileData(23.7856, 23.7856, 23.7856, 298.15, .12, 100000, 256, "resources/bossFiles/oplsaa.par", 
-	"test/unittests/MultipleSolvents/meohtip3Tests/meohtip3.z", "test/unittests/MultipleSolvents/meohtip3Tests", 11.0, 
+	ConfigFileData settings = ConfigFileData(23.7856, 23.7856, 23.7856, 298.15, .12, 100000, 256, "resources/bossFiles/oplsaa.par",
+	"test/unittests/MultipleSolvents/meohtip3Tests/meohtip3.z", "test/unittests/MultipleSolvents/meohtip3Tests", 11.0,
 	12.0, 12345);
 	createConfigFile(MCGPU, fileName, primaryAtomIndexString, settings);
 }
@@ -96,11 +96,11 @@ TEST (meohtip3Test, MultpleSolventDefinition_GPU)
 
 //Test meohtip3 with multiple solvents 1,2 primary indexes on CPU
 //Using neighborlist
-TEST (meohtip3Test, NeighborListFunctionMulSolvent) 
+TEST (meohtip3Test, NeighborListFunctionMulSolvent)
  {
     std::string MCGPU = getMCGPU_path();
 	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent-NL", true, true, false).c_str());
-    double expected = -2400;
+    double expected = -1980;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3MulSolvent-NL.results");
     EXPECT_NEAR(expected, energyResult, 100);
 }
@@ -111,9 +111,9 @@ TEST (meohtip3Test,NeighborListFunctionMulSolvent_GPU)
  {
     std::string MCGPU = getMCGPU_path();
 	system(buildMeohTip3Command(MCGPU, "meohtip3MulSolvent.config", "meohtip3MulSolvent-NL-GPU", false, true, false).c_str());
-    double expected = -2400;
+    double expected = -1980;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3MulSolvent-NL-GPU.results");
-    EXPECT_NEAR(expected, energyResult, 100);	 
+    EXPECT_NEAR(expected, energyResult, 100);
 }
 
 
@@ -146,7 +146,7 @@ TEST (meohtip3Test, SingleMultipleIndexes)
 	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes.config", "meohtip3SingleMultipleIndexes", true, false, false).c_str());
     double expected = -1990;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3SingleMultipleIndexes.results");
-    EXPECT_NEAR(expected, energyResult, 100);	 
+    EXPECT_NEAR(expected, energyResult, 100);
 }
 
 //test meohtip3 with multiple solvents (1,[1,2]) primary indexes on GPU
@@ -156,7 +156,7 @@ TEST (meohtip3Test, SingleMultipleIndexes_GPU)
 	system(buildMeohTip3Command(MCGPU, "meohtip3SingleMultipleIndexes.config", "meohtip3SingleMultipleIndexes-GPU", false, false, false).c_str());
     double expected = -1990;
 	double energyResult = getEnergyResult(MCGPU, "meohtip3SingleMultipleIndexes-GPU.results");
-    EXPECT_NEAR(expected, energyResult, 100);         
+    EXPECT_NEAR(expected, energyResult, 100);
 }
 
 //test meohtip3 with multiple solvents ([1,2],1) primary indexes on CPU

@@ -264,16 +264,18 @@ Real SimBox::calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, int c
     int neighborSize = findNeighbors(currMol);
     for (int cellHead = 0; cellHead < neighborSize; cellHead++) {
       NLC_Node* head = neighbors[cellHead];
+
       if (head->index == currMol)
         prevNode = head;
       while(head->next != NULL) {
+        int idx = head->index;
         if (head->next->index == currMol)
           prevNode = head;
-        if (head->index >= startMol && head->index != currMol) {
-          p2Start = moleculeData[MOL_PIDX_START][head->index];
-          p2End = moleculeData[MOL_PIDX_COUNT][head->index] + p2Start;
+        if (idx >= startMol && idx != currMol) {
+          p2Start = moleculeData[MOL_PIDX_START][idx];
+          p2End = moleculeData[MOL_PIDX_COUNT][idx] + p2Start;
           if (moleculesInRange(p1Start, p1End, p2Start, p2End)) {
-            total += calcMoleculeInteractionEnergy(subLJ, subCharge, currMol, head->index);
+            total += calcMoleculeInteractionEnergy(subLJ, subCharge, currMol, idx);
           }
         }
         head = head->next;
