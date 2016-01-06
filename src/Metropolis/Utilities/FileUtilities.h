@@ -601,8 +601,9 @@ class StateScanner
       @param molecules - array of molecules to be printed out
       @param numOfMolecules - the number of molecules to be written out
       @param fileName - the name of the file to be written
+			@param atomCoords - the coordinates of the atoms in the box.
     */
-    void outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename);
+    void outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename, Real** atomCoords);
 };
 
 /**

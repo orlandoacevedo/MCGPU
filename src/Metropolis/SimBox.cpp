@@ -18,21 +18,6 @@ void SimBox::keepMoleculeInBox(int molIdx) {
   }
 }
 
-void SimBox::printCoordinates() {
-  for (int i = 0; i < numMolecules; i++) {
-    int start = moleculeData[MOL_START][i];
-    int end = start + moleculeData[MOL_LEN][i];
-    std::cout << "MOL # " << (i+1) << std::endl;
-    for (int j = start; j < end; j++) {
-      for (int k = 0; k < NUM_DIMENSIONS; k++) {
-        std::cout << atomCoordinates[k][j] << " ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
-  }
-}
-
 bool SimBox::addMolecules(Molecule* molecules, int nMolecules) {
   int nAtoms = 0, largestMolecule = 0;
 
@@ -240,7 +225,7 @@ int SimBox::chooseMolecule() const {
 }
 
 Real SimBox::calcSystemEnergy (Real &subLJ, Real &subCharge) {
-  Real total = 0;
+  Real total = subLJ + subCharge;
 
   for (int mol = 0; mol < numMolecules; mol++) {
     total += calcMolecularEnergyContribution(subLJ, subCharge, mol, mol);
@@ -478,17 +463,14 @@ void SimBox::updateNLC(int molIdx) {
 
   if (update) {
     if (prevNode->index == molIdx) {
-      //std::cout << "SPECIAL UPDATE!" << std::endl;
       neighborCells[prevCell[0]][prevCell[1]][prevCell[2]] = (prevNode->next);
       prevNode->next = neighborCells[newCell[0]][newCell[1]][newCell[2]];
       neighborCells[newCell[0]][newCell[1]][newCell[2]] = prevNode;
     } else {
-      //std::cout << "NORMAL UPDATE!" << std::endl;
       NLC_Node* removeNode = prevNode->next;
       prevNode->next = (prevNode->next->next);
       removeNode->next = (neighborCells[newCell[0]][newCell[1]][newCell[2]]);
       neighborCells[newCell[0]][newCell[1]][newCell[2]] = removeNode;
     }
   }
-
 }

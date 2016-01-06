@@ -492,7 +492,7 @@ void StateScanner::parsePrimaryIndexDefinitions(Environment* enviro, string defi
 
 
 
-void StateScanner::outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename) {
+void StateScanner::outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename, Real** atomCoords) {
   ofstream outFile;
   outFile.open(filename.c_str());
   outFile << environment->x << " " << environment->y << " "
@@ -503,6 +503,8 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
           << *environment->primaryAtomIndexConfigLine << " "
           << environment->randomseed << " "
           << std::endl << step << std::endl << std::endl;
+
+	int aIdx = 0;
 
   for (int i = 0; i < numOfMolecules; i++) {
     Molecule currentMol = molecules[i];
@@ -518,13 +520,15 @@ void StateScanner::outputState(Environment *environment, Molecule *molecules, in
       Atom currentAtom = currentMol.atoms[j];
 
       outFile << currentAtom.id << " "
-              << currentAtom.x << " " << currentAtom.y
-              << " " << currentAtom.z << " "
+              << atomCoords[0][aIdx] << " " << atomCoords[1][aIdx]
+              << " " << atomCoords[2][aIdx] << " "
               << currentAtom.sigma << " "
               << currentAtom.epsilon << " "
               << currentAtom.charge << " "
 		          << *currentAtom.name << " " << std::endl;
-    }
+
+			aIdx++;
+		}
 
     // Write bonds
     outFile << "= Bonds" << std::endl;

@@ -196,7 +196,7 @@ void Simulation::run() {
 
 		if (args.stateInterval > 0 && move > stepStart && (move - stepStart) % args.stateInterval == 0) {
 			log.verbose("");
-			saveState(baseStateFile, move);
+			saveState(baseStateFile, move, sb);
 			log.verbose("");
 		}
 
@@ -280,14 +280,12 @@ void Simulation::run() {
 	log.verbose(startConv.str());
 
 	if (args.stateInterval >= 0)
-		saveState(baseStateFile, (stepStart + simSteps));
+		saveState(baseStateFile, (stepStart + simSteps), sb);
 
 	fprintf(stdout, "\nFinished running %ld steps\n", simSteps);
 
-	if (false) {
-		fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
-		fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
-	}
+  fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
+	fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
 
 	fprintf(stdout, "Energy Long-range Correction: %.3f\n", energy_LRC);
 	//fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
@@ -330,10 +328,8 @@ void Simulation::run() {
 	resultsFile << "Molecule-Count = " << box->environment->numOfMolecules << std::endl << std::endl;
 	resultsFile << "[Results]" << std::endl;
 
-	if (false) {
-		resultsFile << "LJ-Energy Subtotal: " << lj_energy << std::endl;
-		resultsFile << "Charge Energy Subtotal: " << charge_energy << std::endl;
-	}
+	resultsFile << "LJ-Energy Subtotal: " << lj_energy << std::endl;
+	resultsFile << "Charge Energy Subtotal: " << charge_energy << std::endl;
 
 	resultsFile << "Final-Energy = " << currentEnergy << std::endl;
 	resultsFile << "Run-Time = " << diffTime << " seconds" << std::endl;
@@ -344,7 +340,7 @@ void Simulation::run() {
 	resultsFile.close();
 }
 
-void Simulation::saveState(const std::string& baseFileName, int simStep) {
+void Simulation::saveState(const std::string& baseFileName, int simStep, const SimBox* sb) {
 	StateScanner statescan = StateScanner("");
 	std::string stateOutputPath = baseFileName;
 	std::string stepCount;
@@ -358,7 +354,7 @@ void Simulation::saveState(const std::string& baseFileName, int simStep) {
 
 	log.verbose("Saving state file " + stateOutputPath );
 
-	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath);
+	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath, sb->atomCoordinates);
 }
 
 int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection) {
