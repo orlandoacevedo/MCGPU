@@ -21,114 +21,351 @@ public:
   // BEGINNING OF PUBLIC CONSTANTS
 
   // DIMENSION CONSTANTS
+
+  /**
+   * Constant to represent the X-axis.
+   */
   static const int X_COORD = 0;
+
+  /**
+   * Constant to represent the Y-axis.
+   */
   static const int Y_COORD = 1;
+
+  /**
+   * Constant to represent the Z-axis.
+   */
   static const int Z_COORD = 2;
+
+  /**
+   * Constant holds the number of spatial dimensions in the simulation.
+   */
   static const int NUM_DIMENSIONS = 3;
 
   // MOLECULE DATA CONSTANTS
+
+  /**
+   * Indicates the row of moleculeData that holds the start index of each
+   *     molecule in atomCoordinates and atomData.
+   */
   static const int MOL_START = 0;
+
+  /**
+   * Indicates the row of moleculeData that holds the number of atoms of each
+   *     molecule.
+   */
   static const int MOL_LEN = 1;
+
+  /**
+   * Indicates the row of moleculeData that holds the start index of each
+   *     molecule's primary index(es) in primaryIndexes.
+   */
   static const int MOL_PIDX_START = 2;
+
+  /**
+   * Indicates the row of moleculeData that holds the number of primary indexes
+   *     that each molecule has.
+   */
   static const int MOL_PIDX_COUNT = 3;
+
+  /**
+   * Indicates the row of moleculeData that hold the type of each molecule.
+   */
   static const int MOL_TYPE = 4;
+
+  /**
+   * Indicates the number of rows of moleculeData.
+   */
   static const int MOL_DATA_SIZE = 5;
 
   // ATOM DATA CONSTANTS
+
+  /**
+   * Indicates the row of atomData that holds the value of sigma for each atom.
+   */
   static const int ATOM_SIGMA = 0;
+
+  /**
+   * Indicates the row of atomData that holds the value of epsilon for each atom.
+   */
   static const int ATOM_EPSILON = 1;
+
+  /**
+   * Indicates the row of atomData that holds the charge of each atom.
+   */
   static const int ATOM_CHARGE = 2;
+
+  /**
+   * Indicates the number of rows of atomData.
+   */
   static const int ATOM_DATA_SIZE = 3;
 
   // BOND DATA CONSTANTS
+
+  /**
+   * Indicates the row of bondData that holds the 1st atom index for each bond.
+   */
   static const int BOND_A1_IDX = 0;
+
+  /**
+   * Indicates the row of bondData that holds the 2nd atom index for each bond.
+   */
   static const int BOND_A2_IDX = 1;
+
+  /**
+   * Indicates the row of bondData that holds the force constant for each bond.
+   */
   static const int BOND_KBOND = 2;
+
+  /**
+   * Indicates the row of bondData holding the equilibrium distance of each bond.
+   */
   static const int BOND_EQDIST = 3;
+
+  /**
+   * Indicates the row of bondData that records whether each bond is variable.
+   */
   static const int BOND_VARIABLE = 4;
+
+  /**
+   * Indicates the number of rows in bondData.
+   */
   static const int BOND_DATA_SIZE = 5;
 
   // ANGLE DATA CONSTANTS
+
+  /**
+   * Indicates the row of angleData that holds the first atom's index for each
+   *     angle.
+   */
   static const int ANGLE_A1_IDX = 0;
+
+  /**
+   * Indicates the row of angleData that holds the middle atom's index for each
+   *     angle.
+   */
   static const int ANGLE_MID_IDX = 1;
+
+  /**
+   * Indicates the row of angleData that holds the third atom's index for each
+   *     angle.
+   */
   static const int ANGLE_A2_IDX = 2;
+
+  /**
+   * Indicates the row of angleData that holds the force constant of each angle.
+   */
   static const int ANGLE_KANGLE = 3;
+
+  /**
+   * Indicates the row of angleData holding the equilibrium size of each angle.
+   */
   static const int ANGLE_EQANGLE = 4;
+
+  /**
+   * Indicates the row of angleData holding whether each angle is variable.
+   */
   static const int ANGLE_VARIABLE = 5;
+
+  /**
+   * Indicates the number of rows in angleData.
+   */
   static const int ANGLE_DATA_SIZE = 6;
 
   // BEGINNING OF MEMBER VARIABLES
 
   // Basic environment conditions.
-  Real*   size;         // Real[3]. Holds the box's dimensions.
-  Real    temperature;  // Holds the box's temperature.
-  Real    cutoff;       // Holds the box's cutoff distance.
-  Real    maxTranslate; // Holds the maximum translation of a molecule.
-  Real    maxRotate;    // Holds the maximum rotation of a molecule.
-  int numSteps;         // Holds the number of steps to run.
+
+  /**
+   * Real[3]. Holds the box's dimensions.
+   */
+  Real*   size;
+
+  /**
+   * Holds the box's temperature.
+   */
+  Real    temperature;
+
+  /**
+   * Holds the box's cutoff distance.
+   */
+  Real    cutoff;
+
+  /**
+   * Holds the maximum translation of a molecule.
+   */
+  Real    maxTranslate;
+
+  /**
+   * Holds the maximum rotation of a molecule (in degrees).
+   */
+  Real    maxRotate;
+
+  /**
+   * Holds the number of steps to run.
+   */
+  int numSteps;
 
   // Item sizes
-  int     numMolecules; // The number of molecules in the box.
-  int     numAtoms;     // The number of atoms in the box.
-  int     numBonds;     // The number of bonds in the box. (Currently unused).
-  int     numAngles;    // The number of angles in the box. (Currently unused).
-  int     numDihedrals; // The number of dihedrals in the box. (Currently unused).
+
+  /**
+   * The number of molecules in the box.
+   */
+  int numMolecules;
+
+  /**
+   * The number of atoms in the box.
+   */
+  int numAtoms;
+
+  /**
+   * The number of bonds in the box. (Currently unused).
+   */
+  int numBonds;
+
+  /**
+   * The number of angles in the box. (Currently unused).
+   */
+  int numAngles;
+
+  /**
+   * The number of dihedrals in the box. (Currently unused).
+   */
+  int numDihedrals;
 
   // Molecule information
-  int**    moleculeData; // int[MOL_DATA_SIZE][numMolecules]
-  // Holds information about the start atom index, the number of atoms in the
-  // molecule, the start of the molecule's primary indexes, and the number of
-  // primary indexes in the molecule.
-  int*     primaryIndexes; // int[#of total primary indexes]
-  // Holds the primary indexes for every atom.
+
+  /**
+   * int[MOL_DATA_SIZE][numMolecules]
+   * Holds information about the start atom index, the number of atoms in the
+   * molecule, the start of the molecule's primary indexes, and the number of
+   * primary indexes in the molecule.
+   */
+  int** moleculeData;
+
+  /**
+   * int[#of total primary indexes]
+   * Holds the primary indexes for every atom.
+   */
+  int* primaryIndexes;
 
   // Atom information
-  Real**  atomCoordinates; // Real[3][numAtoms]
-  // Holds the coordinates of every atom in the box. Which atom belongs to which
-  // molecule is specified in moleculeData.
-  Real** rollBackCoordinates; // Real[3][# of atoms in largest molecule]
-  // Holds the previous coordinates of every atom in the most recently moved
-  // molecule. Used when rolling back a molecule following a rejected step.
-  Real**  atomData; // Real[ATOM_DATA_SIZE][numAtoms]
-  // Holds constant information about every atom, including sigma, epsilon, and
-  // the atom's charge.
+
+  /**
+   * Real[3][numAtoms]
+   * Holds the coordinates of every atom in the box. Which atom belongs to which
+   *     molecule is specified in moleculeData.
+   */
+  Real** atomCoordinates;
+
+  /**
+   * Real[3][# of atoms in largest molecule]
+   * Holds the previous coordinates of every atom in the most recently moved
+   *      molecule. Used when rolling back a molecule following a rejected step.
+   */
+  Real** rollBackCoordinates;
+
+  /**
+   * Real[ATOM_DATA_SIZE][numAtoms]
+   * Holds constant information about every atom, including sigma, epsilon, and
+   *     the atom's charge.
+   */
+  Real**  atomData;
 
   // Bond information -- Currently unused.
-  Real*   bondLengths; // Real[numBonds]
-  // Holds the length of every bond in the box.
-  const Real**  bondData; // Real [BOND_DATA_SIZE][numBonds]
-  // Holds data about every bond in the box, including the endpoints, the
-  // force constant, and the equilibrium distance.
+
+  /**
+   * Real[numBonds]
+   * Holds the length of every bond in the box.
+   */
+  Real*   bondLengths;
+
+  /**
+   * Real [BOND_DATA_SIZE][numBonds]
+   * Holds data about every bond in the box, including the endpoints, the
+   *     force constant, and the equilibrium distance.
+   */
+  const Real**  bondData;
 
   // Angle information -- Currently unused.
-  Real*   angleSizes; // Real [numAngles]
-  // Holds the size of every angle in the box, in degrees.
-  const Real**  angleData; // Real[ANGLE_DATA_SIZE][numAngles]
-  // Holds data about every angle in the box, including the endpoints, central
-  // atom, force constant, and the equilibrium angle.
+
+  /**
+   * Real [numAngles]
+   * Holds the size of every angle in the box, in degrees.
+   */
+  Real*   angleSizes;
+
+  /**
+   * Real[ANGLE_DATA_SIZE][numAngles]
+   * Holds data about every angle in the box, including the endpoints, central
+   *     atom, force constant, and the equilibrium angle.
+   */
+  const Real**  angleData;
 
   // Dihedral information -- Currently unused.
-  Real*   dihedralSizes; // Real [numDihedrals]
-  // Holds the size of every dihedral in the box.
-  const Real**  dihedralData; // Real[?][numDihedrals]
-  // Will hold data about every dihedral in the box. Currently unimplemented.
+
+  /**
+   * Real [numDihedrals]
+   * Holds the size of every dihedral in the box.
+   */
+  Real*   dihedralSizes;
+
+  /**
+   * Real[?][numDihedrals]
+   * Will hold data about every dihedral in the box. Currently unimplemented.
+   */
+  const Real**  dihedralData;
 
   //NLC information.
-  bool useNLC; // True if NLC is being used, false otherwise.
-  int* numCells; // int[3]
-  // Holds the number of cells in each dimension.
-  Real* cellWidth; // Real [3]
-  // Holds the width of each cell in each dimension.
-  NLC_Node* nlc_heap; // Points to NLC_Node[numMolecules]
-  // Used only for allocation / deallocation of memory for the NLC linked cells.
-  NLC_Node** neighbors; // NLC_Node*[3^3]
-  // Holds each linked list for cells adjacent to the target molecule.
-  NLC_Node**** neighborCells; // NLC_Node*[numCells[0]][numCells[1]][numCells[2]]
-  // NLC heads for every cell in the box.
-  NLC_Node* prevNode; // Points to the node before the node just examined, or
-  // to the node just examined if that node is the head of its linked list.
-  int* prevCell; // int[3]
-  // Holds the location of the cell most recently examined.
+
+  /**
+   * True if NLC is being used, false otherwise.
+   */
+  bool useNLC;
+
+  /**
+   * int[3]
+   * Holds the number of cells in each dimension.
+   */
+  int* numCells;
+
+  /**
+   * Real [3]
+   * Holds the width of each cell in each dimension.
+   */
+  Real* cellWidth;
+
+  /**
+   * Points to NLC_Node[numMolecules]
+   * Used only for allocation / deallocation of memory for the NLC linked cells.
+   */
+  NLC_Node* nlc_heap;
+
+  /**
+   * NLC_Node*[3^3]
+   * Holds each linked list for cells adjacent to the target molecule.
+   */
+  NLC_Node** neighbors;
+
+  /**
+   * NLC_Node*[numCells[0]][numCells[1]][numCells[2]]
+   * NLC heads for every cell in the box.
+   */
+  NLC_Node**** neighborCells;
+
+  /**
+   * Points to the node before the node just examined, or
+   *     to the node just examined if that node is the head of its linked list.
+   */
+  NLC_Node* prevNode;
+
+  /**
+   * int[3]
+   * Holds the location of the cell most recently examined.
+   */
+  int* prevCell;
+
+  //BEGINNING OF FUNCTIONS
 
   /**
    * Roll back a molecule to its original poisition. Performs translation and

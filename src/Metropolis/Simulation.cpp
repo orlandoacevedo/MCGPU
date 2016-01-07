@@ -268,7 +268,7 @@ void Simulation::run() {
 		Atom firstAtom = box->molecules[changeIdx].atoms[0];
 	}
 	endTime = clock();
-	writePDB(box->getEnvironment(), box->getMolecules());
+	writePDB(box->getEnvironment(), box->getMolecules(), sb);
 
 	/*This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
 	  However, it is a good enough estimation without adding unnecessary complexity.*/
@@ -357,7 +357,7 @@ void Simulation::saveState(const std::string& baseFileName, int simStep, const S
 	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath, sb->atomCoordinates);
 }
 
-int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection) {
+int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection, SimBox* sb) {
   std::string pdbName;
 
   if (args.simulationName.empty())
@@ -371,6 +371,9 @@ int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMolecul
 
 	int numOfMolecules = sourceEnvironment.numOfMolecules;
 	pdbFile << "REMARK Created by MCGPU" << std::endl;
+	int atomIdx = 0;
+
+	Real** atomCoords = sb->atomCoordinates;
 
 	for (int i = 0; i < numOfMolecules; i++) {
 		Molecule currentMol = sourceMoleculeCollection[i];
@@ -391,11 +394,12 @@ int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMolecul
 			pdbFile.setf(std::ios_base::fixed, std::ios_base::floatfield);
 			pdbFile.precision(3);
 			pdbFile.width(12);
-			pdbFile << currentAtom.x;
+			pdbFile << atomCoords[0][atomIdx];
 			pdbFile.width(8);
-			pdbFile << currentAtom.y;
+			pdbFile << atomCoords[1][atomIdx];
 			pdbFile.width(8);
-			pdbFile << currentAtom.z << std::endl;
+			pdbFile << atomCoords[2][atomIdx] << std::endl;
+			atomIdx++;
     }
   	pdbFile << "TER" << std::endl;
   }
