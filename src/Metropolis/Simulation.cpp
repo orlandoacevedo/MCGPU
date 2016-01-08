@@ -95,7 +95,6 @@ void Simulation::run() {
 	Real oldEnergy_sb = 0;
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont = 0, oldEnergyCont = 0;
-	Real newEnergyCont_sb = 0, oldEnergyCont_sb = 0;
 	Real lj_energy = 0, charge_energy = 0;
 	Real new_lj = 0, old_lj = 0;
 	Real new_charge = 0, old_charge = 0;
@@ -213,9 +212,9 @@ void Simulation::run() {
 			}
 		} else {
 			if (args.useNeighborList) {
-				oldEnergyCont_sb = sb->calcMolecularEnergyContribution(old_lj, old_charge, changeIdx, 0);
+				oldEnergyCont = sb->calcMolecularEnergyContribution(old_lj, old_charge, changeIdx, 0);
 			} else {
-			  oldEnergyCont_sb = sb->calcMolecularEnergyContribution(old_lj, old_charge, changeIdx, 0);
+			  oldEnergyCont = sb->calcMolecularEnergyContribution(old_lj, old_charge, changeIdx, 0);
 			}
 		}
 
@@ -231,21 +230,21 @@ void Simulation::run() {
 			}
 		} else {
 			if (args.useNeighborList) {
-				newEnergyCont_sb = sb->calcMolecularEnergyContribution(new_lj, new_charge, changeIdx, 0);
+				newEnergyCont = sb->calcMolecularEnergyContribution(new_lj, new_charge, changeIdx, 0);
 			} else {
-				newEnergyCont_sb = sb->calcMolecularEnergyContribution(new_lj, new_charge, changeIdx, 0);
+				newEnergyCont = sb->calcMolecularEnergyContribution(new_lj, new_charge, changeIdx, 0);
 			}
 		}
 
 		// Compare new energy and old energy to decide if we should accept or not
-		bool accept = false, accept_sb = false;
+		bool accept = false;
 
-		if (newEnergyCont_sb < oldEnergyCont_sb) {
+		if (newEnergyCont < oldEnergyCont) {
 			// Always accept decrease in energy
 			accept = true;
 		} else {
 			// Otherwise use statistics+random number to determine weather to accept increase in energy
-			Real x = exp(-(newEnergyCont_sb - oldEnergyCont_sb) / kT);
+			Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
 
 			if (x >= randomReal(0.0, 1.0)) {
 				accept = true;
@@ -256,7 +255,7 @@ void Simulation::run() {
 
 		if (accept) {
 			accepted++;
-			oldEnergy_sb += newEnergyCont_sb - oldEnergyCont_sb;
+			oldEnergy_sb += newEnergyCont - oldEnergyCont;
 			lj_energy += new_lj - old_lj;
 			charge_energy += new_charge - old_charge;
 		} else {
@@ -264,8 +263,6 @@ void Simulation::run() {
 			sb->rollback(changeIdx);
 		}
 
-		int firstIdx = sb->moleculeData[0][changeIdx];
-		Atom firstAtom = box->molecules[changeIdx].atoms[0];
 	}
 	endTime = clock();
 	writePDB(box->getEnvironment(), box->getMolecules(), sb);
