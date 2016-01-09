@@ -278,7 +278,6 @@ Real SimBox::calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, int c
         }
       }
     }
-
   }
 
   return total;

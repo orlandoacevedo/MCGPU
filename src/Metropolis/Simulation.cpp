@@ -33,7 +33,7 @@
 //#include "ParallelSim/ParallelCalcs.h"
 #include "Utilities/FileUtilities.h"
 #include "SimBox.h"
-
+#include "SimBoxBuilder.h"
 
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
@@ -133,9 +133,8 @@ void Simulation::run() {
 	}
 
 	// Build SimBox below
-	SimBox* sb = new SimBox();
-	sb->useNLC = args.useNeighborList;
-	sb->buildBox(box);
+	SimBoxBuilder builder = SimBoxBuilder(args.useNeighborList);
+	SimBox* sb = builder.build(box);
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0) {
 		if (false) {
