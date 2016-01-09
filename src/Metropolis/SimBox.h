@@ -375,21 +375,6 @@ public:
    */
   void rollback(int molIdx);
 
-  /**
-   * Adds the molecules from a Box to this simulation box.
-   *
-   * @param molecules A dynamic array containing the box's molecules.
-   * @param numMolecules The size of the molecules array.
-   * @return True if successful, false otherwise.
-   */
-  bool addMolecules(Molecule* molecules, int numMolecules);
-
-  /**
-   * Adds the primary indexes from a box to the following simBox object.
-   *
-   * @param primaryAtomIndexArray The box's array containing primary index definitions.
-   */
-  void addPrimaryIndexes(std::vector< std::vector<int> *>* primaryAtomIndexArray);
 
   /**
    * Keeps a molecule in the simulation box's boundaries, based on the location
@@ -408,13 +393,6 @@ public:
    * @return The measurement, scaled to be periodic.
    */
   Real makePeriodic(Real x, int dimension);
-
-  /**
-   * Given a box, constructs the corresponding simulation box.
-   *
-   * @param box The box to construct the simulation box from.
-   */
-  void buildBox(Box* box);
 
   /**
    * Returns the index of a random molecule within the simulation box.
@@ -573,12 +551,6 @@ public:
    * @return sqrt(|a*b|), the geometric mean of the two numbers.
    */
   Real calcBlending (const Real &a, const Real &b);
-
-  /**
-   * Stores all of the molecules in this simulation box in an appropriate chain
-   * of neighbor-list linked cells.
-   */
-  void fillNLC();
 
   /**
    * Given the index for a molecule, popuplate neighbors with the heads of

@@ -18,74 +18,6 @@ void SimBox::keepMoleculeInBox(int molIdx) {
   }
 }
 
-bool SimBox::addMolecules(Molecule* molecules, int nMolecules) {
-  int nAtoms = 0, largestMolecule = 0;
-
-  for (int i = 0; i < nMolecules; i++) {
-    nAtoms += molecules[i].numOfAtoms;
-    if (nAtoms > largestMolecule) {
-      largestMolecule = nAtoms;
-    }
-  }
-
-  numAtoms = nAtoms;
-  numMolecules = nMolecules;
-
-  rollBackCoordinates = new Real*[NUM_DIMENSIONS];
-  atomCoordinates = new Real*[NUM_DIMENSIONS];
-  atomData = new Real*[ATOM_DATA_SIZE];
-  moleculeData = new int*[MOL_DATA_SIZE];
-
-  for (int i = 0; i < NUM_DIMENSIONS; i++) {
-    atomCoordinates[i] = new Real[numAtoms];
-    rollBackCoordinates[i] = new Real[largestMolecule];
-  }
-  for (int i = 0; i < ATOM_DATA_SIZE; i++) {
-    atomData[i] = new Real[numAtoms];
-  }
-  for (int i = 0; i < MOL_DATA_SIZE; i++) {
-    moleculeData[i] = new int[numMolecules];
-  }
-
-  int atomIdx = 0;
-  for (int i = 0; i < numMolecules; i++) {
-
-    moleculeData[MOL_START][i] = atomIdx;
-    moleculeData[MOL_LEN][i] = molecules[i].numOfAtoms;
-    moleculeData[MOL_TYPE][i] = molecules[i].type;
-
-    for (int j = 0; j < molecules[i].numOfAtoms; j++) {
-      Atom a = molecules[i].atoms[j];
-      atomData[ATOM_SIGMA][atomIdx] = a.sigma;
-      atomData[ATOM_EPSILON][atomIdx] = a.epsilon;
-      atomData[ATOM_CHARGE][atomIdx] = a.charge;
-      atomCoordinates[X_COORD][atomIdx] = a.x;
-      atomCoordinates[Y_COORD][atomIdx] = a.y;
-      atomCoordinates[Z_COORD][atomIdx] = a.z;
-      atomIdx++;
-    }
-  }
-  return true;
-}
-
-
-void SimBox::addPrimaryIndexes(std::vector<std::vector<int>* >* in) {
-  int numPIdxes = 0;
-  for (int i = 0; i < numMolecules; i++) {
-    numPIdxes += in->at(moleculeData[MOL_TYPE][i])->size();
-  }
-  primaryIndexes = new int[numPIdxes];
-  int idx = 0;
-  for (int i = 0; i < numMolecules; i++) {
-    vector<int>* v = in->at(moleculeData[MOL_TYPE][i]);
-    moleculeData[MOL_PIDX_START][i] = idx;
-    moleculeData[MOL_PIDX_COUNT][i] = v->size();
-    for (int j = 0; j < v->size(); j++) {
-      primaryIndexes[idx++] = v->at(j) + moleculeData[MOL_START][i];
-    }
-  }
-}
-
 void SimBox::changeMolecule(int molIdx, int vIdx, Real dX, Real dY, Real dZ, Real rX, Real rY, Real rZ) {
   int molStart = moleculeData[MOL_START][molIdx];
   int molLen = moleculeData[MOL_LEN][molIdx];
@@ -202,24 +134,6 @@ void SimBox::rotateZ(int aIdx, Real angleDeg) {
   atomCoordinates[Y_COORD][aIdx] = oldY * cos(angleRad) - oldX * sin(angleRad);
 }
 
-void SimBox::buildBox(Box* box) {
-  size = new Real[NUM_DIMENSIONS];
-  size[X_COORD] = box->environment->x;
-  size[Y_COORD] = box->environment->y;
-  size[Z_COORD] = box->environment->z;
-  cutoff = box->environment->cutoff;
-  temperature = box->environment->temp;
-  maxTranslate = box->environment->maxTranslation;
-  maxRotate = box->environment->maxRotation;
-  numAtoms = box->environment->numOfAtoms;
-  numMolecules = box->environment->numOfMolecules;
-  addMolecules(box->molecules, numMolecules);
-  addPrimaryIndexes(box->environment->primaryAtomIndexArray);
-  if (useNLC) {
-    fillNLC();
-  }
-}
-
 int SimBox::chooseMolecule() const {
   return (int) randomReal(0, numMolecules);
 }
@@ -292,7 +206,6 @@ bool SimBox::moleculesInRange(refInt p1Start, refInt p1End, refInt p2Start, refI
     p1 = primaryIndexes[p1Idx];
     for (int p2Idx = p2Start; p2Idx < p2End; p2Idx++) {
       p2 = primaryIndexes[p2Idx];
-    //  std::cout << p1 << " and " << p2 << ": dist is " << calcAtomDistSquared(box, p1, p2);
       if (calcAtomDistSquared(p1, p2) <= cutoff * cutoff) {
         return true;
       }
@@ -374,42 +287,6 @@ Real SimBox::calcChargeEnergy(refInt a1, refInt a2, const Real& r) {
 
 Real SimBox::calcBlending (const Real &a, const Real &b) {
   return sqrt(abs(a*b));
-}
-
-void SimBox::fillNLC() {
-  neighbors = new NLC_Node*[27];
-  numCells = new int[NUM_DIMENSIONS];
-  cellWidth = new Real[NUM_DIMENSIONS];
-  prevCell = new int[NUM_DIMENSIONS];
-  for (int i = 0; i < NUM_DIMENSIONS; i++) {
-    numCells[i] = (int) (size[i] / cutoff);
-    if (numCells[i] == 0)
-      numCells[i] = 1;
-    cellWidth[i] = size[i] / numCells[i];
-  }
-  neighborCells = new NLC_Node***[numCells[0]];
-  for (int i = 0; i < numCells[0]; i++) {
-    neighborCells[i] = new NLC_Node**[numCells[1]];
-    for (int j = 0; j < numCells[1]; j++) {
-      neighborCells[i][j] = new NLC_Node*[numCells[2]];
-      for (int k = 0; k < numCells[2]; k++) {
-        neighborCells[i][j][k] = new NLC_Node();
-        neighborCells[i][j][k]->index = -1;
-        neighborCells[i][j][k]->next = NULL;
-      }
-    }
-  }
-  nlc_heap = new NLC_Node[numMolecules];
-  for (int i = 0; i < numMolecules; i++) {
-    int pIdx = primaryIndexes[moleculeData[MOL_PIDX_START][i]];
-    int cloc[3];
-    for (int j = 0; j < NUM_DIMENSIONS; j++) {
-      cloc[j] = getCell(atomCoordinates[j][pIdx], j);
-    }
-    nlc_heap[i].next = neighborCells[cloc[0]][cloc[1]][cloc[2]];
-    nlc_heap[i].index = i;
-    neighborCells[cloc[0]][cloc[1]][cloc[2]] = &nlc_heap[i];
-  }
 }
 
 int SimBox::findNeighbors(int molIdx) {
