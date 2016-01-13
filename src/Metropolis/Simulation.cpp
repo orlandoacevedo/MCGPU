@@ -133,7 +133,7 @@ void Simulation::run() {
 	}
 
 	// Build SimBox below
-	SimBoxBuilder builder = SimBoxBuilder(args.useNeighborList);
+	SimBoxBuilder builder = SimBoxBuilder(args.useNeighborList, new SBScanner());
 	SimBox* sb = builder.build(box);
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0) {

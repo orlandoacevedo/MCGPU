@@ -285,7 +285,7 @@ public:
    * Holds data about every bond in the box, including the endpoints, the
    *     force constant, and the equilibrium distance.
    */
-  const Real**  bondData;
+   Real**  bondData;
 
   // Angle information -- Currently unused.
 
@@ -300,7 +300,7 @@ public:
    * Holds data about every angle in the box, including the endpoints, central
    *     atom, force constant, and the equilibrium angle.
    */
-  const Real**  angleData;
+  Real**  angleData;
 
   // Dihedral information -- Currently unused.
 

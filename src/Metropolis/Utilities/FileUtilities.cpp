@@ -476,7 +476,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
 
 		// Copy atoms for each molecule.
     for (int k = 0; k < count[0]; k++)	{
-    	box->atoms[m * count[0] + k].id = offset * count[0] + k;
+    	box->atoms[m * count[0] + k].id = m * count[0] + k;
     }
 
 		// Copy bonds for each molecule.

@@ -1,9 +1,10 @@
 #include "SimBoxBuilder.h"
 
 
-SimBoxBuilder::SimBoxBuilder(bool useNLC) {
+SimBoxBuilder::SimBoxBuilder(bool useNLC, SBScanner* sbData_in) {
   sb = new SimBox();
   sb->useNLC = useNLC;
+  sbData = sbData_in;
 }
 
 SimBox* SimBoxBuilder::build(Box* box) {
@@ -31,18 +32,33 @@ void SimBoxBuilder::initEnvironment(Environment* environment) {
 
 void SimBoxBuilder::addMolecules(Molecule* molecules) {
   int largestMolecule = 0, nAtoms = 0;
+  int mostBonds = 0, nBonds = 0;
+  int mostAngles = 0, nAngles = 0;
+
   for (int i = 0; i < sb->numMolecules; i++) {
     nAtoms += molecules[i].numOfAtoms;
+    nBonds += molecules[i].numOfBonds;
+    nAngles += molecules[i].numOfAngles;
     if (molecules[i].numOfAtoms > largestMolecule) {
       largestMolecule = molecules[i].numOfAtoms;
+    }
+    if (molecules[i].numOfBonds > mostBonds) {
+      mostBonds = molecules[i].numOfBonds;
+    }
+    if (molecules[i].numOfAngles > mostAngles) {
+      mostAngles = molecules[i].numOfAngles;
     }
   }
 
   sb->numAtoms = nAtoms;
+  sb->numBonds = nBonds;
+  sb->numAngles = nAngles;
+
   sb->rollBackCoordinates = new Real*[SimBox::NUM_DIMENSIONS];
   sb->atomCoordinates = new Real*[SimBox::NUM_DIMENSIONS];
   sb->atomData = new Real*[SimBox::ATOM_DATA_SIZE];
   sb->moleculeData = new int*[SimBox::MOL_DATA_SIZE];
+  sb->bondData = new Real*[SimBox::BOND_DATA_SIZE];
 
   for (int i = 0; i < SimBox::NUM_DIMENSIONS; i++) {
     sb->atomCoordinates[i] = new Real[sb->numAtoms];
@@ -57,7 +73,14 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
     sb->moleculeData[i] = new int[sb->numMolecules];
   }
 
-  int atomIdx = 0;
+  for (int i = 0; i < SimBox::BOND_DATA_SIZE; i++) {
+    sb->bondData[i] = new Real[sb->numBonds];
+  }
+  int atomIdx = 0, bondIdx = 0;
+
+  std::map<int, int> idToIdx;
+  std::map<int, std::string*> idToName;
+
   for (int i = 0; i < sb->numMolecules; i++) {
 
     sb->moleculeData[SimBox::MOL_START][i] = atomIdx;
@@ -66,6 +89,8 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
 
     for (int j = 0; j < molecules[i].numOfAtoms; j++) {
       Atom a = molecules[i].atoms[j];
+      idToIdx[a.id] = atomIdx;
+      idToName[a.id] = a.name;
       sb->atomData[SimBox::ATOM_SIGMA][atomIdx] = a.sigma;
       sb->atomData[SimBox::ATOM_EPSILON][atomIdx] = a.epsilon;
       sb->atomData[SimBox::ATOM_CHARGE][atomIdx] = a.charge;
@@ -74,6 +99,18 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
       sb->atomCoordinates[SimBox::Z_COORD][atomIdx] = a.z;
       atomIdx++;
     }
+
+    for (int j = 0; j < molecules[i].numOfBonds; j++) {
+      Bond b = molecules[i].bonds[j];
+      sb->bondData[SimBox::BOND_A1_IDX][bondIdx] = idToIdx[b.atom1];
+      sb->bondData[SimBox::BOND_A2_IDX][bondIdx] = idToIdx[b.atom2];
+      std::string name1 = *(idToName[b.atom1]);
+      std::string name2 = *(idToName[b.atom2]);
+      sb->bondData[SimBox::BOND_KBOND][bondIdx] = sbData->getKBond(name1, name2);
+      sb->bondData[SimBox::BOND_EQDIST][bondIdx] = sbData->getEqBondDist(name1, name2);
+      bondIdx++;
+    }
+
   }
 }
 

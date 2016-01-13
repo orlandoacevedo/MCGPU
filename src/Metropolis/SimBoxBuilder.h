@@ -2,6 +2,7 @@
 #define SIMBOX_BUILDER_H
 
 #include "SimBox.h"
+#include "Utilities/FileUtilities.h"
 
 class SimBoxBuilder {
 
@@ -12,6 +13,12 @@ private:
    *     instance.
    */
   SimBox* sb;
+
+  /**
+   * sbData points to the SBScanner object that will be used to retrieve data
+   *     read in from the OPLSAA.sb / OPLSUA.sb file.
+   */
+  SBScanner* sbData;
 
   /**
    * Initializes basic environment variables, such as the box's temperature,
@@ -49,8 +56,10 @@ public:
    * Constructor for SimBoxBuilder.
    *
    * @param useNLC True if this Simulation run will use the NLC, false otherwise.
+   * @param sbData Points to SBScanner, which retrieves information about bonds
+   *     and angles from oplsaa.sb.
    */
-  SimBoxBuilder(bool useNLC);
+  SimBoxBuilder(bool useNLC, SBScanner* sbData);
 
   /**
    * Driver function for SimBoxBuilder. Constructs and returns a simulation box
