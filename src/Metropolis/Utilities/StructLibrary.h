@@ -189,6 +189,11 @@ struct Angle
     */
     int atom2;
 
+		/**
+		 * The index of the common atom in the angle.
+		 */
+	  int commonAtom;
+
     /*!
     the angle between the atoms; used to be "value"
     */
@@ -213,6 +218,7 @@ struct Angle
 	{
     	atom1 = 0;
     	atom2 = 0;
+			commonAtom = 0;
     	value = 0;
     	variable = true;
 	}
@@ -222,6 +228,7 @@ struct Angle
 	{
     	atom1 = a1;
     	atom2 = a2;
+			commonAtom = 0;
     	value = val;
     	variable = varied;
 	}

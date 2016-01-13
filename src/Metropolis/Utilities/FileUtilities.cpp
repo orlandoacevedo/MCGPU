@@ -438,6 +438,9 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
     // Copy angles from the molecule vector.
     for (int k = 0; k < molec1.numOfAngles; k++) {
   		box->molecules[j].angles[k] = molec1.angles[k];
+			int a1Idx = molec1.angles[k].atom1;
+			int a2Idx = molec1.angles[k].atom2;
+			box->molecules[j].angles[k].commonAtom = getCommonAtom(bondVector, a1Idx, a2Idx);
     }
 
     // Copy dihedrals from the molecule vector.

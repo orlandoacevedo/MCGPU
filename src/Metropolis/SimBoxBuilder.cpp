@@ -59,6 +59,9 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
   sb->atomData = new Real*[SimBox::ATOM_DATA_SIZE];
   sb->moleculeData = new int*[SimBox::MOL_DATA_SIZE];
   sb->bondData = new Real*[SimBox::BOND_DATA_SIZE];
+  sb->angleData = new Real*[SimBox::ANGLE_DATA_SIZE];
+  sb->bondLengths = new Real[nBonds];
+  sb->angleSizes = new Real[nAngles];
 
   for (int i = 0; i < SimBox::NUM_DIMENSIONS; i++) {
     sb->atomCoordinates[i] = new Real[sb->numAtoms];
@@ -76,7 +79,11 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
   for (int i = 0; i < SimBox::BOND_DATA_SIZE; i++) {
     sb->bondData[i] = new Real[sb->numBonds];
   }
-  int atomIdx = 0, bondIdx = 0;
+
+  for (int i = 0; i < SimBox::ANGLE_DATA_SIZE; i++) {
+    sb->angleData[i] = new Real[sb->numAngles];
+  }
+  int atomIdx = 0, bondIdx = 0, angleIdx = 0;
 
   std::map<int, int> idToIdx;
   std::map<int, std::string*> idToName;
@@ -86,6 +93,10 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
     sb->moleculeData[SimBox::MOL_START][i] = atomIdx;
     sb->moleculeData[SimBox::MOL_LEN][i] = molecules[i].numOfAtoms;
     sb->moleculeData[SimBox::MOL_TYPE][i] = molecules[i].type;
+    sb->moleculeData[SimBox::MOL_BOND_START][i] = bondIdx;
+    sb->moleculeData[SimBox::MOL_BOND_COUNT][i] = molecules[i].numOfBonds;
+    sb->moleculeData[SimBox::MOL_ANGLE_START][i] = angleIdx;
+    sb->moleculeData[SimBox::MOL_ANGLE_COUNT][i] = molecules[i].numOfAngles;
 
     for (int j = 0; j < molecules[i].numOfAtoms; j++) {
       Atom a = molecules[i].atoms[j];
@@ -108,9 +119,27 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
       std::string name2 = *(idToName[b.atom2]);
       sb->bondData[SimBox::BOND_KBOND][bondIdx] = sbData->getKBond(name1, name2);
       sb->bondData[SimBox::BOND_EQDIST][bondIdx] = sbData->getEqBondDist(name1, name2);
+      sb->bondLengths[bondIdx] = b.distance;
+      sb->bondData[SimBox::BOND_VARIABLE][bondIdx] = b.variable;
       bondIdx++;
     }
 
+    for (int j = 0; j < molecules[i].numOfAngles; j++) {
+      Angle a = molecules[i].angles[j];
+      sb->angleData[SimBox::ANGLE_A1_IDX][angleIdx] = idToIdx[a.atom1];
+      sb->angleData[SimBox::ANGLE_A2_IDX][angleIdx] = idToIdx[a.atom2];
+      sb->angleData[SimBox::ANGLE_MID_IDX][angleIdx] = idToIdx[a.commonAtom];
+      if (a.commonAtom != -1) {
+        std::string a1Name = *(idToName[a.atom1]);
+        std::string a2Name = *(idToName[a.atom2]);
+        std::string midName = *(idToName[a.commonAtom]);
+        sb->angleData[SimBox::ANGLE_KANGLE][angleIdx] = sbData->getKAngle(a1Name, midName, a2Name);
+        sb->angleData[SimBox::ANGLE_EQANGLE][angleIdx] = sbData->getEqAngle(a1Name, midName, a2Name);
+      }
+      sb->angleSizes[angleIdx] = a.value;
+      sb->angleData[SimBox::ANGLE_VARIABLE][angleIdx] = a.variable;
+      angleIdx++;
+    }
   }
 }
 

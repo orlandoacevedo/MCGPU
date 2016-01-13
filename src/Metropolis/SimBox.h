@@ -74,9 +74,33 @@ public:
   static const int MOL_TYPE = 4;
 
   /**
+   * Indicates the row of moleculeData that holds the start index of each
+   *     molecule's bonds in bondData and bondLengths.
+   */
+  static const int MOL_BOND_START = 5;
+
+  /**
+   * Indicates the row of moleculeData that holds the number of bonds in each
+   *     molecule.
+   */
+  static const int MOL_BOND_COUNT = 6;
+
+  /**
+   * Indicates the row of moleculeData that holds the start index of each
+   *     molecule's angles in angleData and angleSizes.
+   */
+  static const int MOL_ANGLE_START = 7;
+
+  /**
+   * Indicates the row of moleculeData that holds the number of angles in each
+   *     molecules.
+   */
+  static const int MOL_ANGLE_COUNT = 8;
+
+  /**
    * Indicates the number of rows of moleculeData.
    */
-  static const int MOL_DATA_SIZE = 5;
+  static const int MOL_DATA_SIZE = 9;
 
   // ATOM DATA CONSTANTS
 
