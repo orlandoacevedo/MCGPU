@@ -389,6 +389,13 @@ public:
    */
   int* prevCell;
 
+  /**
+   * int[atoms in largest molecule]
+   * Used for performing union-find calculations to find what half of a bond or
+   *     angle a molecule is in.
+   */
+   int* unionFindParent;
+
   //BEGINNING OF FUNCTIONS
 
   /**
@@ -614,9 +621,41 @@ public:
    * list. Therefore, it must be set to the node to remove's predecessor, or the
    * remove node itself if that node is the head of the linked list.
    *
-   * Inputs: molIdx - The index of the moleucle to update.
+   * @param molIdx The index of the moleucle to update.
    */
   void updateNLC(int molIdx);
+
+
+  /**
+   * Stretches or compresses the given bond in the given molecule.
+   *
+   * @param molIdx The index of the molecule that the bond is in.
+   * @param bondIdx The index of the bond within the molecule. For example, the
+   *     first bond in molecule 12 has index 0.
+   * @param stretchDist The amount to stretch or compress the bond. Positive
+   *     values correspond to stretching, negative to compression.
+   */
+  void stretchBond(int molIdx, int bondIdx, Real stretchDist);
+
+  /**
+   * Unions the sets of two different atoms connected by a bond. Note that atoms
+   *     are indexed within the molecule, so the first atom in the 12th molecule
+   *     has index 0.
+   *
+   * @param atom1 The index (within the molecule) of the first atom to union.
+   * @param atom2 The index (within the molecule) second atom in the union.
+   */
+  void unionAtoms(int atom1, int atom2);
+
+  /**
+   * Finds the representative element of an atom in the disjoint set array.
+   * Note that the atom is indexed within the molecule, so the first atom in the
+   * 12th molecule has index 0. This function also performs path compression.
+   *
+   * @param atomIdx The atom's index within the molecule.
+   * @return The representative element of the atom index.
+   */
+  int find (int atomIdx);
 };
 
 typedef const SimBox & refBox;

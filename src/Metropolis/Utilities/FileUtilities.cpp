@@ -1,22 +1,19 @@
 #include "FileUtilities.h"
 
-//#include <iostream>
-//#include <fstream>
-//#include <stdlib.h>
-#include <exception>
-#include <stdexcept>
-//#include <sstream>
-#include <time.h>
 #include "Parsing.h"
 #include "StructLibrary.h"
 #include "Metropolis/Box.h"
 #include "Metropolis/SimulationArgs.h"
 
+#include <exception>
+#include <stdexcept>
+#include <time.h>
+
+
 using std::string;
 using std::ifstream;
 
 #define DEFAULT_STEP_COUNT 100
-
 
 bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps) {
 
@@ -32,7 +29,7 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 
   if (inputType == InputFile::Configuration) {	// Build from config/z-matrix.
 
-		// Reading in config information from config file.
+	  // Reading in config information from config file.
 		ConfigScanner config_scanner = ConfigScanner();
     if (!config_scanner.readInConfig(inputPath)) {
   		std::cerr << "Error: loadBoxData(): Could not read config file" << std::endl;

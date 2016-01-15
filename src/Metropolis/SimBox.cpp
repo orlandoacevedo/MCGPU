@@ -350,3 +350,65 @@ void SimBox::updateNLC(int molIdx) {
     }
   }
 }
+
+void SimBox::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
+  int bondStart = moleculeData[MOL_BOND_START][molIdx];
+  int bondEnd = bondStart + moleculeData[MOL_BOND_COUNT][molIdx];
+  int startIdx = moleculeData[MOL_START][molIdx];
+  int molSize = moleculeData[MOL_LEN][molIdx];
+  int end1 = (int) bondData[BOND_A1_IDX][bondStart + bondIdx];
+  int end2 = (int) bondData[BOND_A2_IDX][bondStart + bondIdx];
+
+  for (int i = 0; i < molSize; i++) {
+    unionFindParent[i] = i;
+  }
+
+  for (int i = bondStart; i < bondEnd; i++) {
+    int a1 = (int) bondData[BOND_A1_IDX][i];
+    int a2 = (int) bondData[BOND_A2_IDX][i];
+    unionAtoms(a1, a2);
+  }
+  int side1 = find(end1 - startIdx);
+  int side2 = find(end2 - startIdx);
+  if (side1 == side2)
+    return;
+  Real v[NUM_DIMENSIONS];
+  Real denon;
+  for (int i = 0; i < NUM_DIMENSIONS; i++) {
+    v[i] = atomCoordinates[i][side2] - atomCoordinates[i][side1];
+    denon += v[i] * v[i];
+  }
+  denon = sqrt(denon);
+  for (int i = 0; i < NUM_DIMENSIONS; i++) {
+    v[i] = v[i] / denon / 2.0;
+  }
+  for (int i = 0; i < molSize; i++) {
+    if(find(i) == side2) {
+      for (int j = 0; j < NUM_DIMENSIONS; j++) {
+        atomCoordinates[j][i + startIdx] += v[i];
+      }
+    } else {
+      for (int j = 0; j < NUM_DIMENSIONS; j++) {
+        atomCoordinates[j][i + startIdx] -= v[i];
+      }
+    }
+  }
+}
+
+
+void SimBox::unionAtoms(int atom1, int atom2) {
+  int a1Parent = find(atom1);
+  int a2Parent = find(atom2);
+  if (a1Parent != a2Parent) {
+    unionFindParent[a1Parent] = a2Parent;
+  }
+}
+
+int SimBox::find(int atomIdx) {
+  if (unionFindParent[atomIdx] == atomIdx) {
+    return atomIdx;
+  } else {
+    unionFindParent[atomIdx] = find(unionFindParent[atomIdx]);
+    return unionFindParent[atomIdx];
+  }
+}

@@ -61,6 +61,7 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
   sb->bondData = new Real*[SimBox::BOND_DATA_SIZE];
   sb->angleData = new Real*[SimBox::ANGLE_DATA_SIZE];
   sb->bondLengths = new Real[nBonds];
+  sb->unionFindParent = new int[largestMolecule];
   sb->angleSizes = new Real[nAngles];
 
   for (int i = 0; i < SimBox::NUM_DIMENSIONS; i++) {
