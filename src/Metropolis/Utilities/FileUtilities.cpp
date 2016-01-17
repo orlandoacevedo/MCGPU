@@ -187,6 +187,9 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBSc
   memset(box->dihedrals, 0, sizeof(Dihedral) * box->dihedralCount);
   memset(box->hops, 0, sizeof(Hop) * box->hopCount);
 
+	std::vector<Bond> bondVector;	// bondVector will hold a list of bonds.
+	// These will be used to get the common atom in every angle.
+
 	//Copy data from vector to molecule
   for (int j = 0; j < molecVec.size(); j++) {
     Molecule molec1 = molecVec[j];
@@ -220,8 +223,7 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBSc
     	box->molecules[j].atoms[k] = molec1.atoms[k];
     }
 
-		std::vector<Bond> bondVector;	// bondVector will hold a list of bonds.
-		// These will be used to get the common atom in every angle.
+
 
     // Copy over bonds from the molecule vector.
     for (int k = 0; k < molec1.numOfBonds; k++) {
@@ -386,6 +388,9 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
   //Clear count.
   memset(count, 0, sizeof(count));
 
+	std::vector<Bond> bondVector;	// bondVector will hold a list of bonds.
+	// These will be used to get the common atom in every angle.
+
 	//Copy data from vector to molecule.
  	for(int j = 0; j < molecVec.size(); j++) {
 
@@ -421,8 +426,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
     	box->molecules[j].atoms[k] = molec1.atoms[k];
     }
 
-		std::vector<Bond> bondVector;	// bondVector will hold a list of bonds.
-		// These will be used to get the common atom in every angle.
+
 
     // Copy bonds from the molecule vector.
     for (int k = 0; k < molec1.numOfBonds; k++) {
@@ -439,6 +443,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
 			int a2Idx = molec1.angles[k].atom2;
 			box->molecules[j].angles[k].commonAtom = getCommonAtom(bondVector, a1Idx, a2Idx);
     }
+
 
     // Copy dihedrals from the molecule vector.
     for (int k = 0; k < molec1.numOfDihedrals; k++) {
@@ -489,6 +494,7 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
     for(int k = 0; k < count[2]; k++) {
     	box->angles[m * count[2] + k].atom1 += m * count[0];
       box->angles[m * count[2] + k].atom2 += m * count[0];
+			box->angles[m * count[2] + k].commonAtom += m * count[0];
     }
 
 		// Copy dihedrals for each molecule.

@@ -130,13 +130,11 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
       sb->angleData[SimBox::ANGLE_A1_IDX][angleIdx] = idToIdx[a.atom1];
       sb->angleData[SimBox::ANGLE_A2_IDX][angleIdx] = idToIdx[a.atom2];
       sb->angleData[SimBox::ANGLE_MID_IDX][angleIdx] = idToIdx[a.commonAtom];
-      if (a.commonAtom != -1) {
-        std::string a1Name = *(idToName[a.atom1]);
-        std::string a2Name = *(idToName[a.atom2]);
-        std::string midName = *(idToName[a.commonAtom]);
-        sb->angleData[SimBox::ANGLE_KANGLE][angleIdx] = sbData->getKAngle(a1Name, midName, a2Name);
-        sb->angleData[SimBox::ANGLE_EQANGLE][angleIdx] = sbData->getEqAngle(a1Name, midName, a2Name);
-      }
+      std::string a1Name = *(idToName[a.atom1]);
+      std::string a2Name = *(idToName[a.atom2]);
+      std::string midName = *(idToName[a.commonAtom]);
+      sb->angleData[SimBox::ANGLE_KANGLE][angleIdx] = sbData->getKAngle(a1Name, midName, a2Name);
+      sb->angleData[SimBox::ANGLE_EQANGLE][angleIdx] = sbData->getEqAngle(a1Name, midName, a2Name);
       sb->angleSizes[angleIdx] = a.value;
       sb->angleData[SimBox::ANGLE_VARIABLE][angleIdx] = a.variable;
       angleIdx++;
