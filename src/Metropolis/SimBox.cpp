@@ -351,6 +351,87 @@ void SimBox::updateNLC(int molIdx) {
   }
 }
 
+void SimBox::expandAngle(int molIdx, int angleIdx, Real expandDeg) {
+  int bondStart = moleculeData[MOL_BOND_START][molIdx];
+  int bondEnd = bondStart + moleculeData[MOL_BOND_COUNT][molIdx];
+  int angleStart = moleculeData[MOL_ANGLE_START][molIdx];
+  int startIdx = moleculeData[MOL_START][molIdx];
+  int molSize = moleculeData[MOL_LEN][molIdx];
+  int end1 = (int) angleData[ANGLE_A1_IDX][angleStart + angleIdx];
+  int end2 = (int) angleData[ANGLE_A2_IDX][angleStart + angleIdx];
+  int mid = (int) angleData[ANGLE_MID_IDX][angleStart + angleIdx];
+
+  for (int i = 0; i < molSize; i++) {
+    unionFindParent[i] = i;
+  }
+
+  for (int i = bondStart; i < bondEnd; i++) {
+    int a1 = (int) bondData[BOND_A1_IDX][i];
+    int a2 = (int) bondData[BOND_A2_IDX][i];
+    if (a1 == mid || a2 == mid)
+      continue;
+    unionAtoms(a1 - startIdx, a2 - startIdx);
+  }
+  int group1 = find(end1 - startIdx);
+  int group2 = find(end2 - startIdx);
+  if (group1 == group2) {
+    std::cout << "ERROR: EXPANDING ANGLE IN A RING!" << std::endl;
+    return;
+  }
+  Real DEG2RAD = 3.14159256358979323846264 / 180.0;
+  Real end1Mid[NUM_DIMENSIONS];
+  Real end2Mid[NUM_DIMENSIONS];
+  Real normal[NUM_DIMENSIONS];
+  Real mvector[NUM_DIMENSIONS];
+  for (int i = 0; i < NUM_DIMENSIONS; i++) {
+    end1Mid[i] = atomCoordinates[i][mid] - atomCoordinates[i][end1];
+    end2Mid[i] = atomCoordinates[i][mid] - atomCoordinates[i][end2];
+    mvector[i] = atomCoordinates[i][mid];
+  }
+  normal[0] = end1Mid[1] * end2Mid[2] - end2Mid[1] * end1Mid[2];
+  normal[1] = end2Mid[0] * end1Mid[2] - end1Mid[0] * end2Mid[2];
+  normal[2] = end1Mid[0] * end2Mid[1] - end2Mid[0] * end1Mid[1];
+  Real normLen = 0.0;
+  for (int i = 0; i < NUM_DIMENSIONS; i++) {
+    normLen += normal[i] * normal[i];
+  }
+  normLen = sqrt(normLen);
+  for (int i = 0; i < NUM_DIMENSIONS; i++) {
+    normal[i] = normal[i] / normLen;
+  }
+
+
+  for (int i = startIdx; i < startIdx + molSize; i++) {
+    Real theta;
+    Real point[NUM_DIMENSIONS];
+    Real dot = 0.0;
+    Real cross[NUM_DIMENSIONS];
+    if (find(i - startIdx) == group1) {
+      theta = expandDeg * -DEG2RAD;
+    } else if (find(i - startIdx) == group2) {
+      theta = expandDeg * DEG2RAD;
+    } else {
+      continue;
+    }
+
+    for (int j = 0; j < NUM_DIMENSIONS; j++) {
+      point[j] = atomCoordinates[j][i] - mvector[i];
+      dot += point[j] * normal[j];
+    }
+
+    cross[0] = normal[1] * point[2] - point[1] * normal[2];
+    cross[1] = point[0] * normal[2] - normal[0] * point[2];
+    cross[2] = normal[0] * point[1] - point[0] * normal[1];
+
+    for (int j = 0; j < NUM_DIMENSIONS; j++) {
+      point[j] = normal[j] * dot * (1 - cos(theta)) + point[j] * cos(theta) + cross[j] * sin(theta);
+      atomCoordinates[j][i] = point[j] + mvector[j];
+    }
+  }
+
+  angleSizes[angleStart + angleIdx] += expandDeg;
+}
+
 void SimBox::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
   int bondStart = moleculeData[MOL_BOND_START][molIdx];
   int bondEnd = bondStart + moleculeData[MOL_BOND_COUNT][molIdx];
@@ -364,14 +445,18 @@ void SimBox::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
   }
 
   for (int i = bondStart; i < bondEnd; i++) {
-    int a1 = (int) bondData[BOND_A1_IDX][i];
-    int a2 = (int) bondData[BOND_A2_IDX][i];
+    if (i == bondIdx + bondStart)
+      continue;
+    int a1 = (int) bondData[BOND_A1_IDX][i] - startIdx;
+    int a2 = (int) bondData[BOND_A2_IDX][i] - startIdx;
     unionAtoms(a1, a2);
   }
   int side1 = find(end1 - startIdx);
   int side2 = find(end2 - startIdx);
-  if (side1 == side2)
+  if (side1 == side2) {
+    std::cout << "ERROR: EXPANDING BOND IN A RING!" << std::endl;
     return;
+  }
   Real v[NUM_DIMENSIONS];
   Real denon;
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
@@ -393,6 +478,7 @@ void SimBox::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
       }
     }
   }
+  bondLengths[bondStart + bondIdx] += stretchDist;
 }
 
 

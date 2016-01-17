@@ -621,7 +621,7 @@ public:
    * list. Therefore, it must be set to the node to remove's predecessor, or the
    * remove node itself if that node is the head of the linked list.
    *
-   * @param molIdx The index of the moleucle to update.
+   * @param molIdx The index of the molecule to update.
    */
   void updateNLC(int molIdx);
 
@@ -636,6 +636,18 @@ public:
    *     values correspond to stretching, negative to compression.
    */
   void stretchBond(int molIdx, int bondIdx, Real stretchDist);
+
+  /**
+   * Expands or contracts the given angle in the given molecule.
+   *
+   * @param molIdx The index of the molecule that the angle is in.
+   * @param angleIdx The index of teh angle within the molecule. For example,
+   *     the first angle in molecule 12 has index 0.
+   * @param expandDeg The amount to expand or contract the angle. Positive
+   *     values correspond to expansion, negative to contraction. This is
+   *     measured in degrees.
+   */
+   void expandAngle(int molIdx, int angleIdx, Real expandDeg);
 
   /**
    * Unions the sets of two different atoms connected by a bond. Note that atoms
