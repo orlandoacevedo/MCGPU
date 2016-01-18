@@ -481,6 +481,31 @@ void SimBox::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
   bondLengths[bondStart + bondIdx] += stretchDist;
 }
 
+Real SimBox::angleEnergy(int molIdx) {
+  Real out = 0;
+  int angleStart = moleculeData[MOL_ANGLE_START][molIdx];
+  int angleEnd = angleStart + moleculeData[MOL_ANGLE_COUNT][molIdx];
+  for (int i = angleStart; i < angleEnd; i++) {
+    if ((bool) angleData[ANGLE_VARIABLE][i]) {
+      Real diff = angleData[ANGLE_EQANGLE][i] - angleSizes[i];
+      out += angleData[ANGLE_KANGLE][i] * diff * diff;
+    }
+  }
+  return out;
+}
+
+Real SimBox::bondEnergy(int molIdx) {
+  Real out = 0;
+  int bondStart = moleculeData[MOL_BOND_START][molIdx];
+  int bondEnd = bondStart + moleculeData[MOL_BOND_COUNT][molIdx];
+  for (int i = bondStart; i < bondEnd; i++) {
+    if ((bool) bondData[BOND_VARIABLE][i]) {
+      Real diff = bondData[BOND_EQDIST][i] - bondLengths[i];
+      out += bondData[BOND_KBOND][i] * diff * diff;
+    }
+  }
+  return out;
+}
 
 void SimBox::unionAtoms(int atom1, int atom2) {
   int a1Parent = find(atom1);

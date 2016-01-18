@@ -649,6 +649,24 @@ public:
    */
    void expandAngle(int molIdx, int angleIdx, Real expandDeg);
 
+   /**
+    * Calculates the energy from various flexible angles within the molecule.
+    *
+    * @param molIdx The index of the molecule to calculate the energy of.
+    * @return The energy produced by angles being different from their
+    *     equilibrium measurement.
+    */
+   Real angleEnergy(int molIdx);
+
+   /**
+    * Calculates the energy from various flexible bonds within the molecule.
+    *
+    * @param molIdx The index of the molecule to calculate the energy of.
+    * @return The energy produced by bonds being different from their
+    *     equilibrium measurement.
+    */
+   Real bondEnergy(int molIdx);
+
   /**
    * Unions the sets of two different atoms connected by a bond. Note that atoms
    *     are indexed within the molecule, so the first atom in the 12th molecule
@@ -668,6 +686,8 @@ public:
    * @return The representative element of the atom index.
    */
   int find (int atomIdx);
+
+
 };
 
 typedef const SimBox & refBox;
