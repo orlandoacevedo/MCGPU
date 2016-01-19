@@ -9,7 +9,7 @@ SimBoxBuilder::SimBoxBuilder(bool useNLC, SBScanner* sbData_in) {
 
 SimBox* SimBoxBuilder::build(Box* box) {
   initEnvironment(box->environment);
-  addMolecules(box->molecules);
+  addMolecules(box->molecules, box->environment->primaryAtomIndexArray->size());
   addPrimaryIndexes(box->environment->primaryAtomIndexArray);
   if (sb->useNLC) {
     fillNLC();
@@ -30,10 +30,18 @@ void SimBoxBuilder::initEnvironment(Environment* environment) {
   sb->numMolecules = environment->numOfMolecules;
 }
 
-void SimBoxBuilder::addMolecules(Molecule* molecules) {
+void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
   int largestMolecule = 0, nAtoms = 0;
   int mostBonds = 0, nBonds = 0;
   int mostAngles = 0, nAngles = 0;
+
+  sb->excludeAtoms = new int**[numTypes];
+  sb->fudgeAtoms =  new int**[numTypes];
+
+  for (int i = 0; i < numTypes; i++) {
+    sb->excludeAtoms[i] = NULL;
+    sb->fudgeAtoms[i] = NULL;
+  }
 
   for (int i = 0; i < sb->numMolecules; i++) {
     nAtoms += molecules[i].numOfAtoms;
@@ -138,6 +146,82 @@ void SimBoxBuilder::addMolecules(Molecule* molecules) {
       sb->angleSizes[angleIdx] = a.value;
       sb->angleData[SimBox::ANGLE_VARIABLE][angleIdx] = a.variable;
       angleIdx++;
+    }
+
+    int type = molecules[i].type;
+    if (sb->excludeAtoms[type] == NULL) {
+      int numOfAtoms = sb->moleculeData[SimBox::MOL_LEN][i];
+      sb->excludeAtoms[type] = new int*[numOfAtoms];
+      sb->fudgeAtoms[type] = new int*[numOfAtoms];
+      int startIdx = sb->moleculeData[SimBox::MOL_START][i];
+      int *excludeCount = new int[numOfAtoms];
+      int *fudgeCount = new int[numOfAtoms];
+      for (int j = 0; j < numOfAtoms; j++) {
+        excludeCount[j] = 0;
+        fudgeCount[j] = 0;
+      }
+      for (int j = 0; j < molecules[i].numOfBonds; j++) {
+        int idx1 = idToIdx[molecules[i].bonds[j].atom1] - startIdx;
+        int idx2 = idToIdx[molecules[i].bonds[j].atom2] - startIdx;
+        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms) {
+          excludeCount[idx1]++;
+          excludeCount[idx2]++;
+        }
+      }
+      for (int j = 0; j < molecules[i].numOfAngles; j++) {
+        int idx1 = idToIdx[molecules[i].angles[j].atom1] - startIdx;
+        int idx2 = idToIdx[molecules[i].angles[j].atom2] - startIdx;
+        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms) {
+          excludeCount[idx1]++;
+          excludeCount[idx2]++;
+        }
+      }
+      for (int j = 0; j < molecules[i].numOfDihedrals; j++) {
+        int idx1 = idToIdx[molecules[i].dihedrals[j].atom1] - startIdx;
+        int idx2 = idToIdx[molecules[i].dihedrals[j].atom2] - startIdx;
+        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms) {
+          fudgeCount[idx1]++;
+          fudgeCount[idx2]++;
+        }
+      }
+      for (int j = 0; j < numOfAtoms; j++) {
+        sb->excludeAtoms[type][j] = new int[excludeCount[j] + 1];
+        sb->fudgeAtoms[type][j] = new int[fudgeCount[j] + 1];
+        excludeCount[j] = 0;
+        fudgeCount[j] = 0;
+      }
+      for (int j = 0; j < molecules[i].numOfBonds; j++) {
+        int idx1 = idToIdx[molecules[i].bonds[j].atom1] - startIdx;
+        int idx2 = idToIdx[molecules[i].bonds[j].atom2] - startIdx;
+        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms) {
+          sb->excludeAtoms[type][idx1][++excludeCount[idx1]] = idx2;
+          sb->excludeAtoms[type][idx2][++excludeCount[idx2]] = idx1;
+        }
+      }
+      for (int j = 0; j < molecules[i].numOfAngles; j++) {
+        int idx1 = idToIdx[molecules[i].angles[j].atom1] - startIdx;
+        int idx2 = idToIdx[molecules[i].angles[j].atom2] - startIdx;
+        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms) {
+          sb->excludeAtoms[type][idx1][++excludeCount[idx1]] = idx2;
+          sb->excludeAtoms[type][idx2][++excludeCount[idx2]] = idx1;
+        }
+      }
+      for (int j = 0; j < molecules[i].numOfDihedrals; j++) {
+        int idx1 = idToIdx[molecules[i].dihedrals[j].atom1] - startIdx;
+        int idx2 = idToIdx[molecules[i].dihedrals[j].atom2] - startIdx;
+        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms) {
+          sb->fudgeAtoms[type][idx1][++fudgeCount[idx1]] = idx2;
+          sb->fudgeAtoms[type][idx2][++fudgeCount[idx2]] = idx1;
+        }
+      }
+
+      for (int j = 0; j < numOfAtoms; j++) {
+        sb->excludeAtoms[type][j][++excludeCount[j]] = -1;
+        sb->fudgeAtoms[type][j][++fudgeCount[j]] = -1;
+      }
+
+      delete[] excludeCount;
+      delete[] fudgeCount;
     }
   }
 }

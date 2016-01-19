@@ -396,6 +396,20 @@ public:
    */
    int* unionFindParent;
 
+  /**
+   * int[# of molecule types][# atoms in each type][# of atoms to exclude]
+   * Holds information for which intra molecular pairwise LJ and Coloumb
+   *     interactions to not calculate.
+   */
+  int*** excludeAtoms;
+
+  /**
+   * int[# of molecule types][# atoms in each type][# of atoms to half]
+   * Holds information for which intra molecular pairwise LJ and Coloumb
+   *     interactions to multiply by the fudge factor.
+   */
+  int*** fudgeAtoms;
+
   //BEGINNING OF FUNCTIONS
 
   /**
@@ -625,6 +639,15 @@ public:
    */
   void updateNLC(int molIdx);
 
+  /**
+   * Calculates the energy contribution from intramolecular forces within the
+   *     given molecule.
+   *
+   * @param molIdx The index of the molecule to calculate the intramolecular
+   *      energy contribution of.
+   * @return The intramolecular energy contribution of the molecule.
+   */
+  Real calcIntraMolecularEnergy(int molIdx);
 
   /**
    * Stretches or compresses the given bond in the given molecule.

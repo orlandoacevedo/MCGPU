@@ -223,8 +223,6 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBSc
     	box->molecules[j].atoms[k] = molec1.atoms[k];
     }
 
-
-
     // Copy over bonds from the molecule vector.
     for (int k = 0; k < molec1.numOfBonds; k++) {
 
@@ -499,8 +497,8 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBS
 
 		// Copy dihedrals for each molecule.
     for(int k = 0; k < count[3]; k++) {
-    	box->dihedrals[m * count[3] + k].atom1+= m * count[0];
-      box->dihedrals[m * count[3] + k].atom2+= m * count[0];
+    	box->dihedrals[m * count[3] + k].atom1 += m * count[0];
+      box->dihedrals[m * count[3] + k].atom2 += m * count[0];
   	}
 
 		// Copy hops for each molecule.

@@ -351,6 +351,49 @@ void SimBox::updateNLC(int molIdx) {
   }
 }
 
+Real SimBox::calcIntraMolecularEnergy(int molIdx) {
+  int molStart = moleculeData[MOL_START][molIdx];
+  int molEnd = molStart + moleculeData[MOL_LEN][molIdx];
+  int molType = moleculeData[MOL_TYPE][molIdx];
+  Real out = 0.0;
+  out += angleEnergy(molIdx);
+  out += bondEnergy(molIdx);
+
+  for (int i = molStart; i < molEnd; i++) {
+    for (int j = i + 1; j < molEnd; j++) {
+      Real fudgeFactor = 1.0;
+      for (int k = 0; ; k++) {
+        int val = excludeAtoms[molType][i - molStart][k];
+        if (val == -1) {
+          break;
+        } else if (val == j - molStart) {
+          fudgeFactor = 0.0;
+          break;
+        }
+      }
+      if (fudgeFactor == 1.0) {
+        for (int k = 0; ; k++) {
+          int val = fudgeAtoms[molType][i - molStart][k];
+          if (val == -1) {
+            break;
+          } else if (val == j - molStart) {
+            fudgeFactor = 0.5;
+            break;
+          }
+        }
+      }
+      if (fudgeFactor > 0.0) {
+        Real r2 = calcAtomDistSquared(i, j);
+        Real r = sqrt(r2);
+        Real energy = calcLJEnergy(i, j, r2);
+        energy += calcChargeEnergy(i, j, r);
+        out += fudgeFactor * energy;
+      }
+    }
+  }
+  return out;
+}
+
 void SimBox::expandAngle(int molIdx, int angleIdx, Real expandDeg) {
   int bondStart = moleculeData[MOL_BOND_START][molIdx];
   int bondEnd = bondStart + moleculeData[MOL_BOND_COUNT][molIdx];

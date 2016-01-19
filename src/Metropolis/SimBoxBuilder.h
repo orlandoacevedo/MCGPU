@@ -33,8 +33,9 @@ private:
    *     atoms, not bonds or angles.
    *
    * @param molecules A dynamic array containing all of the molecules in the box.
+   * @param numTypes The number of different types of molecules in the box.
    */
-  void addMolecules(Molecule* molecules);
+  void addMolecules(Molecule* molecules, int numTypes);
 
   /**
    * Adds primary indexes, read in from the config file, to every molecule in
