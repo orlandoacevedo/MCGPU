@@ -398,6 +398,8 @@ void SimBox::expandAngle(int molIdx, int angleIdx, Real expandDeg) {
   int bondStart = moleculeData[MOL_BOND_START][molIdx];
   int bondEnd = bondStart + moleculeData[MOL_BOND_COUNT][molIdx];
   int angleStart = moleculeData[MOL_ANGLE_START][molIdx];
+  changedAngle = angleStart + angleIdx;
+  prevAngle = angleSizes[angleStart + angleIdx];
   int startIdx = moleculeData[MOL_START][molIdx];
   int molSize = moleculeData[MOL_LEN][molIdx];
   int end1 = (int) angleData[ANGLE_A1_IDX][angleStart + angleIdx];
@@ -478,6 +480,8 @@ void SimBox::expandAngle(int molIdx, int angleIdx, Real expandDeg) {
 void SimBox::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
   int bondStart = moleculeData[MOL_BOND_START][molIdx];
   int bondEnd = bondStart + moleculeData[MOL_BOND_COUNT][molIdx];
+  changedBond = bondStart + bondIdx;
+  prevBond = bondLengths[bondStart + bondIdx];
   int startIdx = moleculeData[MOL_START][molIdx];
   int molSize = moleculeData[MOL_LEN][molIdx];
   int end1 = (int) bondData[BOND_A1_IDX][bondStart + bondIdx];
@@ -535,6 +539,14 @@ Real SimBox::angleEnergy(int molIdx) {
     }
   }
   return out;
+}
+
+void SimBox::rollbackBond() {
+  bondLengths[changedBond] = prevBond;
+}
+
+void SimBox::rollbackAngle() {
+  angleSizes[changedAngle] = prevAngle;
 }
 
 Real SimBox::bondEnergy(int molIdx) {

@@ -311,6 +311,16 @@ public:
    */
    Real**  bondData;
 
+   /**
+    * Holds the index of the most recently changed bond.
+    */
+   int changedBond;
+
+   /**
+    * Holds the previous length of the most recently changed bond.
+    */
+   Real prevBond;
+
   // Angle information -- Currently unused.
 
   /**
@@ -325,6 +335,17 @@ public:
    *     atom, force constant, and the equilibrium angle.
    */
   Real**  angleData;
+
+  /**
+   * Holds the index of the most recently changed angle.
+   */
+  int changedAngle;
+
+  /**
+   * Holds the previous measurement of the most recently changed angle, in
+   *     degrees.
+   */
+  Real prevAngle;
 
   // Dihedral information -- Currently unused.
 
@@ -670,25 +691,37 @@ public:
    *     values correspond to expansion, negative to contraction. This is
    *     measured in degrees.
    */
-   void expandAngle(int molIdx, int angleIdx, Real expandDeg);
+  void expandAngle(int molIdx, int angleIdx, Real expandDeg);
 
-   /**
-    * Calculates the energy from various flexible angles within the molecule.
-    *
-    * @param molIdx The index of the molecule to calculate the energy of.
-    * @return The energy produced by angles being different from their
-    *     equilibrium measurement.
-    */
-   Real angleEnergy(int molIdx);
+  /**
+   * Calculates the energy from various flexible angles within the molecule.
+   *
+   * @param molIdx The index of the molecule to calculate the energy of.
+   * @return The energy produced by angles being different from their
+   *     equilibrium measurement.
+   */
+  Real angleEnergy(int molIdx);
 
-   /**
-    * Calculates the energy from various flexible bonds within the molecule.
-    *
-    * @param molIdx The index of the molecule to calculate the energy of.
-    * @return The energy produced by bonds being different from their
-    *     equilibrium measurement.
-    */
+  /**
+   * Rolls back the length of the most recently changed bond. Does not change
+   *     any atom coordinates.
+   */
+  void rollbackBond();
+
+  /**
+   * Calculates the energy from various flexible bonds within the molecule.
+   *
+   * @param molIdx The index of the molecule to calculate the energy of.
+   * @return The energy produced by bonds being different from their
+   *     equilibrium measurement.
+   */
    Real bondEnergy(int molIdx);
+
+  /**
+   * Rolls back the size of the most recently changed angle. Does not change
+   *     any angle coordinates.
+   */
+  void rollbackAngle();
 
   /**
    * Unions the sets of two different atoms connected by a bond. Note that atoms
