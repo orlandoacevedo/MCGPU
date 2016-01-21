@@ -176,10 +176,11 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           excludeCount[idx2]++;
         }
       }
-      for (int j = 0; j < molecules[i].numOfDihedrals; j++) {
-        int idx1 = idToIdx[molecules[i].dihedrals[j].atom1] - startIdx;
-        int idx2 = idToIdx[molecules[i].dihedrals[j].atom2] - startIdx;
-        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms) {
+      for (int j = 0; j < molecules[i].numOfHops; j++) {
+        int idx1 = idToIdx[molecules[i].hops[j].atom1] - startIdx;
+        int idx2 = idToIdx[molecules[i].hops[j].atom2] - startIdx;
+        int hopDist = molecules[i].hops[j].hop;
+        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms && hopDist == 3) {
           fudgeCount[idx1]++;
           fudgeCount[idx2]++;
         }
@@ -206,10 +207,11 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           sb->excludeAtoms[type][idx2][++excludeCount[idx2]] = idx1;
         }
       }
-      for (int j = 0; j < molecules[i].numOfDihedrals; j++) {
-        int idx1 = idToIdx[molecules[i].dihedrals[j].atom1] - startIdx;
-        int idx2 = idToIdx[molecules[i].dihedrals[j].atom2] - startIdx;
-        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms) {
+      for (int j = 0; j < molecules[i].numOfHops; j++) {
+        int idx1 = idToIdx[molecules[i].hops[j].atom1] - startIdx;
+        int idx2 = idToIdx[molecules[i].hops[j].atom2] - startIdx;
+        int hopDist = molecules[i].hops[j].hop;
+        if (idx1 >= 0 && idx1 < numOfAtoms && idx2 >= 0 && idx2 < numOfAtoms && hopDist == 3) {
           sb->fudgeAtoms[type][idx1][++fudgeCount[idx1]] = idx2;
           sb->fudgeAtoms[type][idx2][++fudgeCount[idx2]] = idx1;
         }
