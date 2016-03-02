@@ -34,6 +34,8 @@
 #include "Utilities/FileUtilities.h"
 #include "SimBox.h"
 #include "SimBoxBuilder.h"
+#include "GPUCopy.h"
+#include "SimCalcs.h"
 
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
@@ -135,6 +137,9 @@ void Simulation::run() {
 	// Build SimBox below
 	SimBoxBuilder builder = SimBoxBuilder(args.useNeighborList, new SBScanner());
 	SimBox* sb = builder.build(box);
+	GPUCopy::copyIn(sb);
+	GPUCopy::setParallel(true);
+	SimCalcs::setSB(sb);
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0) {
 		if (false) {
@@ -159,7 +164,7 @@ void Simulation::run() {
 		oldEnergy_sb += energy_LRC;
 	}
 	function_time_end = clock();
-
+	GPUCopy::copyOut(sb);
 	double duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC * threadsToSpawn);
 
 	//for testing/debug purposes

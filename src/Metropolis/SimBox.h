@@ -4,198 +4,19 @@
 #include "Box.h"
 #include "Utilities/StructLibrary.h"
 #include "Utilities/MathLibrary.h"
+#include "SimBoxConstants.h"
+#include "DataTypes.h"
 
 #include <stdlib.h>
 #include <vector>
 #include <set>
 
-typedef double Real;
 typedef unsigned int ID;
-typedef const int & refInt;
 
 
 class SimBox {
 
 public:
-
-  // BEGINNING OF PUBLIC CONSTANTS
-
-  // DIMENSION CONSTANTS
-
-  /**
-   * Constant to represent the X-axis.
-   */
-  static const int X_COORD = 0;
-
-  /**
-   * Constant to represent the Y-axis.
-   */
-  static const int Y_COORD = 1;
-
-  /**
-   * Constant to represent the Z-axis.
-   */
-  static const int Z_COORD = 2;
-
-  /**
-   * Constant holds the number of spatial dimensions in the simulation.
-   */
-  static const int NUM_DIMENSIONS = 3;
-
-  // MOLECULE DATA CONSTANTS
-
-  /**
-   * Indicates the row of moleculeData that holds the start index of each
-   *     molecule in atomCoordinates and atomData.
-   */
-  static const int MOL_START = 0;
-
-  /**
-   * Indicates the row of moleculeData that holds the number of atoms of each
-   *     molecule.
-   */
-  static const int MOL_LEN = 1;
-
-  /**
-   * Indicates the row of moleculeData that holds the start index of each
-   *     molecule's primary index(es) in primaryIndexes.
-   */
-  static const int MOL_PIDX_START = 2;
-
-  /**
-   * Indicates the row of moleculeData that holds the number of primary indexes
-   *     that each molecule has.
-   */
-  static const int MOL_PIDX_COUNT = 3;
-
-  /**
-   * Indicates the row of moleculeData that hold the type of each molecule.
-   */
-  static const int MOL_TYPE = 4;
-
-  /**
-   * Indicates the row of moleculeData that holds the start index of each
-   *     molecule's bonds in bondData and bondLengths.
-   */
-  static const int MOL_BOND_START = 5;
-
-  /**
-   * Indicates the row of moleculeData that holds the number of bonds in each
-   *     molecule.
-   */
-  static const int MOL_BOND_COUNT = 6;
-
-  /**
-   * Indicates the row of moleculeData that holds the start index of each
-   *     molecule's angles in angleData and angleSizes.
-   */
-  static const int MOL_ANGLE_START = 7;
-
-  /**
-   * Indicates the row of moleculeData that holds the number of angles in each
-   *     molecules.
-   */
-  static const int MOL_ANGLE_COUNT = 8;
-
-  /**
-   * Indicates the number of rows of moleculeData.
-   */
-  static const int MOL_DATA_SIZE = 9;
-
-  // ATOM DATA CONSTANTS
-
-  /**
-   * Indicates the row of atomData that holds the value of sigma for each atom.
-   */
-  static const int ATOM_SIGMA = 0;
-
-  /**
-   * Indicates the row of atomData that holds the value of epsilon for each atom.
-   */
-  static const int ATOM_EPSILON = 1;
-
-  /**
-   * Indicates the row of atomData that holds the charge of each atom.
-   */
-  static const int ATOM_CHARGE = 2;
-
-  /**
-   * Indicates the number of rows of atomData.
-   */
-  static const int ATOM_DATA_SIZE = 3;
-
-  // BOND DATA CONSTANTS
-
-  /**
-   * Indicates the row of bondData that holds the 1st atom index for each bond.
-   */
-  static const int BOND_A1_IDX = 0;
-
-  /**
-   * Indicates the row of bondData that holds the 2nd atom index for each bond.
-   */
-  static const int BOND_A2_IDX = 1;
-
-  /**
-   * Indicates the row of bondData that holds the force constant for each bond.
-   */
-  static const int BOND_KBOND = 2;
-
-  /**
-   * Indicates the row of bondData holding the equilibrium distance of each bond.
-   */
-  static const int BOND_EQDIST = 3;
-
-  /**
-   * Indicates the row of bondData that records whether each bond is variable.
-   */
-  static const int BOND_VARIABLE = 4;
-
-  /**
-   * Indicates the number of rows in bondData.
-   */
-  static const int BOND_DATA_SIZE = 5;
-
-  // ANGLE DATA CONSTANTS
-
-  /**
-   * Indicates the row of angleData that holds the first atom's index for each
-   *     angle.
-   */
-  static const int ANGLE_A1_IDX = 0;
-
-  /**
-   * Indicates the row of angleData that holds the middle atom's index for each
-   *     angle.
-   */
-  static const int ANGLE_MID_IDX = 1;
-
-  /**
-   * Indicates the row of angleData that holds the third atom's index for each
-   *     angle.
-   */
-  static const int ANGLE_A2_IDX = 2;
-
-  /**
-   * Indicates the row of angleData that holds the force constant of each angle.
-   */
-  static const int ANGLE_KANGLE = 3;
-
-  /**
-   * Indicates the row of angleData holding the equilibrium size of each angle.
-   */
-  static const int ANGLE_EQANGLE = 4;
-
-  /**
-   * Indicates the row of angleData holding whether each angle is variable.
-   */
-  static const int ANGLE_VARIABLE = 5;
-
-  /**
-   * Indicates the number of rows in angleData.
-   */
-  static const int ANGLE_DATA_SIZE = 6;
-
   // BEGINNING OF MEMBER VARIABLES
 
   // Basic environment conditions.
@@ -241,6 +62,17 @@ public:
    * The number of atoms in the box.
    */
   int numAtoms;
+
+  /**
+   * The number of atoms in the largest molecule.
+   */
+  int largestMol;
+
+
+  /**
+   * The number of primary indexes in the box.
+   */
+  int numPIdxes;
 
   /**
    * The number of bonds in the box. (Currently unused).
@@ -431,8 +263,6 @@ public:
    */
   int*** fudgeAtoms;
 
-  //BEGINNING OF FUNCTIONS
-
   /**
    * Roll back a molecule to its original poisition. Performs translation and
    * rotation.
@@ -448,7 +278,7 @@ public:
    *
    * @param molIdx The index of the molecule to keep inside the box.
    */
-  void keepMoleculeInBox(int molIdx);
+  void keepMoleculeInBox(int molIdx, Real** aCoords, int** molData, int* pIdxes, Real* bsize);
 
   /**
    * Given a distance, makes the distance periodic to mitigate distances greater
@@ -458,7 +288,7 @@ public:
    * @param dimension The dimension the measurement must be made periodic in.
    * @return The measurement, scaled to be periodic.
    */
-  Real makePeriodic(Real x, int dimension);
+  Real makePeriodic(Real x, int dimension, Real* bSize);
 
   /**
    * Returns the index of a random molecule within the simulation box.
@@ -476,21 +306,6 @@ public:
   void changeMolecule(int molIdx);
 
   /**
-   * Given a molecule to change, and information to change, translates and
-   * rotates the specified molecule, saving its old position.
-   *
-   * @param molIdx The index of the molecule to change.
-   * @param vIdx The index of the pivot point of the molecule.
-   * @param dX The amount to translate in the x direction.
-   * @param dY The amount to translate in the y direction.
-   * @param dZ The amount to translate in the z direction.
-   * @param rX The amount to rotate around the x axis (degrees).
-   * @param rY The amount to rotate around the y axis (degrees).
-   * @param rZ The amount to rotate around the z axis (degrees).
-   */
-  void changeMolecule(int molIdx, int vIdx, Real dX, Real dY, Real dZ, Real rX, Real rY, Real rZ);
-
-  /**
    * Given an atom to translate, and the directions to tranlate it, moves it.
    *
    * @param aIdx The index of the atom to change.
@@ -498,7 +313,7 @@ public:
    * @param dY The amount to translate in the y direction.
    * @param dZ The amount to tranlsate in the z direction.
    */
-  void translateAtom(int aIdx, Real dX, Real dY, Real dZ);
+  void translateAtom(int aIdx, Real dX, Real dY, Real dZ, Real** aCoords);
 
   /**
    * Given an atom to rotate, its pivot point, and the amounts to rotate,
@@ -510,7 +325,8 @@ public:
    * @param rotY The amount of rotation around the y-axis that is done.
    * @param rotZ The amount of rotation around the z-axis that is done.
    */
-  void rotateAtom(int aIdx, int pivotIdx, Real rotX, Real rotY, Real rotZ);
+  #pragma acc routine seq
+  void rotateAtom(int aIdx, int pivotIdx, Real rotX, Real rotY, Real rotZ, Real** aCoords);
 
   /**
    * Given an atom and an amount to rotate, rotates about the x-axis.
@@ -518,7 +334,7 @@ public:
    * @param aIdx The index of the atom to rotate.
    * @param angleDeg The angle to rotate it (in degrees).
    */
-  void rotateX(int aIdx, Real angleDeg);
+  void rotateX(int aIdx, Real angleDeg, Real** aCoords);
 
   /**
    * Given an atom and an amount to rotate, rotates it about the y-axis.
@@ -526,7 +342,7 @@ public:
    * @param aIdx The index of the atom to rotate.
    * @param angleDeg The angle to rotate it (in degrees).
    */
-  void rotateY(int aIdx, Real angleDeg);
+  void rotateY(int aIdx, Real angleDeg, Real** aCoords);
 
   /**
    * Given an atom and an amount to rotate, rotates it about the z-axis.
@@ -534,7 +350,7 @@ public:
    * @param aIdx The index of the atom to rotate.
    * @param angleDeg The angle to rotate it (in degrees).
    */
-  void rotateZ(int aIdx, Real angleDeg);
+  void rotateZ(int aIdx, Real angleDeg, Real** aCoords);
 
   /**
    * calcSystemEnergy Determines the total energy of the box
@@ -566,7 +382,7 @@ public:
    * @param p2End index of the last primary index from molecule 2,  + 1.
    * @return true if the molecules are in range, false otherwise.
    */
-  bool moleculesInRange(refInt p1Start, refInt p1End, refInt p2Start, refInt p2End);
+  bool moleculesInRange(int p1Start, int p1End, int p2Start, int p2End);
 
   /**
    * calcMoleculeInteractionEnergy Calcs the energy caused by the interaction between
@@ -578,7 +394,7 @@ public:
    * @param m2 The molecule index of the second molecule.
    * @return The energy from the molecular interaction.
    */
-  Real calcMoleculeInteractionEnergy (Real &subLJ, Real &subCharge, refInt m1, refInt m2);
+  Real calcMoleculeInteractionEnergy (int m1, int m2);
 
   /**
    * calcAtomDistSquared Calculates the square of the distance between two atoms.
@@ -587,7 +403,7 @@ public:
    * @param a2 The atom index of the second atom.
    * @return The square of the distance between the atoms.
    */
-  Real calcAtomDistSquared(refInt a1, refInt a2);
+  Real calcAtomDistSquared(int a1, int a2, Real** aCoords, Real* bSize);
 
   /**
    * calcLJEnergy Calculates the Lennard - Jones potential between two atoms.
@@ -597,7 +413,7 @@ public:
    * @param r2  The distance between the atoms, squared.
    * @return The Lennard - Jones potential from the two atoms' interaction.
    */
-  Real calcLJEnergy(refInt a1, refInt a2, const Real& r2);
+  Real calcLJEnergy(int a1, int a2, const Real& r2, Real** aData);
 
   /**
    * calcChargeEnergy Calculates the Coloumb potential between two atoms.
@@ -607,7 +423,7 @@ public:
    * @param r  The distance between the atoms.
    * @return The Coloumb potential from the two atoms' interaction.
    */
-  Real calcChargeEnergy(refInt a1, refInt a2, const Real& r);
+  Real calcChargeEnergy(int a1, int a2, const Real& r, Real** aData);
 
   /**
    * calcBlending Calculates the geometric mean of two real numbers.

@@ -92,7 +92,7 @@ UnitTestName := metrotest
 ##############################
 
 # Defines the compiler used to compile and link the source files.
-CC := pgCC
+CC := pgc++
 
 # Defines the types of files that the Makefile knows how to compile
 # and link. Specify the filetype by using a modulus (percent sign),
@@ -105,10 +105,10 @@ IncPaths := . $(SourceDir) $(TestDir)
 
 # Compiler specific flags for the C++ compiler when generating .o files
 # and when generating .d files for dependency information
-CompileFlags := -c -acc -ta=nvidia
+CompileFlags := -g -c -acc -ta=nvidia -Minfo=accel
 
 # Flags for linking metrosim with the PGI compiler.
-LinkFlags := -lgomp -acc -ta=nvidia
+LinkFlags := -g -lgomp -acc -ta=nvidia -Minfo=accel
 
 # The debug compiler flags that add symbol and profiling hooks to the
 # executable for C++ code
