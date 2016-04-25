@@ -7,6 +7,11 @@
 	-> March 28, by Joshua Mosby
 	-> April 21, by Nathan Coleman
 	-> February 25, 2015 by Jared Brown
+
+	Note: Resources for Verlet: "Understanding Molecular Simulation: From Algorithms to Applications," by Daan Frenkel and
+				     Berend Smit; page 545
+				     
+
 */
 
 #include <math.h>
@@ -744,3 +749,250 @@ void SerialCalcs::DFS(Bond edgeList[], int currentAtom, int offset, int atomStat
 		}
 	}
 }
+
+
+void SerialCalcs::createVerletList(Box *box, bool initialized)
+{
+	Molecule *molecules = box->getMolecules();
+    	Environment *environment = box->getEnvironment();
+    	int numOfMolecules = environment->numOfMolecules;
+	
+	    /*"Store the positions of the [molecules]" as described from book as xv(i): "Understanding Molecular Simulation" Frenkel & Smit page 548*/
+    	if(!initialized)
+    	{
+        	//Initialized verlet list
+        	box->verletMolecules = (Molecule *)malloc(sizeof(Molecule) * numOfMolecules);
+    	}
+   	else
+    	{
+		//Free up memory
+        	box->freeUpVerletMolecules();
+        	//Re-allocate new memory
+        	box->verletMolecules = (Molecule *)malloc(sizeof(Molecule) * numOfMolecules);
+    	}		
+
+ 	for(int molecule = 0; molecule < numOfMolecules; molecule++)
+    	{
+        	box->copyMolecules_Verlet(molecule);
+    	}
+
+	
+    	/*Initialize the verlet list with end-of-verlet-list value = -1 */
+    	box->verletList = new int*[numOfMolecules];
+    	for(int i = 0; i < numOfMolecules; i++)
+    	{
+        	box->verletList[i] = new int[numOfMolecules];
+    	}
+    	for(int row = 0; row < numOfMolecules; row++)
+        	for(int column = 0; column < numOfMolecules; column++)
+            		box->verletList[row][column] = -1;
+
+    	/*Initialize the amount of verlet neighbors*/
+    	box->amtOfVerletNeighbors = new int[numOfMolecules];
+    	for(int i = 0; i < numOfMolecules; i++)
+    	{
+        	box->amtOfVerletNeighbors[i] = 0;
+    	}
+
+    	/*Create verlet list from approach in Book*/
+    	//radius cutoff squared
+    	Real radiusCutoff = environment->cutoff * environment->cutoff;
+    	//verlet cutoff is 28.175% larger than radius cutoff. See Note at top of file
+    	Real verletCutoff = 1.28175*radiusCutoff;
+    	bool moleculeIncluded = false;
+
+	for(int moleculeIndexI = 0; moleculeIndexI < numOfMolecules; moleculeIndexI++)
+    	{
+               	for(int moleculeIndexJ = moleculeIndexI + 1; moleculeIndexJ < numOfMolecules; moleculeIndexJ++)
+        	{
+            		if(moleculeIndexI == moleculeIndexJ)
+                		continue;
+            
+            		/*grab the primary indexes of ith-Molecule and jth-Molecule*/
+            		std::vector<int> ithMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[moleculeIndexI].type]);
+            		std::vector<int> jthMolPrimaryIndexArray;
+            		if (molecules[moleculeIndexI].type == molecules[moleculeIndexJ].type)
+            		{
+                		jthMolPrimaryIndexArray = ithMolPrimaryIndexArray;
+            		}
+            		else
+            		{
+                		jthMolPrimaryIndexArray = (*(*(environment->primaryAtomIndexArray))[molecules[moleculeIndexJ].type]);
+            		}
+            
+            		/*If any of the primary indexes of a molecule are within the verlet cutoff, then add to verlet list*/
+            		for(int primaryIndexI = 0; primaryIndexI < ithMolPrimaryIndexArray.size(); primaryIndexI++)
+            		{
+                		/* Get an atom from molecule i*/
+                		int atomIndex1 = ithMolPrimaryIndexArray[primaryIndexI];
+                		Atom atom1 = molecules[moleculeIndexI].atoms[atomIndex1];
+                
+                		for(int primaryIndexJ = 0; primaryIndexJ < jthMolPrimaryIndexArray.size(); primaryIndexJ++)
+                		{
+                    			/* Get an atom from molecule j*/
+                    			int atomIndex2 = jthMolPrimaryIndexArray[primaryIndexJ];
+                    			Atom atom2 = molecules[moleculeIndexJ].atoms[atomIndex2];
+                    
+                    			//Get the distancebetween atom1 and atom2. calcAtomDist() handles periodicity
+                    			Real distance = calcAtomDist(atom1, atom2, environment);
+                    			
+                    			if(distance < verletCutoff)
+                    			{
+
+                        			/*add moleculeJ as moleculeI's neighbor and vice versa*/
+                        			int neighborI = box->amtOfVerletNeighbors[moleculeIndexI];
+                        			box->verletList[moleculeIndexI][neighborI] = moleculeIndexJ;
+                        			int neighborJ = box->amtOfVerletNeighbors[moleculeIndexJ];
+                        			box->verletList[moleculeIndexJ][neighborJ] = moleculeIndexI;
+                        
+                        			/*Increase the said amount of neighbors for ith & jth molecule*/
+                        			box->amtOfVerletNeighbors[moleculeIndexI]++;
+                        			box->amtOfVerletNeighbors[moleculeIndexJ]++;
+                        			moleculeIncluded = true;
+                        			break;
+                    			}
+                		}
+                		/*if true, exit because we're done looking at primary atoms of molecule i*/
+                		if(moleculeIncluded)
+                    			break;
+        		}
+        	}
+    	}    
+
+
+}
+
+bool SerialCalcs::isOutsideSkinLayer(Box* box, int moleculeIndex)
+{
+    //Have the environment
+    Environment *environment = box->getEnvironment();
+    
+    /*Get the same molecule, but at possibly different positions in the box due to past movements*/
+    Molecule *moleculePosition1 = box->getMolecules();
+    Molecule *moleculePosition2 = box->getVerletMolecules();
+    
+    /*grab the primary indexes. They should be the same*/
+    std::vector<int> molecule1PrimaryIndexes = (*(*(environment->primaryAtomIndexArray))[moleculePosition1[moleculeIndex].type]);
+    std::vector<int> molecule2PrimaryIndexes = (*(*(environment->primaryAtomIndexArray))[moleculePosition2[moleculeIndex].type]);
+    
+    /*For all the primary index atoms calculate the distance between the two molecules.*/
+    
+    //Set up
+    Real radiusCutoff = box->environment->cutoff;
+    radiusCutoff = radiusCutoff * radiusCutoff;
+    Real verletCutoff = 1.2875*radiusCutoff;
+    Real verletSkinLayer = (verletCutoff - radiusCutoff) / 2.0;
+    for(int i = 0; i < molecule1PrimaryIndexes.size(); i++)
+    {
+        /*Get an atom from molecule1*/
+        int primaryIndex1 = molecule1PrimaryIndexes[i];
+        Atom atom1 = moleculePosition1[moleculeIndex].atoms[primaryIndex1];
+        
+        for(int j = 0; j < molecule2PrimaryIndexes.size(); j++)
+        {
+            /*Get an atom from molecule2*/
+            int primaryIndex2 = molecule2PrimaryIndexes[j];
+            Atom atom2 = moleculePosition2[moleculeIndex].atoms[primaryIndex2];
+            
+	    //Handles periodicity
+            Real distance = calcAtomDist(atom1, atom2, environment);
+
+            if(distance > verletSkinLayer)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+    
+}
+
+Real SerialCalcs::calcMolecularEnergyContribution_Verlet(Box* box, int moleculeIndex, Real &subLJ, Real &subCharge, bool initial = false)
+{
+    Real totalEnergy = 0.0;
+    
+    int amtOfNeighbors = box->amtOfVerletNeighbors[moleculeIndex];
+    Molecule *molecules = box->getMolecules();
+    Environment *environment = box->getEnvironment();
+    
+    /*For each neighbor the molecule has calculate the energy between them*/
+    for(int neighbor = 0; neighbor < amtOfNeighbors; neighbor++)
+    {
+        Real lj_energy = 0;
+        Real charge_energy = 0;
+        int neighborIndex = box->verletList[moleculeIndex][neighbor];
+
+	//Is this called by calcSystemEnergy()? And avoid double counting of energy calculation;moleculeCalc A to B == B to A
+	if(initial) 
+		if(moleculeIndex < neighborIndex)
+			 continue;
+
+	//Only calculate contribution with neighbors within cutoff radius NOT all verlet neighbors
+	if(isWithinRRCutoff(box, moleculeIndex, neighborIndex))
+	{
+       		totalEnergy += calcInterMolecularEnergy(molecules, moleculeIndex, neighborIndex, environment, lj_energy, charge_energy);
+       		subLJ += lj_energy;
+       		subCharge += charge_energy;
+	}
+    }
+    return totalEnergy;
+}
+
+Real SerialCalcs::calcSystemEnergy_Verlet(Box* box, Real &subLJ, Real &subCharge, bool initial=false)
+{
+    Real totalEnergy = 0.0;
+    Environment* environment = box->getEnvironment();
+    
+    /*For all the molecules in the simulation box use verlet list to calculate the system's energy*/
+    for(int molecule = 0; molecule < environment->numOfMolecules; molecule++)
+    {
+        totalEnergy += calcMolecularEnergyContribution_Verlet(box, molecule, subLJ, subCharge, initial);
+    }
+    return totalEnergy;
+}
+
+
+bool SerialCalcs::isWithinRRCutoff(Box *box, int molecule1, int molecule2)
+{
+	Molecule *molecules = box->getMolecules();
+	Environment *environment = box->getEnvironment();
+	Real rrCut = environment->cutoff * environment->cutoff;
+
+	//Get the primary atom index array
+	std::vector<int> moleculeAPrimaries = (*(*(environment->primaryAtomIndexArray))[molecules[molecule1].type]);
+	std::vector<int> moleculeBPrimaries;
+	if(molecules[molecule1].type == molecules[molecule2].type)
+	{
+		moleculeBPrimaries = moleculeAPrimaries;
+	}
+	else
+	{
+		moleculeBPrimaries = (*(*(environment->primaryAtomIndexArray))[molecules[molecule2].type]);
+	}
+        
+	//for each molecule's primary atoms check the distance between the two molecules
+	for(int primaryAtomA = 0; primaryAtomA < moleculeAPrimaries.size(); primaryAtomA++)
+	{
+		int atomIndexA = moleculeAPrimaries[primaryAtomA];
+		Atom atomA = molecules[molecule1].atoms[atomIndexA];
+		
+		for(int primaryAtomB = 0; primaryAtomB < moleculeBPrimaries.size(); primaryAtomB++)
+		{
+			int atomIndexB = moleculeBPrimaries[primaryAtomB];
+			Atom atomB = molecules[molecule2].atoms[atomIndexB];
+
+			//Handles periodicity
+			Real distance = calcAtomDist(atomA, atomB, environment);
+			
+			if(distance < rrCut)
+			{
+				return true;
+			}					
+
+		}
+	}
+	return false;
+
+}
+
+

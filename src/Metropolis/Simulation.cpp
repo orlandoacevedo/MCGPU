@@ -95,7 +95,7 @@ void Simulation::run()
 	std::cout << "Simulation Name: " << args.simulationName << std::endl;
 	
 	for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++)
-    {
+    	{
 		box->keepMoleculeInBox(molIdx);
 	}
 
@@ -103,7 +103,12 @@ void Simulation::run()
 	{
 		box->createNeighborList();
 	}
-
+	else
+	{	
+    		/*--Initialize the verlet list--*/
+    		SerialCalcs::createVerletList(box, false);
+	}
+	
 	Real oldEnergy = 0, currentEnergy = 0;
 	Real newEnergyCont = 0, oldEnergyCont = 0;
 	Real lj_energy = 0, charge_energy = 0;
@@ -148,7 +153,7 @@ void Simulation::run()
 	if (oldEnergy == 0)
 	{	
 		if (args.simulationMode == SimulationMode::Parallel)
-        {
+	        {
 			if (args.useNeighborList)
 			{
 				log.verbose("Using neighbor-list for energy calculation");
@@ -170,11 +175,14 @@ void Simulation::run()
 			else
 			{
 				log.verbose("Using original system energy calculation");
-				oldEnergy = SerialCalcs::calcSystemEnergy(box, lj_energy, charge_energy);
+//				oldEnergy = SerialCalcs::calcSystemEnergy(box, lj_energy, charge_energy);
+				oldEnergy = SerialCalcs::calcSystemEnergy_Verlet(box, lj_energy, charge_energy, true);
 			}
 		}
 		
 		//oldEnergy += energy_LRC + intraMolEnergy; // add in long-range correction value and intramol energy
+//	        oldEnergy = SerialCalcs::calcSystemEnergy_Verlet(box, lj_energy, charge_energy);
+
 		oldEnergy += energy_LRC;
 	}
 	function_time_end = clock();
@@ -226,8 +234,15 @@ void Simulation::run()
 		
 		//Randomly select index of a molecule for changing
 		int changeIdx = box->chooseMolecule();
+
+        	/*Check if we need a new verlet list from last move*/
+        	if(SerialCalcs::isOutsideSkinLayer(box, changeIdx))
+        	{
+			std::cout<<"Creating a new list"<<endl;
+            		SerialCalcs::createVerletList(box, true);
+        	}
 		
-		// get neighbors and update neighbor-list on interval
+//		// get neighbors and update neighbor-list on interval
 		if (args.useNeighborList)
 		{
 			if (move % args.neighborListInterval == 0) 
@@ -258,14 +273,24 @@ void Simulation::run()
 			}
 			else
 			{
-				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, old_lj, old_charge, changeIdx);
+//				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, old_lj, old_charge, changeIdx);
+				oldEnergyCont = SerialCalcs::calcMolecularEnergyContribution_Verlet(box, changeIdx, old_lj, old_charge, false);
 			}
 		}
+
 		
 		//Actually translate the molecule at the preselected index	
 		box->changeMolecule(changeIdx);
-		
-		//Calculate the new energy after translation
+
+        	/*Check if we need a new verlet list since we moved the molecule*/
+        	if(SerialCalcs::isOutsideSkinLayer(box, changeIdx))
+        	{
+			std::cout<<"Creating a new list"<<endl;
+
+            		SerialCalcs::createVerletList(box, true);
+        	}
+   		
+//		//Calculate the new energy after translation
 		if (args.simulationMode == SimulationMode::Parallel)
 		{
 			if (args.useNeighborList)
@@ -285,10 +310,11 @@ void Simulation::run()
 			}
 			else
 			{
-				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, new_lj, new_charge, changeIdx);
+//				newEnergyCont = SerialCalcs::calcMolecularEnergyContribution(box, new_lj, new_charge, changeIdx);
+        			newEnergyCont = SerialCalcs::calcMolecularEnergyContribution_Verlet(box, changeIdx, new_lj, new_charge, false);
+				
 			}
 		}
-
 		// Compare new energy and old energy to decide if we should accept or not
 		bool accept = false;
 		
