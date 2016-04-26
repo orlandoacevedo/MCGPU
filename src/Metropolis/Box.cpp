@@ -44,6 +44,9 @@ Box::~Box()
 	FREE(angles);
 	FREE(dihedrals);
 	FREE(hops);
+
+	FREE(verletMolecules); //--Alex
+        FREE(verletList); //--Alex
 }
 
 void Box::createNeighborList() 
@@ -192,3 +195,38 @@ Real Box::wrapBox(Real x, Real boxDim, int position)
 
     return x;
 }
+
+void Box::freeUpVerletMolecules()
+{
+	FREE(verletMolecules);
+}
+
+void Box::copyMolecules_Verlet(int moleculeIndex)
+{
+    Molecule *sourceMolecule = &molecules[moleculeIndex];
+    
+    //free memory of molecule before allocate memory
+    if (verletMolecules[moleculeIndex].numOfAtoms != 0)
+    {
+        delete[] verletMolecules[moleculeIndex].atoms;
+        delete[] verletMolecules[moleculeIndex].bonds;
+        delete[] verletMolecules[moleculeIndex].angles;
+        delete[] verletMolecules[moleculeIndex].dihedrals;
+        delete[] verletMolecules[moleculeIndex].hops;
+    }
+    
+    memcpy(&verletMolecules[moleculeIndex],sourceMolecule,  sizeof(changedMol));
+
+    verletMolecules[moleculeIndex].atoms = new Atom[sourceMolecule->numOfAtoms];
+    verletMolecules[moleculeIndex].bonds = new Bond[sourceMolecule->numOfBonds];
+    verletMolecules[moleculeIndex].angles = new Angle[sourceMolecule->numOfAngles];
+    verletMolecules[moleculeIndex].dihedrals = new Dihedral[sourceMolecule->numOfDihedrals];
+    verletMolecules[moleculeIndex].hops = new Hop[sourceMolecule->numOfHops];
+    
+    copyMolecule(&verletMolecules[moleculeIndex], sourceMolecule);
+}
+
+
+
+
+

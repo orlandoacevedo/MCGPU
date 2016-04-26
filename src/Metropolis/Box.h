@@ -60,6 +60,11 @@ class Box
 		NeighborList *getNeighborList() {return neighborList;};
 		void createNeighborList();
 		
+		Molecule *verletMolecules;
+		int **verletList;
+		int *amtOfVerletNeighbors;
+		Molecule *getVerletMolecules(){return verletMolecules;};
+		
 		/// Chooses a random molecule to be changed for a given
 		///   simulation step.
 		/// @return Returns the index of the chosen molecule.
@@ -98,7 +103,21 @@ class Box
 		/// @param boxDim The magnitude of the periodic range.
 		/// @return Returns the periodic position.
 	 	Real wrapBox(Real x, Real boxDim, int position);
-		
+
+		/*Free up the memory use of box->verletMolecules. Its use is located at SerialCalc::createVerletList()*/
+		void freeUpVerletMolecules();		
+
+	 	/// Copies the data of one molecule to another.
+		/// @param mol_dst A pointer by reference to the destination molecule.
+		/// @param mol_src A pointer to the source molecule.
+//	 	void copyMolecule_Verlet(Molecule *mol_dst, Molecule *mol_src);
+
+        	/*This will make a copy all the molcules from Box->molecules[] to Box->verletMolecules[]. Both lists share
+		the exact same index location within the arrays.
+          	Its use is at SerialCalcs::createVerletList()
+          	@param moleculeIndex: The index of the molecule
+        	*/
+        	void copyMolecules_Verlet(int moleculeIndex);
 };
 
 #endif

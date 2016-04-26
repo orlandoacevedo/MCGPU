@@ -18,6 +18,7 @@
 #include "Metropolis/DataTypes.h"
 #include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/StructLibrary.h"
+#define NMAX 100000  /* Alex: Maximum number of atoms which can be simulated */
 
 // Linked-cell neighbor list constants
 
@@ -259,7 +260,57 @@ namespace SerialCalcs
 	* @param edgeListSize The size of edgeList.
 	*/
 	void DFS(Bond edgeList[], int currentAtom, int offset, int atomStatus[], int type, int edgeListSize);
+
+    /**
+    * Creates a whole new verlet list for each molecule given the simulation box and saves position of the molecules when this verlet
+	 list is made in box->verletMolecules. 
+    * @param box: The simulation box. We will use a pass by reference so we can update the simulation box's verlet list and 
+    *             verletMolecules; everything else about box should remaing constant (the same as before createVerletList() was called
+    * @Note: verletList This method will fill 'verletList'
+    * @Note: verletMolecules "Store the positions of the [molecules]" as described from book as xv(i): "Understanding Molecular
+    *                       Simulation" Frenkel & Smit page 548
+    *
+    */
+    void createVerletList(Box *box, bool isInitialized);
+    
+    /* This will use the simulation box's molecule list and verletMolecules list to determine if the randomly selected
+       molecule's displacement is greater than the skin layer of the verlet algorithm. The distance checking is between the current
+       position of the molecule in box->molecules and the position of the molecule when the verlet list was made box->verletMolecules
+       See book on page 547 for pseudo-code. 
+       @param box The simulation box with the list information
+       @param moleculeIndex the molecule to be measured
+    */
+    bool isOutsideSkinLayer(Box* box, int moleculeIndex);
 	
+    /* For each neighbor the molecule has check if that neighbor is within the cutoff and then calculate the energy between the
+	molecule at moleculeIndex and the neighbor molecule.
+        @param box              The simulation box
+        @param moleculeIndex    The molecule we'll get the neigbors of and calculate the energy between them
+        @param subLJ
+        @param subCharge
+	@param initial Flag to know if this method is being called by calcSystemEnergy_Verlet() or not
+    */
+    Real calcMolecularEnergyContribution_Verlet(Box* box, int moleculeIndex, Real &subLJ, Real &subCharge, bool initial);
+    
+    /* For all the molecules in the simulation box use verlet list to calculate the system's energy
+       Note: the verlet list is made before this function call, so all the molecules have there respective verlet list.
+       @param box The simulation box
+       @param subLj
+       @param subCharge
+       @param initial Flag to indicate whether we've called this method once already. Necessary for calcMolecularEnergyContribution_Verlet()
+    */
+    Real calcSystemEnergy_Verlet(Box* box, Real &subLJ, Real &subCharge, bool initial);	
+
+
+   /*
+	Used when calculating molecular energy contribution. We need to use the verlet list and 
+	only calculate the energy contribution of molecules within the rrcutoff range
+	@para box the simulation box
+	@param molecule1 The molecule in question; the molecule we have moved.
+	@param molecule2 Then neighbor molecule to molecule1
+	@returns True if molecule2 is within the rrcutoff
+   */
+   bool isWithinRRCutoff(Box* box, int molecule1, int molecule2);
 }
 
 #endif
