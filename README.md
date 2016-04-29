@@ -3,15 +3,15 @@ MCGPU (Monte Carlo on Graphics Processing Units)
 
 ##Requirements
 ###Required Hardware:
- * For Parallel Execution - Nvidia graphics card with compute Compute Capability 2.0 (or greater)
-    * Tested on Nvidia Fermi M2070, Kepler K20m
+ * For Parallel Execution - Nvidia graphics card with compute Compute Capability 2.1 (or greater)
+    * Tested on Nvidia Fermi M2070, Kepler K20m, GeForce GTX 780M, Titan X
 
 
 ###Required Software:
  * Linux or OSX Operating System
     * Tested on Ubuntu 14.04 LTS, SUSE Linux Enterprise Server 11 SP2, OSX Yosemite 
  * [Nvidia Developer Toolkit](http://developer.nvidia.com/cuda-downloads)
-    * Tested with CUDA 5.5, 6.5
+    * Tested with CUDA 5.5, 6.5, 7.5
  * [OpenMp](http://www.openmp.org)
 
 *Note*: If you are using the Alabama Supercomputer Center (ASC), configure based on the instructions received when you set up your account.
@@ -28,9 +28,9 @@ make
 make LOCAL_INSTALL=1
 ```
 
-*Note*: To build on an OSX machine, use MAC=1
+*Note*: To build on an OSX machine, use MAC=1. CUDA 6.5 is required when using gcc.
 ```
-make MAC=1
+make MAC=1 CUDA_PATH=/Developer/NVIDIA/CUDA-6.5
 ```
 
 *Note*: To build in debug mode, use BUILD=debug:
@@ -86,6 +86,13 @@ Do you want to use X-windows [y/n]: <n>
 cd /path/to/MCGPU/
 cd bin/
 ./metrosim ./[configuration file]
+
+Examples:
+./metrosim ./indole4000.config --threads 6 -s --name indole4000 -n 1000 -i 100 -k
+runs job using 6 OpenMP CPU threads, for 1000 steps, printing out every 100 intervals
+
+./metrosim ./indole4000.config -p --name indole4000 -n 1000 -i 100 -k
+runs job on best available GPU, for 1000 steps, printing out every 100 intervals
 ```
 
 For more information, see the Alabama Supercomputer Center manual.
@@ -98,15 +105,17 @@ When using multiple solvents, the primary index array (Configuration File line 3
 
 
 ##Available Command-line Options
- * `--serial`: Runs simulation on CPU (default)
- * `--parallel`: Runs simulation on GPU (requries CUDA)
- * `--list-devices`: Lists available CUDA-capable devices (requires CUDA)
- * `--device <index>`: Specifies what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
- * `--threads <count>`: Specifies number of threads to use when running on a multiprocessor CPU (--serial only)
+ * `--serial (-s)`: Runs simulation on CPU (default)
+ * `--parallel (-p)`: Runs simulation on GPU (requries CUDA)
+ * `--list-devices (-Q)`: Lists available CUDA-capable devices (requires CUDA)
+ * `--device <index> (-d)`: Specifies what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
+ * `--threads <count> (-t)`: Specifies number of threads to use when running on a multiprocessor CPU (--serial only)
  * `--name <title>`: Specifies the name of the simulation that will be run.
- * `--steps <count>`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
- * `--verbose`: Enables real time energy printouts
- * `--neighbor <interval>`: Specifies to use the neighborlist structure for molecular organization. interval is optional and refers to how many steps between updating the neighborlist (default is 100).
+ * `--steps <count> (-n)`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
+ * `--verbose (-k)`: Enables real time energy printouts
+ * `--neighbor <interval> (-l)`: Specifies to use the neighborlist structure for molecular organization. interval is optional and refers to how many steps between updating the neighborlist (default is 100).
+ * `--status-interval <interval> (-i)`: Specifies the number of simulation steps between status updates.
+ * `--state-interval <interval> (-I)`: Specifies the number of simulation steps between state file snapshots of the current simulation run.
 
 To view documentation for all command-line flags available, use the --help flag:
 ```
@@ -128,16 +137,16 @@ Line numbers are important
 [8]     <max translation for a molecule in angstroms>
 [9]     #line 9 is a comment and is ignored
 [10]    <number of steps for which to run the simulation> 
-[11]    #line 11 is a commend and is ignored
+[11]    #line 11 is a comment and is ignored
 [12]    <number of molecules in the simulation>
 [13]    #line 13 is a comment and is ignored
 [14]    <path to the opls-aa.par file>
 [15]    #line 15 is a comment and is ignored
 [16]    <path to the z-matrix file to use>
 [17]    #line 17 is a comment and is ignored.
-[18]    <path to the state input file; overrides z-matrix setting is present>
+[18]    <path to the state input file; overrides z-matrix setting if present>
 [19]    #line 19 is a comment and is ignored.
-[20]    <path to the stateoutput file>
+[20]    <path to the state output file>
 [21]    #line 21 is a comment and is ignored.
 [22]    <path to the pdb output file>
 [23]    #line 23 is a comment and is ignored.
@@ -150,11 +159,11 @@ Line numbers are important
 [30]    <primary atom index array to be used during cutoff as integer indexes of z-matrix atom in molecule, comma separated, starting from zero>
 ```
 
-**Contributing Authors**: Scott Aldige, Jared Brown, Matt Campbell, William Champion, Nathan Coleman, Yitong Dai, Seth Denney, Matthew Hardwick, Andrew Lewis, Alexander Luchs, Jennifer Lynch, Tavis Maclellan, Joshua Mosby, Jeffrey Overbey, Robert Sanek, Riley Spahn, Kalan Stowe, Ashley Tolbert, Albert Wallace, Seth Wooten, James Young, Francis Zayek, Xiao (David) Zhang, and Orlando Acevedo*
+**Contributing Authors**: Guillermo Aguirre, Scott Aldige, James Bass, Jared Brown, Matt Campbell, William Champion, Nathan Coleman, Yitong Dai, Seth Denney, Matthew Hardwick, Andrew Lewis, Alexander Luchs, Jennifer Lynch, Tavis Maclellan, Joshua Mosby, Jeffrey Overbey, Mitchell Price, Robert Sanek, Jonathan Sligh, Riley Spahn, Kalan Stowe, Ashley Tolbert, Albert Wallace, Jay Whaley, Seth Wooten, James Young, Francis Zayek, Xiao (David) Zhang, and Orlando Acevedo*
 
 **Software License**:
 MCGPU. Computational Chemistry: Highly Parallel Monte Carlo Simulations on CPUs and GPUs.
-Copyright (C) 2015  Orlando Acevedo
+Copyright (C) 2016  Orlando Acevedo
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
