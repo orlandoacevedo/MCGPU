@@ -44,6 +44,13 @@ make BUILD=debug
 cd /path/to/MCGPU/
 cd bin/
 ./metrosim ./[configuration file] [options]
+
+Examples:
+./metrosim ./indole4000.config --threads 6 -s --name indole4000 -n 1000 -i 100 -k
+runs job using 6 OpenMP CPU threads, for 1000 steps, printing out every 100 intervals
+
+./metrosim ./indole4000.config -p --name indole4000 -n 1000 -i 100 -k
+runs job on best available GPU, for 1000 steps, printing out every 100 intervals
 ```
 Where `[configuration file]` is a .config file containing configuration information, and `[options]` are command-line options. An example demo.config can be found in the resources folder. See below for specific .config file documentation and all command-line options available.
 
@@ -87,12 +94,6 @@ cd /path/to/MCGPU/
 cd bin/
 ./metrosim ./[configuration file]
 
-Examples:
-./metrosim ./indole4000.config --threads 6 -s --name indole4000 -n 1000 -i 100 -k
-runs job using 6 OpenMP CPU threads, for 1000 steps, printing out every 100 intervals
-
-./metrosim ./indole4000.config -p --name indole4000 -n 1000 -i 100 -k
-runs job on best available GPU, for 1000 steps, printing out every 100 intervals
 ```
 
 For more information, see the Alabama Supercomputer Center manual.
