@@ -9,6 +9,8 @@
 #ifndef DEVICE_QUERY_H
 #define DEVICE_QUERY_H
 
+#include <iostream>
+
 #define DEVICE_ANY -1
 #define MIN_MAJOR_VER 2
 #define MIN_MINOR_VER 1
@@ -20,13 +22,13 @@ struct DeviceContext
 	int minor;
 
 	DeviceContext()
-	{ 
+	{
 		index = -1;
 		major = 0;
 		minor = 0;
 	}
 
-	bool isOpen() 
+	bool isOpen()
 	{
 		return index >= 0;
 	}
