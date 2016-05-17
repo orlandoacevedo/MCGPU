@@ -136,13 +136,15 @@ void Simulation::run() {
 
 	// Build SimBox below
 	SimBoxBuilder builder = SimBoxBuilder(args.useNeighborList, new SBScanner());
+
+        bool parallel = args.simulationMode == SimulationMode::Parallel;
 	SimBox* sb = builder.build(box);
 	GPUCopy::copyIn(sb);
-	GPUCopy::setParallel(true);
+	GPUCopy::setParallel(parallel);
 	SimCalcs::setSB(sb);
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0) {
-		if (false) {
+		if (parallel) {
 			if (args.useNeighborList) {
 				log.verbose("Using neighbor-list for energy calculation");
 				//oldEnergy = ParallelCalcs::calcSystemEnergy_NLC(box);

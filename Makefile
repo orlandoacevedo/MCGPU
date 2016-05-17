@@ -105,10 +105,10 @@ IncPaths := . $(SourceDir) $(TestDir)
 
 # Compiler specific flags for the C++ compiler when generating .o files
 # and when generating .d files for dependency information
-CompileFlags := -g -c -acc -ta=nvidia -Minfo=accel
+CompileFlags := -c -acc -ta=nvidia -Minfo=accel
 
 # Flags for linking metrosim with the PGI compiler.
-LinkFlags := -g -lgomp -acc -ta=nvidia -Minfo=accel
+LinkFlags := -lgomp -acc -ta=nvidia -Minfo=accel
 
 # The debug compiler flags that add symbol and profiling hooks to the
 # executable for C++ code

@@ -29,6 +29,10 @@ Real** GPUCopy::atomDataPtr() {
   }
 }
 
+int GPUCopy::onGpu() {
+  return parallel;
+}
+
 Real** GPUCopy::rollBackCoordinatesPtr() {
   if (parallel) {
     return d_rollBackCoordinates;

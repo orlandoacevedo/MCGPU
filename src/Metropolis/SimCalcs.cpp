@@ -1,6 +1,7 @@
 #include "SimCalcs.h"
 
 SimBox* sb;
+int on_gpu;
 
 bool SimCalcs::moleculesInRange(int p1Start, int p1End, int p2Start, int p2End,
     Real** atomCoords, Real* bSize, int* primaryIndexes, Real cutoff) {
@@ -61,7 +62,7 @@ Real SimCalcs::calcMolecularEnergyContribution(int currMol, int startMol) {
   const int p1Start = sb->moleculeData[MOL_PIDX_START][currMol];
   const int p1End   = sb->moleculeData[MOL_PIDX_COUNT][currMol] + p1Start;
 
-  #pragma acc parallel loop deviceptr(molData, atomCoords, bSize, pIdxes, aData)
+  #pragma acc parallel loop deviceptr(molData, atomCoords, bSize, pIdxes, aData) if (on_gpu)
   for (int otherMol = startMol; otherMol < numMolecules; otherMol++) {
     if (otherMol != currMol) {
       int p2Start = molData[MOL_PIDX_START][otherMol];
@@ -201,7 +202,7 @@ void SimCalcs::changeMolecule(int molIdx) {
   int** molData = GPUCopy::moleculeDataPtr();
 
   // do the move here
-  #pragma acc parallel loop deviceptr(aCoords, rBCoords)
+  #pragma acc parallel loop deviceptr(aCoords, rBCoords) if(on_gpu)
   for (int i = 0; i < molLen; i++) {
     for (int j = 0; j < NUM_DIMENSIONS; j++) {
       rBCoords[j][i] = aCoords[j][molStart + i];
@@ -212,7 +213,7 @@ void SimCalcs::changeMolecule(int molIdx) {
     translateAtom(molStart + i, deltaX, deltaY, deltaZ, aCoords);
   }
 
-  #pragma acc parallel loop deviceptr(aCoords, molData, pIdxes, bSize)
+  #pragma acc parallel loop deviceptr(aCoords, molData, pIdxes, bSize) if(on_gpu)
   for (int i = 0; i < 1; i++) {
     aCoords[0][molStart + vertexIdx] += deltaX;
     aCoords[1][molStart + vertexIdx] += deltaY;
@@ -234,7 +235,7 @@ void SimCalcs::keepMoleculeInBox(int molIdx, Real** aCoords, int** molData, int*
 
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
     if (aCoords[i][pIdx] < 0) {
-      #pragma acc loop independent
+      #pragma acc loop independent 
       for (int j = start; j < end; j++) {
         aCoords[i][j] += bSize[i];
       }
@@ -255,9 +256,9 @@ void SimCalcs::rollback(int molIdx) {
   Real** aCoords = GPUCopy::atomCoordinatesPtr();
   Real** rBCoords = GPUCopy::rollBackCoordinatesPtr();
 
-  #pragma acc parallel loop deviceptr(aCoords, rBCoords)
+  #pragma acc parallel loop deviceptr(aCoords, rBCoords) if(on_gpu)
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
-    #pragma acc loop independent
+    #pragma acc loop independent 
     for (int j = 0; j < molLen; j++) {
       aCoords[i][molStart + j] = rBCoords[i][j];
     }
@@ -266,4 +267,5 @@ void SimCalcs::rollback(int molIdx) {
 
 void SimCalcs::setSB(SimBox* sb_in) {
   sb = sb_in;
+  on_gpu = GPUCopy::onGpu();
 }

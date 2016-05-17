@@ -13,7 +13,7 @@ namespace GPUCopy {
   int* primaryIndexesPtr();
   int** moleculeDataPtr();
   Real* sizePtr();
-
+  int onGpu();
 }
 
 
