@@ -2,35 +2,19 @@ MCGPU (Monte Carlo on Graphics Processing Units)
 ===============================================================
 
 ##Requirements
-###Required Hardware:
- * For Parallel Execution - Nvidia graphics card with compute Compute Capability 2.1 (or greater)
-    * Tested on Nvidia Fermi M2070, Kepler K20m, GeForce GTX 780M, Titan X
-
-
-###Required Software:
- * Linux or OSX Operating System
-    * Tested on Ubuntu 14.04 LTS, SUSE Linux Enterprise Server 11 SP2, OSX Yosemite 
- * [Nvidia Developer Toolkit](http://developer.nvidia.com/cuda-downloads)
-    * Tested with CUDA 5.5, 6.5, 7.5
- * [OpenMp](http://www.openmp.org)
-
-*Note*: If you are using the Alabama Supercomputer Center (ASC), configure based on the instructions received when you set up your account.
+ * [PGI Accelerator C/C++ Compiler with OpenACC](https://www.pgroup.com/resources/accel.htm) *or*
+   [OpenACC Toolkit](https://developer.nvidia.com/openacc-toolkit) (free for academic use)
+    * *Note*: If you are using the Alabama Supercomputer Center's Dense Memory Cluster (DMC), type ```module load pgi``` to load the PGI compilers.
+ * For GPU Execution: NVIDIA CUDA-capable graphics card
+    * Tested on NVIDIA Kepler K20m and K40
+    * By default, the PGI compilers target Fermi-generation GPUs (Compute Capability 2.0) and higher
+ * Linux operating system
 
 ##Build
 ```
 git clone git://github.com/orlandoacevedo/MCGPU.git
 cd MCGPU/
 make
-```
-
-*Note*: To build on a local machine, use LOCAL_INSTALL=1
-```
-make LOCAL_INSTALL=1
-```
-
-*Note*: To build on an OSX machine, use MAC=1. CUDA 6.5 is required when using gcc.
-```
-make MAC=1 CUDA_PATH=/Developer/NVIDIA/CUDA-6.5
 ```
 
 *Note*: To build in debug mode, use BUILD=debug:
@@ -54,7 +38,7 @@ runs job on best available GPU, for 1000 steps, printing out every 100 intervals
 ```
 Where `[configuration file]` is a .config file containing configuration information, and `[options]` are command-line options. An example demo.config can be found in the resources folder. See below for specific .config file documentation and all command-line options available.
 
-###To Run a Simulation on the Alabama Supercomputer Center:
+###To Run a Simulation on the Alabama Supercomputer Center's DMC:
 ```
 cd /path/to/MCGPU/
 run_gpu demo_script.txt
@@ -99,11 +83,19 @@ cd bin/
 For more information, see the Alabama Supercomputer Center manual.
 
 
+##Running Automated Tests
+```
+cd /path/to/MCGPU/
+make          # Build the metrosim binary first (required by metrotest)
+make tests    # Then build the metrotest binary
+cd bin/
+./metrotest   # Will take several minutes
+```
+
 ##Running With Multiple Solvents
 MCGPU currently supports the simulaton of two solvents within one z-matrix file where separate solvents are separated by TERZ.
 
 When using multiple solvents, the primary index array (Configuration File line 30), must contan at least one primary index array for each molecule, with the arrays enclosed in brackets and comma separated. For example [2],[1,3] represents the primary index structure for two molecules where the first molecule (defined above TERZ) has the primary index of '2' and the second molecule (defined below TERZ) has the primary indexes of '1' and '3'.
-
 
 ##Available Command-line Options
  * `--serial (-s)`: Runs simulation on CPU (default)
