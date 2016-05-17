@@ -23,54 +23,54 @@
 #define COMMENT_DELIM ';'
 
 class SBScanner {
-	
-	private: 
-		
+
+	private:
+
 		/**
 		 * Double map from one atom to another atom to data about the bond between the two atoms.
 		 */
 		map<string, map<string, BondData> > bondDataMap;
-		
+
 		/**
 		 * Triple map from one atom to another atom to a third atom about the angle formed by those three atoms.
 		 */
 		map<string, map<string, map<string, AngleData> > > angleDataMap;
-	
+
 		/**
 		 * Contains the path to the oplsaa.sb file.
 		 */
 		string fileName;
-		
+
 		/**
 		 * Given a line of input that specifies the data pertaining to a bond, stores the data in the bondDataMap.
 		 * @param line A line of data from the OPLSAA.sb file.
 		 */
 		void processBond(string line);
-		
+
 		/**
 		 * Given a line of input that specifies the data pertaining to an angle, stores the data in the angleDataMap.
 		 * @param line A line of data from the OPLSAA.sb file.
 		 */
 		void processAngle(string line);
-		
+
 		/**
 		 * Given a line of input, stores the data in the pertinent map.
 		 * @param line A line of data from the OPLSAA.sb file.
 		 */
 		void processLine(string line);
-		
+
 	public:
 
 		/**
 		 * Constructor for SBScanner;
 		 */
 		SBScanner();
-		
+
 		/**
 		 * Destructor for SBScanner;
 		 */
 		~SBScanner();
-		
+
 		/**
 		 * Reads in OPLS.sb and stores the bond and angle data.
 		 * @param fileName The path and name of the file to read from.
@@ -79,7 +79,7 @@ class SBScanner {
 		 *		     1: error
 		 */
 		bool readInSB(string filename);
-		
+
 		/**
 		 * Given a pair of atoms, returns the kBond between them.
 		 * @param atom1 One of the atoms in the bond.
@@ -87,7 +87,7 @@ class SBScanner {
 		 * @return The force constant of the bond.
 		 */
 		Real getKBond(string atom1, string atom2);
-		
+
 		/**
 		 * Given a pair of atoms, returns the eqBondDist between them.
 		 * @param atom1 One of the atoms in the bond.
@@ -95,7 +95,7 @@ class SBScanner {
 		 * @return The equilibrium bond distance.
 		 */
 		Real getEqBondDist(string atom1, string atom2);
-		
+
 		/**
 		 * Given three atoms, returns the kAngle of the angle that they form.
 		 * @param endpoint1 The atom at one end of the angle.
@@ -104,7 +104,7 @@ class SBScanner {
 		 * @return The force constant of the angle.
 		 */
 		Real getKAngle(string endpoint1, string middleAtom, string endpoint2);
-		
+
 		/**
 		 * Given three atoms, returns the eqAngle of the angle that they form.
 		 * @param endpoint1 The atom at one end of the angle.
@@ -113,22 +113,7 @@ class SBScanner {
 		 * @return The equilibrium angle formed by the three atoms (in degrees).
 		 */
 		Real getEqAngle(string endpoint1, string middleAtom, string endpoint2);
-		
-		/**
-		 * Given an atom's name, returns the corresponding bond map.
-		 * @param atom1 The name of the atom at one end of a bond.
-		 * @return A map from the name of another atom to data about the bond these atoms share.
-		 */
-		map<string, BondData> getBondMap(string atom1);
-		
-		/**
-		 * Given an atom's name, returns the corresponding angle map.
-		 * @param endpoint1 The name of the atom at one end of an angle.
-		 * @return A map from from the names of midpoints in angles to the other endpoint of 
-		 * an angle to data about the angle these atoms form.
-		 */
-		map<string, map<string, AngleData> > getAngleMap(string endpoint1);
-		
+
 };
 
 class ConfigScanner
@@ -170,11 +155,11 @@ class ConfigScanner
           The nonbonded cutoff distance.
         */
         long cutoff;
-        
+
         bool isSafeToContinue; //used to help with logic flow during detection of Zmatrix and State file paths in file
         bool useStatefileSetup; //if true, always try the state file for pre-sim setup; else, try ZMatrix
         bool useZMatrixSetup; //if set to true, use the ZMatrix file unless state file is available
-		
+
       	void throwScanError(string message);
       	void parsePrimaryIndexDefinitions(string definitions);
 
@@ -190,7 +175,7 @@ class ConfigScanner
         bool readInConfig(string configpath);
 
         /**
-          @return - returns the environment variable in this Config_Scan 
+          @return - returns the environment variable in this Config_Scan
         */
         Environment* getEnviro();
 
@@ -203,7 +188,7 @@ class ConfigScanner
           @return getSteps - returns the number of steps to run the simulation.
         */
         long getSteps();
-        
+
         /**
           @return - returns the path to the opls file for the simulation.
         */
@@ -236,9 +221,9 @@ class ConfigScanner
 
         /**
           @return - returns the random seed used in the simulation.
-        */        
+        */
         unsigned int getrandomseed() {return enviro.randomseed;}
-        
+
         /**
         	@return - returns whether or not we should use the state file for setup, with preference over the zmatrix file
         */
@@ -248,7 +233,7 @@ class ConfigScanner
     			@return - return whether or not we should use the ZMatrix file for setup, in the event the state file isn't found
     		*/
     		bool doSetupFromZMatrixFile() {return useZMatrixSetup;}
-        
+
 
 };
 
@@ -270,18 +255,18 @@ class OplsScanner
     */
     string fileName;
 	 /**
-     Vector used to keep track of errors when lines in 
+     Vector used to keep track of errors when lines in
 	  the OPLS file that don't match the correct format.
     */
 	 vector<int> errLines;
 	 /**
-      Vector used to keep track of errors when the hashes in 
-		the OPLS file that exist more than once. 
+      Vector used to keep track of errors when the hashes in
+		the OPLS file that exist more than once.
     */
 	 vector<string> errHashes;
 	  /**
       Vector used to keep track of errors when the hashes in the fourier coefficent
-		section of the OPLS file that exist more than once. 
+		section of the OPLS file that exist more than once.
     */
 	 vector<string> errHashesFourier;
    public:
@@ -291,25 +276,25 @@ class OplsScanner
      */
     OplsScanner(); // constructor
     ~OplsScanner();
-		
+
 		/**
 		Scans in the opls File calls sub-function addLineToTable
 		@param filename - the name/path of the opls file
-        @return - success code 
+        @return - success code
                   0: successful
                   1: error
 		*/
-      bool readInOpls(string filename); 
-		
+      bool readInOpls(string filename);
+
 		/**
 		Parses out a line from the opls file and gets (sigma, epsilon, charge)
-		adds an entry to the map at the hash number position, 
+		adds an entry to the map at the hash number position,
 		calls sub-function checkFormat()
 		@param line - a line from the opls file
 		@param numOflines - number of lines previously read in, used for error output
 		*/
       void addLineToTable(string line, int numOfLines);
-		
+
 		/**
 		  Checks the format of the line being read in
 		  returns false if the format of the line is invalid
@@ -320,42 +305,42 @@ class OplsScanner
                   2: Fourier Coefficent format
 		*/
 		int checkFormat(string line);
-				
+
 		/**
 		  Logs all the Errors found in the OPLS file to the output log.
 		*/
 		void logErrors();
-		
+
 		/**
 		Returns an Atom struct based on the hashNum (1st col) in Z matrix file
-		The Atom struct has -1 for x,y,z and has the hashNum for an id. 
+		The Atom struct has -1 for x,y,z and has the hashNum for an id.
 		sigma, epsilon, charges
 		@param hashNum -  the hash number (1st col) in Z matrix file
         @return - the atom with that is the value to the hasNum key.
 		*/
 		Atom getAtom(string hashNum);
-		
+
 		/**
 		Returns the sigma value based on the hashNum (1st col) in Z matrix file
 		@param hashNum -  the hash number (1st col) in Z matrix file
         @return - the sigma value of the atom that is the value associated with the hasNum key.
 		*/
 		Real getSigma(string hashNum);
-		
+
 		/**
 		Returns the epsilon value based on the hashNum (1st col) in Z matrix file
 		@param hashNum - the hash number (1st col) in Z matrix file
         @return - the epsilon value of the atom that is the value associated with the hashNum key.
 		*/
 		Real getEpsilon(string hashNum);
-		
+
 		/**
 		Returns the charge value based on the hashNum (1st col) in Z matrix file
 		@param hashNum -  the hash number (1st col) in Z matrix file
         @return - the charge value of the atom that is the value associated with the hashNum key.
 		*/
 		Real getCharge(string hashNum);
-		
+
 		/**
 		Returns the V values value based on the hashNum (1st col) in Z matrix file
 		@param hashNum -  the hash number (1st col) in Z matrix file
@@ -414,7 +399,7 @@ class ZmatrixScanner
    public:
       ZmatrixScanner(); // constructor
       ~ZmatrixScanner();
-		
+
 		/**
           Scans in the z-matrix File calls sub-function parseLine
           @param filename - the name/path of the z-matrix file
@@ -423,8 +408,8 @@ class ZmatrixScanner
                     0: Valid z-matrix path
                     1: Invalid z-matrix path
 		*/
-        bool readInZmatrix(string filename, OplsScanner* scanner); 
-		
+        bool readInZmatrix(string filename, OplsScanner* scanner);
+
 		/**
           Parses out a line from the zmatrix file and gets the atom from the OPLS hash
           Creates structs for bond, angle, dihedral, if applicable
@@ -433,7 +418,7 @@ class ZmatrixScanner
           @param numOflines - number of lines previously read in, used for error output
 		*/
         void parseLine(string line, int numOfLines);
-		
+
 		/**
           Checks the format of the line being read in
           returns false if the format of the line is invalid
@@ -492,13 +477,13 @@ class ZmatrixScanner
         /**
           Creates a 2d array representing all the bonds in the molecule
           the array is filled with 1 or 0 for a bond or no bond between atoms
-          array is n*n where n is the number of atoms.		   
+          array is n*n where n is the number of atoms.
           @param graph - a 2d array representing all the bonds in the molecule
           @param molec - the molecule to check its bonds for valid hops
         */
         void buildAdjacencyMatrix(int **&graph, Molecule molec);
 
-		  
+
         /**
           Creates a molecule(s)  based on a starting unique ID and the pattern specified
           by the Z-matrix in the scan functions
@@ -544,7 +529,7 @@ class StateScanner
       1 represents variable angle
 
       @param line - line containing information about the angle
-      @return - returns a bond 
+      @return - returns a bond
     */
     Angle getAngleFromLine(string line);
 
@@ -570,9 +555,9 @@ class StateScanner
       expected input line:
       "atom1 atom2 value [0|1]"
       0 represents not variable
-      1 represents variable dihedral 
+      1 represents variable dihedral
 
-      @param line - line containing information about the dihedral 
+      @param line - line containing information about the dihedral
       @return - returns the dihedral represented on the line
     */
     Dihedral getDihedralFromLine(string line);
@@ -593,15 +578,15 @@ class StateScanner
       @return - a hop represented by the information on the line.
     */
     Hop getHopFromLine(string line);
-    
+
     /**
     	Once the state file has been read in,
     	passes the Environment for pre-box setup.
     	[If you attempt to get the Environment before
     	the state file is successfully read in, passes NULL].
     */
-    
-    
+
+
     /**
     	Once the state file has been read in,
     	passes the Molecule for pre-box setup.
@@ -616,8 +601,9 @@ class StateScanner
       @param molecules - array of molecules to be printed out
       @param numOfMolecules - the number of molecules to be written out
       @param fileName - the name of the file to be written
+			@param atomCoords - the coordinates of the atoms in the box.
     */
-    void outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename);
+    void outputState(Environment *environment, Molecule *molecules, int numOfMolecules, int step, string filename, Real** atomCoords);
 };
 
 /**
@@ -629,8 +615,8 @@ class StateScanner
 * @param: inputType: Whether we are running from the config file + zmatrix combo, or from the state file
 * @param: box: the generic box into which all the environment information
 *		is to be stored; can be modified as necessary for serial or parallel use later.
-* @param: startStep: 
-* @param: steps: 
+* @param: startStep:
+* @param: steps:
 *
 * @returns: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
 *		for which you should do halt the simulation
@@ -641,22 +627,23 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 /*************************
 *Builds data for the simulation box/environment from the Zmatrix and config files, if
 * so desired. Note: this doesn't fully enable the box to be used for the simulation; the geometry
-* information must be set up. There's a call to generatefcc box at the end of the method, 
+* information must be set up. There's a call to generatefcc box at the end of the method,
 * at which point the box will actually be "generated"/ready.
 *
 * @param: enviro: the environment stored in the configuration file
 * @param: molecVec: the array of molecules, partly created from the Zmatrix file
 * @param: box: the box in which all the data is to be stored and the environment set up
+* @param: sb_scanner: used to read in from data from oplsaa.sb
 *
 * @return: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
 *		for which you should do halt the simulation
 */
-bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box);
+bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box, SBScanner &sb_scanner);
 
 /*************************
 *	Uses data from a given state file to reconstruct a box/environment, as the box looked
 * at the time of the statefile's capture during a prior simulation run.
-*	Includes geometry information, etc, so the box will be ready for use in the current 
+*	Includes geometry information, etc, so the box will be ready for use in the current
 * simulation immediately after the data has been copied over to the box.
 *
 * @param: enviro: the Environment data from the statefile
@@ -666,15 +653,15 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box);
 * @return: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
 *		for which you should do halt the simulation
 */
-bool fillBoxData(Environment* enviro, vector<Molecule>& moleVec, Box* box);
+bool fillBoxData(Environment* enviro, vector<Molecule>& moleVec, Box* box, SBScanner& sb_scanner);
 
 /*************************
-*	Once the box has been filled with environment data, takes the data and 
+*	Once the box has been filled with environment data, takes the data and
 *	sets up the geometry and other aspects necessary to successfully run a simulation.
 * Data must be loaded by either buildBoxData or fillBoxData, depending on if you are
 * loading a clean simulation, or loading from the state file.
-*	
-* @param: box: the box to be used for simulation, with all data pre-loaded	
+*
+* @param: box: the box to be used for simulation, with all data pre-loaded
 *
 *	@return: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
 *		for which you should do halt the simulation
@@ -708,8 +695,8 @@ void writeToLog(string text,int stamp);
 */
 void writeToLog(stringstream& ss, int stamp);
 
-static inline std::string& rtrim(std::string& s);
-static inline std::string& ltrim(std::string& s);
-static inline std::string& trim(std::string& s);
+std::string& rtrim(std::string& s);
+std::string& ltrim(std::string& s);
+std::string& trim(std::string& s);
 
 #endif

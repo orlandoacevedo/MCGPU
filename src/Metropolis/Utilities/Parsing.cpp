@@ -8,7 +8,7 @@ std::string getExtension(const std::string& filepath)
 	unsigned last_dot = filepath.find_last_of(".");
 	unsigned last_delim = filepath.find_last_of("/\\");
 	std::string extension;
-	if (last_delim == std::string::npos || last_delim < last_dot)
+	if (filepath.find_last_of("/\\") == std::string::npos || last_delim < last_dot)
 		extension = filepath.substr(last_dot + 1);
 	return extension;
 }

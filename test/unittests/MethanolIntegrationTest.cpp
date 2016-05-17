@@ -1,6 +1,7 @@
 
 #include "Applications/Application.h"
 #include "gtest/gtest.h"
+#include "TestUtil.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -10,93 +11,39 @@
 #include <string>
 #include <cmath>
 
+/**
+ * Generates a configuration file to be used in testing.
+ * @param MCGPU_path The path to MCGPU's root directory.
+ * @param fileName The name of the configuration file to generate.
+ * @param primaryAtomIndexString The entry for the Primary Atom Index line of the config file.
+ */
+void createMethanolConfigFile(std::string MCGPU, std::string fileName, std::string primaryAtomIndexString) {
+	ConfigFileData settings = ConfigFileData(26.15, 26.15, 26.15, 298.15, .12, 100000, 256, "resources/bossFiles/oplsaa.par", 
+	"test/unittests/Integration/MethanolTest/meoh.z", "test/unittests/Integration/MethanolTest", 11.0, 
+	12.0, 12345);
+	createConfigFile(MCGPU, fileName, primaryAtomIndexString, settings);
+}
+
 // Descr: evident
 // Implementation details: See gtest/samples for GTest syntax and usage
 TEST(MethanolTest, FrontToEndIntegrationTest)
 {
-	string directory = get_current_dir_name();
-	
-	std::string mc ("MCGPU");
-	std::size_t found = directory.find(mc);
-	
-	if (found != std::string::npos) {
-		directory = directory.substr(0,found+6);
-	}
-	std::string MCGPU = directory;
-	
-	
-	// Create the test config file,
-	// 		because it requires full hardcoded filepath names that will change on each user's computer
-	
-	ofstream configFile;
-	std::string configFilePath (std::string( MCGPU + "/test/unittests/Integration/MethanolTest/MethanolTest.config"));
-	configFile.open( configFilePath.c_str() );
-	std::stringstream cfg;
-	cfg << ""
-		<< "#size of periodic box (x, y, z in angstroms)\n"
-		<< "26.15\n"
-		<< "26.15\n"
-		<< "26.15\n"
-		<< "#temperature in Kelvin\n"
-		<< "298.15\n"
-		<< "#max translation\n"
-		<< ".12\n"
-		<< "#number of steps\n"
-		<< "100000\n"
-		<< "#number of molecues\n"
-		<< "256\n"
-		<< "#path to opls.par file\n"
-		<< MCGPU << "resources/bossFiles/oplsaa.par\n"
-		<< "#path to z matrix file\n"
-		<< MCGPU << "/test/unittests/Integration/MethanolTest/meoh.z\n"
-		<< "#path to state input\n"
-		<< "\n"
-		<< "#path to state output\n"
-		<< MCGPU << "/test/unittests/Integration/MethanolTest\n"
-		<< "#pdb output path\n"
-		<< "methanoltest.pdb\n"
-		<< "#cutoff distance in angstroms\n"
-		<< "11.0\n"
-		<< "#max rotation\n"
-		<< "12.0\n"
-		<< "#Random Seed Input\n"
-		<< "12345\n"
-		<< "#Primary Atom Index\n"
-		<< "1";
-		
-	configFile << cfg.str();
-	configFile.close();
+	std::string MCGPU = getMCGPU_path();
+	createMethanolConfigFile(MCGPU, "MethanolTest.config", "1");
 	
     std::stringstream ss;    
 	ss << MCGPU << "/bin/metrosim "
        << " " // don't forget a space between the path and the arguments
        << MCGPU << "/test/unittests/Integration/MethanolTest/MethanolTest.config -s --name methanolCPU -k";
 	
-	
     // Launch MCGPU application in serial, expect output files in /MCGPU/ directory   
 	system(ss.str().c_str());
 	
 	double expected = -1900;
-	double energyResult = -1;
-	
-	std::ifstream infile( std::string(MCGPU + "/bin/methanolCPU.results").c_str() );
-	
-	
-	for( std::string line; getline( infile, line ); )
-	{
-		std::string str2 ("Final-Energy");
-		std::string result;
-		found = line.find(str2);
-		
-		if (found != std::string::npos) {
-			result = line.substr(15);
-			energyResult  = strtod(result.c_str(), NULL);
-			break;
-		}
-	}
+	double energyResult = getEnergyResult(MCGPU, "methanolCPU.results");
 	
 	// Clean up
-	remove(configFilePath.c_str());
+	remove(  std::string(MCGPU + "/test/unittests/Integration/MethanolTest/MethanolTest.config").c_str());
 	remove(  std::string(MCGPU + "/bin/methanolCPU.pdb").c_str()  );
 	remove(  std::string(MCGPU + "/bin/methanolCPU.results").c_str()  );
 	remove(  std::string(MCGPU + "/bin/methanolCPU_100000.state").c_str()  );

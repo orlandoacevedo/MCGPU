@@ -4,7 +4,7 @@
 
 	Author: Nathan Coleman
 	Created: February 21, 2014
-	
+
 	-> February 26, by Albert Wallace
 	-> March 28, by Joshua Mosby
 	-> April 21, by Nathan Coleman
@@ -16,6 +16,7 @@
 #include "SimulationArgs.h"
 #include "Box.h"
 #include "Utilities/Logger.h"
+#include "SimBox.h"
 
 #define OUT_INTERVAL 100
 
@@ -27,7 +28,7 @@ class Simulation
 		Simulation(SimulationArgs simArgs);
 		~Simulation();
 		void run();
-		
+
 	private:
 		Box *box;
 		SimulationArgs args;
@@ -35,8 +36,8 @@ class Simulation
 		long stepStart;
 		int threadsToSpawn;
 		Logger log;
-		int writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection);
-		void saveState(const std::string& simName, int simStep);
+		int writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection, SimBox* sb);
+		void saveState(const std::string& simName, int simStep, const SimBox* sb);
 		const std::string currentDateTime();
 };
 

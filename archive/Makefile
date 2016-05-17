@@ -2,13 +2,13 @@
 # MCGPU Makefile
 # Version 1.0
 # Authors: Tavis Maclellan
-# 
+#
 # This Makefile depends on GNU make.
 ########################
 # Makefile Target List #
 ########################
 #
-# make [all] : Creates all output files 
+# make [all] : Creates all output files
 # make clean : Cleans out the objects folder
 # make remove : Cleans out the objects and bin folder
 # make compile : Compiles all the code, but no programs are linked
@@ -82,7 +82,7 @@ LCuFlags := -g -pg -arch=sm_35 -lcudadevrt -rdc true
 LinearSim := linearSim
 ParallelSim := parallelSim
 
-# The modules in the source directory that each program is linked with. If 
+# The modules in the source directory that each program is linked with. If
 # the module name is given, then the program will be linked with all of the
 # source files in that folder. If the program only needs a specific object
 # file from the module, then specify the specific source file needed with
@@ -149,14 +149,14 @@ ObjFolders := $(addprefix $(ObjDir)/,$(SourceModules))
 ObjFolders += $(ObjDir)/$(UnitTestDir)
 
 # Searches through the specified Modules list for all of the valid
-# files that it can find and compile. Once all of the files are 
+# files that it can find and compile. Once all of the files are
 # found, they are appended with an .o and prefixed with the object
 # directory path. This allows the compiled object files to be routed
 # to the proper output directory.
 Sources := $(filter $(FileTypes),$(wildcard $(addsuffix /*,$(SourceModules))))
 Objects := $(patsubst %,$(ObjDir)/%.o,$(basename $(Sources)))
 
-# The unit testing objects are all gathered seperately because they are 
+# The unit testing objects are all gathered seperately because they are
 # included all at once from the testing directory and are compiled into the
 # output program alongside the source objects.
 UnitTestingSources := $(filter $(FileTypes),$(wildcard $(UnitTestDir)/*))
@@ -173,7 +173,7 @@ DF = $(DepDir)/$*
 # Template Code #
 #################
 
-# NOTE: This template code is only being used because we have two programs to 
+# NOTE: This template code is only being used because we have two programs to
 # output, and it is easier to keep them built with the template rather than
 # manual changes. Once we merge linear and parallel into a single applcation,
 # we can remove the template information.
@@ -209,7 +209,7 @@ $(1)_OBJS += $$(foreach folder,$$($(1)_MODULE_LIST),$(find-objects))
 
 $(1): $$(sort $$($(1)_OBJS))
 	$(3) $$^ -o $(BinDir)/$$@ $(4)
-	
+
 endef
 
 ##############################
@@ -220,7 +220,7 @@ endef
 # not break if a similar named file exists in the directory.
 .PHONY : all build compile recompile clean remove
 
-# The house-keeping targets that provide the basic functionality of the 
+# The house-keeping targets that provide the basic functionality of the
 # Makefile.
 
 all : build $(LinearSim) $(ParallelSim)
@@ -232,7 +232,7 @@ recompile : remove build $(Objects)
 build :
 	@mkdir -p $(ObjDir) $(ObjFolders) $(BinDir)
 
-clean : 
+clean :
 	rm -rf $(ObjDir)
 
 remove :
@@ -274,7 +274,7 @@ $(ObjDir)/gtest_main.a : $(ObjDir)/gtest-all.o $(ObjDir)/gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
 
 
-# Here are the Rules that determine how to compile a CUDA and a C++ source 
+# Here are the Rules that determine how to compile a CUDA and a C++ source
 # file into an object file. Also, this rule will generate the file's
 # dependecies and format the file into a format that allows for easy and
 # effecient dependency resolution. The CUDA code must be compiled twice (once
