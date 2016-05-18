@@ -123,9 +123,6 @@ When using multiple solvents, the primary index array (Configuration File line 3
 ##Available Command-line Options
  * `--serial (-s)`: Runs simulation on CPU (default)
  * `--parallel (-p)`: Runs simulation on GPU (requries CUDA)
- * `--list-devices (-Q)`: Lists available CUDA-capable devices (requires CUDA)
- * `--device <index> (-d)`: Specifies what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
- * `--threads <count> (-t)`: Specifies number of threads to use when running on a multiprocessor CPU (--serial only)
  * `--name <title>`: Specifies the name of the simulation that will be run.
  * `--steps <count> (-n)`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
  * `--verbose (-k)`: Enables real time energy printouts
