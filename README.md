@@ -82,6 +82,17 @@ cd bin/
 
 For more information, see the Alabama Supercomputer Center manual.
 
+##Visualizing PDB Files
+
+At the end of the simulation, MCGPU produces a PDB file, which can be loaded
+into a visualization program to view the box.  Recommended PDB viewers
+include:
+
+* [Jmol](http://jmol.sourceforge.net/)
+
+* [Chimera](https://www.cgl.ucsf.edu/chimera/)
+
+* [RasMol](http://www.openrasmol.org/)
 
 ##Running Automated Tests
 ```
