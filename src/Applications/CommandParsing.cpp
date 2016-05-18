@@ -14,7 +14,6 @@
 
 #include "CommandParsing.h"
 #include "Metropolis/SimulationArgs.h"
-#include "Metropolis/Utilities/DeviceQuery.h"
 #include "Metropolis/Utilities/Parsing.h"
 
 using std::string;
@@ -41,19 +40,16 @@ bool readCommandLine(int argc, char** argv, CommandParameters* params) {
 	opterr = 0;
 
 	// The short options recognized by the program
-	const char* short_options = ":i:I:n:i:d:sphQVktl:";
+	const char* short_options = ":i:I:n:i:sphVkl:";
 
 	// The long options recognized by the program
 	struct option long_options[] = {
 		{"status-interval", 	required_argument, 	0, 	'i'},
 		{"state-interval",		required_argument,	0,	'I'},
 		{"steps",				required_argument,	0,	'n'},
-		{"threads",				required_argument,	0,	't'},
 		{"serial", 				no_argument, 		0, 	's'},
 		{"parallel", 			no_argument, 		0, 	'p'},
 		{"help", 				no_argument, 		0, 	'h'},
-		{"list-devices",		no_argument,		0,	'Q'},
-		{"device",				required_argument,	0,	'd'},
 		{"version",				no_argument,		0,	'V'},
 		{"verbose",				no_argument,		0,	'k'},
 		{"neighbor",			required_argument,	0,	'l'},
@@ -114,19 +110,6 @@ bool readCommandLine(int argc, char** argv, CommandParameters* params) {
 					return false;
 				}
 				break;
-			case 't':	// thread count
-				params->threadFlag = true;
-				if (!fromString<int>(optarg, params->threadCount)) {
-					std::cerr << APP_NAME << ": ";
-					std::cerr << " --threads (-t): Invalid thread count" << std::endl;
-					return false;
-				}
-				if (params->threadCount <= 0) {
-					std::cerr << APP_NAME << ": ";
-					std::cerr << " --threads (-t): Thread count must be greater than zero" << std::endl;
-					return false;
-				}
-				break;
 			case 's':	// run serial
 				params->serialFlag = true;
 				break;
@@ -150,17 +133,6 @@ bool readCommandLine(int argc, char** argv, CommandParameters* params) {
 			case 'h':	// print help
 				printHelpScreen();
 				return false;
-			case 'Q':	// list all devices
-				printDeviceInformation();
-	  		return false;
-			case 'd':
-				params->deviceFlag = true;
-				if (params->deviceIndex < 0) {
-					std::cerr << APP_NAME << ": ";
-					std::cerr << " --device (-d): Device index cannot be a negative index" << std::endl;
-					return false;
-				}
-				break;
 			case ':':	// missing argument
 				if (optopt == 'l') {
 					params->neighborListFlag = true;
@@ -217,6 +189,8 @@ bool parseCommandLine(CommandParameters* params, SimulationArgs* args) {
 		args->simulationMode = SimulationMode::Parallel;
 	} else if (params->serialFlag) { // serial flag set
 		args->simulationMode = SimulationMode::Serial;
+	} else {
+		args->simulationMode = SimulationMode::Default;
 	}
 
 	if (!parseInputFile(params->argList[0], args->filePath, args->fileType)) {
@@ -227,22 +201,10 @@ bool parseCommandLine(CommandParameters* params, SimulationArgs* args) {
 	args->statusInterval = params->statusInterval;
 	args->stateInterval = params->stateInterval;
 	args->stepCount = params->stepCount;
-	args->threadCount = params->threadCount;
 	args->simulationName = params->simulationName;
 	args->verboseOutput = params->verboseOutputFlag;
 	args->useNeighborList = params->neighborListFlag;
 	args->neighborListInterval = params->neighborListInterval;
-
-	if (!params->parallelFlag && params->deviceFlag) {
-		std::cerr << APP_NAME << ": Cannot use graphics device in serial simulation" << std::endl;
-		return false;
-	}
-
-	// Set the user selected device index.
-	if (params->deviceFlag)
-		args->deviceIndex = params->deviceIndex;
-	else
-		args->deviceIndex = DEVICE_ANY;
 
 	return true;
 }
@@ -285,19 +247,9 @@ void printHelpScreen() {
 		  		"\t\t  configuration settings and parameters.\n"
 					"\t.state\t: Resume a previous simulation that was saved.\n\n";
 
-	cout << "CPU Operation Flags\n"
+	cout << "Operation Flags\n"
 		  		"====================\n"
-					"--threads <count>\t\t(-t)\n"
-					"\tSpecifies how many threads are launched when calculating molecular\n"
-					"\tinteraction. This value must a valid integer that is greater than\n"
-					"\tzero. If value specified is greater than the device capabilities,\n"
-					"\tthe number used will be the device maximum.\n\n";
-
-	cout << "GPU Operation Flags\n"
-		  		"====================\n"
-					"This tool can execute a given simulation on both the CPU and the GPU.\n"
-		  		"The following flags can query the current availability of GPU devices\n"
-		  		"and control how the simulation will execute on the GPU.\n\n";
+					"This tool can execute a given simulation on both the CPU and the GPU.\n\n";
 
 	cout << "--parallel\t(-p)\n"
 	 				"\tRun the simulation in parallel by executing steps on a CUDA\n"
@@ -312,26 +264,6 @@ void printHelpScreen() {
 
 	cout << "--verbose\t(-k)\n"
 		      "\tRun the simulation printing regular step updates to std::cout.\n\n";
-
-	cout << "--list-devices\t(-Q)\n"
-					"\tQueries the host machine for available CUDA capable devices. The\n"
-			  	"\tentries will contain the following information about each\n"
-			  	"\tavailable device:\n\n"
-					"\tDevice Index\t: The index of the device on the host system\n"
-					"\tDevice Name\t: The name of the available device.\n"
-					"\tClock Rate\t: The clock rate of the device in kilohertz\n"
-					"\tCompute Capability : The major and minor version of the device.\n"
-					"\tProcessor Count\t: The number of multiprocessors on the device.\n"
-					"\tGlobal Memory\t: The total amount of global memory on the device.\n"
-					"\tConstant Memory\t: The total amount of constant memory on the device\n"
-					"\tWarp Size\t: The number of threads in a warp.\n\n";
-
-	cout << "--device <index>\t(-d)\n"
-					"\tWhen running the simulation on the GPU, this option specifies which\n"
-					"\tavailable graphics device to use if multiple are installed on the\n"
-					"\thost system. If this option is not specified then the simulation\n"
-					"\twill attempt to find the best device. Additionally, this flag must\n"
-					"\tbe accompanied with the --parallel flag.\n\n";
 
 	cout << "Simulation Run Parameters\n"
 		  		"==========================\n"
@@ -406,6 +338,4 @@ void printVersionInformation() {
 	#else
 	  std::cout << "Floating-point Precision: Single" << std::endl;
 	#endif
-
-	std::cout << "Minimum Required CUDA Version: " << MIN_MAJOR_VER << "." << MIN_MINOR_VER << std::endl;
 }

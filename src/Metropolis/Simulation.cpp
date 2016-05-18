@@ -44,26 +44,7 @@ Simulation::Simulation(SimulationArgs simArgs) {
 	args = simArgs;
 	stepStart = 0;
 
-	if (false) {
-		/*We need to set this to 1 in parallel mode because it is irrelevant BUT is used in the
-		  runtime calculation. See summary equation for explanation.*/
-		threadsToSpawn = 1;
-	//	box = ParallelCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
-	} else {
-		int processorCount = omp_get_num_procs();
-		/*We seem to get reasonable performance if we use half as many threads as there are 'logical' processors.
-		  We could do performance tuning to get more information on what the ideal number might be.*/
-		threadsToSpawn = max(processorCount / 2, 1);
-
-		if (simArgs.threadCount > 0)
-			threadsToSpawn = min(omp_get_max_threads(), simArgs.threadCount);
-
-		std::cout << processorCount << " processors detected by OpenMP; using " << threadsToSpawn << " threads." << endl;
-		omp_set_num_threads(threadsToSpawn);
-		omp_set_dynamic(0); //forces OpenMP to use the exact number of threads specified above (no less)
-		box = SerialCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
-	}
-
+	box = SerialCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
 	if (box == NULL) {
 		std::cerr << "Error: Unable to initialize simulation Box" << std::endl;
 		exit(EXIT_FAILURE);
@@ -167,13 +148,12 @@ void Simulation::run() {
 	}
 	function_time_end = clock();
 	GPUCopy::copyOut(sb);
-	double duration = difftime(function_time_end, function_time_start) / (CLOCKS_PER_SEC * threadsToSpawn);
+	double duration = difftime(function_time_end, function_time_start) / CLOCKS_PER_SEC;
 
 	//for testing/debug purposes
 	std::stringstream durationConv;
 	durationConv << "Duration of system energy calculation function: " << duration << " seconds.";
 	log.verbose(durationConv.str());
-	log.verbose("Threads to spawn: " + threadsToSpawn);
 
 	std::stringstream simStepsConv;
 	simStepsConv << "\nRunning " << (simSteps) << " steps\n";
@@ -273,9 +253,7 @@ void Simulation::run() {
 	endTime = clock();
 	writePDB(box->getEnvironment(), box->getMolecules(), sb);
 
-	/*This number will understate 'true' time the more threads we have, since not all parts of the program are threaded.
-	  However, it is a good enough estimation without adding unnecessary complexity.*/
-	double diffTime = difftime(endTime, startTime) / (CLOCKS_PER_SEC * threadsToSpawn);
+	double diffTime = difftime(endTime, startTime) / CLOCKS_PER_SEC;
 
 	currentEnergy = oldEnergy_sb;
 	stringstream startConv;
@@ -319,11 +297,10 @@ void Simulation::run() {
 	if (!args.simulationName.empty())
 		resultsFile << "Simulation-Name = " << args.simulationName << std::endl;
 
-	if (false) {
+	if (args.simulationMode == SimulationMode::Parallel) {
 		resultsFile << "Simulation-Mode = GPU" << std::endl;
 	} else {
 		resultsFile << "Simulation-Mode = CPU" << std::endl;
-		resultsFile << "Threads-Used = " << threadsToSpawn << std::endl;
 	}
 
 	resultsFile << "Starting-Step = " << stepStart << std::endl;
