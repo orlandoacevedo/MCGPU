@@ -23,20 +23,34 @@ make BUILD=debug
 ```
 
 ##Run
-###To Run a Simulation on a local machine:
+###To Run a Simulation on a Local Machine:
 ```
 cd /path/to/MCGPU/
-cd bin/
-./metrosim ./[configuration file] [options]
-
-Examples:
-./metrosim ./indole4000.config --threads 6 -s --name indole4000 -n 1000 -i 100 -k
-runs job using 6 OpenMP CPU threads, for 1000 steps, printing out every 100 intervals
-
-./metrosim ./indole4000.config -p --name indole4000 -n 1000 -i 100 -k
-runs job on best available GPU, for 1000 steps, printing out every 100 intervals
+bin/metrosim [configuration file] [options]
 ```
-Where `[configuration file]` is a .config file containing configuration information, and `[options]` are command-line options. An example demo.config can be found in the resources folder. See below for specific .config file documentation and all command-line options available.
+where `[configuration file]` is a .config file containing configuration
+information and `[options]` are command-line options. An example demo.config
+can be found in the resources folder. See below for specific .config file
+documentation and all command-line options available.
+
+*Example 1:*
+```
+bin/metrosim resources/exampleFiles/indole4000.config -k
+```
+runs a simulation on the GPU if possible and on the CPU otherwise.  The ```-k``` option enables
+verbose output: status information will be printed every 1000 time steps.
+
+*Example 2:*
+```
+bin/metrosim resources/exampleFiles/indole4000.config -p --name indole4000 -n 5000 -i 1000 -k
+```
+runs a simulation on the GPU (```-p```), for 5000 steps, printing status information every 1000 intervals.
+
+*Example 3:*
+```
+bin/metrosim resources/exampleFiles/indole4000.config -s --name indole4000 -n 1000 -i 100 -k
+```
+runs a simulation on the CPU (```-s```), for 1000 steps, printing status information every 100 steps.
 
 ###To Run a Simulation on the Alabama Supercomputer Center's DMC:
 ```
