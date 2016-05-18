@@ -108,7 +108,7 @@ bool moleculesInRange(int p1Start, int p1End, int p2Start, int p2End,
  * @param bSize The size of the box.
  * @return The energy from the molecular interaction.
  */
- #pragma acc routine seq
+ #pragma acc routine vector
 Real calcMoleculeInteractionEnergy (int m1, int m2, int** molData, Real** aData,
   Real** aCoords, Real* bSize);
 
