@@ -65,7 +65,8 @@ Simulation::~Simulation() {
 }
 
 void Simulation::run() {
-	std::cout << "Simulation Name: " << args.simulationName << std::endl;
+	if (!args.simulationName.empty())
+		std::cout << "Simulation Name: " << args.simulationName << std::endl;
 
 	for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++) {
 		box->keepMoleculeInBox(molIdx);
@@ -102,6 +103,11 @@ void Simulation::run() {
 	MCGPU.append("/bin/pdbFiles");
 
 	mkdir(MCGPU.data(), 0777);
+
+	std::cout << "Running " << simSteps << " time steps";
+	if (stepStart > 0)
+		std::cout << " starting from step " << stepStart;
+	std::cout << std::endl;
 
 	clock_t startTime, endTime;
 	startTime = clock();

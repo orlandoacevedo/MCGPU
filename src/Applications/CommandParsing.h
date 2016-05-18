@@ -18,7 +18,7 @@
 #define APP_NAME "metrosim"		 *< The executable name of the application.
 #endif
 
-#define DEFAULT_STATUS_INTERVAL 100
+#define DEFAULT_STATUS_INTERVAL 1000
 #define DEFAULT_NEIGHBORLIST_INTERVAL 100
 
 	/**
