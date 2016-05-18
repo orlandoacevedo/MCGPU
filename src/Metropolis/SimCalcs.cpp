@@ -6,19 +6,13 @@ int on_gpu;
 bool SimCalcs::moleculesInRange(int p1Start, int p1End, int p2Start, int p2End,
     Real** atomCoords, Real* bSize, int* primaryIndexes, Real cutoff) {
 
-  int p1;
-  int p2;
-
   bool out = false;
 
   for (int p1Idx = p1Start; p1Idx < p1End; p1Idx++) {
-    p1 = primaryIndexes[p1Idx];
+    int p1 = primaryIndexes[p1Idx];
     for (int p2Idx = p2Start; p2Idx < p2End; p2Idx++) {
-      p2 = primaryIndexes[p2Idx];
-      if (calcAtomDistSquared(p1, p2, atomCoords, bSize) <=
-          cutoff * cutoff) {
-        out = true;
-      }
+      int p2 = primaryIndexes[p2Idx];
+      out |= (calcAtomDistSquared(p1, p2, atomCoords, bSize) <= cutoff * cutoff);
     }
   }
   return out;
@@ -40,11 +34,10 @@ Real SimCalcs::calcAtomDistSquared(int a1, int a2, Real** aCoords,
 Real SimCalcs::makePeriodic(Real x, int dimension, Real* bSize) {
   Real dimLength = bSize[dimension];
 
-  if (x < -0.5 * dimLength) {
-    x += dimLength;
-  } else if (x > 0.5 * dimLength) {
-    x -= dimLength;
-  }
+  int lt = (x < -0.5 * dimLength); // 1 or 0
+  x += lt * dimLength;
+  int gt = (x > 0.5 * dimLength);  // 1 or 0
+  x -= gt * dimLength;
   return x;
 }
 
