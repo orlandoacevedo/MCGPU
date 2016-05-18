@@ -17,7 +17,7 @@ cd MCGPU/
 make
 ```
 
-*Note*: To build in debug mode, use BUILD=debug:
+*Note*: To build in debug mode (so the executable can be debugged using cuda-gdb), use BUILD=debug:
 ```
 make BUILD=debug
 ```
@@ -91,6 +91,29 @@ make tests    # Then build the metrotest binary
 cd bin/
 ./metrotest   # Will take several minutes
 ```
+
+##Profiling
+### For CPU profiling:
+For CPU profiling, build metrosim with profiling enabled, run it (which will
+produce a file called gmon.out), and then use gprof to view the resulting
+profile data.
+```
+make BUILD=profile
+bin/metrosim -s resources/exampleFiles/indole4000.config   # or another config file
+gprof bin/metrosim
+```
+
+### For GPU profiling:
+For GPU profiling, build metrosim in release mode, and run it using nvprof.
+```
+make
+nvprof --print-gpu-summary bin/metrosim -s resources/exampleFiles/indole4000.config   # or another config file
+```
+Alternatively, ```nvprof --print-gpu-trace``` will print information about every
+kernel launch (so only run this with a very few time steps).
+
+The NVIDIA Visual Profiler, nvvp, is highly recommended and provides much more
+detailed information that the nvprof commands above.
 
 ##Running With Multiple Solvents
 MCGPU currently supports the simulaton of two solvents within one z-matrix file where separate solvents are separated by TERZ.
