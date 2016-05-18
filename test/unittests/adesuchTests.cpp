@@ -31,7 +31,7 @@ TEST (adesuchTest, OnePrimaryIndex)
         std::stringstream ss;
                 ss << MCGPU << "/bin/metrosim "
                 << " "
-                << MCGPU << "/test/unittests/MultipleSolvents/adesuchTests/adesuch1MPI.config -s --verbose --threads 12 -i 10000 >"
+                << MCGPU << "/test/unittests/MultipleSolvents/adesuchTests/adesuch1MPI.config -s --verbose -i 10000 >"
                 << " "
                 << MCGPU << "/bin/adesuch1MPI.txt 2>&1";
 
