@@ -63,7 +63,7 @@ Real SimCalcs::calcMolecularEnergyContribution(int currMol, int startMol) {
   const int p1End   = sb->moleculeData[MOL_PIDX_COUNT][currMol] + p1Start;
 
   #pragma acc parallel loop gang deviceptr(molData, atomCoords, bSize, pIdxes, aData) if (on_gpu) \
-	num_gangs(numMolecules - startMol) vector_length(64)
+              vector_length(64)
   for (int otherMol = startMol; otherMol < numMolecules; otherMol++) {
     if (otherMol != currMol) {
       int p2Start = molData[MOL_PIDX_START][otherMol];
@@ -88,7 +88,7 @@ Real SimCalcs::calcMoleculeInteractionEnergy (int m1, int m2, int** molData,
   const int m2Start = molData[MOL_START][m2];
   const int m2End = molData[MOL_LEN][m2] + m2Start;
 
-  #pragma acc loop vector collapse(2)
+  #pragma acc loop vector collapse(2) reduction(+:energySum)
   for (int i = m1Start; i < m1End; i++) {
     for (int j = m2Start; j < m2End; j++) {
       if (aData[ATOM_SIGMA][i] >= 0 && aData[ATOM_SIGMA][j] >= 0
