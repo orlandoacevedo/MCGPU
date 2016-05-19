@@ -22,6 +22,7 @@
 ##############################
 #
 # BUILD=debug    : Builds the program in debug mode
+# BUILD=profile  : Builds the program in profiling mode
 # BUILD=release  : Builds the program in release mode
 #
 # PRECISION=single : All floating point numbers use single-precision
@@ -110,9 +111,13 @@ CompileFlags := -c -acc -ta=nvidia -Minfo=accel
 # Flags for linking metrosim with the PGI compiler.
 LinkFlags := -lgomp -acc -ta=nvidia -Minfo=accel
 
-# The debug compiler flags that add symbol and profiling hooks to the
-# executable for C++ code
-DebugFlags := -g -Minfo=ccff
+# The debug compiler flags add debugging symbols to the executable
+# This originally contained -Minfo=ccff
+DebugFlags := -g
+
+# The profile compiler flags add profiling hooks (which produce gmon.out)
+# as well as debugging symbols, but optimizations are still enabled
+ProfileFlags := -g -O3 -mp -pg
 
 # The release build compiler flags that add optimization flags and remove
 # all symbol and relocation table information from the executable.
@@ -152,10 +157,10 @@ GTEST_SRCS_ = $(GTestDir)/src/*.cc $(GTestDir)/src/*.h $(GTestHeaders)
 # The base define list to pass to the compiled and linked executable.
 Definitions := APP_NAME=\"$(AppName)\"
 
-# Check for the BUILD definition being set to debug or release. If this define
-# is not set by the user, then the build will default to a release build. If
-# the user specifies an option other than 'debug' or 'release' then the build
-# will default to release build.
+# Check for the BUILD definition: debug, profile, or release. If this is is not
+# set by the user, then the build will default to a release build. If the user
+# specifies an option other than 'debug', 'profile', or 'release', then the
+# build will default to release build.
 ifeq ($(BUILD),debug)
 	# "Debug" build - set compiling and linking flags
 	CompileFlags += $(DebugFlags)
@@ -163,11 +168,20 @@ ifeq ($(BUILD),debug)
 	BuildDir := $(BuildDir)/debug
 	Definitions += DEBUG
 else
+ifeq ($(BUILD),profile)
+	# "Profile" build - set compiling and linking flags
+	CompileFlags += $(ProfileFlags)
+	LinkFlags += $(ProfileFlags)
+	BuildDir := $(BuildDir)/profile
+	Definitions += PROFILE
+
+else
 	# "Release" build - set compiling and linking flags
 	CompileFlags += $(ReleaseFlags)
 	LinkFlags += $(ReleaseFlags)
 	BuildDir := $(BuildDir)/release
 	Definitions += RELEASE
+endif
 endif
 
 # Check for the PRECISION definition being set to single or double. If this

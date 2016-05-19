@@ -86,7 +86,7 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 	ss << MCGPU << metrosimCommand << MCGPU << working_path << "/" << configFile << " ";
 
 	if(series) {
-		ss << "-s --threads 12 ";	//If testing in series, give the flag and specify a the number of threads.
+		ss << "-s ";				//If testing in series, give the flag.
 	} else {
 		ss << "-p ";				//If testing in parallel, give the corresponding flag.
 	}

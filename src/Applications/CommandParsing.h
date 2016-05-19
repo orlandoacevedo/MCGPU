@@ -18,7 +18,7 @@
 #define APP_NAME "metrosim"		 *< The executable name of the application.
 #endif
 
-#define DEFAULT_STATUS_INTERVAL 100
+#define DEFAULT_STATUS_INTERVAL 1000
 #define DEFAULT_NEIGHBORLIST_INTERVAL 100
 
 	/**
@@ -55,12 +55,6 @@
 		int stepCount;
 
 		/**
-		 * The number of threads to launch in serial mode.
-		 * This must be a valid integer number greater than zero.
-     */
-		int threadCount;
-
-		/**
 		 * Declares whether the help option was specified.
 		 */
 		bool helpFlag;
@@ -69,22 +63,6 @@
 		 * Declares whether the version option was specified.
 		 */
 		bool versionFlag;
-
-		/**
-		 * Declares whether the query device option was specified.
-		 */
-		bool listDevicesFlag;
-
-		/**
-		 * Specifies whether the user has chosen a device, or to
-		 * use the default device.
-		 */
-		bool deviceFlag;
-
-		/**
-		 * Specifies which device to use when running in parallel.
-		 */
-		int deviceIndex;
 
     /**
 		 * The number of non-option arguments given by the user.
@@ -115,11 +93,6 @@
 		 * Declares whether the steps option was specified.
      */
 		bool stepFlag;
-
-		/**
-		 * Declares whether the thread count option was specified.
-     */
-		bool threadFlag;
 
     /**
 		 * Declares whether the serial execution option was specified.
@@ -155,17 +128,12 @@
 		CommandParameters() :	statusInterval(DEFAULT_STATUS_INTERVAL),
 								stateInterval(0),
 								stepCount(0),
-								threadCount(0),
 								argCount(0),
 								argList(NULL),
 								helpFlag(false),
 								versionFlag(false),
-								listDevicesFlag(false),
-								deviceIndex(0),
-								deviceFlag(false),
 								statusFlag(false),
 								stepFlag(false),
-								threadFlag(false),
 								serialFlag(false),
 								parallelFlag(false),
 								verboseOutputFlag(false),

@@ -76,9 +76,6 @@ struct SimulationArgs
 	/// The number of simulation steps to execute in the current run.
 	int stepCount;
 
-	/// The number of threads to use in the current run.
-	int threadCount;
-	
 	/// Whether or not program prints to cout 
 	///		(silenced for integration tests)
 	bool verboseOutput;

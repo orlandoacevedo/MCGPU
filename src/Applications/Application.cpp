@@ -10,9 +10,9 @@
  */
 
 #include "Application.h"
-#include "Metropolis/Utilities/DeviceQuery.h"
 #include <iostream>
 #include <fstream>
+#include <openacc.h>
 
 
 int metrosim::run(int argc, char** argv) {
@@ -22,15 +22,28 @@ int metrosim::run(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 
+	int numDevices = acc_get_num_devices(acc_device_nvidia);
+
+	// Ensure args.simulationMode is either Serial or Parallel
+	if (args.simulationMode == SimulationMode::Default) {
+		if (numDevices < 1) {
+			fprintf(stdout, "No CUDA devices found; defaulting to CPU execution.\n");
+			args.simulationMode = SimulationMode::Serial;
+		} else {
+			fprintf(stdout, "%d CUDA device(s) found; running on GPU.\n", numDevices);
+			args.simulationMode = SimulationMode::Parallel;
+		}
+	}
+
 	bool parallelMode = (args.simulationMode == SimulationMode::Parallel);
 
-	DeviceContext context = DeviceContext();
-
 	if (parallelMode) {
-		if (!openDeviceContext(&context, MIN_MAJOR_VER, MIN_MINOR_VER, args.deviceIndex)) {
-			fprintf(stdout, "ERROR: Cannot find Suitable GPU!\n");
+		if (numDevices == 0) {
+			fprintf(stdout, "ERROR: Cannot find suitable GPU!\n");
 			exit(EXIT_FAILURE);
 		}
+		acc_init(acc_device_nvidia);
+		acc_set_device_type(acc_device_nvidia);
 	}
 
 	if (parallelMode) {
@@ -45,10 +58,7 @@ int metrosim::run(int argc, char** argv) {
 	fprintf(stdout, "Finishing simulation...\n\n");
 
 	if (parallelMode) {
-		if (!closeDeviceContext(&context)) {
-			fprintf(stdout, "Could not close device context!\n");
-			exit(EXIT_FAILURE);
-		}
+		acc_shutdown(acc_device_nvidia);
 	}
 
 	exit(EXIT_SUCCESS);

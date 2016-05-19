@@ -2,19 +2,13 @@ MCGPU (Monte Carlo on Graphics Processing Units)
 ===============================================================
 
 ##Requirements
-###Required Hardware:
- * For Parallel Execution - Nvidia graphics card with compute Compute Capability 2.1 (or greater)
-    * Tested on Nvidia Fermi M2070, Kepler K20m, GeForce GTX 780M, Titan X
-
-
-###Required Software:
- * Linux or OSX Operating System
-    * Tested on Ubuntu 14.04 LTS, SUSE Linux Enterprise Server 11 SP2, OSX Yosemite 
- * [Nvidia Developer Toolkit](http://developer.nvidia.com/cuda-downloads)
-    * Tested with CUDA 5.5, 6.5, 7.5
- * [OpenMp](http://www.openmp.org)
-
-*Note*: If you are using the Alabama Supercomputer Center (ASC), configure based on the instructions received when you set up your account.
+ * [PGI Accelerator C/C++ Compiler with OpenACC](https://www.pgroup.com/resources/accel.htm) *or*
+   [OpenACC Toolkit](https://developer.nvidia.com/openacc-toolkit) (free for academic use)
+    * *Note*: If you are using the Alabama Supercomputer Center's Dense Memory Cluster (DMC), type ```module load pgi``` to load the PGI compilers.
+ * For GPU Execution: NVIDIA CUDA-capable graphics card
+    * Tested on NVIDIA Kepler K20m and K40
+    * By default, the PGI compilers target Fermi-generation GPUs (Compute Capability 2.0) and higher
+ * Linux operating system
 
 ##Build
 ```
@@ -23,38 +17,42 @@ cd MCGPU/
 make
 ```
 
-*Note*: To build on a local machine, use LOCAL_INSTALL=1
-```
-make LOCAL_INSTALL=1
-```
-
-*Note*: To build on an OSX machine, use MAC=1. CUDA 6.5 is required when using gcc.
-```
-make MAC=1 CUDA_PATH=/Developer/NVIDIA/CUDA-6.5
-```
-
-*Note*: To build in debug mode, use BUILD=debug:
+*Note*: To build in debug mode (so the executable can be debugged using cuda-gdb), use BUILD=debug:
 ```
 make BUILD=debug
 ```
 
 ##Run
-###To Run a Simulation on a local machine:
+###To Run a Simulation on a Local Machine:
 ```
 cd /path/to/MCGPU/
-cd bin/
-./metrosim ./[configuration file] [options]
-
-Examples:
-./metrosim ./indole4000.config --threads 6 -s --name indole4000 -n 1000 -i 100 -k
-runs job using 6 OpenMP CPU threads, for 1000 steps, printing out every 100 intervals
-
-./metrosim ./indole4000.config -p --name indole4000 -n 1000 -i 100 -k
-runs job on best available GPU, for 1000 steps, printing out every 100 intervals
+bin/metrosim [configuration file] [options]
 ```
-Where `[configuration file]` is a .config file containing configuration information, and `[options]` are command-line options. An example demo.config can be found in the resources folder. See below for specific .config file documentation and all command-line options available.
+where `[configuration file]` is a .config file containing configuration
+information and `[options]` are command-line options. An example demo.config
+can be found in the resources folder. See below for specific .config file
+documentation and all command-line options available.
 
-###To Run a Simulation on the Alabama Supercomputer Center:
+*Example 1:*
+```
+bin/metrosim resources/exampleFiles/indole4000.config -k
+```
+runs a simulation on the GPU if possible and on the CPU otherwise.  The ```-k``` option enables
+verbose output: status information will be printed every 1000 time steps.
+
+*Example 2:*
+```
+bin/metrosim resources/exampleFiles/indole4000.config -p --name indole4000 -n 5000 -i 1000 -k
+```
+runs a simulation on the GPU (```-p```), for 5000 steps, printing status information every 1000 intervals.
+
+*Example 3:*
+```
+bin/metrosim resources/exampleFiles/indole4000.config -s --name indole4000 -n 1000 -i 100 -k
+```
+runs a simulation on the CPU (```-s```), for 1000 steps, printing status information every 100 steps.
+
+###To Run a Simulation on the Alabama Supercomputer Center's DMC:
 ```
 cd /path/to/MCGPU/
 run_gpu demo_script.txt
@@ -98,19 +96,58 @@ cd bin/
 
 For more information, see the Alabama Supercomputer Center manual.
 
+##Visualizing PDB Files
+
+At the end of the simulation, MCGPU produces a PDB file, which can be loaded
+into a visualization program to view the box.  Recommended PDB viewers
+include:
+
+* [Jmol](http://jmol.sourceforge.net/)
+
+* [Chimera](https://www.cgl.ucsf.edu/chimera/)
+
+* [RasMol](http://www.openrasmol.org/)
+
+##Running Automated Tests
+```
+cd /path/to/MCGPU/
+make          # Build the metrosim binary first (required by metrotest)
+make tests    # Then build the metrotest binary
+cd bin/
+./metrotest   # Will take several minutes
+```
+
+##Profiling
+### For CPU profiling:
+For CPU profiling, build metrosim with profiling enabled, run it (which will
+produce a file called gmon.out), and then use gprof to view the resulting
+profile data.
+```
+make BUILD=profile
+bin/metrosim -s resources/exampleFiles/indole4000.config   # or another config file
+gprof bin/metrosim
+```
+
+### For GPU profiling:
+For GPU profiling, build metrosim in release mode, and run it using nvprof.
+```
+make
+nvprof --print-gpu-summary bin/metrosim -s resources/exampleFiles/indole4000.config   # or another config file
+```
+Alternatively, ```nvprof --print-gpu-trace``` will print information about every
+kernel launch (so only run this with a very few time steps).
+
+The NVIDIA Visual Profiler, nvvp, is highly recommended and provides much more
+detailed information that the nvprof commands above.
 
 ##Running With Multiple Solvents
 MCGPU currently supports the simulaton of two solvents within one z-matrix file where separate solvents are separated by TERZ.
 
 When using multiple solvents, the primary index array (Configuration File line 30), must contan at least one primary index array for each molecule, with the arrays enclosed in brackets and comma separated. For example [2],[1,3] represents the primary index structure for two molecules where the first molecule (defined above TERZ) has the primary index of '2' and the second molecule (defined below TERZ) has the primary indexes of '1' and '3'.
 
-
 ##Available Command-line Options
  * `--serial (-s)`: Runs simulation on CPU (default)
  * `--parallel (-p)`: Runs simulation on GPU (requries CUDA)
- * `--list-devices (-Q)`: Lists available CUDA-capable devices (requires CUDA)
- * `--device <index> (-d)`: Specifies what device to use when running a simulation. Index refers to one given in --list-devices. (requires CUDA)
- * `--threads <count> (-t)`: Specifies number of threads to use when running on a multiprocessor CPU (--serial only)
  * `--name <title>`: Specifies the name of the simulation that will be run.
  * `--steps <count> (-n)`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
  * `--verbose (-k)`: Enables real time energy printouts
