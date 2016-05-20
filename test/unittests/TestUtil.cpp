@@ -26,9 +26,9 @@ void createConfigFile(std::string MCGPU, std::string fileName, std::string prima
 		<< MCGPU << settings.z_matrix_file << std::endl
 		<< "#path to state input\n"
 		<< MCGPU << settings.working_path << std::endl
-        << "#path to state output\n"
+        << "#path to state output directory\n"
         << MCGPU << settings.working_path << std::endl
-        << "#pdb output path\n"
+        << "#path to pdb output directory\n"
         << MCGPU << settings.working_path << std::endl
         << "#cutoff distance in angstroms\n"
         << settings.cutoffDistance << std::endl

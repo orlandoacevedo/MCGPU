@@ -119,6 +119,10 @@ class SBScanner {
 class ConfigScanner
 {
     private:
+		/**
+		 * The name of the simulation being run.
+		 */
+		string simName;
         /**
           The environment used in the simulation.
         */
@@ -214,6 +218,12 @@ class ConfigScanner
           @return - returns the path to the pdb output file(s) for the simulation.
         */
         string getPdbOutputPath();
+		
+		/**
+		 * @return - returns the simulation name
+		 */
+		string getSimulationName();
+
         /**
           @return getSteps - returns the nonbonded cutoff in the simulation.
         */

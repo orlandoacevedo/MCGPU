@@ -186,6 +186,10 @@ bool ConfigScanner::readInConfig(string configpath) {
 						return false;
 					}
           break;
+		case 32: // Simulation Name
+		  if (line.length() > 0) {
+		  	simName = line;
+		  }
       }
 
 			currentLine++;
@@ -269,4 +273,8 @@ string ConfigScanner::getStateOutputPath() {
 
 string ConfigScanner::getPdbOutputPath() {
   return pdbOutputPath;
+}
+
+string ConfigScanner::getSimulationName() {
+  return simName;
 }
