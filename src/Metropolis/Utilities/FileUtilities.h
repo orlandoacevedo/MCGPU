@@ -621,7 +621,7 @@ class StateScanner
 * @returns: returns TRUE if completed successfully, or FALSE if there was a show-stopping error
 *		for which you should do halt the simulation
 */
-bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps);
+bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep, long* steps);
 
 
 /*************************

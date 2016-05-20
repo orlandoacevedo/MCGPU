@@ -97,6 +97,12 @@ struct SimulationArgs
 	///    at the very end of the simulation (which is the default
 	///    behavior with no interval specified).
 	int stateInterval;
+
+	/// Filepath to output PDB data
+	std::string pdbOutputPath;
+
+	/// Filepath to output simulation state data
+	std::string stateOutputPath;
 };
 
 #endif

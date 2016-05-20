@@ -30,7 +30,7 @@ namespace SerialCalcs {
 	 *   		but it was placed here due to time constraints.
 	 *   		TODO for future group.
    */
-	Box* createBox(std::string inputPath, InputFileType inputType, long* startStep, long* steps);
+	Box* createBox(SimulationArgs& simArgs, long* startStep, long* steps);
 
 	/**
 	 * Calculates the long-range correction energy value for molecules outside the cutoff.

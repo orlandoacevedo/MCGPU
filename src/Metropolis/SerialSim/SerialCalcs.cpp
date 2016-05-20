@@ -17,13 +17,15 @@
 
 using namespace std;
 
-Box* SerialCalcs::createBox(std::string inputPath, InputFileType inputType, long* startStep, long* steps) {
+Box* SerialCalcs::createBox(SimulationArgs& simArgs, long* startStep, long* steps) {
 	SerialBox* box = new SerialBox();
-	if (!loadBoxData(inputPath, inputType, box, startStep, steps)) {
-		if (inputType != InputFile::Unknown) {
-			std::cerr << "Error: Could not build from file: " << inputPath << std::endl;
+	if (!loadBoxData(simArgs, box, startStep, steps)) {
+		if (simArgs.fileType != InputFile::Unknown) {
+			std::cerr << "Error: Could not build from file: " << simArgs.filePath
+								<< std::endl;
 		} else {
-			std::cerr << "Error: Can not build environment with unknown file: " << inputPath << std::endl;
+			std::cerr << "Error: Can not build environment with unknown file: " 
+								<< simArgs.filePath << std::endl;
 		}
 		return NULL;
 	}

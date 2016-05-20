@@ -15,7 +15,7 @@ using std::ifstream;
 
 #define DEFAULT_STEP_COUNT 100
 
-bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* startStep, long* steps) {
+bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep, long* steps) {
 
 	if (box == NULL) {			// If box is null, print an error and return.
 		std::cerr << "Error: loadBoxData(): Box is NULL" << std::endl;
@@ -27,14 +27,16 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 
 	SBScanner sb_scanner;
 
-  if (inputType == InputFile::Configuration) {	// Build from config/z-matrix.
+  if (simArgs.fileType == InputFile::Configuration) {	// Build from config/z-matrix.
 
 	  // Reading in config information from config file.
 		ConfigScanner config_scanner = ConfigScanner();
-    if (!config_scanner.readInConfig(inputPath)) {
+    if (!config_scanner.readInConfig(simArgs.filePath)) {
   		std::cerr << "Error: loadBoxData(): Could not read config file" << std::endl;
       return false;
     }
+		simArgs.pdbOutputPath = config_scanner.getPdbOutputPath();
+		simArgs.stateOutputPath = config_scanner.getStateOutputPath();
 
 		// Getting bond and angle data from oplsaa.sb file.
 	  sb_scanner = SBScanner();
@@ -90,10 +92,10 @@ bool loadBoxData(string inputPath, InputFileType inputType, Box* box, long* star
 
   	return true;
 
-  } else if (inputType == InputFile::State) {		// Build from state file.
+  } else if (simArgs.fileType == InputFile::State) {		// Build from state file.
 
 		// Instantiate a state scanner and read in the environment.
-		StateScanner state_scanner = StateScanner(inputPath);
+		StateScanner state_scanner = StateScanner(simArgs.filePath);
     enviro = state_scanner.readInEnvironment();
 
 		// Validate the environment

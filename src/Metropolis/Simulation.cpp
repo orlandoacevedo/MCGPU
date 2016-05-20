@@ -44,7 +44,7 @@ Simulation::Simulation(SimulationArgs simArgs) {
 	args = simArgs;
 	stepStart = 0;
 
-	box = SerialCalcs::createBox(args.filePath, args.fileType, &stepStart, &simSteps);
+	box = SerialCalcs::createBox(args, &stepStart, &simSteps);
 	if (box == NULL) {
 		std::cerr << "Error: Unable to initialize simulation Box" << std::endl;
 		exit(EXIT_FAILURE);
@@ -328,7 +328,11 @@ void Simulation::run() {
 
 void Simulation::saveState(const std::string& baseFileName, int simStep, const SimBox* sb) {
 	StateScanner statescan = StateScanner("");
-	std::string stateOutputPath = baseFileName;
+	std::string stateOutputPath;
+	if (!args.stateOutputPath.empty()) {
+		stateOutputPath = args.stateOutputPath + "/";
+	}
+	stateOutputPath.append(baseFileName);
 	std::string stepCount;
 
 	if (!toString<int>(simStep, stepCount))
@@ -343,13 +347,18 @@ void Simulation::saveState(const std::string& baseFileName, int simStep, const S
 	statescan.outputState(box->getEnvironment(), box->getMolecules(), box->getMoleculeCount(), simStep, stateOutputPath, sb->atomCoordinates);
 }
 
-int Simulation::writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection, SimBox* sb) {
+int Simulation::writePDB(Environment sourceEnvironment, Molecule* sourceMoleculeCollection, SimBox* sb) {
   std::string pdbName;
 
-  if (args.simulationName.empty())
-    pdbName = RESULTS_FILE_DEFAULT;
-  else
-    pdbName = args.simulationName;
+	if (!args.pdbOutputPath.empty()) {
+		pdbName = args.pdbOutputPath;
+		pdbName.append("/");
+	}
+	if (!args.simulationName.empty()) {
+    pdbName.append(args.simulationName);
+	} else {
+    pdbName.append(RESULTS_FILE_DEFAULT);
+	}
 
   pdbName.append(".pdb");
   std::ofstream pdbFile;

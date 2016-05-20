@@ -6,6 +6,8 @@ gmon.out
 *.log
 *.state
 *.results
+*.config
+*.pdb
 
 OutputLog
 
