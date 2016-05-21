@@ -184,9 +184,9 @@ Line numbers are important
 [17]    #line 17 is a comment and is ignored.
 [18]    <path to the state input file; overrides z-matrix setting if present>
 [19]    #line 19 is a comment and is ignored.
-[20]    <path to the state output file>
+[20]    <path to the directory for state output (empty is current directory)>
 [21]    #line 21 is a comment and is ignored.
-[22]    <path to the pdb output file>
+[22]    <path to the directory for pdb output (empty is current directory>
 [23]    #line 23 is a comment and is ignored.
 [24]    <nonbonded cutoff distance in angstroms>
 [25]    #line 25 is a comment and is ignored.
@@ -195,6 +195,8 @@ Line numbers are important
 [28]    <random number seed input as integer value>
 [29]    #line 29 is a comment and is ignored.
 [30]    <primary atom index array to be used during cutoff as integer indexes of z-matrix atom in molecule, comma separated, starting from zero>
+[31]    #line 31 is a comment and is ignored.
+[32]    <simulation name>
 ```
 
 **Contributing Authors**: Guillermo Aguirre, Scott Aldige, James Bass, Jared Brown, Matt Campbell, William Champion, Nathan Coleman, Yitong Dai, Seth Denney, Matthew Hardwick, Andrew Lewis, Alexander Luchs, Jennifer Lynch, Tavis Maclellan, Joshua Mosby, Jeffrey Overbey, Mitchell Price, Robert Sanek, Jonathan Sligh, Riley Spahn, Kalan Stowe, Ashley Tolbert, Albert Wallace, Jay Whaley, Seth Wooten, James Young, Francis Zayek, Xiao (David) Zhang, and Orlando Acevedo*

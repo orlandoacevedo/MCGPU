@@ -98,10 +98,10 @@ struct SimulationArgs
 	///    behavior with no interval specified).
 	int stateInterval;
 
-	/// Filepath to output PDB data
+	/// Path to directory for PDB output data
 	std::string pdbOutputPath;
 
-	/// Filepath to output simulation state data
+	/// Path to directory for simulation state data
 	std::string stateOutputPath;
 };
 

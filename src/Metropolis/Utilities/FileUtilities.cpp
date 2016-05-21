@@ -35,8 +35,12 @@ bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep, long* steps
   		std::cerr << "Error: loadBoxData(): Could not read config file" << std::endl;
       return false;
     }
-		simArgs.pdbOutputPath = config_scanner.getPdbOutputPath();
-		simArgs.stateOutputPath = config_scanner.getStateOutputPath();
+	simArgs.pdbOutputPath = config_scanner.getPdbOutputPath();
+	simArgs.stateOutputPath = config_scanner.getStateOutputPath();
+	if (!config_scanner.getSimulationName().empty() &&
+			simArgs.simulationName.empty()) {
+		simArgs.simulationName = config_scanner.getSimulationName();
+	}
 
 		// Getting bond and angle data from oplsaa.sb file.
 	  sb_scanner = SBScanner();
