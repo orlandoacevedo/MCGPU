@@ -2,14 +2,20 @@
 #include "Metropolis/Utilities/FileUtilities.h"
 #include "gtest/gtest.h"
 
-// Descr: evident
-// Implementation details: See gtest/samples for GTest syntax and usage
+/**
+ * Test the configuration scanner
+ *
+ * The ConfigScanner reads .config files and sets up the simulation based on
+ * those values. Test that those values are properly read and processed.
+ */
 TEST(IOTests, ConfigScan)
 {
-    char *path = (char*) malloc(4096);
+	const double ERROR_MARGIN = 0.0001;
+
+	// Find the MCGPU project path
     size_t size = 4096;
+    char *path = (char*) malloc(size);
     path = getcwd(path, size);
-    //std::string directory = get_current_dir_name();
     std::string directory(path);
     std::string mc ("MCGPU");
     std::size_t found = directory.find(mc);
@@ -21,31 +27,25 @@ TEST(IOTests, ConfigScan)
 
     string configPath = MCGPU;
     configPath.append("stuff/configurationTest.txt");
-    string oplsPath = "path/to/opls/file";
+    string oplsPath = "path/to/opla.par/file";
     string zMatrixPath = "path/to/zMatrix/file";
     string stateInputPath = "path/to/state/input";
     string stateOutputPath = "path/to/State/output";
     string pdbOutputPath = "path/to/pdb/output";
+	string simName = "MyTestSimulation";
     ConfigScanner cs;
     cs.readInConfig(configPath);
 
-	cout << cs.getConfigPath() << endl;
-	cout << cs.getOplsusaparPath() << endl;
-    //test configuration path
-	EXPECT_EQ(0, configPath.compare(cs.getConfigPath())  );
-    //test opls path
-	EXPECT_EQ(0, oplsPath.compare(cs.getOplsusaparPath())  );
-    //test zmatrix path
-	EXPECT_EQ(0, zMatrixPath.compare(cs.getZmatrixPath())  );
-    //test state input path
-	EXPECT_EQ(0, stateInputPath.compare(cs.getStatePath())  );
-    //test state ouput path
-	EXPECT_EQ(0, stateOutputPath.compare(cs.getStateOutputPath())  );
-    //test pdb output
-	EXPECT_EQ(0, pdbOutputPath.compare(cs.getPdbOutputPath())  );
+    // Test various path elements
+	EXPECT_EQ(configPath, cs.getConfigPath());
+	EXPECT_EQ(oplsPath, cs.getOplsusaparPath());
+	EXPECT_EQ(zMatrixPath, cs.getZmatrixPath());
+	EXPECT_EQ(stateInputPath, cs.getStatePath());
+	EXPECT_EQ(stateOutputPath, cs.getStateOutputPath());
+	EXPECT_EQ(pdbOutputPath, cs.getPdbOutputPath());
+	EXPECT_EQ(simName, cs.getSimulationName());
 
-    //test box dimensions
-    Environment* enviro = cs.getEnviro();
+    // Test box dimensions
     double x = 10.342;
     double y = 1234.45;
     double z = 100.3;
@@ -54,17 +54,12 @@ TEST(IOTests, ConfigScan)
     int numberOfSteps = 10000;
     int numberOfMolecules = 500;
 
-
-    //EXPECT_EQ should work, and tester even shows values are the same but fails anyway
-    // Best luck, m8.
-	EXPECT_NEAR(x, enviro->x, .0001 );
-	EXPECT_NEAR(y, enviro->y, .0001);
-	EXPECT_NEAR(z, enviro->z, .0001 );
-
-	EXPECT_NEAR(maxTranslation, enviro->maxTranslation, .0001 );
-	EXPECT_NEAR(numberOfMolecules, enviro->numOfMolecules, .0001 );
-	EXPECT_NEAR(temperature, enviro->temp, .0001 );
-	EXPECT_NEAR(numberOfSteps, cs.getSteps(), .0001 );
-
-
+    Environment* enviro = cs.getEnviro();
+	EXPECT_NEAR(x, enviro->x, ERROR_MARGIN);
+	EXPECT_NEAR(y, enviro->y, ERROR_MARGIN);
+	EXPECT_NEAR(z, enviro->z, ERROR_MARGIN);
+	EXPECT_NEAR(maxTranslation, enviro->maxTranslation, ERROR_MARGIN);
+	EXPECT_NEAR(numberOfMolecules, enviro->numOfMolecules, ERROR_MARGIN);
+	EXPECT_NEAR(temperature, enviro->temp, ERROR_MARGIN);
+	EXPECT_NEAR(numberOfSteps, cs.getSteps(), ERROR_MARGIN);
 }
