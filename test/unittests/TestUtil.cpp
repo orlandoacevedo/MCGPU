@@ -1,45 +1,47 @@
 #include "TestUtil.h"
 
-void createConfigFile(std::string MCGPU, std::string fileName, std::string primaryAtomIndexString, ConfigFileData settings) {
+// Generates a config file with the given attributes
+void createConfigFile(std::string MCGPU, std::string fileName,
+		std::string primaryAtomIndexString,
+		ConfigFileData settings) {
 	std::ofstream configFile;
-	//std::cout << "CREATING CONFIG FILE: " << MCGPU << settings.working_path << "/" << fileName;
-	std::string configFilePath (std::string (MCGPU + settings.working_path + "/" + fileName));
+	std::string configFilePath (std::string(MCGPU + settings.working_path + "/" + fileName));
 
 	configFile.open(configFilePath.c_str());
 	std::stringstream cfg;
 	cfg << ""
-		<< "#size of periodic box (x, y, z in angstroms)" << std::endl
-		<< settings.sizeX << std::endl
-		<< settings.sizeY << std::endl
-		<< settings.sizeZ << std::endl
-		<< "#temperature in Kelvin\n"
-		<< settings.tempKelvin << std::endl
-		<< "#max translation\n"
-		<< settings.maxTranslation << std::endl
-		<< "#number of steps\n"
-		<< settings.numSteps << std::endl
-		<< "#number of molecules\n"
-		<< settings.numMolecules << std::endl
-		<< "#path to opla.par file\n"
-		<< MCGPU << settings.oplsaa_par_path << std::endl
-		<< "#path to z matrix file\n"
-		<< MCGPU << settings.z_matrix_file << std::endl
-		<< "#path to state input\n"
-		<< MCGPU << settings.working_path << std::endl
-        << "#path to state output directory\n"
-        << MCGPU << settings.working_path << std::endl
-        << "#path to pdb output directory\n"
-        << MCGPU << settings.working_path << std::endl
-        << "#cutoff distance in angstroms\n"
-        << settings.cutoffDistance << std::endl
-        << "#max rotation\n"
-        << settings.maxRotation << std::endl
-        << "#Random Seed Input\n"
-        << settings.randomSeed << std::endl
-        << "#Primary Atom Index\n"
-        << primaryAtomIndexString;
-        configFile << cfg.str();
-        configFile.close();
+		<< "# Size of periodic box (x, y, z in angstroms)" << std::endl
+		<< "x=" << settings.sizeX << std::endl
+		<< "y=" << settings.sizeY << std::endl
+		<< "z=" << settings.sizeZ << std::endl
+		<< "# Temperature in Kelvin\n"
+		<< "temp=" << settings.tempKelvin << std::endl
+		<< "# Max translation\n"
+		<< "max-translation=" << settings.maxTranslation << std::endl
+		<< "# Number of steps\n"
+		<< "steps=" << settings.numSteps << std::endl
+		<< "# Number of molecules\n"
+		<< "molecules=" << settings.numMolecules << std::endl
+		<< "# Path to opla.par file\n"
+		<< "opla.par=" << MCGPU << settings.oplsaa_par_path << std::endl
+		<< "# Path to z matrix file\n"
+		<< "z-matrix=" << MCGPU << settings.z_matrix_file << std::endl
+		<< "# Path to state input\n"
+		<< "state-input=" << MCGPU << settings.working_path << std::endl
+		<< "# Path to state output directory\n"
+		<< "state-output=" << MCGPU << settings.working_path << std::endl
+		<< "# Path to pdb output directory\n"
+		<< "pdb-output=" << MCGPU << settings.working_path << std::endl
+		<< "# Cutoff distance in angstroms\n"
+		<< "cutoff=" << settings.cutoffDistance << std::endl
+		<< "# Max rotation\n"
+		<< "max-rotation=" << settings.maxRotation << std::endl
+		<< "# Random Seed Input\n"
+		<< "random-seed=" << settings.randomSeed << std::endl
+		<< "# Primary Atom Index\n"
+		<< "primary-atom=" << primaryAtomIndexString;
+		configFile << cfg.str();
+		configFile.close();
 }
 
 std::string getMCGPU_path () {

@@ -110,12 +110,12 @@ bool ConfigScanner::readInConfig(string configpath) {
 				return false;
 			}
 		} else if (key == "opla.par") {
-				if (value.length() > 0) {
-					oplsuaparPath = value;
-				} else {
-					throwScanError("Configuration file not well formed. Missing oplsuapar path value.");
-					return false;
-				}
+			if (value.length() > 0) {
+				oplsuaparPath = value;
+			} else {
+				throwScanError("Configuration file not well formed. Missing oplsuapar path value.");
+				return false;
+			}
 		} else if (key == "z-matrix") {
 			if (value.length() > 0) {
 				zmatrixPath = value;
