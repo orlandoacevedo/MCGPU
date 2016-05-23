@@ -161,43 +161,49 @@ To view documentation for all command-line flags available, use the --help flag:
 ```
 
 ##Configuration File
-Configuration files are used to configure a simulation. Command-line options override values given in this file.
-Line numbers are important
+Configuration files are used to configure a simulation. They are formatted
+using the [INI](https://en.wikipedia.org/wiki/INI_file) convnetion.
+Command-line options override values given in this file. An example
+configuration file is shown below.
 
 ```
-[1]     #line 1 is a comment and will be ignored
-[2]     <x dimension>
-[3]     <y dimension>
-[4]     <z dimension>
-[5]     #line 5 is a comment and will be ignored
-[6]     <temperature in kelvin>
-[7]     #line seven is a comment and will be ignored
-[8]     <max translation for a molecule in angstroms>
-[9]     #line 9 is a comment and is ignored
-[10]    <number of steps for which to run the simulation> 
-[11]    #line 11 is a comment and is ignored
-[12]    <number of molecules in the simulation>
-[13]    #line 13 is a comment and is ignored
-[14]    <path to the opls-aa.par file>
-[15]    #line 15 is a comment and is ignored
-[16]    <path to the z-matrix file to use>
-[17]    #line 17 is a comment and is ignored.
-[18]    <path to the state input file; overrides z-matrix setting if present>
-[19]    #line 19 is a comment and is ignored.
-[20]    <path to the directory for state output (empty is current directory)>
-[21]    #line 21 is a comment and is ignored.
-[22]    <path to the directory for pdb output (empty is current directory>
-[23]    #line 23 is a comment and is ignored.
-[24]    <nonbonded cutoff distance in angstroms>
-[25]    #line 25 is a comment and is ignored.
-[26]    <max rotation for a molecule in degrees>
-[27]    #line 27 is a comment and is ignored.
-[28]    <random number seed input as integer value>
-[29]    #line 29 is a comment and is ignored.
-[30]    <primary atom index array to be used during cutoff as integer indexes of z-matrix atom in molecule, comma separated, starting from zero>
-[31]    #line 31 is a comment and is ignored.
-[32]    <simulation name>
+# The dimensions of the periodic simulation box (in angrstroms)
+x=55
+y=55
+z=55
+# Temperature (in Kelvin)
+temp=298.15
+# Maximum tranlsation for a molecule during the simulation
+max-translation=0.15
+# Number of steps to run in the simulation
+steps=1000
+# Number of molecules
+molecules=5120
+# Path to opla.par file
+opla.par=/absolute/path/to/oplsaa.par
+# Path to z-matrix file
+z-matrix=/aboslute/path/to/matrix.z
+# Path to input state *directory*
+state-input=/absolute/path/to/input/dir
+# Path to state output *directory*
+state-output=/absolute/path/to/output/dir
+# Path to pdb output *directory*
+pdb-output=/absolute/path/to/output/dir
+# Cutoff distance (in angstroms)
+cutoff=25
+# Maximum rotation of any particle
+max-rotation=15
+# Seed for random generator
+random-seed=12345
+# Primary atom index (integer indexes of z-matrix atom in molecule, comma
+# separated, starting from zero)
+primary-atom=1
+# Name for the simulation
+sim-name=MyTestSimulation
 ```
+
+The order of the attributes is not significant. Comments can begin with `#` or
+`;`. Empty lines will be ignored.
 
 **Contributing Authors**: Guillermo Aguirre, Scott Aldige, James Bass, Jared Brown, Matt Campbell, William Champion, Nathan Coleman, Yitong Dai, Seth Denney, Matthew Hardwick, Andrew Lewis, Alexander Luchs, Jennifer Lynch, Tavis Maclellan, Joshua Mosby, Jeffrey Overbey, Mitchell Price, Robert Sanek, Jonathan Sligh, Riley Spahn, Kalan Stowe, Ashley Tolbert, Albert Wallace, Jay Whaley, Seth Wooten, James Young, Francis Zayek, Xiao (David) Zhang, and Orlando Acevedo*
 
