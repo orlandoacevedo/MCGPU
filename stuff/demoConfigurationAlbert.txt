@@ -1,30 +1,32 @@
 #size of periodic box (x, y, z in angstroms)
-28.0
-28.0
-28.0
-#temperature in Kelvin
-298.15
-#max translation
-.15
-#number of steps
-1000
-#number of molecues
-108
-#path to opls.par file
-../../Utilities/bossFiles/oplsaa.par
-#path to z matrix file
-../../Utilities/bossFiles/mesh.z
-#path to state input
+x=28.0
+y=28.0
+z=28.0
+# temperature in Kelvin
+temp=298.15
+# max translation
+max-translation=.15
+# number of steps
+steps=1000
+# number of molecues
+molecules=108
+# Path to opls.par file
+opla.par=../../Utilities/bossFiles/oplsaa.par
+# Path to z matrix file
+z-matrix=../../Utilities/bossFiles/mesh.z
+# Path to state input
 
-#path to state output
-stateOutput
-#pdb output path
-pdbOutput.pdb
-#cutoff distance in angstroms
-9.0
-#max rotation
-15.0
-#Random Seed Input
-12345
-#Primary Atom Index
-5
+# Path to state output
+
+# Pdb output path
+
+# Cutoff distance in angstroms
+cutoff=9.0
+# Max rotation
+max-rotation=15.0
+# Random Seed Input
+random-seed=12345
+# Primary Atom Index
+primary-atom=5
+# Simulation name
+sim-name=AlbertDemoSimulation
