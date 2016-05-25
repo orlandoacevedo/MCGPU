@@ -72,11 +72,10 @@ BuildDir := $(ObjDir)
 # any new modules to this list, or else they will not be compiled.
 # NOTE: If a file is no longer being used make sure to remove it from
 # the module directory, else it will be included in the build.
-Modules := Applications 				\
-		   Metropolis                   \
-		   Metropolis/Utilities 		\
-		   Metropolis/SerialSim		    \
-		   Metropolis/ParallelSim
+Modules := Applications \
+		Metropolis \
+		Metropolis/Utilities \
+		Metropolis/SerialSim \
 
 ########################
 # Program Output Names #
@@ -106,10 +105,18 @@ IncPaths := . $(SourceDir) $(TestDir)
 
 # Compiler specific flags for the C++ compiler when generating .o files
 # and when generating .d files for dependency information
-CompileFlags := -c -acc -ta=nvidia -Minfo=accel
+ifeq ($(CC),pgc++)
+	CompileFlags := -c -acc -ta=nvidia -Minfo=accel
+else
+	CompileFlags := -c
+endif
 
 # Flags for linking metrosim with the PGI compiler.
-LinkFlags := -lgomp -acc -ta=nvidia -Minfo=accel
+ifeq ($(CC),pgc++)
+	LinkFlags := -lgomp -acc -ta=nvidia -Minfo=accel
+else
+	LinkFlags := -lgomp
+endif
 
 # The debug compiler flags add debugging symbols to the executable
 # This originally contained -Minfo=ccff
@@ -121,7 +128,10 @@ ProfileFlags := -g -O3 -mp -pg
 
 # The release build compiler flags that add optimization flags and remove
 # all symbol and relocation table information from the executable.
-ReleaseFlags := -O3 -s -mp
+ReleaseFlags := -O3 -s
+ifeq ($(CC),pgc++)
+	ReleaseFlags += -mp
+endif
 
 #############################
 # Automated Testing Details #
@@ -259,7 +269,7 @@ create_dep_unittest = $(CC) $(GTestFlags) $(Includes) $(Defines) -MM $<
 
 all : $(AppName)
 
-tests : $(UnitTestName)
+tests : $(AppName) $(UnitTestName)
 
 $(AppName) : $(Objects) $(ProgramMain) | dirtree
 	$(CC) $^ $(Includes) $(Defines) -o $(AppDir)/$@ $(LinkFlags)

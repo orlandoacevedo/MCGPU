@@ -1,10 +1,13 @@
-#include "GPUCopy.h"
+#ifdef _OPENACC
 #include <openacc.h>
+#endif
+
+#include "GPUCopy.h"
 
 bool parallel = false;
 
-Real**  h_atomData = NULL;
-Real**  d_atomData = NULL;
+Real** h_atomData = NULL;
+Real** d_atomData = NULL;
 
 Real** h_rollBackCoordinates = NULL;
 Real** d_rollBackCoordinates = NULL;
@@ -18,72 +21,53 @@ int* d_primaryIndexes = NULL;
 int** h_moleculeData = NULL;
 int** d_moleculeData = NULL;
 
-Real*   h_size = NULL;
-Real*   d_size = NULL;
+Real* h_size = NULL;
+Real* d_size = NULL;
 
-Real** GPUCopy::atomDataPtr() {
-  if (parallel) {
-    return d_atomData;
-  } else {
-    return h_atomData;
-  }
-}
+void GPUCopy::setParallel(bool in) { parallel = in; }
 
-int GPUCopy::onGpu() {
-  return parallel;
-}
+int GPUCopy::onGpu() { return parallel; }
+
+Real** GPUCopy::atomDataPtr() { return parallel ? d_atomData : h_atomData; }
 
 Real** GPUCopy::rollBackCoordinatesPtr() {
-  if (parallel) {
-    return d_rollBackCoordinates;
-  } else {
-    return h_rollBackCoordinates;
-  }
+  return parallel ? d_rollBackCoordinates : h_rollBackCoordinates;
 }
 
 Real** GPUCopy::atomCoordinatesPtr() {
-  if (parallel) {
-    return d_atomCoordinates;
-  } else {
-    return h_atomCoordinates;
-  }
+  return parallel ? d_atomCoordinates : h_atomCoordinates;
 }
 
 int* GPUCopy::primaryIndexesPtr() {
-  if (parallel) {
-    return d_primaryIndexes;
-  } else {
-    return h_primaryIndexes;
-  }
+  return parallel ? d_primaryIndexes : h_primaryIndexes;
 }
 
 int** GPUCopy::moleculeDataPtr() {
-  if (parallel) {
-    return d_moleculeData;
-  } else {
-    return h_moleculeData;
-  }
+  return parallel ? d_moleculeData : h_moleculeData;
 }
 
-Real* GPUCopy::sizePtr() {
-  if (parallel) {
-    return d_size;
-  } else {
-    return h_size;
-  }
-}
+Real* GPUCopy::sizePtr() { return parallel ? d_size : h_size; }
 
-void GPUCopy::copyIn(SimBox * sb) {
+void GPUCopy::copyIn(SimBox *sb) {
+  h_moleculeData = sb->moleculeData;
+  h_atomData = sb->atomData;
+  h_atomCoordinates = sb->atomCoordinates;
+  h_rollBackCoordinates = sb->rollBackCoordinates;
+  h_size = sb-> size;
+  h_primaryIndexes = sb->primaryIndexes;
+  if (!parallel) { return; }
+
+#ifdef _OPENACC
   d_moleculeData = (int**)acc_malloc(MOL_DATA_SIZE * sizeof(int *));
   assert(d_moleculeData != NULL);
   for (int row = 0; row < MOL_DATA_SIZE; row++) {
     int *h_moleculeData_row = sb->moleculeData[row];
-    int *d_moleculeData_row = (int *)acc_copyin(h_moleculeData_row, sb->numMolecules * sizeof(int));
+    int *d_moleculeData_row = (int *)acc_copyin(h_moleculeData_row,
+                                                sb->numMolecules * sizeof(int));
     assert(d_moleculeData_row != NULL);
     #pragma acc parallel deviceptr(d_moleculeData)
     d_moleculeData[row] = d_moleculeData_row;
   }
-  h_moleculeData = sb->moleculeData;
 
   d_atomData = (Real**)acc_malloc(ATOM_DATA_SIZE * sizeof(Real *));
   assert(d_atomData != NULL);
@@ -94,7 +78,6 @@ void GPUCopy::copyIn(SimBox * sb) {
     #pragma acc parallel deviceptr(d_atomData)
     d_atomData[row] = d_atomData_row;
   }
-  h_atomData = sb->atomData;
 
   d_atomCoordinates = (Real**)acc_malloc(NUM_DIMENSIONS * sizeof(Real *));
   assert(d_atomCoordinates != NULL);
@@ -105,7 +88,6 @@ void GPUCopy::copyIn(SimBox * sb) {
     #pragma acc parallel deviceptr(d_atomCoordinates)
     d_atomCoordinates[row] = d_atomCoordinates_row;
   }
-  h_atomCoordinates = sb->atomCoordinates;
 
   d_rollBackCoordinates = (Real**)acc_malloc(NUM_DIMENSIONS * sizeof(Real *));
   assert(d_rollBackCoordinates != NULL);
@@ -116,16 +98,17 @@ void GPUCopy::copyIn(SimBox * sb) {
     #pragma acc parallel deviceptr(d_rollBackCoordinates)
     d_rollBackCoordinates[row] = d_rollBackCoordinates_row;
   }
-  h_rollBackCoordinates = sb->rollBackCoordinates;
 
   d_primaryIndexes = (int *)acc_copyin(sb->primaryIndexes, sb->numPIdxes * sizeof(int));
-  h_primaryIndexes = sb->primaryIndexes;
 
   d_size = (Real *)acc_copyin(sb->size, NUM_DIMENSIONS * sizeof(Real));
-  h_size = sb->size;
+#endif
 }
 
 void GPUCopy::copyOut(SimBox* sb) {
+  if (!parallel) return;
+
+#ifdef _OPENACC
   for (int row = 0; row < MOL_DATA_SIZE; row++) {
     int *h_moleculeData_row = h_moleculeData[row];
     acc_copyout(h_moleculeData_row, sb->numMolecules * sizeof(int));
@@ -148,8 +131,6 @@ void GPUCopy::copyOut(SimBox* sb) {
 
   acc_copyout(h_primaryIndexes, sb->numPIdxes);
   acc_copyout(h_size, NUM_DIMENSIONS);
+#endif
 }
 
-void GPUCopy::setParallel(bool in) {
-  parallel = in;
-}

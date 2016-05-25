@@ -1,6 +1,9 @@
+#ifdef _OPENACC
+#include <openacc.h>
+#endif
+
 #include "SimBox.h"
 #include "GPUCopy.h"
-#include <openacc.h>
 #include "SimCalcs.h"
 
 void SimBox::keepMoleculeInBox(int molIdx, Real** aCoords, int** molData, int* pIdxes, Real* bSize) {

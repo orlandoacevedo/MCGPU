@@ -15,7 +15,7 @@
 #include "Metropolis/SimulationArgs.h"
 
 #ifndef APP_NAME
-#define APP_NAME "metrosim"		 *< The executable name of the application.
+#define APP_NAME "metrosim"    *< The executable name of the application.
 #endif
 
 #define DEFAULT_STATUS_INTERVAL 1000
