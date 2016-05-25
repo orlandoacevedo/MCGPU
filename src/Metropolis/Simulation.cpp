@@ -30,7 +30,6 @@
 #include "SerialSim/SerialBox.h"
 #include "SerialSim/SerialCalcs.h"
 #include "SerialSim/NeighborList.h"
-//#include "ParallelSim/ParallelCalcs.h"
 #include "Utilities/FileUtilities.h"
 #include "SimBox.h"
 #include "SimBoxBuilder.h"
@@ -126,8 +125,8 @@ void Simulation::run() {
 
         bool parallel = args.simulationMode == SimulationMode::Parallel;
 	SimBox* sb = builder.build(box);
-	GPUCopy::copyIn(sb);
 	GPUCopy::setParallel(parallel);
+	GPUCopy::copyIn(sb);
 	SimCalcs::setSB(sb);
 	//Calculate original starting energy for the entire system
 	if (oldEnergy == 0) {

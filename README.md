@@ -22,6 +22,15 @@ make
 make BUILD=debug
 ```
 
+*Note*: MCGPU can also be compiled with GCC, though it doesn't support GPU
+offloading and is therefore substantially slower. To use GCC, compile with
+
+```
+make CC=g++
+```
+
+If you compile with GCC, you **cannot** run in parallel mode.
+
 ##Run
 ###To Run a Simulation on a Local Machine:
 ```
