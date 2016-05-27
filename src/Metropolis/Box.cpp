@@ -4,13 +4,6 @@
  * Superclass to SerialBox. This class serves as a temporary intermediate class
  * between constants files, z-matrices, config files, and state files, and the
  * SimBox class, which now performs energy calculations.
- *
- *	Author: Nathan Coleman
- *	Created: February 21, 2014
- *
- *	-> February 26, by Albert Wallace
- *	-> March 28, by Joshua Mosby
- *	-> April 21, by Nathan Coleman
  */
 
 #include "Box.h"

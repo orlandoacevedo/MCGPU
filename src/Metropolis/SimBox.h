@@ -359,7 +359,7 @@ public:
    * @param subCharge Initial Coulomb energy. Final Coulomb energy passed out by reference.
    * @return The total energy of the box.
    */
-  Real calcSystemEnergy (Real &subLJ, Real &subCharge);
+  Real calcSystemEnergy(Real &subLJ, Real &subCharge);
 
   /**
    * calcMolecularEnergyContribution Determines the energy contribution of a particular molecule.

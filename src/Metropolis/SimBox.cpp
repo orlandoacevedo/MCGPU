@@ -28,75 +28,10 @@ void SimBox::keepMoleculeInBox(int molIdx, Real** aCoords, int** molData, int* p
 
 void SimBox::changeMolecule(int molIdx) {
   SimCalcs::changeMolecule(molIdx);
-  /*
-  Real maxT = maxTranslate;
-  Real maxR = maxRotate;
-
-  int molStart = moleculeData[MOL_START][molIdx];
-  int molLen = moleculeData[MOL_LEN][molIdx];
-
-  int vertexIdx = (int) randomReal(0, molLen);
-
-  const Real deltaX = randomReal(-maxT, maxT);
-  const Real deltaY = randomReal(-maxT, maxT);
-  const Real deltaZ = randomReal(-maxT, maxT);
-
-  const Real rotX = randomReal(-maxR, maxR);
-  const Real rotY = randomReal(-maxR, maxR);
-  const Real rotZ = randomReal(-maxR, maxR);
-
-  Real ** rBCoords = GPUCopy::rollBackCoordinatesPtr();
-  Real ** aCoords = GPUCopy::atomCoordinatesPtr();
-  Real * bSize = GPUCopy::sizePtr();
-  int* pIdxes = GPUCopy::primaryIndexesPtr();
-  int** molData = GPUCopy::moleculeDataPtr();
-
-  // do the move here
-  #pragma acc parallel loop deviceptr(rBCoords, aCoords)
-  for (int i = 0; i < molLen; i++) {
-    #pragma acc loop independent
-    for (int j = 0; j < NUM_DIMENSIONS; j++) {
-      rBCoords[j][i] = aCoords[j][molStart + i];
-    }
-    if (i == vertexIdx)
-      continue;
-    rotateAtom(molStart + i, molStart + vertexIdx, rotX, rotY, rotZ, aCoords);
-    translateAtom(molStart + i, deltaX, deltaY, deltaZ, aCoords);
-  }
-
-  #pragma acc parallel loop deviceptr(aCoords, molData, pIdxes, bSize)
-  for (int i = 0; i < 1; i++) {
-    aCoords[0][molStart + vertexIdx] += deltaX;
-    aCoords[1][molStart + vertexIdx] += deltaY;
-    aCoords[2][molStart + vertexIdx] += deltaZ;
-    keepMoleculeInBox(molIdx, aCoords, molData, pIdxes, bSize);
-  }
-
-  if (useNLC) {
-    updateNLC(molIdx);
-  } */
 }
 
 void SimBox::rollback(int molIdx) {
   SimCalcs::rollback(molIdx);
-  /*
-  int molStart = moleculeData[MOL_START][molIdx];
-  int molLen = moleculeData[MOL_LEN][molIdx];
-
-  Real** aCoords = GPUCopy::atomCoordinatesPtr();
-  Real** rBCoords = GPUCopy::rollBackCoordinatesPtr();
-
-  #pragma acc parallel loop deviceptr(aCoords, rBCoords)
-  for (int i = 0; i < NUM_DIMENSIONS; i++) {
-    #pragma acc loop independent
-    for (int j = 0; j < molLen; j++) {
-      aCoords[i][molStart + j] = rBCoords[i][j];
-    }
-  }
-
-  if (useNLC) {
-    updateNLC(molIdx);
-  } */
 }
 
 void SimBox::translateAtom(int aIdx, Real dX, Real dY, Real dZ, Real** aCoords) {
@@ -118,7 +53,7 @@ void SimBox::rotateAtom(int aIdx, int pivotIdx, Real rotX, Real rotY, Real rotZ,
 }
 
 void SimBox::rotateX(int aIdx, Real angleDeg, Real** aCoords) {
-//Real angleRad = degreesToRadians(angleDeg);
+  // Real angleRad = degreesToRadians(angleDeg);
   Real angleRad = angleDeg * 3.14159265358979 / 180.0;
   Real oldY = aCoords[Y_COORD][aIdx];
   Real oldZ = aCoords[Z_COORD][aIdx];
@@ -127,7 +62,7 @@ void SimBox::rotateX(int aIdx, Real angleDeg, Real** aCoords) {
 }
 
 void SimBox::rotateY(int aIdx, Real angleDeg, Real** aCoords) {
-  //Real angleRad = degreesToRadians(angleDeg);
+  // Real angleRad = degreesToRadians(angleDeg);
   Real angleRad = angleDeg * 3.14159265358979 / 180.0;
   Real oldZ = aCoords[Z_COORD][aIdx];
   Real oldX = aCoords[X_COORD][aIdx];
@@ -136,16 +71,12 @@ void SimBox::rotateY(int aIdx, Real angleDeg, Real** aCoords) {
 }
 
 void SimBox::rotateZ(int aIdx, Real angleDeg, Real** aCoords) {
-  //Real angleRad = degreesToRadians(angleDeg);
+  // Real angleRad = degreesToRadians(angleDeg);
   Real angleRad = angleDeg * 3.14159265358979 / 180.0;
   Real oldX = aCoords[X_COORD][aIdx];
   Real oldY = aCoords[Y_COORD][aIdx];
   aCoords[X_COORD][aIdx] = oldX * cos(angleRad) + oldY * sin(angleRad);
   aCoords[Y_COORD][aIdx] = oldY * cos(angleRad) - oldX * sin(angleRad);
-}
-
-int SimBox::chooseMolecule() const {
-  return (int) randomReal(0, numMolecules);
 }
 
 Real SimBox::calcSystemEnergy (Real &subLJ, Real &subCharge) {
@@ -158,71 +89,13 @@ Real SimBox::calcSystemEnergy (Real &subLJ, Real &subCharge) {
   return total;
 }
 
-Real SimBox::calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, int currMol, int startMol) {
-
+Real SimBox::calcMolecularEnergyContribution(Real &subLJ, Real &subCharge,
+                                             int currMol, int startMol) {
   return SimCalcs::calcMolecularEnergyContribution(currMol, startMol);
-
- /*
-  Real total = 0;
-  const int p1Start = moleculeData[MOL_PIDX_START][currMol];
-  const int p1End   = moleculeData[MOL_PIDX_COUNT][currMol] + p1Start;
-  const int p1 = primaryIndexes[p1Start];
-
-  if (useNLC) {
-      int p2Start, p2End;
-    for (int i = 0; i < NUM_DIMENSIONS; i++) {
-      prevCell[i] = getCell(atomCoordinates[i][p1], i);
-    }
-    int neighborSize = findNeighbors(currMol);
-    for (int cellHead = 0; cellHead < neighborSize; cellHead++) {
-      NLC_Node* head = neighbors[cellHead];
-
-      if (head->index == currMol)
-        prevNode = head;
-      while(head->next != NULL) {
-        int idx = head->index;
-        if (head->next->index == currMol)
-          prevNode = head;
-        if (idx >= startMol && idx != currMol) {
-          p2Start = moleculeData[MOL_PIDX_START][idx];
-          p2End = moleculeData[MOL_PIDX_COUNT][idx] + p2Start;
-          if (moleculesInRange(p1Start, p1End, p2Start, p2End)) {
-            total += calcMoleculeInteractionEnergy(currMol, idx);
-          }
-        }
-        head = head->next;
-      }
-    }
-
-  } else {
-
-
-    int** molData = GPUCopy::moleculeDataPtr();
-    Real** aCoords = GPUCopy::atomCoordinatesPtr();
-    int* pIdxes = GPUCopy::primaryIndexesPtr();
-    Real** aData = GPUCopy::atomDataPtr();
-    Real* bSize = GPUCopy::sizePtr();
-
-  //  #pragma acc parallel loop deviceptr(molData, aCoords, pIdxes, aData) reduction(+:total)
-    for (int otherMol = startMol; otherMol < numMolecules; otherMol++) {
-      if (otherMol != currMol) {
-        int p2Start = moleculeData[MOL_PIDX_START][otherMol];
-        int p2End = moleculeData[MOL_PIDX_COUNT][otherMol] + p2Start;
-        if (moleculesInRange(p1Start, p1End, p2Start, p2End)) {
-          total += calcMoleculeInteractionEnergy(currMol, otherMol);
-        }
-      }
-    }
-  }
-
-  return total; */
 }
 
 bool SimBox::moleculesInRange(int p1Start, int p1End, int p2Start, int p2End) {
-
-  int p1;
-  int p2;
-
+  int p1, p2;
   bool out = false;
 
   for (int p1Idx = p1Start; p1Idx < p1End; p1Idx++) {

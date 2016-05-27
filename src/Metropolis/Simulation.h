@@ -1,14 +1,9 @@
-/*
-	Driver for the simulation. Takes in a SimulationArgs object and creates the
-	the necessary Box type, state file output path, etc.
-
-	Author: Nathan Coleman
-	Created: February 21, 2014
-
-	-> February 26, by Albert Wallace
-	-> March 28, by Joshua Mosby
-	-> April 21, by Nathan Coleman
-*/
+/**
+ * Simulation.h
+ *
+ * Driver for the simulation. Takes in a SimulationArgs object and creates the
+ * the necessary Box type, state file output path, etc.
+ */
 
 #ifndef SIMULATION_H
 #define SIMULATION_H
@@ -24,20 +19,41 @@ const double kBoltz = 0.00198717;
 
 class Simulation
 {
-	public:
-		Simulation(SimulationArgs simArgs);
-		~Simulation();
-		void run();
+  public:
+    /** Construct the Simulation with configuration arguments */
+    Simulation(SimulationArgs simArgs);
 
-	private:
-		Box *box;
-		SimulationArgs args;
-		long simSteps;
-		long stepStart;
-		Logger log;
-		int writePDB(Environment sourceEnvironment, Molecule * sourceMoleculeCollection, SimBox* sb);
-		void saveState(const std::string& simName, int simStep, const SimBox* sb);
-		const std::string currentDateTime();
+    /** Destruct the simulation */
+    ~Simulation();
+
+    /** Execute the simulation */
+    void run();
+
+  private:
+    /** The periodic box the simulation run in */
+    Box *box;
+
+    /** The aguments that configure the simualtion */
+    SimulationArgs args;
+
+    /** The number of steps in the simulation */
+    long simSteps;
+
+    /** The starting step number for the simulation */
+    long stepStart;
+
+    /** The object that logs simulation events */
+    Logger log;
+
+    /** Writes the final state of the application to a PDB file */
+    int writePDB(Environment sourceEnvironment,
+                 Molecule *sourceMoleculeCollection, SimBox* sb);
+
+    /** Saves the state of the simulation to a file */
+    void saveState(const std::string& simName, int simStep, const SimBox* sb);
+
+    /** The current date */
+    const std::string currentDateTime();
 };
 
 #endif
