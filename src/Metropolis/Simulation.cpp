@@ -28,7 +28,6 @@
 #include "SimBox.h"
 #include "SimBoxBuilder.h"
 #include "GPUCopy.h"
-#include "SimCalcs.h"
 
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
@@ -58,7 +57,7 @@ Simulation::~Simulation() {
 }
 
 void Simulation::run() {
-  SimulationStep simStep = SimulationStep();
+  SimulationStep *simStep = new SimulationStep();
   if (!args.simulationName.empty())
     std::cout << "Simulation Name: " << args.simulationName << std::endl;
 
@@ -138,7 +137,7 @@ void Simulation::run() {
         log.verbose("Using original system energy calculation");
       }
     }
-    oldEnergy_sb = simStep.calcSystemEnergy(lj_energy, charge_energy, sb);
+    oldEnergy_sb = simStep->calcSystemEnergy(lj_energy, charge_energy, sb);
     oldEnergy_sb += energy_LRC;
   }
   function_time_end = clock();
@@ -163,7 +162,6 @@ void Simulation::run() {
 
   //Loop for each individual step
   for (int move = stepStart; move < (stepStart + simSteps); move++) {
-    std::vector<int> neighbors;
     new_lj = 0, old_lj = 0, new_charge = 0, old_charge = 0;
 
     // Provide printouts at each predetermined interval
@@ -184,19 +182,16 @@ void Simulation::run() {
     }
 
     // Randomly select index of a molecule for changing
-    int changeIdx = simStep.chooseMolecule(sb);
+    int changeIdx = simStep->chooseMolecule(sb);
 
-    // Calculate the current/original/old energy contribution for the current
-    // molecule
-    oldEnergyCont = simStep.calcMolecularEnergyContribution(old_lj, old_charge,
-                                                            changeIdx, 0, sb);
+    // Calculate the energy before translation
+    oldEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0, sb);
 
     // Perturb the molecule
-    simStep.changeMolecule(changeIdx, sb);
+    simStep->changeMolecule(changeIdx, sb);
 
     // Calculate the new energy after translation
-    newEnergyCont = simStep.calcMolecularEnergyContribution(new_lj, new_charge,
-                                                            changeIdx, 0, sb);
+    newEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0, sb);
 
     // Compare new energy and old energy to decide if we should accept or not
     bool accept = false;
@@ -218,9 +213,10 @@ void Simulation::run() {
       charge_energy += new_charge - old_charge;
     } else {
       rejected++;
-      simStep.rollback(changeIdx, sb);
+      simStep->rollback(changeIdx, sb);
     }
   }
+  delete(simStep);
   endTime = clock();
   writePDB(box->getEnvironment(), box->getMolecules(), sb);
 
