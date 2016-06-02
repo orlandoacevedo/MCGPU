@@ -19,6 +19,7 @@
 #include "SimulationArgs.h"
 #include "SimulationStep.h"
 #include "BruteForceStep.h"
+#include "ProximityMatrixStep.h"
 #include "Box.h"
 #include "Metropolis/Utilities/MathLibrary.h"
 #include "Metropolis/Utilities/Parsing.h"
@@ -119,7 +120,8 @@ void Simulation::run() {
   bool parallel = args.simulationMode == SimulationMode::Parallel;
   SimBox* sb = builder.build(box);
   GPUCopy::setParallel(parallel);
-  SimulationStep *simStep = new BruteForceStep(sb);
+  //SimulationStep *simStep = new BruteForceStep(sb); // FIXME
+  SimulationStep *simStep = new ProximityMatrixStep(sb); // FIXME
   GPUCopy::copyIn(sb);
   // SimCalcs::setSB(sb);
   //Calculate original starting energy for the entire system

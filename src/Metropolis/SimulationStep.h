@@ -40,7 +40,7 @@ class SimulationStep {
    *
    * @param molIdx The index of the molecule to change.
    */
-  void changeMolecule(int molIdx, SimBox *box);
+  virtual void changeMolecule(int molIdx, SimBox *box);
 
 
   /**
@@ -49,7 +49,7 @@ class SimulationStep {
    *
    * @param molIdx The index of the molecule to change.
    */
-  void rollback(int molIdx, SimBox *box);
+  virtual void rollback(int molIdx, SimBox *box);
 
 
   /**
@@ -59,7 +59,7 @@ class SimulationStep {
    * @param subCharge Initial Coulomb energy.
    * @return The total energy of the box.
    */
-  Real calcSystemEnergy(Real &subLJ, Real &subCharge, int numMolecules);
+  virtual Real calcSystemEnergy(Real &subLJ, Real &subCharge, int numMolecules);
 };
 
 /**
