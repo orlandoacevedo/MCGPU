@@ -18,6 +18,7 @@
 #include "Simulation.h"
 #include "SimulationArgs.h"
 #include "SimulationStep.h"
+#include "BruteForceStep.h"
 #include "Box.h"
 #include "Metropolis/Utilities/MathLibrary.h"
 #include "Metropolis/Utilities/Parsing.h"
@@ -57,7 +58,6 @@ Simulation::~Simulation() {
 }
 
 void Simulation::run() {
-  SimulationStep *simStep = new SimulationStep();
   if (!args.simulationName.empty())
     std::cout << "Simulation Name: " << args.simulationName << std::endl;
 
@@ -119,8 +119,9 @@ void Simulation::run() {
   bool parallel = args.simulationMode == SimulationMode::Parallel;
   SimBox* sb = builder.build(box);
   GPUCopy::setParallel(parallel);
+  SimulationStep *simStep = new BruteForceStep(sb);
   GPUCopy::copyIn(sb);
-  SimCalcs::setSB(sb);
+  // SimCalcs::setSB(sb);
   //Calculate original starting energy for the entire system
   if (oldEnergy == 0) {
     if (parallel) {
@@ -137,7 +138,8 @@ void Simulation::run() {
         log.verbose("Using original system energy calculation");
       }
     }
-    oldEnergy_sb = simStep->calcSystemEnergy(lj_energy, charge_energy, sb);
+    oldEnergy_sb = simStep->calcSystemEnergy(lj_energy, charge_energy,
+                                             sb->numMolecules);
     oldEnergy_sb += energy_LRC;
   }
   function_time_end = clock();
@@ -160,7 +162,7 @@ void Simulation::run() {
     baseStateFile.append("untitled");
   }
 
-  //Loop for each individual step
+  // ----- Main simulation loop -----
   for (int move = stepStart; move < (stepStart + simSteps); move++) {
     new_lj = 0, old_lj = 0, new_charge = 0, old_charge = 0;
 
@@ -185,13 +187,13 @@ void Simulation::run() {
     int changeIdx = simStep->chooseMolecule(sb);
 
     // Calculate the energy before translation
-    oldEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0, sb);
+    oldEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0);
 
     // Perturb the molecule
     simStep->changeMolecule(changeIdx, sb);
 
     // Calculate the new energy after translation
-    newEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0, sb);
+    newEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0);
 
     // Compare new energy and old energy to decide if we should accept or not
     bool accept = false;
@@ -224,7 +226,8 @@ void Simulation::run() {
 
   currentEnergy = oldEnergy_sb;
   stringstream startConv;
-  startConv << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: " << currentEnergy;
+  startConv << "Step " << (stepStart + simSteps) << ":\r\n--Current Energy: "
+            << currentEnergy;
   log.verbose(startConv.str());
 
   if (args.stateInterval >= 0)
