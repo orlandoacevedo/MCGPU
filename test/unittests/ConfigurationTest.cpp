@@ -26,7 +26,7 @@ TEST(IOTests, ConfigScan)
     std::string MCGPU = directory;
 
     string configPath = MCGPU;
-    configPath.append("stuff/configurationTest.txt");
+    configPath.append("test/unittests/ConfigurationTest.config");
     string oplsPath = "path/to/opla.par/file";
     string zMatrixPath = "path/to/zMatrix/file";
     string stateInputPath = "path/to/state/input";
