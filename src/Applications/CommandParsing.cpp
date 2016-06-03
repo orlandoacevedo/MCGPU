@@ -209,7 +209,7 @@ bool parseCommandLine(CommandParameters* params, SimulationArgs* args) {
 
   // Assign the simulation strategy type
   if (!params->simStrategy.empty()) {
-    args->strategy = Strategy::getStrategy(params->simStrategy);
+    args->strategy = Strategy::fromString(params->simStrategy);
     if (args->strategy == Strategy::Unknown) {
       std::cerr << APP_NAME << ": Unknown energy calculation strategy "
                 << "specified" << std::endl;
@@ -339,6 +339,11 @@ void printHelpScreen() {
           "\tThe filename for the saved state files will be the simulation\n"
           "\tname with the current step number appended at the end:\n\n"
           "\t\t<simulation-name>_<step-num>.state\n\n";
+
+  cout << "--strategy <strategy-name>\t(-S)\n"
+          "\tSpecifies the strategy to be used by the simulation for energy\n"
+          "\tcalulations. Options include 'brute-force' and\n"
+          "\t'proximity-matrix'\n\n";
 
   cout << "Generic Tool Options\n"
           "=====================\n\n";

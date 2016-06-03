@@ -48,7 +48,7 @@ namespace Strategy {
     Unknown
   };
 
-  Type getStrategy(std::string type);
+  Type fromString(std::string type);
 }
 typedef Strategy::Type SimulationStrategy;
 
