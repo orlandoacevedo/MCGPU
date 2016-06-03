@@ -163,6 +163,7 @@ When using multiple solvents, the primary index array (Configuration File line 3
  * `--neighbor <interval> (-l)`: Specifies to use the neighborlist structure for molecular organization. interval is optional and refers to how many steps between updating the neighborlist (default is 100).
  * `--status-interval <interval> (-i)`: Specifies the number of simulation steps between status updates.
  * `--state-interval <interval> (-I)`: Specifies the number of simulation steps between state file snapshots of the current simulation run.
+ * `--strategy <strategy-name> (-S)`: Specifies the energy calculation strategy to utilize. Current options include `brute-force` and `proximity-matrix`
 
 To view documentation for all command-line flags available, use the --help flag:
 ```
