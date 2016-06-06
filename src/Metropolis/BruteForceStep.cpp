@@ -34,8 +34,8 @@ Real BruteForceCalcs::calcMolecularEnergyContribution(int currMol,
     if (otherMol != currMol) {
       int p2Start = molData[MOL_PIDX_START][otherMol];
       int p2End = molData[MOL_PIDX_COUNT][otherMol] + p2Start;
-      if (SimCalcs::moleculesInRange(p1Start, p1End, p2Start, p2End, atomCoords, bSize,
-                           pIdxes, cutoff)) {
+      if (SimCalcs::moleculesInRange(p1Start, p1End, p2Start, p2End,
+                                     atomCoords, bSize, pIdxes, cutoff)) {
         total += calcMoleculeInteractionEnergy(currMol, otherMol, molData,
                                                aData, atomCoords, bSize);
       }

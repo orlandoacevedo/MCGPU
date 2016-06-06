@@ -2,7 +2,10 @@
 #include "ProximityMatrixStep.h"
 #include "SimulationStep.h"
 #include "GPUCopy.h"
+
+#ifdef _OPENACC
 #include <openacc.h>
+#endif
 
 
 ProximityMatrixStep::~ProximityMatrixStep() {
@@ -11,12 +14,15 @@ ProximityMatrixStep::~ProximityMatrixStep() {
 }
 
 Real ProximityMatrixStep::calcMolecularEnergyContribution(int currMol,
-                                                     int startMol) {
-  return ProximityMatrixCalcs::calcMolecularEnergyContribution(currMol, startMol, this->proximityMatrix);
+                                                          int startMol) {
+  return ProximityMatrixCalcs::calcMolecularEnergyContribution( currMol,
+      startMol, this->proximityMatrix);
 }
 
-Real ProximityMatrixStep::calcSystemEnergy(Real &subLJ, Real &subCharge, int numMolecules) {
-  Real result = SimulationStep::calcSystemEnergy(subLJ, subCharge, numMolecules);
+Real ProximityMatrixStep::calcSystemEnergy(Real &subLJ, Real &subCharge,
+                                           int numMolecules) {
+  Real result = SimulationStep::calcSystemEnergy(subLJ, subCharge,
+                                                 numMolecules);
   this->proximityMatrix = ProximityMatrixCalcs::createProximityMatrix();
   return result;
 }
@@ -33,8 +39,8 @@ void ProximityMatrixStep::rollback(int molIdx, SimBox *box) {
 
 // ----- ProximityMatrixCalcs Definitions -----
 
-Real ProximityMatrixCalcs::calcMolecularEnergyContribution(int currMol,
-                                                      int startMol, char *proximityMatrix) {
+Real ProximityMatrixCalcs::calcMolecularEnergyContribution(
+    int currMol, int startMol, char *proximityMatrix) {
   Real total = 0;
 
   int **molData = GPUCopy::moleculeDataPtr();
@@ -56,8 +62,8 @@ Real ProximityMatrixCalcs::calcMolecularEnergyContribution(int currMol,
       if (otherMol != currMol) {
         int p2Start = molData[MOL_PIDX_START][otherMol];
         int p2End = molData[MOL_PIDX_COUNT][otherMol] + p2Start;
-        if (SimCalcs::moleculesInRange(p1Start, p1End, p2Start, p2End, atomCoords, bSize,
-                             pIdxes, cutoff)) {
+        if (SimCalcs::moleculesInRange(p1Start, p1End, p2Start, p2End,
+                                       atomCoords, bSize, pIdxes, cutoff)) {
           total += calcMoleculeInteractionEnergy(currMol, otherMol, molData,
                                                  aData, atomCoords, bSize);
         }
@@ -81,13 +87,12 @@ Real ProximityMatrixCalcs::calcMolecularEnergyContribution(int currMol,
   return total;
 }
 
-// FIXME BEGIN FUNCTIONS DUPLICATED FROM BRUTEFORCESTEP...
-
+// TODO: Duplicate; abstract out when PGCC supports it
 Real ProximityMatrixCalcs::calcMoleculeInteractionEnergy (int m1, int m2,
-                                                     int** molData,
-                                                     Real** aData,
-                                                     Real** aCoords,
-                                                     Real* bSize) {
+                                                          int** molData,
+                                                          Real** aData,
+                                                          Real** aCoords,
+                                                          Real* bSize) {
   Real energySum = 0;
 
   const int m1Start = molData[MOL_START][m1];
@@ -116,8 +121,6 @@ Real ProximityMatrixCalcs::calcMoleculeInteractionEnergy (int m1, int m2,
   return (energySum);
 }
 
-// FIXME ...END FUNCTIONS DUPLICATED FROM BRUTEFORCESTEP
-
 char *ProximityMatrixCalcs::createProximityMatrix() {
   const long numMolecules = SimCalcs::sb->numMolecules;
   const Real cutoff = SimCalcs::sb->cutoff;
@@ -129,21 +132,28 @@ char *ProximityMatrixCalcs::createProximityMatrix() {
   Real** aData = GPUCopy::atomDataPtr();
 
   char *matrix;
+  #ifdef _OPENACC
   if (SimCalcs::on_gpu) {
     matrix = (char *)acc_malloc(numMolecules * numMolecules * sizeof(char));
   } else {
     matrix = (char *)malloc(numMolecules * numMolecules * sizeof(char));
   }
+  #else
+  matrix = (char *)malloc(numMolecules * numMolecules * sizeof(char));
+  #endif
   assert(matrix != NULL);
-#pragma acc parallel loop deviceptr(molData, atomCoords, bSize, pIdxes, aData, matrix) if(SimCalcs::on_gpu)
+  #pragma acc parallel loop deviceptr(molData, atomCoords, bSize, pIdxes, \
+      aData, matrix) if (SimCalcs::on_gpu)
   for (int i = 0; i < numMolecules; i++) {
     const int p1Start = molData[MOL_PIDX_START][i];
     const int p1End   = molData[MOL_PIDX_COUNT][i] + p1Start;
-#pragma acc loop seq
+    #pragma acc loop seq
     for (int j = 0; j < numMolecules; j++) {
       const int p2Start = molData[MOL_PIDX_START][j];
       const int p2End = molData[MOL_PIDX_COUNT][j] + p2Start;
-      matrix[i*numMolecules + j] = (j != i && SimCalcs::moleculesInRange(p1Start, p1End, p2Start, p2End, atomCoords, bSize, pIdxes, cutoff));
+      matrix[i*numMolecules + j] = (j != i &&
+          SimCalcs::moleculesInRange(p1Start, p1End, p2Start, p2End,
+                                     atomCoords, bSize, pIdxes, cutoff));
     }
   }
   return matrix;
@@ -159,22 +169,28 @@ void ProximityMatrixCalcs::updateProximityMatrix(char *matrix, int i) {
   int* pIdxes = GPUCopy::primaryIndexesPtr();
   Real** aData = GPUCopy::atomDataPtr();
 
-#pragma acc parallel loop deviceptr(molData, atomCoords, bSize, pIdxes, aData, matrix) if(SimCalcs::on_gpu)
+  #pragma acc parallel loop deviceptr(molData, atomCoords, bSize, pIdxes, \
+      aData, matrix) if (SimCalcs::on_gpu)
   for (int j = 0; j < numMolecules; j++) {
     const int p1Start = molData[MOL_PIDX_START][i];
     const int p1End   = molData[MOL_PIDX_COUNT][i] + p1Start;
     const int p2Start = molData[MOL_PIDX_START][j];
     const int p2End = molData[MOL_PIDX_COUNT][j] + p2Start;
 
-    const char entry = (j != i && SimCalcs::moleculesInRange(p1Start, p1End, p2Start, p2End, atomCoords, bSize, pIdxes, cutoff));
+    const char entry = (j != i && SimCalcs::moleculesInRange(p1Start, p1End,
+                                                             p2Start, p2End,
+                                                             atomCoords, bSize,
+                                                             pIdxes, cutoff));
     matrix[i*numMolecules + j] = entry;
     matrix[j*numMolecules + i] = entry;
   }
 }
 
 void ProximityMatrixCalcs::freeProximityMatrix(char *matrix) {
+  #ifdef _OPENACC
   if (SimCalcs::on_gpu)
     acc_free(matrix);
   else
+  #endif
     free(matrix);
 }
