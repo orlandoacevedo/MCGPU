@@ -41,31 +41,10 @@ namespace ProximityMatrixCalcs {
 
   Real calcMolecularEnergyContribution(int currMol, int startMol, char *proximityMatrix);
 
-  #pragma acc routine seq
-  bool moleculesInRange(int p1Start, int p1End, int p2Start, int p2End,
-                        Real** atomCoords, Real* bSize, int* primaryIndexes,
-                        Real cutoff);
-
-  #pragma acc routine seq
-  Real calcAtomDistSquared(int a1, int a2, Real** aCoords,
-                           Real* bSize);
-
-  #pragma acc routine seq
-  Real makePeriodic(Real x, int dimension, Real* bSize);
-
   #pragma acc routine vector
   Real calcMoleculeInteractionEnergy (int m1, int m2, int** molData,
                                       Real** aData, Real** aCoords,
                                       Real* bSize);
-
-  #pragma acc routine seq
-  Real calcLJEnergy(int a1, int a2, Real r2, Real** aData);
-
-  #pragma acc routine seq
-  Real calcChargeEnergy(int a1, int a2, Real r, Real** aData);
-
-  #pragma acc routine seq
-  Real calcBlending (Real a, Real b);
 
   char *createProximityMatrix();
 
