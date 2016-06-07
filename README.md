@@ -163,6 +163,7 @@ When using multiple solvents, the primary index array (Configuration File line 3
  * `--neighbor <interval> (-l)`: Specifies to use the neighborlist structure for molecular organization. interval is optional and refers to how many steps between updating the neighborlist (default is 100).
  * `--status-interval <interval> (-i)`: Specifies the number of simulation steps between status updates.
  * `--state-interval <interval> (-I)`: Specifies the number of simulation steps between state file snapshots of the current simulation run.
+ * `--strategy <strategy-name> (-S)`: Specifies the energy calculation strategy to utilize. Current options include `brute-force` and `proximity-matrix`
 
 To view documentation for all command-line flags available, use the --help flag:
 ```
@@ -176,39 +177,56 @@ Command-line options override values given in this file. An example
 configuration file is shown below.
 
 ```
+# Name for the simulation
+sim-name=MyTestSimulation
+
 # The dimensions of the periodic simulation box (in angrstroms)
 x=55
 y=55
 z=55
+
 # Temperature (in Kelvin)
 temp=298.15
+
 # Maximum tranlsation for a molecule during the simulation
 max-translation=0.15
+
 # Number of steps to run in the simulation
 steps=1000
+
 # Number of molecules
 molecules=5120
+
 # Path to opla.par file
 opla.par=/absolute/path/to/oplsaa.par
+
 # Path to z-matrix file
 z-matrix=/aboslute/path/to/matrix.z
+
 # Path to input state *directory*
 state-input=/absolute/path/to/input/dir
+
 # Path to state output *directory*
 state-output=/absolute/path/to/output/dir
+
 # Path to pdb output *directory*
 pdb-output=/absolute/path/to/output/dir
+
 # Cutoff distance (in angstroms)
 cutoff=25
+
 # Maximum rotation of any particle
 max-rotation=15
+
 # Seed for random generator
 random-seed=12345
+
 # Primary atom index (integer indexes of z-matrix atom in molecule, comma
 # separated, starting from zero)
 primary-atom=1
-# Name for the simulation
-sim-name=MyTestSimulation
+
+# Strategy for energy calculations
+strategy=brute-force
 ```
 
 The order of the attributes is not significant. Comments can begin with `#` or

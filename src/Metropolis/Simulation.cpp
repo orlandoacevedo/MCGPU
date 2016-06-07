@@ -19,6 +19,7 @@
 #include "SimulationArgs.h"
 #include "SimulationStep.h"
 #include "BruteForceStep.h"
+#include "ProximityMatrixStep.h"
 #include "Box.h"
 #include "Metropolis/Utilities/MathLibrary.h"
 #include "Metropolis/Utilities/Parsing.h"
@@ -119,7 +120,18 @@ void Simulation::run() {
   bool parallel = args.simulationMode == SimulationMode::Parallel;
   SimBox* sb = builder.build(box);
   GPUCopy::setParallel(parallel);
-  SimulationStep *simStep = new BruteForceStep(sb);
+  SimulationStep *simStep;
+  if (args.strategy == Strategy::BruteForce) {
+    log.verbose("Using brute force strategy for energy calculations");
+    simStep = new BruteForceStep(sb);
+  } else if (args.strategy == Strategy::ProximityMatrix) {
+    log.verbose("Using proximity matrix strategy for energy calculations");
+    simStep = new ProximityMatrixStep(sb);
+  } else {
+    log.verbose("No energy calculation strategy specified, defaulting to "
+                "brute force");
+    simStep = new BruteForceStep(sb);
+  }
   GPUCopy::copyIn(sb);
   // SimCalcs::setSB(sb);
   //Calculate original starting energy for the entire system
