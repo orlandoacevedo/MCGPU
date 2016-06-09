@@ -162,6 +162,9 @@ GTestHeaders = $(GTestDir)/include/gtest/*.h \
 # Set Google Test's header directory as a system directory, such that
 # the compiler doesn't generate warnings in Google Test headers.
 GTestFlags := -I$(GTestDir)/include
+ifeq ($(CC),g++)
+	GTestFlags += -lpthread
+endif
 #GTestFlags += -pthread #-Wall -Wextra
 
 # Builds gtest.a and gtest_main.a.
