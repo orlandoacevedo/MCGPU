@@ -113,7 +113,7 @@ endif
 
 # Flags for linking metrosim with the PGI compiler.
 ifeq ($(CC),pgc++)
-	LinkFlags := -lgomp -acc -ta=nvidia -Minfo=accel
+	LinkFlags := -acc -ta=nvidia -Minfo=accel
 else
 	LinkFlags := -lgomp
 endif
