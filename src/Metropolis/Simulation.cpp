@@ -111,9 +111,9 @@ void Simulation::run() {
   function_time_start = clock();
 
   if(args.verboseOutput) {
-    log = Logger(VERBOSE);
+    log = Logger(Verbose);
   } else {
-    log = Logger(NON_VERBOSE);
+    log = Logger(Info);
   }
 
   // Build SimBox below

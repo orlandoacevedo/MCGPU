@@ -1,21 +1,40 @@
 #include "Logger.h"
 
 Logger::Logger() {
-	loggerLevel = NONE;
+  loggerLevel = Info;
 }
 
 Logger::Logger(LoggerType loggerLevel_init) {
-	loggerLevel = loggerLevel_init;
+  loggerLevel = loggerLevel_init;
+}
+
+void Logger::error(std::string text) {
+  if (loggerLevel >= Error) {
+    std::cout << text << std::endl;
+  }
+}
+
+
+void Logger::info(std::string text) {
+  if (loggerLevel >= Info) {
+    std::cout << text << std::endl;
+  }
+}
+
+void Logger::debug(std::string text) {
+  if (loggerLevel >= Debug) {
+    std::cout << text << std::endl;
+  }
 }
 
 void Logger::verbose(std::string text) {
-	if(loggerLevel == VERBOSE) {
-		std::cout << text << std::endl;
-	}
+  if(loggerLevel >= Verbose) {
+    std::cout << text << std::endl;
+  }
 }
 
 void Logger::print(std::string text) {
-	if(loggerLevel != NONE) {
-		std::cout << text << std::endl;
-	}
+  if(loggerLevel != None) {
+    std::cout << text << std::endl;
+  }
 }
