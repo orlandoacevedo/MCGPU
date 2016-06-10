@@ -94,6 +94,15 @@ UnitTestName := metrotest
 # Defines the compiler used to compile and link the source files.
 CC := pgc++
 
+# Defines compiler-specific flags
+# Some of the GNU C++ library headers included by the Google Test
+# infrastructure use C++11 features (notably, variadic templates)
+ifeq ($(CC),pgc++)
+	CFLAGS := --c++11
+else
+	CFLAGS := 
+endif
+
 # Defines the types of files that the Makefile knows how to compile
 # and link. Specify the filetype by using a modulus (percent sign),
 # followed by a dot and the file extension (e.g. %.java, %.txt).
@@ -153,6 +162,9 @@ GTestHeaders = $(GTestDir)/include/gtest/*.h \
 # Set Google Test's header directory as a system directory, such that
 # the compiler doesn't generate warnings in Google Test headers.
 GTestFlags := -I$(GTestDir)/include
+ifeq ($(CC),g++)
+	GTestFlags += -lpthread
+endif
 #GTestFlags += -pthread #-Wall -Wextra
 
 # Builds gtest.a and gtest_main.a.
@@ -250,12 +262,12 @@ format_dep = sed -n "H;$$ {g;s@.*:\(.*\)@$(basename $@).o $@: \$$\(wildcard\1\)@
 
 # The command that will generate the dependency file (*.d) output for a given
 # C++ file using the C++ compiler
-create_dep_cpp = $(CC) $(Includes) $(Defines) -MM $<
+create_dep_cpp = $(CC) $(CFLAGS) $(Includes) $(Defines) -MM $<
 
 # The command that will generate the dependency file (*.d) output for a given
 # unit testing file. These files are special because they use specific flags
 # that link the testing framework.
-create_dep_unittest = $(CC) $(GTestFlags) $(Includes) $(Defines) -MM $<
+create_dep_unittest = $(CC) $(CFLAGS) $(GTestFlags) $(Includes) $(Defines) -MM $<
 
 ##############################
 # Makefile Rules and Targets #
@@ -272,10 +284,10 @@ all : $(AppName)
 tests : $(AppName) $(UnitTestName)
 
 $(AppName) : $(Objects) $(ProgramMain) | dirtree
-	$(CC) $^ $(Includes) $(Defines) -o $(AppDir)/$@ $(LinkFlags)
+	$(CC) $^ $(CFLAGS) $(Includes) $(Defines) -o $(AppDir)/$@ $(LinkFlags)
 
 $(UnitTestName) : $(Objects) $(UnitTestingObjects) $(ObjDir)/gtest_main.a | dirtree
-	$(CC) $^ $(GTestFlags) $(Includes) $(Defines) -o $(AppDir)/$@ $(LinkFlags)
+	$(CC) $^ $(CFLAGS) $(GTestFlags) $(Includes) $(Defines) -o $(AppDir)/$@ $(LinkFlags)
 
 dirtree :
 	@mkdir -p $(ObjFolders) $(BinDir) $(ObjDir) $(AppDir) $(BuildDir)
@@ -294,11 +306,11 @@ clean :
 # compiles fast and for ordinary users its source rarely changes.
 
 $(ObjDir)/gtest-all.o : $(GTEST_SRCS_) | dirtree
-	$(CC) $(GTestFlags) -I$(GTestDir) -c \
+	$(CC) $(CFLAGS) $(GTestFlags) -I$(GTestDir) -c \
             $(GTestDir)/src/gtest-all.cc -o $@
 
 $(ObjDir)/gtest_main.o : $(GTEST_SRCS_) | dirtree
-	$(CC) $(GTestFlags) -I$(GTestDir) -c \
+	$(CC) $(CFLAGS) $(GTestFlags) -I$(GTestDir) -c \
 	  $(GTestDir)/src/gtest_main.cc -o $@
 
 $(ObjDir)/gtest.a : $(ObjDir)/gtest-all.o | dirtree
@@ -313,10 +325,10 @@ $(ObjDir)/gtest_main.a : $(ObjDir)/gtest-all.o $(ObjDir)/gtest_main.o | dirtree
 # in order to meet the Google Test framework requirements.
 
 $(BuildDir)/$(UnitTestDir)/%.o : $(UnitTestDir)/%.cpp $(GTestHeaders) | dirtree
-	$(CC) $(CompileFlags) $(GTestFlags) $(Defines) $(Includes) $< -o $@
+	$(CC) $(CFLAGS) $(CompileFlags) $(GTestFlags) $(Defines) $(Includes) $< -o $@
 
 $(BuildDir)/%.o : %.cpp | dirtree
-	$(CC) $(CompileFlags) $(Includes) $(Defines) $< -o $@
+	$(CC) $(CFLAGS) $(CompileFlags) $(Includes) $(Defines) $< -o $@
 
 ##########################
 # Dependency Build Rules #
