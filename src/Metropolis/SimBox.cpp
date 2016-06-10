@@ -128,6 +128,7 @@ Real SimBox::calcIntraMolecularEnergy(int molIdx) {
   out += angleEnergy(molIdx);
   out += bondEnergy(molIdx);
 
+  // Calculate intramolecular LJ and Coulomb energy if necessary
   for (int i = molStart; i < molEnd; i++) {
     for (int j = i + 1; j < molEnd; j++) {
       Real fudgeFactor = 1.0;
@@ -140,7 +141,7 @@ Real SimBox::calcIntraMolecularEnergy(int molIdx) {
           break;
         }
       }
-      if (fudgeFactor == 1.0) {
+      if (fudgeFactor > 0.0) {
         for (int k = 0; ; k++) {
           int val = fudgeAtoms[molType][i - molStart][k];
           if (val == -1) {

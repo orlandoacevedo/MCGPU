@@ -59,8 +59,9 @@ Simulation::~Simulation() {
 }
 
 void Simulation::run() {
-  if (!args.simulationName.empty())
+  if (!args.simulationName.empty()) {
     std::cout << "Simulation Name: " << args.simulationName << std::endl;
+  }
 
   for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++) {
     box->keepMoleculeInBox(molIdx);
@@ -120,6 +121,7 @@ void Simulation::run() {
   bool parallel = args.simulationMode == SimulationMode::Parallel;
   SimBox* sb = builder.build(box);
   GPUCopy::setParallel(parallel);
+
   SimulationStep *simStep;
   if (args.strategy == Strategy::BruteForce) {
     log.verbose("Using brute force strategy for energy calculations");
@@ -133,7 +135,7 @@ void Simulation::run() {
     simStep = new BruteForceStep(sb);
   }
   GPUCopy::copyIn(sb);
-  // SimCalcs::setSB(sb);
+
   //Calculate original starting energy for the entire system
   if (oldEnergy == 0) {
     if (parallel) {
@@ -199,13 +201,13 @@ void Simulation::run() {
     int changeIdx = simStep->chooseMolecule(sb);
 
     // Calculate the energy before translation
-    oldEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0);
+    oldEnergyCont = simStep->calcMoleculeEnergy(changeIdx, 0);
 
     // Perturb the molecule
     simStep->changeMolecule(changeIdx, sb);
 
     // Calculate the new energy after translation
-    newEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0);
+    newEnergyCont = simStep->calcMoleculeEnergy(changeIdx, 0);
 
     // Compare new energy and old energy to decide if we should accept or not
     bool accept = false;

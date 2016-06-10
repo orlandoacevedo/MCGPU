@@ -11,30 +11,37 @@ SimulationStep::SimulationStep(SimBox *box) {
   SimCalcs::setSB(box);
 }
 
+Real SimulationStep::calcMoleculeEnergy(int currMol, int startMol) {
+  return calcMolecularEnergyContribution(currMol, startMol) +
+    calcIntraMolecularEnergy(currMol);
+}
+
+Real SimulationStep::calcIntraMolecularEnergy(int molIdx) {
+  return SimCalcs::calcIntraMolecularEnergy(molIdx);
+}
+
 /** Returns the index of a random molecule within the simulation box */
 int SimulationStep::chooseMolecule(SimBox *box) {
   return (int) randomReal(0, box->numMolecules);
 }
-
 
 /** Perturb a given molecule */
 void SimulationStep::changeMolecule(int molIdx, SimBox *box) {
   SimCalcs::changeMolecule(molIdx);
 }
 
-
 /** Move a molecule back to its original position */
 void SimulationStep::rollback(int molIdx, SimBox *box) {
   SimCalcs::rollback(molIdx);
 }
-
 
 /** Determines the total energy of the box */
 Real SimulationStep::calcSystemEnergy(Real &subLJ, Real &subCharge,
                                       int numMolecules) {
   Real total = subLJ + subCharge;
   for (int mol = 0; mol < numMolecules; mol++) {
-    total += calcMolecularEnergyContribution(mol, mol);
+    total += calcMolecularEnergyContribution(mol, mol) +
+      calcIntraMolecularEnergy(mol);
   }
 
   return total;
@@ -46,6 +53,76 @@ Real SimulationStep::calcSystemEnergy(Real &subLJ, Real &subCharge,
 
 SimBox* SimCalcs::sb;
 int SimCalcs::on_gpu;
+
+Real SimCalcs::calcIntraMolecularEnergy(int molIdx) {
+  int molStart = sb->moleculeData[MOL_START][molIdx];
+  int molEnd = molStart + sb->moleculeData[MOL_LEN][molIdx];
+  int molType = sb->moleculeData[MOL_TYPE][molIdx];
+  Real out = 0.0;
+  out += angleEnergy(molIdx);
+  out += bondEnergy(molIdx);
+
+  // Calculate intramolecular LJ and Coulomb energy if necessary
+  for (int i = molStart; i < molEnd; i++) {
+    for (int j = i + 1; j < molEnd; j++) {
+      Real fudgeFactor = 1.0;
+      for (int k = 0; ; k++) {
+        int val = sb->excludeAtoms[molType][i - molStart][k];
+        if (val == -1) {
+          break;
+        } else if (val == j - molStart) {
+          fudgeFactor = 0.0;
+          break;
+        }
+      }
+      if (fudgeFactor > 0.0) {
+        for (int k = 0; ; k++) {
+          int val = sb->fudgeAtoms[molType][i - molStart][k];
+          if (val == -1) {
+            break;
+          } else if (val == j - molStart) {
+            fudgeFactor = 0.5;
+            break;
+          }
+        }
+      }
+      if (fudgeFactor > 0.0) {
+        Real r2 = calcAtomDistSquared(i, j, sb->atomCoordinates, sb->size);
+        Real r = sqrt(r2);
+        Real energy = calcLJEnergy(i, j, r2, sb->atomData);
+        energy += calcChargeEnergy(i, j, r, sb->atomData);
+        out += fudgeFactor * energy;
+      }
+    }
+  }
+  return out;
+}
+
+Real SimCalcs::angleEnergy(int molIdx) {
+  Real out = 0;
+  int angleStart = sb->moleculeData[MOL_ANGLE_START][molIdx];
+  int angleEnd = angleStart + sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
+  for (int i = angleStart; i < angleEnd; i++) {
+    if ((bool) sb->angleData[ANGLE_VARIABLE][i]) {
+      Real diff = sb->angleData[ANGLE_EQANGLE][i] - sb->angleSizes[i];
+      out += sb->angleData[ANGLE_KANGLE][i] * diff * diff;
+    }
+  }
+  return out;
+}
+
+Real SimCalcs::bondEnergy(int molIdx) {
+  Real out = 0;
+  int bondStart = sb->moleculeData[MOL_BOND_START][molIdx];
+  int bondEnd = bondStart + sb->moleculeData[MOL_BOND_COUNT][molIdx];
+  for (int i = bondStart; i < bondEnd; i++) {
+    if ((bool) sb->bondData[BOND_VARIABLE][i]) {
+      Real diff = sb->bondData[BOND_EQDIST][i] - sb->bondLengths[i];
+      out += sb->bondData[BOND_KBOND][i] * diff * diff;
+    }
+  }
+  return out;
+}
 
 bool SimCalcs::moleculesInRange(int p1Start, int p1End, int p2Start,
                                        int p2End, Real** atomCoords,

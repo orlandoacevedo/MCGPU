@@ -22,6 +22,16 @@ class SimulationStep {
    */
   int chooseMolecule(SimBox *box);
 
+  /**
+   * Determines the total energy of a particular molecule in the system.
+   *
+   * Combines the intramolecular energy with the intermolecular energy.
+   * @param currMol The index of the molecule to calculate the contribution of
+   * @param startMol The index of the molecule to begin searching from to
+   * determine interaction energies (for intermolecular forces)
+   * @return the sum of the intermolecular and intramolecular energies
+   */
+  Real calcMoleculeEnergy(int currMol, int startMol);
 
   /**
    * Determines the energy contribution of a particular molecule.
@@ -32,6 +42,17 @@ class SimulationStep {
    * @return The total energy of the box (discounts initial lj / charge energy)
    */
   virtual Real calcMolecularEnergyContribution(int currMol, int startMol) = 0;
+
+
+  /**
+   * Calculates the energy contribution from intramolecular forces within the
+   *     given molecule.
+   *
+   * @param molIdx The index of the molecule to calculate the intramolecular
+   *      energy contribution of.
+   * @return The intramolecular energy contribution of the molecule.
+   */
+  Real calcIntraMolecularEnergy(int molIdx);
 
 
   /**
@@ -72,6 +93,34 @@ class SimulationStep {
 namespace SimCalcs {
   extern SimBox* sb;
   extern int on_gpu;
+
+  /**
+   * Calculates the energy contribution from intramolecular forces within the
+   *     given molecule.
+   *
+   * @param molIdx The index of the molecule to calculate the intramolecular
+   *      energy contribution of.
+   * @return The intramolecular energy contribution of the molecule.
+   */
+  Real calcIntraMolecularEnergy(int molIdx);
+
+  /**
+   * Calculates the energy from various flexible angles within the molecule.
+   *
+   * @param molIdx The index of the molecule to calculate the energy of.
+   * @return The energy produced by angles being different from their
+   *     equilibrium measurement.
+   */
+  Real angleEnergy(int molIdx);
+
+  /**
+   * Calculates the energy from various flexible bonds within the molecule.
+   *
+   * @param molIdx The index of the molecule to calculate the energy of.
+   * @return The energy produced by bonds being different from their
+   *     equilibrium measurement.
+   */
+   Real bondEnergy(int molIdx);
 
   /**
    * Determines whether or not two molecule's primaryIndexes are within the
