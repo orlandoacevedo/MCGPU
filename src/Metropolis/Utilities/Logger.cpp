@@ -10,26 +10,26 @@ Logger::Logger(LoggerType loggerLevel_init) {
 
 void Logger::error(std::string text) {
   if (loggerLevel >= Error) {
-    std::cout << text << std::endl;
+    std::cout << "ERROR: "<< text << std::endl;
   }
 }
 
 
 void Logger::info(std::string text) {
   if (loggerLevel >= Info) {
-    std::cout << text << std::endl;
+    std::cout << "INFO: " << text << std::endl;
   }
 }
 
 void Logger::debug(std::string text) {
   if (loggerLevel >= Debug) {
-    std::cout << text << std::endl;
+    std::cout << "DEBUG: " << text << std::endl;
   }
 }
 
 void Logger::verbose(std::string text) {
   if(loggerLevel >= Verbose) {
-    std::cout << text << std::endl;
+    std::cout << "VERBOSE: " << text << std::endl;
   }
 }
 

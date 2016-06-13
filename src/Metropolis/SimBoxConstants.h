@@ -70,6 +70,9 @@
 
 // BOND DATA CONSTANTS
 
+// The default delta for a bond modulation (in Angstroms)
+#define BOND_DELTA 0.06
+
 // Indicates the row of bondData that holds the 1st atom index for each bond.
 #define BOND_A1_IDX 0
 
@@ -89,6 +92,9 @@
 #define BOND_DATA_SIZE 5
 
 // ANGLE DATA CONSTANTS
+
+// The default delta for an angle modulation (in degrees)
+#define ANGLE_DELTA 3.1
 
 // Indicates the row of angleData that holds the first atom's index for each
 //     angle.

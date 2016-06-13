@@ -5,7 +5,6 @@
 #include <string>
 
 enum LoggerType {
-  //VERBOSE, NON_VERBOSE, NONE  
   None,
   Error,
   Info,
@@ -54,8 +53,9 @@ class Logger {
     void verbose(std::string text);
 
     /**
-     * Prints messages that only a verbose level or non verbose level logger
-     * will print.
+     * Outputs a message so long as the logger is not turned off (of None type)
+     *
+     * Does not add a prefix to the log message.
      */
     void print(std::string text);
 };

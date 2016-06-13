@@ -79,7 +79,6 @@ void Simulation::run() {
   Real new_charge = 0, old_charge = 0;
 
   Real energy_LRC = SerialCalcs::calcEnergy_LRC(box);
-  //Real intraMolEnergy = SerialCalcs::calcIntraMolecularEnergy(box, lj_energy, charge_energy);
 
   Real kT = kBoltz * box->getEnvironment()->temp;
   int accepted = 0;
