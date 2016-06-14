@@ -433,25 +433,25 @@ void SimCalcs::intramolecularMove(int molIdx) {
   int numMoves = (int)round(randomReal(1, sb->maxIntraMoves)); 
   int numBonds = sb->moleculeData[MOL_BOND_COUNT][molIdx];
   int numAngles = sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
+  Real bondDelta = sb->maxBondDelta, angleDelta = sb->maxAngleDelta;
   for (int i = 0; i < numMoves; i++) {
     int moveType = (int)round(randomReal(0, 1));
     int selectedBond, selectedAngle;
-    // FIXME: deltas are always positive
     switch (moveType) {
       case 0:
         if (numBonds == 0) break;
         selectedBond = (int)round(randomReal(0,
               sb->moleculeData[MOL_BOND_COUNT][molIdx] - 1));
-        // TODO (blm): Make bond delta more accurate/user configurable
-        stretchBond(molIdx, selectedBond, randomReal(0, BOND_DELTA));
+        // TODO (blm): Make bond delta more accurate
+        stretchBond(molIdx, selectedBond, randomReal(-bondDelta, bondDelta));
         // TODO (blm): Do an MC test to self-correct bond delta
         break;
       case 1:
         if (numAngles == 0) break;
         selectedAngle = (int)round(randomReal(0,
               sb->moleculeData[MOL_ANGLE_COUNT][molIdx] - 1));
-        // TODO (blm): Make bond delta more accurate/user configurable
-        expandAngle(molIdx, selectedAngle, randomReal(0, ANGLE_DELTA));
+        // TODO (blm): Make bond delta more accurate
+        expandAngle(molIdx, selectedAngle, randomReal(-angleDelta, angleDelta));
         // TODO (blm): Do an MC test to self-correct angle delta
         break;
       // TODO: Add dihedrals here

@@ -194,6 +194,10 @@ bool ConfigScanner::readInConfig(string configpath) {
       if (value.length() > 0) {
         strategy = value;
       }
+    } else if (key == "max-bond-delta") {
+      enviro.maxBondDelta = atof(value.c_str());
+    } else if (key == "max-angle-delta") {
+      enviro.maxAngleDelta = atof(value.c_str());
     } else {
       throwScanError("Unexpected key encountered: " + key);
       return false;

@@ -30,6 +30,8 @@ void SimBoxBuilder::initEnvironment(Environment* environment) {
   sb->maxRotate = environment->maxRotation;
   sb->numAtoms = environment->numOfAtoms;
   sb->numMolecules = environment->numOfMolecules;
+  sb->maxBondDelta = environment->maxBondDelta;
+  sb->maxAngleDelta = environment->maxAngleDelta;
 }
 
 void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
