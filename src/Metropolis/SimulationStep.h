@@ -318,13 +318,23 @@ namespace SimCalcs {
    * Rolls back the size of the most recently changed angle. Does not change
    *     any angle coordinates.
    */
-  void rollbackAngle();
+  void rollbackAngles(int molIdx);
 
   /**
    * Rolls back the length of the most recently changed bond. Does not change
    *     any atom coordinates.
    */
-  void rollbackBond();
+  void rollbackBonds(int molIdx);
+
+  /**
+   * Saves the bonds of a particular molecule in the event of a rollback
+   */
+  void saveBonds(int molIdx);
+
+  /**
+   * Saves the angles of a particular molecule in the event of a rollback
+   */
+  void saveAngles(int molIdx);
 
   /**
    * Unions the sets of two different atoms connected by a bond. Note that atoms

@@ -115,8 +115,6 @@ void SimCalcs::expandAngle(int molIdx, int angleIdx, Real expandDeg) {
   int bondStart = sb->moleculeData[MOL_BOND_START][molIdx];
   int bondEnd = bondStart + sb->moleculeData[MOL_BOND_COUNT][molIdx];
   int angleStart = sb->moleculeData[MOL_ANGLE_START][molIdx];
-  sb->changedAngle = angleStart + angleIdx;
-  sb->prevAngle = sb->angleSizes[angleStart + angleIdx];
   int startIdx = sb->moleculeData[MOL_START][molIdx];
   int molSize = sb->moleculeData[MOL_LEN][molIdx];
   int end1 = (int)sb->angleData[ANGLE_A1_IDX][angleStart + angleIdx];
@@ -215,8 +213,6 @@ Real SimCalcs::bondEnergy(int molIdx) {
 void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
   int bondStart = sb->moleculeData[MOL_BOND_START][molIdx];
   int bondEnd = bondStart + sb->moleculeData[MOL_BOND_COUNT][molIdx];
-  sb->changedBond = bondStart + bondIdx;
-  sb->prevBond = sb->bondLengths[bondStart + bondIdx];
   int startIdx = sb->moleculeData[MOL_START][molIdx];
   int molSize = sb->moleculeData[MOL_LEN][molIdx];
   int end1 = (int)sb->bondData[BOND_A1_IDX][bondStart + bondIdx];
@@ -226,6 +222,7 @@ void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
     sb->unionFindParent[i] = i;
   }
 
+  // Split the molecule atoms into two disjoint sets around the bond
   for (int i = bondStart; i < bondEnd; i++) {
     if (i == bondIdx + bondStart)
       continue;
@@ -239,6 +236,8 @@ void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
     std::cerr << "ERROR: EXPANDING BOND IN A RING!" << std::endl;
     return;
   }
+
+  // Move each atom the appropriate distance for the bond stretch
   Real v[NUM_DIMENSIONS];
   Real denon;
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
@@ -250,7 +249,7 @@ void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
     v[i] = v[i] / denon / 2.0;
   }
   for (int i = 0; i < molSize; i++) {
-    if(find(i) == side2) {
+    if (find(i) == side2) {
       for (int j = 0; j < NUM_DIMENSIONS; j++) {
         sb->atomCoordinates[j][i + startIdx] += v[i];
       }
@@ -260,13 +259,14 @@ void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
       }
     }
   }
+
+  // Record the actual bond stretch
   sb->bondLengths[bondStart + bondIdx] += stretchDist;
 }
 
-bool SimCalcs::moleculesInRange(int p1Start, int p1End, int p2Start,
-                                       int p2End, Real** atomCoords,
-                                       Real* bSize, int* primaryIndexes,
-                                       Real cutoff) {
+bool SimCalcs::moleculesInRange(int p1Start, int p1End, int p2Start, int p2End,
+                                Real** atomCoords, Real* bSize,
+                                int* primaryIndexes, Real cutoff) {
   bool out = false;
   for (int p1Idx = p1Start; p1Idx < p1End; p1Idx++) {
     int p1 = primaryIndexes[p1Idx];
@@ -384,7 +384,7 @@ void SimCalcs::intermolecularMove(int molIdx) {
   int molStart = sb->moleculeData[MOL_START][molIdx];
   int molLen = sb->moleculeData[MOL_LEN][molIdx];
 
-  int vertexIdx = (int) randomReal(0, molLen);
+  int vertexIdx = (int)randomReal(0, molLen);
 
   const Real deltaX = randomReal(-maxT, maxT);
   const Real deltaY = randomReal(-maxT, maxT);
@@ -394,9 +394,9 @@ void SimCalcs::intermolecularMove(int molIdx) {
   const Real rotY = randomReal(-maxR, maxR);
   const Real rotZ = randomReal(-maxR, maxR);
 
-  Real ** rBCoords = GPUCopy::rollBackCoordinatesPtr();
-  Real ** aCoords = GPUCopy::atomCoordinatesPtr();
-  Real * bSize = GPUCopy::sizePtr();
+  Real** rBCoords = GPUCopy::rollBackCoordinatesPtr();
+  Real** aCoords = GPUCopy::atomCoordinatesPtr();
+  Real* bSize = GPUCopy::sizePtr();
   int* pIdxes = GPUCopy::primaryIndexesPtr();
   int** molData = GPUCopy::moleculeDataPtr();
 
@@ -424,36 +424,59 @@ void SimCalcs::intermolecularMove(int molIdx) {
 }
 
 void SimCalcs::intramolecularMove(int molIdx) {
-  // TODO: allow max to be configurable
-  int numMoves = (int)round(randomReal(1, 15)); 
+  // Save the molecule data for rolling back
+  // TODO (blm): Put these in the GPU with GPUCopy
+  saveBonds(molIdx);
+  saveAngles(molIdx);
+
+  // TODO (blm): allow max to be configurable
+  int numMoves = (int)round(randomReal(1, sb->maxIntraMoves)); 
   int numBonds = sb->moleculeData[MOL_BOND_COUNT][molIdx];
   int numAngles = sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
   for (int i = 0; i < numMoves; i++) {
     int moveType = (int)round(randomReal(0, 1));
     int selectedBond, selectedAngle;
+    // FIXME: deltas are always positive
     switch (moveType) {
       case 0:
         if (numBonds == 0) break;
         selectedBond = (int)round(randomReal(0,
               sb->moleculeData[MOL_BOND_COUNT][molIdx] - 1));
-        // TODO: Make bond delta more accurate/user configurable/random
-        stretchBond(molIdx, selectedBond, BOND_DELTA);
-        // TODO: Do an MC test to self-correct bond delta
+        // TODO (blm): Make bond delta more accurate/user configurable
+        stretchBond(molIdx, selectedBond, randomReal(0, BOND_DELTA));
+        // TODO (blm): Do an MC test to self-correct bond delta
         break;
       case 1:
         if (numAngles == 0) break;
-        // TODO: select an angle to expand
         selectedAngle = (int)round(randomReal(0,
               sb->moleculeData[MOL_ANGLE_COUNT][molIdx] - 1));
-        // TODO: Make bond delta more accurate/user configurable/random
-        expandAngle(molIdx, selectedAngle, ANGLE_DELTA);
-        // TODO: Do an MC test to self-correct bond delta
+        // TODO (blm): Make bond delta more accurate/user configurable
+        expandAngle(molIdx, selectedAngle, randomReal(0, ANGLE_DELTA));
+        // TODO (blm): Do an MC test to self-correct angle delta
         break;
       // TODO: Add dihedrals here
       default:
         // logger.error("Invalid intramolecular move selected");
         std::cerr << "Invalid intramolecular move selected" << std::endl;
     }
+  }
+}
+
+void SimCalcs::saveBonds(int molIdx) {
+  int start = sb->moleculeData[MOL_BOND_START][molIdx];
+  int end = sb->moleculeData[MOL_BOND_COUNT][molIdx];
+
+  for (int i = start; i < end; i++) {
+    sb->rollBackBondLengths[i] = sb->bondLengths[i];
+  }
+}
+
+void SimCalcs::saveAngles(int molIdx) {
+  int start = sb->moleculeData[MOL_ANGLE_START][molIdx];
+  int end = sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
+
+  for (int i = start; i < end; i++) {
+    sb->rollBackAngleSizes[i] = sb->angleSizes[i];
   }
 }
 
@@ -500,16 +523,26 @@ void SimCalcs::rollback(int molIdx) {
     }
   }
 
-  rollbackAngle();
-  rollbackBond();
+  rollbackAngles(molIdx);
+  rollbackBonds(molIdx);
 }
 
-void SimCalcs::rollbackAngle() {
-  sb->angleSizes[sb->changedAngle] = sb->prevAngle;
+void SimCalcs::rollbackBonds(int molIdx) {
+  int start = sb->moleculeData[MOL_BOND_START][molIdx];
+  int end = sb->moleculeData[MOL_BOND_COUNT][molIdx];
+
+  for (int i = start; i < end; i++) {
+    sb->angleSizes[i] = sb->rollBackAngleSizes[i];
+  }
 }
 
-void SimCalcs::rollbackBond() {
-  sb->bondLengths[sb->changedBond] = sb->prevBond;
+void SimCalcs::rollbackAngles(int molIdx) {
+  int start = sb->moleculeData[MOL_ANGLE_START][molIdx];
+  int end = sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
+
+  for (int i = start; i < end; i++) {
+    sb->angleSizes[i] = sb->rollBackAngleSizes[i];
+  }
 }
 
 void SimCalcs::unionAtoms(int atom1, int atom2) {

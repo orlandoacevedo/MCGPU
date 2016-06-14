@@ -8,6 +8,8 @@ SimBoxBuilder::SimBoxBuilder(bool useNLC, SBScanner* sbData_in) {
 }
 
 SimBox* SimBoxBuilder::build(Box* box) {
+  // TODO (blm): Make this command line/config file configurable
+  sb->maxIntraMoves = 15;
   initEnvironment(box->environment);
   addMolecules(box->molecules, box->environment->primaryAtomIndexArray->size());
   addPrimaryIndexes(box->environment->primaryAtomIndexArray);
@@ -69,9 +71,11 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
   sb->bondData = new Real*[BOND_DATA_SIZE];
   sb->angleData = new Real*[ANGLE_DATA_SIZE];
   sb->bondLengths = new Real[nBonds];
+  sb->rollBackBondLengths = new Real[nBonds];
   sb->unionFindParent = new int[largestMolecule];
   sb->largestMol = largestMolecule;
   sb->angleSizes = new Real[nAngles];
+  sb->rollBackAngleSizes = new Real[nAngles];
 
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
     sb->atomCoordinates[i] = new Real[sb->numAtoms];

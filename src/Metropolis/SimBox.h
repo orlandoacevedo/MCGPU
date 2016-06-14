@@ -51,6 +51,9 @@ public:
    */
   int numSteps;
 
+  /** Holds the maximum number of intramolecular moves to make in a step */
+  int maxIntraMoves;
+
   // Item sizes
 
   /**
@@ -128,7 +131,7 @@ public:
    */
   Real**  atomData;
 
-  // Bond information -- Currently unused.
+  // Bond information
 
   /**
    * Real[numBonds]
@@ -137,23 +140,19 @@ public:
   Real*   bondLengths;
 
   /**
+   * Real[numBonds]
+   * Holds the previous lengths of all the bonds in the simulation box
+   */
+  Real* rollBackBondLengths;
+
+  /**
    * Real [BOND_DATA_SIZE][numBonds]
    * Holds data about every bond in the box, including the endpoints, the
    *     force constant, and the equilibrium distance.
    */
    Real**  bondData;
 
-   /**
-    * Holds the index of the most recently changed bond.
-    */
-   int changedBond;
-
-   /**
-    * Holds the previous length of the most recently changed bond.
-    */
-   Real prevBond;
-
-  // Angle information -- Currently unused.
+  // Angle information
 
   /**
    * Real [numAngles]
@@ -162,22 +161,18 @@ public:
   Real*   angleSizes;
 
   /**
+   * Real[numAngles]
+   * Holds the previous anlge sizes of the angles in the simulation box
+   */
+  Real* rollBackAngleSizes;
+
+  /**
    * Real[ANGLE_DATA_SIZE][numAngles]
    * Holds data about every angle in the box, including the endpoints, central
    *     atom, force constant, and the equilibrium angle.
    */
   Real**  angleData;
 
-  /**
-   * Holds the index of the most recently changed angle.
-   */
-  int changedAngle;
-
-  /**
-   * Holds the previous measurement of the most recently changed angle, in
-   *     degrees.
-   */
-  Real prevAngle;
 
   // Dihedral information -- Currently unused.
 
