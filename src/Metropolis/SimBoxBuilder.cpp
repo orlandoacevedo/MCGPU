@@ -26,6 +26,7 @@ void SimBoxBuilder::initEnvironment(Environment* environment) {
   sb->size[Z_COORD] = environment->z;
   sb->cutoff = environment->cutoff;
   sb->temperature = environment->temp;
+  sb->kT = sb->temperature * kBoltz;
   sb->maxTranslate = environment->maxTranslation;
   sb->maxRotate = environment->maxRotation;
   sb->numAtoms = environment->numOfAtoms;

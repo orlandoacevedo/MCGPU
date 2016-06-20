@@ -80,7 +80,6 @@ void Simulation::run() {
 
   Real energy_LRC = SerialCalcs::calcEnergy_LRC(box);
 
-  Real kT = kBoltz * box->getEnvironment()->temp;
   int accepted = 0;
   int rejected = 0;
 
@@ -209,19 +208,7 @@ void Simulation::run() {
     newEnergyCont = simStep->calcMoleculeEnergy(changeIdx, 0);
 
     // Compare new energy and old energy to decide if we should accept or not
-    bool accept = false;
-
-    if (newEnergyCont < oldEnergyCont) {
-      // Always accept decrease in energy
-      accept = true;
-    } else {
-      // Otherwise use statistics + random number to determine weather to
-      // accept increase in energy
-      Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
-      accept = x >= randomReal(0.0, 1.0);
-    }
-
-    if (accept) {
+    if (SimCalcs::acceptMove(oldEnergyCont, newEnergyCont)) {
       accepted++;
       oldEnergy_sb += newEnergyCont - oldEnergyCont;
       lj_energy += new_lj - old_lj;

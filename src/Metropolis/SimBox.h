@@ -13,11 +13,11 @@
 
 typedef unsigned int ID;
 
+const double kBoltz = 0.00198717;
 
 class SimBox {
 
-public:
-
+ public:
   // ----- Basic Environment Conditions -----
 
   /**
@@ -29,6 +29,11 @@ public:
    * Holds the box's temperature.
    */
   Real temperature;
+
+  /**
+   * Holds tempeture value for Monte Carlo calculations
+   */
+  Real kT;
 
   /**
    * Holds the box's cutoff distance.

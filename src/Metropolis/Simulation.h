@@ -15,8 +15,6 @@
 
 #define OUT_INTERVAL 100
 
-const double kBoltz = 0.00198717;
-
 class Simulation
 {
   public:

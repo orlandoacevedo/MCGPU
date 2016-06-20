@@ -553,6 +553,17 @@ int SimCalcs::find(int atomIdx) {
   }
 }
 
+bool SimCalcs::acceptMove(Real oldEnergy, Real newEnergy) {
+    // Always accept decrease in energy
+    if (newEnergy < oldEnergy) {
+      return true;
+    }
+
+    // Otherwise use random number to determine weather to accept
+    return exp(-(newEnergy - oldEnergy) / sb->kT) >=
+        randomReal(0.0, 1.0);
+}
+
 void SimCalcs::setSB(SimBox* sb_in) {
   sb = sb_in;
   on_gpu = GPUCopy::onGpu();

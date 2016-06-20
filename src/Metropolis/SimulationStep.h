@@ -356,6 +356,15 @@ namespace SimCalcs {
    */
   int find (int atomIdx);
 
+  /**
+   * Determines if a move should be accepted based on the before and after
+   * energy values.
+   *
+   * @param oldEnergy the total molecular energy prior to the move
+   * @param newEnergy the total molecular energy proceeding the move
+   */
+  bool acceptMove(Real oldEnergy, Real newEnergy);
+
   /** Set the current SimBox instance for this namespace */
   void setSB(SimBox* sb);
 }
