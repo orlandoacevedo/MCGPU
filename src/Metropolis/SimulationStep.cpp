@@ -139,7 +139,7 @@ void SimCalcs::expandAngle(int molIdx, int angleIdx, Real expandDeg) {
   int group1 = find(end1 - startIdx);
   int group2 = find(end2 - startIdx);
   if (group1 == group2) {
-    std::cout << "ERROR: EXPANDING ANGLE IN A RING!" << std::endl;
+    // std::cout << "ERROR: EXPANDING ANGLE IN A RING!" << std::endl;
     return;
   }
   Real DEG2RAD = 3.14159256358979323846264 / 180.0;
@@ -233,13 +233,13 @@ void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
   int side1 = find(end1 - startIdx);
   int side2 = find(end2 - startIdx);
   if (side1 == side2) {
-    std::cerr << "ERROR: EXPANDING BOND IN A RING!" << std::endl;
+    // std::cerr << "ERROR: EXPANDING BOND IN A RING!" << std::endl;
     return;
   }
 
   // Move each atom the appropriate distance for the bond stretch
   Real v[NUM_DIMENSIONS];
-  Real denon;
+  Real denon = 0.0;
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
     v[i] = sb->atomCoordinates[i][side2] - sb->atomCoordinates[i][side1];
     denon += v[i] * v[i];
@@ -251,11 +251,11 @@ void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
   for (int i = 0; i < molSize; i++) {
     if (find(i) == side2) {
       for (int j = 0; j < NUM_DIMENSIONS; j++) {
-        sb->atomCoordinates[j][i + startIdx] += v[i];
+        sb->atomCoordinates[j][i + startIdx] += v[j];
       }
     } else {
       for (int j = 0; j < NUM_DIMENSIONS; j++) {
-        sb->atomCoordinates[j][i + startIdx] -= v[i];
+        sb->atomCoordinates[j][i + startIdx] -= v[j];
       }
     }
   }
@@ -435,30 +435,21 @@ void SimCalcs::intramolecularMove(int molIdx) {
   int numAngles = sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
   Real bondDelta = sb->maxBondDelta, angleDelta = sb->maxAngleDelta;
   for (int i = 0; i < numMoves; i++) {
-    int moveType = (int)round(randomReal(0, 1));
+    Real moveType = randomReal(0, 1);
     int selectedBond, selectedAngle;
-    switch (moveType) {
-      case 0:
+    if (moveType > 0.5) {
         if (numBonds == 0) break;
-        selectedBond = (int)round(randomReal(0,
-              sb->moleculeData[MOL_BOND_COUNT][molIdx] - 1));
+        selectedBond = (int)randomReal(0, numBonds);
         // TODO (blm): Make bond delta more accurate
         stretchBond(molIdx, selectedBond, randomReal(-bondDelta, bondDelta));
         // TODO (blm): Do an MC test to self-correct bond delta
-        break;
-      case 1:
+    } else {
         if (numAngles == 0) break;
-        selectedAngle = (int)round(randomReal(0,
-              sb->moleculeData[MOL_ANGLE_COUNT][molIdx] - 1));
+        selectedAngle = (int)randomReal(0, numAngles);
         // TODO (blm): Make bond delta more accurate
         expandAngle(molIdx, selectedAngle, randomReal(-angleDelta, angleDelta));
         // TODO (blm): Do an MC test to self-correct angle delta
-        break;
-      // TODO: Add dihedrals here
-      default:
-        // logger.error("Invalid intramolecular move selected");
-        std::cerr << "Invalid intramolecular move selected" << std::endl;
-    }
+    } // TODO: Add dihedrals here
   }
 }
 

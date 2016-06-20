@@ -105,7 +105,6 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
   std::map<int, std::string*> idToName;
 
   for (int i = 0; i < sb->numMolecules; i++) {
-
     sb->moleculeData[MOL_START][i] = atomIdx;
     sb->moleculeData[MOL_LEN][i] = molecules[i].numOfAtoms;
     sb->moleculeData[MOL_TYPE][i] = molecules[i].type;
@@ -114,6 +113,7 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
     sb->moleculeData[MOL_ANGLE_START][i] = angleIdx;
     sb->moleculeData[MOL_ANGLE_COUNT][i] = molecules[i].numOfAngles;
 
+    // Store all the atom data for the molecule
     for (int j = 0; j < molecules[i].numOfAtoms; j++) {
       Atom a = molecules[i].atoms[j];
       idToIdx[a.id] = atomIdx;
@@ -127,6 +127,7 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
       atomIdx++;
     }
 
+    // Store all the bond data for the molecule
     for (int j = 0; j < molecules[i].numOfBonds; j++) {
       Bond b = molecules[i].bonds[j];
       sb->bondData[BOND_A1_IDX][bondIdx] = idToIdx[b.atom1];
@@ -140,6 +141,7 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
       bondIdx++;
     }
 
+    // Store all the angle data for the molecule
     for (int j = 0; j < molecules[i].numOfAngles; j++) {
       Angle a = molecules[i].angles[j];
       sb->angleData[ANGLE_A1_IDX][angleIdx] = idToIdx[a.atom1];
@@ -167,6 +169,8 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
         excludeCount[j] = 0;
         fudgeCount[j] = 0;
       }
+
+      // Count the number of atoms that will be excluded
       for (int j = 0; j < molecules[i].numOfBonds; j++) {
         int idx1 = idToIdx[molecules[i].bonds[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].bonds[j].atom2] - startIdx;
@@ -183,6 +187,8 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           excludeCount[idx2]++;
         }
       }
+
+      // Count the number of atoms that will be fudged
       for (int j = 0; j < molecules[i].numOfHops; j++) {
         int idx1 = idToIdx[molecules[i].hops[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].hops[j].atom2] - startIdx;
@@ -192,12 +198,16 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           fudgeCount[idx2]++;
         }
       }
+
+      // Build the exclusion and fudge matrix
       for (int j = 0; j < numOfAtoms; j++) {
         sb->excludeAtoms[type][j] = new int[excludeCount[j] + 1];
         sb->fudgeAtoms[type][j] = new int[fudgeCount[j] + 1];
-        excludeCount[j] = 0;
-        fudgeCount[j] = 0;
+        excludeCount[j] = -1;
+        fudgeCount[j] = -1;
       }
+
+      // Exclude two atoms if they're joined by a bond
       for (int j = 0; j < molecules[i].numOfBonds; j++) {
         int idx1 = idToIdx[molecules[i].bonds[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].bonds[j].atom2] - startIdx;
@@ -206,6 +216,8 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           sb->excludeAtoms[type][idx2][++excludeCount[idx2]] = idx1;
         }
       }
+
+      // Exclude two atoms if they're joined by an angle
       for (int j = 0; j < molecules[i].numOfAngles; j++) {
         int idx1 = idToIdx[molecules[i].angles[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].angles[j].atom2] - startIdx;
@@ -214,6 +226,8 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           sb->excludeAtoms[type][idx2][++excludeCount[idx2]] = idx1;
         }
       }
+
+      // Fudge two atoms if they're separated by exactly 3 hops
       for (int j = 0; j < molecules[i].numOfHops; j++) {
         int idx1 = idToIdx[molecules[i].hops[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].hops[j].atom2] - startIdx;
@@ -224,6 +238,7 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
         }
       }
 
+      // End the exclude and fudge list with a -1 flag
       for (int j = 0; j < numOfAtoms; j++) {
         sb->excludeAtoms[type][j][++excludeCount[j]] = -1;
         sb->fudgeAtoms[type][j][++fudgeCount[j]] = -1;
