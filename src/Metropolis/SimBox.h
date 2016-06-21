@@ -16,8 +16,12 @@ typedef unsigned int ID;
 const double kBoltz = 0.00198717;
 
 class SimBox {
-
  public:
+  /**
+   * The current step in the simulation. Used for intramolecular delta tweaking
+   */
+  int stepNum;
+
   // ----- Basic Environment Conditions -----
 
   /**
@@ -165,6 +169,18 @@ class SimBox {
    */
    Real** bondData;
 
+   /**
+    * The number of intramolecular moves that have stretched a bond in this
+    * simulation. Used for intrmolecular delta tuning.
+    */
+   int numBondMoves;
+
+   /**
+    * The number of intrmolecular bond moves that have passed an MC test after
+    * occuring. Used for intrmolecular delta tuning.
+    */
+   int numAcceptedBondMoves;
+
   // ----- Angle Information -----
 
   /**
@@ -186,6 +202,17 @@ class SimBox {
    */
   Real** angleData;
 
+   /**
+    * The number of intramolecular moves that have altered an angle in this
+    * simulation. Used for intrmolecular delta tuning.
+    */
+  int numAngleMoves;
+
+   /**
+    * The number of intramolecular angle moves that have passed an MC test in
+    * this simulation. Used for intrmolecular delta tuning.
+    */
+  int numAcceptedAngleMoves;
 
   // ----- Dihedral Information (Currently unused) -----
 

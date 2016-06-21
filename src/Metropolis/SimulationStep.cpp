@@ -6,6 +6,9 @@
 #include "GPUCopy.h"
 #include "SimulationStep.h"
 
+#define RATIO_MARGIN 0.02
+#define TARGET_RATIO 0.4
+
 /** Construct a new SimulationStep from a SimBox pointer */
 SimulationStep::SimulationStep(SimBox *box) {
   SimCalcs::setSB(box);
@@ -429,6 +432,8 @@ void SimCalcs::intramolecularMove(int molIdx) {
   saveBonds(molIdx);
   saveAngles(molIdx);
 
+  Real newEnergy = 0, currentEnergy = calcIntraMolecularEnergy(molIdx);
+
   // TODO (blm): allow max to be configurable
   int numMoves = (int)round(randomReal(1, sb->maxIntraMoves)); 
   int numBonds = sb->moleculeData[MOL_BOND_COUNT][molIdx];
@@ -438,19 +443,56 @@ void SimCalcs::intramolecularMove(int molIdx) {
     Real moveType = randomReal(0, 1);
     int selectedBond, selectedAngle;
     if (moveType > 0.5) {
-        if (numBonds == 0) break;
+        if (numBonds == 0) continue;
+        sb->numBondMoves++;
         selectedBond = (int)randomReal(0, numBonds);
-        // TODO (blm): Make bond delta more accurate
         stretchBond(molIdx, selectedBond, randomReal(-bondDelta, bondDelta));
-        // TODO (blm): Do an MC test to self-correct bond delta
+
+        // Do an MC test for delta tuning
+        // NOTE: Failing does NOT mean we rollback
+        newEnergy = calcIntraMolecularEnergy(molIdx);
+        if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
+          sb->numAcceptedBondMoves++;
+        }
     } else {
-        if (numAngles == 0) break;
+        if (numAngles == 0) continue;
+        sb->numAngleMoves++;
         selectedAngle = (int)randomReal(0, numAngles);
-        // TODO (blm): Make bond delta more accurate
         expandAngle(molIdx, selectedAngle, randomReal(-angleDelta, angleDelta));
-        // TODO (blm): Do an MC test to self-correct angle delta
+
+        // Do an MC test for delta tuning 
+        // NOTE: Failing does NOT mean we rollback
+        newEnergy = calcIntraMolecularEnergy(molIdx);
+        if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
+          sb->numAcceptedAngleMoves++;
+        }
     } // TODO: Add dihedrals here
   }
+
+  // Tweak the deltas to acheive 40% intramolecular acceptance ratio
+  // FIXME: Make interval configurable
+  if (sb->stepNum != 0 && (sb->stepNum) % 1000 == 0) {
+    Real bondRatio = (Real)sb->numAcceptedBondMoves / sb->numBondMoves;
+    Real angleRatio = (Real)sb->numAcceptedAngleMoves / sb->numAngleMoves;
+    Real diff;
+
+    diff = bondRatio - TARGET_RATIO;
+    if (fabs(diff) > RATIO_MARGIN) {
+      sb->maxBondDelta += sb->maxBondDelta * diff;
+    }
+    diff = angleRatio - TARGET_RATIO;
+    if (fabs(angleDelta) > RATIO_MARGIN) {
+      sb->maxAngleDelta += sb->maxAngleDelta * diff;
+    }
+
+    // Reset the ratio values
+    sb->numAcceptedBondMoves = 0;
+    sb->numBondMoves = 0;
+    sb->numAcceptedAngleMoves = 0;
+    sb->numAngleMoves = 0;
+  }
+
+  currentEnergy = newEnergy;
 }
 
 void SimCalcs::saveBonds(int molIdx) {

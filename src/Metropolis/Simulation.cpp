@@ -217,6 +217,7 @@ void Simulation::run() {
       rejected++;
       simStep->rollback(changeIdx, sb);
     }
+    sb->stepNum++;
   }
   delete(simStep);
   endTime = clock();
