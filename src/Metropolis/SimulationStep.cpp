@@ -6,6 +6,8 @@
 #include "GPUCopy.h"
 #include "SimulationStep.h"
 
+#define ENABLE_INTRA false
+#define ENABLE_TUNING false
 #define RATIO_MARGIN 0.02
 #define TARGET_RATIO 0.4
 
@@ -15,8 +17,12 @@ SimulationStep::SimulationStep(SimBox *box) {
 }
 
 Real SimulationStep::calcMoleculeEnergy(int currMol, int startMol) {
-  return calcMolecularEnergyContribution(currMol, startMol) +
-    calcIntraMolecularEnergy(currMol);
+  if (ENABLE_INTRA) {
+    return calcMolecularEnergyContribution(currMol, startMol) +
+      calcIntraMolecularEnergy(currMol);
+  } else {
+    return calcMolecularEnergyContribution(currMol, startMol);
+  }
 }
 
 Real SimulationStep::calcIntraMolecularEnergy(int molIdx) {
@@ -43,8 +49,8 @@ Real SimulationStep::calcSystemEnergy(Real &subLJ, Real &subCharge,
                                       int numMolecules) {
   Real total = subLJ + subCharge;
   for (int mol = 0; mol < numMolecules; mol++) {
-    total += calcMolecularEnergyContribution(mol, mol) +
-      calcIntraMolecularEnergy(mol);
+    total += calcMolecularEnergyContribution(mol, mol);
+    if (ENABLE_INTRA) total += calcIntraMolecularEnergy(mol);
   }
 
   return total;
@@ -377,7 +383,7 @@ void SimCalcs::rotateZ(int aIdx, Real angleDeg, Real** aCoords) {
 void SimCalcs::changeMolecule(int molIdx) {
   // Intermolecular moves first, to save proper rollback positions
   intermolecularMove(molIdx);
-  intramolecularMove(molIdx);
+  if (ENABLE_INTRA) intramolecularMove(molIdx);
 }
 
 void SimCalcs::intermolecularMove(int molIdx) {
@@ -471,7 +477,7 @@ void SimCalcs::intramolecularMove(int molIdx) {
 
   // Tweak the deltas to acheive 40% intramolecular acceptance ratio
   // FIXME: Make interval configurable
-  if (sb->stepNum != 0 && (sb->stepNum) % 1000 == 0) {
+  if (ENABLE_TUNING && sb->stepNum != 0 && (sb->stepNum) % 1000 == 0) {
     Real bondRatio = (Real)sb->numAcceptedBondMoves / sb->numBondMoves;
     Real angleRatio = (Real)sb->numAcceptedAngleMoves / sb->numAngleMoves;
     Real diff;
