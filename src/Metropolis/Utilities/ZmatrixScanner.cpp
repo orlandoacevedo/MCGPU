@@ -129,7 +129,6 @@ void ZmatrixScanner::parseLine(string line, int numOfLines) {
       lineAtom.x = 0;
       lineAtom.y = 0;
       lineAtom.z = 0;
-	    *lineAtom.name = atomType;
     } else {
       lineAtom = createAtom(atoi(atomID.c_str()), -1, -1, -1, -1, -1, -1, atomType);
     }

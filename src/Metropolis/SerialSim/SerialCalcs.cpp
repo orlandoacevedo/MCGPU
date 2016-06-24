@@ -17,9 +17,10 @@
 
 using namespace std;
 
-Box* SerialCalcs::createBox(SimulationArgs& simArgs, long* startStep, long* steps) {
+Box* SerialCalcs::createBox(SimulationArgs& simArgs, long* startStep,
+                            long* steps, SBScanner* sbScanner) {
 	SerialBox* box = new SerialBox();
-	if (!loadBoxData(simArgs, box, startStep, steps)) {
+	if (!loadBoxData(simArgs, box, startStep, steps, sbScanner)) {
 		if (simArgs.fileType != InputFile::Unknown) {
 			std::cerr << "Error: Could not build from file: " << simArgs.filePath
 								<< std::endl;

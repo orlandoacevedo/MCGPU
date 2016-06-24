@@ -142,7 +142,15 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
       std::string name1 = *(idToName[b.atom1]);
       std::string name2 = *(idToName[b.atom2]);
       sb->bondData[BOND_KBOND][bondIdx] = sbData->getKBond(name1, name2);
+      if (sb->bondData[BOND_KBOND][bondIdx] == -1) {
+        std::cerr << "ERROR: Failed to calculate force constant for bond "
+                  << bondIdx << std::endl;
+      }
       sb->bondData[BOND_EQDIST][bondIdx] = sbData->getEqBondDist(name1, name2);
+      if (sb->bondData[BOND_EQDIST][bondIdx] == -1) {
+        std::cerr << "ERROR: Failed to calculate equilibrium distance for bond "
+                  << bondIdx << std::endl;
+      }
       sb->bondLengths[bondIdx] = b.distance;
       sb->bondData[BOND_VARIABLE][bondIdx] = b.variable;
       bondIdx++;
@@ -158,7 +166,15 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
       std::string a2Name = *(idToName[a.atom2]);
       std::string midName = *(idToName[a.commonAtom]);
       sb->angleData[ANGLE_KANGLE][angleIdx] = sbData->getKAngle(a1Name, midName, a2Name);
+      if (sb->angleData[ANGLE_KANGLE][angleIdx] == -1) {
+        std::cerr << "ERROR: Failed to calculate force constant for angle "
+                  << angleIdx << std::endl;
+      }
       sb->angleData[ANGLE_EQANGLE][angleIdx] = sbData->getEqAngle(a1Name, midName, a2Name);
+      if (sb->angleData[ANGLE_EQANGLE][angleIdx] == -1) {
+        std::cerr << "ERROR: Failed to calculate equilibrium angle for angle "
+                  << angleIdx << std::endl;
+      }
       sb->angleSizes[angleIdx] = a.value;
       sb->angleData[ANGLE_VARIABLE][angleIdx] = a.variable;
       angleIdx++;

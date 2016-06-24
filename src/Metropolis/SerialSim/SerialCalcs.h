@@ -18,6 +18,7 @@
 #include "Metropolis/DataTypes.h"
 #include "Metropolis/SimulationArgs.h"
 #include "Metropolis/Utilities/StructLibrary.h"
+#include "Metropolis/Utilities/FileUtilities.h"
 
 namespace SerialCalcs {
 	
@@ -30,7 +31,8 @@ namespace SerialCalcs {
 	 *   		but it was placed here due to time constraints.
 	 *   		TODO for future group.
    */
-	Box* createBox(SimulationArgs& simArgs, long* startStep, long* steps);
+	Box* createBox(SimulationArgs& simArgs, long* startStep, long* steps,
+                   SBScanner* sbScanner);
 
 	/**
 	 * Calculates the long-range correction energy value for molecules outside the cutoff.

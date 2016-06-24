@@ -609,7 +609,7 @@ class StateScanner {
  * show-stopping error for which you should halt the simulation
  */
 bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep,
-                 long* steps);
+                 long* steps, SBScanner* sbScanner);
 
 
 /**

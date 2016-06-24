@@ -6,7 +6,7 @@
 #include "GPUCopy.h"
 #include "SimulationStep.h"
 
-#define ENABLE_INTRA false
+#define ENABLE_INTRA  false
 #define ENABLE_TUNING false
 #define RATIO_MARGIN 0.02
 #define TARGET_RATIO 0.4
@@ -18,8 +18,9 @@ SimulationStep::SimulationStep(SimBox *box) {
 
 Real SimulationStep::calcMoleculeEnergy(int currMol, int startMol) {
   if (ENABLE_INTRA) {
-    return calcMolecularEnergyContribution(currMol, startMol) +
-      calcIntraMolecularEnergy(currMol);
+    Real inter = calcMolecularEnergyContribution(currMol, startMol);
+    Real intra = calcIntraMolecularEnergy(currMol);
+    return inter + intra;
   } else {
     return calcMolecularEnergyContribution(currMol, startMol);
   }
@@ -49,10 +50,8 @@ Real SimulationStep::calcSystemEnergy(Real &subLJ, Real &subCharge,
                                       int numMolecules) {
   Real total = subLJ + subCharge;
   for (int mol = 0; mol < numMolecules; mol++) {
-    total += calcMolecularEnergyContribution(mol, mol);
-    if (ENABLE_INTRA) total += calcIntraMolecularEnergy(mol);
+    total += calcMoleculeEnergy(mol, mol);
   }
-
   return total;
 }
 
@@ -250,7 +249,7 @@ void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
   Real v[NUM_DIMENSIONS];
   Real denon = 0.0;
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
-    v[i] = sb->atomCoordinates[i][side2] - sb->atomCoordinates[i][side1];
+    v[i] = sb->atomCoordinates[i][end2] - sb->atomCoordinates[i][end1];
     denon += v[i] * v[i];
   }
   denon = sqrt(denon);
@@ -260,11 +259,11 @@ void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
   for (int i = 0; i < molSize; i++) {
     if (find(i) == side2) {
       for (int j = 0; j < NUM_DIMENSIONS; j++) {
-        sb->atomCoordinates[j][i + startIdx] += v[j];
+        sb->atomCoordinates[j][i + startIdx] += v[j] * stretchDist;
       }
     } else {
       for (int j = 0; j < NUM_DIMENSIONS; j++) {
-        sb->atomCoordinates[j][i + startIdx] -= v[j];
+        sb->atomCoordinates[j][i + startIdx] -= v[j] * stretchDist;
       }
     }
   }
@@ -562,8 +561,10 @@ void SimCalcs::rollback(int molIdx) {
     }
   }
 
-  rollbackAngles(molIdx);
-  rollbackBonds(molIdx);
+  if (ENABLE_INTRA) {
+    rollbackAngles(molIdx);
+    rollbackBonds(molIdx);
+  }
 }
 
 void SimCalcs::rollbackBonds(int molIdx) {

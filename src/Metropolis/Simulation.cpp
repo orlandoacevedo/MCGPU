@@ -37,8 +37,9 @@
 Simulation::Simulation(SimulationArgs simArgs) {
   args = simArgs;
   stepStart = 0;
+  sbScanner = new SBScanner();
 
-  box = SerialCalcs::createBox(args, &stepStart, &simSteps);
+  box = SerialCalcs::createBox(args, &stepStart, &simSteps, sbScanner);
   if (box == NULL) {
     std::cerr << "Error: Unable to initialize simulation Box" << std::endl;
     exit(EXIT_FAILURE);
@@ -115,7 +116,7 @@ void Simulation::run() {
   }
 
   // Build SimBox below
-  SimBoxBuilder builder = SimBoxBuilder(args.useNeighborList, new SBScanner());
+  SimBoxBuilder builder = SimBoxBuilder(args.useNeighborList, sbScanner);
   bool parallel = args.simulationMode == SimulationMode::Parallel;
   SimBox* sb = builder.build(box);
   GPUCopy::setParallel(parallel);
