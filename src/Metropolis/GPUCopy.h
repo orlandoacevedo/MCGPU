@@ -7,9 +7,18 @@ namespace GPUCopy {
   void copyIn(SimBox* sb);
   void copyOut(SimBox* sb);
   void setParallel(bool in);
+
   Real** atomDataPtr();
+
   Real** rollBackCoordinatesPtr();
   Real** atomCoordinatesPtr();
+
+  Real* bondsPtr();
+  Real* rollBackBondsPtr();
+
+  Real* anglesPtr();
+  Real* rollBackAnglesPtr();
+
   int* primaryIndexesPtr();
   int** moleculeDataPtr();
   Real* sizePtr();

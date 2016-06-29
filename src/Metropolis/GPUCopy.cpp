@@ -24,6 +24,18 @@ int** d_moleculeData = NULL;
 Real* h_size = NULL;
 Real* d_size = NULL;
 
+Real* h_angleSizes = NULL;
+Real* d_angleSizes = NULL;
+
+Real* h_bondLengths = NULL;
+Real* d_bondLengths = NULL;
+
+Real* h_rollBackBondLengths = NULL;
+Real* d_rollBackBondLengths = NULL;
+
+Real* h_rollBackAngleSizes = NULL;
+Real* d_rollBackAngleSizes = NULL;
+
 void GPUCopy::setParallel(bool in) { parallel = in; }
 
 int GPUCopy::onGpu() { return parallel; }
@@ -46,6 +58,22 @@ int** GPUCopy::moleculeDataPtr() {
   return parallel ? d_moleculeData : h_moleculeData;
 }
 
+Real* GPUCopy::bondsPtr() {
+  return parallel ? d_bondLengths : h_bondLengths;
+}
+
+Real* GPUCopy::rollBackBondsPtr() {
+  return parallel ? d_rollBackBondLengths : h_rollBackBondLengths;
+}
+
+Real* GPUCopy::anglesPtr() {
+  return parallel ? d_angleSizes : h_angleSizes;
+}
+
+Real* GPUCopy::rollBackAnglesPtr() {
+  return parallel ? d_rollBackAngleSizes : h_rollBackAngleSizes;
+}
+
 Real* GPUCopy::sizePtr() { return parallel ? d_size : h_size; }
 
 void GPUCopy::copyIn(SimBox *sb) {
@@ -53,8 +81,12 @@ void GPUCopy::copyIn(SimBox *sb) {
   h_atomData = sb->atomData;
   h_atomCoordinates = sb->atomCoordinates;
   h_rollBackCoordinates = sb->rollBackCoordinates;
-  h_size = sb-> size;
+  h_size = sb->size;
   h_primaryIndexes = sb->primaryIndexes;
+  h_bondLengths = sb->bondLengths;
+  h_rollBackBondLengths = sb->rollBackBondLengths;
+  h_angleSizes = sb->angleSizes;
+  h_rollBackAngleSizes = sb->rollBackAngleSizes;
   if (!parallel) { return; }
 
 #ifdef _OPENACC
@@ -102,6 +134,16 @@ void GPUCopy::copyIn(SimBox *sb) {
   d_primaryIndexes = (int *)acc_copyin(sb->primaryIndexes, sb->numPIdxes * sizeof(int));
 
   d_size = (Real *)acc_copyin(sb->size, NUM_DIMENSIONS * sizeof(Real));
+
+  d_angleSizes = (Real *)acc_copyin(sb->angleSizes,
+                                    sb->numAngles * sizeof(Real *));
+  d_rollBackAngleSizes = (Real *)acc_copyin(sb->rollBackAngleSizes,
+                                            sb->numAngles * sizeof(Real *));
+
+  d_bondLengths = (Real *)acc_copyin(sb->bondLengths, 
+                                     sb->numBonds * sizeof(Real *));
+  d_rollBackBondLengths = (Real *)acc_copyin(sb->rollBackBondLengths, 
+                                             sb->numBonds * sizeof(Real *));
 #endif
 }
 
@@ -131,6 +173,11 @@ void GPUCopy::copyOut(SimBox* sb) {
 
   acc_copyout(h_primaryIndexes, sb->numPIdxes);
   acc_copyout(h_size, NUM_DIMENSIONS);
+
+  acc_copyout(h_angleSizes, sb->numAngles);
+  acc_copyout(h_rollBackAngleSizes, sb->numAngles);
+  acc_copyout(h_bondLengths, sb->numBonds);
+  acc_copyout(h_rollBackBondLengths, sb->numBonds);
 #endif
 }
 
