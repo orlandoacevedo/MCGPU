@@ -150,17 +150,16 @@ The NVIDIA Visual Profiler, nvvp, is highly recommended and provides much more
 detailed information that the nvprof commands above.
 
 ##Running With Multiple Solvents
-MCGPU currently supports the simulaton of two solvents within one z-matrix file where separate solvents are separated by TERZ.
+MCGPU currently supports the simulation of two solvents within one z-matrix file where separate solvents are separated by TERZ.
 
-When using multiple solvents, the primary index array (Configuration File line 30), must contan at least one primary index array for each molecule, with the arrays enclosed in brackets and comma separated. For example [2],[1,3] represents the primary index structure for two molecules where the first molecule (defined above TERZ) has the primary index of '2' and the second molecule (defined below TERZ) has the primary indexes of '1' and '3'.
+When using multiple solvents, the primary index array (Configuration File line 30), must contain at least one primary index array for each molecule, with the arrays enclosed in brackets and comma separated. For example [2],[1,3] represents the primary index structure for two molecules where the first molecule (defined above TERZ) has the primary index of '2' and the second molecule (defined below TERZ) has the primary indexes of '1' and '3'.
 
 ##Available Command-line Options
- * `--serial (-s)`: Runs simulation on CPU (default)
- * `--parallel (-p)`: Runs simulation on GPU (requries CUDA)
+ * `--serial (-s)`: Runs simulation on CPU
+ * `--parallel (-p)`: Runs simulation on GPU
  * `--name <title>`: Specifies the name of the simulation that will be run.
  * `--steps <count> (-n)`: Specifies how many simulation steps to execute in the Monte Carlo Metropolis algorithm. Ignores steps to run in config file, if present (line 10).
  * `--verbose (-k)`: Enables real time energy printouts
- * `--neighbor <interval> (-l)`: Specifies to use the neighborlist structure for molecular organization. interval is optional and refers to how many steps between updating the neighborlist (default is 100).
  * `--status-interval <interval> (-i)`: Specifies the number of simulation steps between status updates.
  * `--state-interval <interval> (-I)`: Specifies the number of simulation steps between state file snapshots of the current simulation run.
  * `--strategy <strategy-name> (-S)`: Specifies the energy calculation strategy to utilize. Current options include `brute-force` and `proximity-matrix`
@@ -172,7 +171,7 @@ To view documentation for all command-line flags available, use the --help flag:
 
 ##Configuration File
 Configuration files are used to configure a simulation. They are formatted
-using the [INI](https://en.wikipedia.org/wiki/INI_file) convnetion.
+according to the [INI](https://en.wikipedia.org/wiki/INI_file) format.
 Command-line options override values given in this file. An example
 configuration file is shown below.
 
@@ -180,7 +179,7 @@ configuration file is shown below.
 # Name for the simulation
 sim-name=MyTestSimulation
 
-# The dimensions of the periodic simulation box (in angrstroms)
+# The dimensions of the periodic simulation box (in angstroms)
 x=55
 y=55
 z=55
@@ -188,7 +187,7 @@ z=55
 # Temperature (in Kelvin)
 temp=298.15
 
-# Maximum tranlsation for a molecule during the simulation
+# Maximum translation for a molecule during the simulation
 max-translation=0.15
 
 # Number of steps to run in the simulation
@@ -201,7 +200,7 @@ molecules=5120
 opla.par=/absolute/path/to/oplsaa.par
 
 # Path to z-matrix file
-z-matrix=/aboslute/path/to/matrix.z
+z-matrix=/absolute/path/to/matrix.z
 
 # Path to input state *directory*
 state-input=/absolute/path/to/input/dir

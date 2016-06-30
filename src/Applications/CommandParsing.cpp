@@ -290,7 +290,7 @@ void printHelpScreen() {
           "\tflag you cannot also specify the --parallel flag.\n\n";
 
   cout << "--verbose\t(-k)\n"
-          "\tRun the simulation printing regular step updates to std::cout.\n\n";
+          "\tRun the simulation printing regular updates to standard output.\n\n";
 
   cout << "Simulation Run Parameters\n"
           "==========================\n"
@@ -310,8 +310,8 @@ void printHelpScreen() {
   cout << "--neighbor <interval>\t\t(-l)\n"
           "\tSpecifies using the linked-cell neighborlist structure for molecule\n"
           "\torganization. The neighborlist is generally faster for large\n"
-          "\tsimulations. Interval dicatates how many steps are executed\n"
-          "\tinbetween updating the neighborlist structure. Having the\n"
+          "\tsimulations. Interval dictates how many steps are executed\n"
+          "\tin between updating the neighborlist structure. Having the\n"
           "\tneighborlist update more often will result in a more accurate\n"
           "\tsimulation but some performance will be lost. The default is set\n"
           "\tat 100 and the given interval must be greater than 0.\n\n";
@@ -342,7 +342,7 @@ void printHelpScreen() {
 
   cout << "--strategy <strategy-name>\t(-S)\n"
           "\tSpecifies the strategy to be used by the simulation for energy\n"
-          "\tcalulations. Options include 'brute-force' and\n"
+          "\tcalculations. Options include 'brute-force' and\n"
           "\t'proximity-matrix'\n\n";
 
   cout << "Generic Tool Options\n"
