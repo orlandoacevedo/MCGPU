@@ -339,6 +339,9 @@ class ZmatrixScanner {
   /** The path to the Z-matrix file */
   string fileName;
 
+  // True if additional bond angles were implied in the z-matrix file
+  bool hasAdditionalBondAngles;
+
   /** Opls_Scan object used to assign sigma, epsilon and charge values. */
   OplsScanner* oplsScanner;
 
@@ -374,6 +377,9 @@ class ZmatrixScanner {
    * Needed to read the bottom sections of the Z-matrix file.
    */
   int previousFormat;
+
+  /** Add any unspecified angles implied by the z-matrix files */
+  void addImpliedAngles(vector<Angle>& angleVector, vector<Bond> bondVector);
 
  public:
   ZmatrixScanner(); // constructor

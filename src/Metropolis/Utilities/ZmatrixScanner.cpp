@@ -62,6 +62,10 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner) {
       moleculeNum++;
       workingMolecule.type = moleculeNum;
 
+      if (hasAdditionalBondAngles) {
+        addImpliedAngles(angleVector, bondVector);
+      }
+
 	    double atomVectorSize = atomVector.size();
       atomArray = (Atom*) malloc(sizeof(Atom) * atomVector.size());
       bondArray = (Bond*) malloc(sizeof(Bond) * bondVector.size());
@@ -93,6 +97,7 @@ bool ZmatrixScanner::readInZmatrix(string filename, OplsScanner* scanner) {
       dihedralVector.clear();
 
       startNewMolecule = false;
+      hasAdditionalBondAngles = false;
     }
   }
 
@@ -147,6 +152,7 @@ void ZmatrixScanner::parseLine(string line, int numOfLines) {
       lineAngle.atom1 = lineAtom.id;
       lineAngle.atom2 = atoi(angleWith.c_str());
       lineAngle.value = atof(angleMeasure.c_str());
+      lineAngle.commonAtom = 0;
       lineAngle.variable = false;
       angleVector.push_back(lineAngle);
     }
@@ -159,9 +165,9 @@ void ZmatrixScanner::parseLine(string line, int numOfLines) {
       dihedralVector.push_back(lineDihedral);
     }
 
-  } else if(format == 2) {
+  } else if (format == 2) {
     startNewMolecule = true;
-  } else if(format == 3) {
+  } else if (format == 3) {
     startNewMolecule = true;
   }
 
@@ -264,6 +270,8 @@ void ZmatrixScanner::handleZAdditions(string line, int cmdFormat) {
         }
         break;
       case 8:     // Additional Bond Angles follow
+        // More angles are in the molecule, will be calculated later
+        hasAdditionalBondAngles = true;
         break;
       case 9:     // Variable Dihedrals follow
         for(int i=0; i< moleculePattern[0].numOfDihedrals; i++) {
@@ -448,7 +456,7 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID) {
     if(i == 0) {
       newMolecules[i].id = startingID;
     } else {
-	     newMolecules[i].id = newMolecules[i-1].id + newMolecules[i-1].numOfAtoms;
+      newMolecules[i].id = newMolecules[i-1].id + newMolecules[i-1].numOfAtoms;
     }
   }
 
@@ -496,3 +504,69 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID) {
 
   return vector<Molecule>(newMolecules,newMolecules+sizeof(newMolecules)/sizeof(Molecule));
 }
+
+void ZmatrixScanner::addImpliedAngles(vector<Angle>& angleVector,
+                                      vector<Bond> bondVector) {
+  // Add the midpoints (common atoms) for each angle
+  for (int i = 0; i < angleVector.size(); i++) {
+    int a1 = angleVector[i].atom1, a2 = angleVector[i].atom2;
+    angleVector[i].commonAtom = getCommonAtom(bondVector, a1, a2);
+  }
+
+  // An angle is implied if two bonds share a midpoint and one end
+  // i.e. 5-3-1 and 4-3-1 implies 5-3-4
+  vector<Angle> toAdd;
+  for (int i = 0; i < angleVector.size(); i++) {
+    for (int j = i + 1; j < angleVector.size(); j++) {
+      if (angleVector[i].commonAtom == angleVector[i].commonAtom) {
+        Angle angle1 = angleVector[i], angle2 = angleVector[j];
+        int a1 = 0, a2 = 0;
+
+        // Locate the similar ends
+        if (angle1.atom1 == angle2.atom1) {
+          a1 = angle1.atom2, a2 = angle2.atom2;
+        } else if (angle1.atom1 == angle2.atom2) {
+          a1 = angle1.atom2, a2 = angle2.atom1;
+        } else if (angle1.atom2 == angle2.atom1) {
+          a1 = angle1.atom1, a2 = angle2.atom2;
+        } else if (angle1.atom2 == angle2.atom2) {
+          a1 = angle1.atom1, a2 = angle2.atom1;
+        }
+
+        // Create the new bond if we found one
+        if (a1 != 0 && a2 != 0) {
+          Angle newAngle;
+          newAngle.atom1 = a1;
+          newAngle.atom2 = a2;
+          newAngle.commonAtom = getCommonAtom(bondVector, newAngle.atom1,
+                                              newAngle.atom2);
+          newAngle.value = 0; // To be calculated with xyz coordinates
+          newAngle.variable = angle1.variable && angle2.variable; // FIXME: Not sure if that's correct
+
+          // Ensure we're not duplicating any angles
+          bool add = true;
+          for (int angle = 0; angle < angleVector.size() && add; angle++) {
+            if (newAngle.commonAtom == angleVector[angle].commonAtom) {
+              Angle current = angleVector[angle];
+              // Angle is considered equal if first, mid, and second atoms
+              // are the same, regardless of exact ordering
+              if ((current.atom1 == a1 && current.atom2 == a2) ||
+                  (current.atom1 == a2 && current.atom2 == a1)) {
+                add = false;
+              }
+            }
+          }
+          if (add) {
+            toAdd.push_back(newAngle);
+          }
+        }
+      }
+    }
+  }
+
+  // Add the implied angles to our current list
+  for (int i = 0; i < toAdd.size(); i++) {
+    angleVector.push_back(toAdd[i]);
+  }
+}
+

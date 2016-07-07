@@ -4,6 +4,7 @@
 #include "StructLibrary.h"
 #include "Metropolis/Box.h"
 #include "Metropolis/SimulationArgs.h"
+#include "MathLibrary.h"
 
 #include <exception>
 #include <stdexcept>
@@ -438,8 +439,10 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box,
       box->molecules[j].angles[k] = molec1.angles[k];
       int a1Idx = molec1.angles[k].atom1;
       int a2Idx = molec1.angles[k].atom2;
-      box->molecules[j].angles[k].commonAtom = getCommonAtom(bondVector,
-                                                             a1Idx, a2Idx);
+      if (box->molecules[j].angles[k].commonAtom != 0) {
+        box->molecules[j].angles[k].commonAtom = getCommonAtom(bondVector,
+                                                               a1Idx, a2Idx);
+      }
     }
 
 
@@ -522,6 +525,19 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box,
               << std::endl;
     return false;
   }
+
+  // Now that we have XYZ coordinates, compute the values of any implicit
+  // angles.
+  for (int angle = 0; angle < box->angleCount; angle++) {
+    if (box->angles[angle].value == 0) {
+      // Calculate the correct angle value base on the XYZ coordinates
+      Angle a = box->angles[angle];
+      Atom *atoms = box->atoms;
+      box->angles[angle].value = getAngle(atoms[a.atom1], atoms[a.commonAtom],
+                                          atoms[a.atom2]);
+    }
+  }
+
 
   return true;
 }
