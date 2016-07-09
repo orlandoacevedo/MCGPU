@@ -1,11 +1,17 @@
 /**
  * Base class for an iteration of the simulation.
  */
+#include <set>
 
 #include "SimBox.h"
 #include "GPUCopy.h"
 #include "SimulationStep.h"
 
+#define VERBOSE true
+#define ENABLE_BOND 1
+#define ENABLE_ANGLE 1
+#define ENABLE_DIHEDRAL 0
+#define ENABLE_TUNING true
 #define RATIO_MARGIN 0.02
 #define TARGET_RATIO 0.4
 
@@ -41,10 +47,34 @@ void SimulationStep::rollback(int molIdx, SimBox *box) {
 /** Determines the total energy of the box */
 Real SimulationStep::calcSystemEnergy(Real &subLJ, Real &subCharge,
                                       int numMolecules) {
+  Real intra = 0, inter = 0;
+  Real bondE = 0, angleE = 0, nonBondE = 0;
+  Real totalBondE = 0, totalAngleE = 0, totalNonBondE = 0;
+
   Real total = subLJ + subCharge;
   for (int mol = 0; mol < numMolecules; mol++) {
     total += calcMoleculeEnergy(mol, mol);
+
+    if (VERBOSE) {
+      inter += calcMolecularEnergyContribution(mol, mol);
+      intra += SimCalcs::calcIntraMolecularEnergy(mol);
+      bondE = SimCalcs::bondEnergy(mol);
+      angleE = SimCalcs::angleEnergy(mol);
+      nonBondE = SimCalcs::calcIntraMolecularEnergy(mol) - bondE - angleE;
+      totalBondE += bondE;
+      totalAngleE += angleE;
+      totalNonBondE += nonBondE;
+    }
+
   }
+
+  if (VERBOSE) {
+    std::cout << "Inter: " << inter << " Intra: " << intra << std::endl;
+    std::cout << "Bond: " << totalBondE << std::endl
+              << "Angle: " << totalAngleE << std::endl
+              << "Non-Bond: " << totalNonBondE << std::endl << std::endl;
+  }
+
   return total;
 }
 
@@ -439,47 +469,88 @@ void SimCalcs::intramolecularMove(int molIdx) {
   // TODO (blm): Put these in the GPU with GPUCopy
   saveBonds(molIdx);
   saveAngles(molIdx);
+  // Max with one to avoid divide by zero if no intra moves
+  int numMoveTypes = max(ENABLE_BOND + ENABLE_ANGLE + ENABLE_DIHEDRAL, 1);
+  Real intraScaleFactor = 0.25 + (0.75 / (numMoveTypes));
+  Real scaleFactor;
+  std::set<int> indexes;
 
   Real newEnergy = 0, currentEnergy = calcIntraMolecularEnergy(molIdx);
 
   // TODO (blm): allow max to be configurable
-  int numMoves = (int)round(randomReal(1, sb->maxIntraMoves)); 
   int numBonds = sb->moleculeData[MOL_BOND_COUNT][molIdx];
   int numAngles = sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
   Real bondDelta = sb->maxBondDelta, angleDelta = sb->maxAngleDelta;
-  for (int i = 0; i < numMoves; i++) {
-    Real moveType = randomReal(0, 1);
-    int selectedBond, selectedAngle;
-    if (moveType > 0.5) {
-        if (numBonds == 0) continue;
-        sb->numBondMoves++;
-        selectedBond = (int)randomReal(0, numBonds);
-        stretchBond(molIdx, selectedBond, randomReal(-bondDelta, bondDelta));
 
-        // Do an MC test for delta tuning
-        // NOTE: Failing does NOT mean we rollback
-        newEnergy = calcIntraMolecularEnergy(molIdx);
-        if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
-          sb->numAcceptedBondMoves++;
-        }
-    } else {
-        if (numAngles == 0) continue;
-        sb->numAngleMoves++;
-        selectedAngle = (int)randomReal(0, numAngles);
-        expandAngle(molIdx, selectedAngle, randomReal(-angleDelta, angleDelta));
+  // Handle bond moves
+  if (ENABLE_BOND) {
+    int numBondsToMove = sb->moleculeData[MOL_BOND_COUNT][molIdx];
+    if (numBondsToMove > 3) {
+      numBondsToMove = (int)randomReal(2, numBonds);
+      numBondsToMove = min(numBondsToMove, sb->maxIntraMoves);
+    }
+    scaleFactor = 0.25 + (0.75 / numBondsToMove) * intraScaleFactor;
+    sb->numBondMoves += numBondsToMove;
 
-        // Do an MC test for delta tuning 
-        // NOTE: Failing does NOT mean we rollback
-        newEnergy = calcIntraMolecularEnergy(molIdx);
-        if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
-          sb->numAcceptedAngleMoves++;
-        }
-    } // TODO: Add dihedrals here
+    // Select the indexes of the bonds to move
+    while (indexes.size() < numBondsToMove) {
+      indexes.insert((int)randomReal(0, numBonds));
+    }
+
+    // Move and test each bond
+    for (auto bondIdx = indexes.begin(); bondIdx != indexes.end(); bondIdx++) {
+      Real stretchDist = scaleFactor * randomReal(-bondDelta, bondDelta);
+      // int selectedBond = (int)randomReal(0, numBonds);
+      stretchBond(molIdx, *bondIdx, stretchDist);
+
+      // Do an MC test for delta tuning
+      // Note: Failing does NOT mean we rollback
+      newEnergy = calcIntraMolecularEnergy(molIdx);
+      if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
+        sb->numAcceptedBondMoves++;
+      }
+      currentEnergy = newEnergy;
+    }
+    indexes.clear();
   }
+
+  // Handle angle movements
+  if (ENABLE_ANGLE) {
+    int numAnglesToMove = sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
+    if (numAnglesToMove > 3) {
+      numAnglesToMove = (int)randomReal(2, numAngles);
+      numAnglesToMove = min(numAnglesToMove, sb->maxIntraMoves);
+    }
+    scaleFactor = 0.25 + (0.75 / numAnglesToMove) * intraScaleFactor;
+    sb->numAngleMoves += numAnglesToMove;
+
+    // Select the indexes of the bonds to move
+    while (indexes.size() < numAnglesToMove) {
+      indexes.insert((int)randomReal(0, numAngles));
+    }
+
+    // Move and test each angle
+    for (auto angle = indexes.begin(); angle != indexes.end(); angle++) {
+      Real expandDist = scaleFactor * randomReal(-angleDelta, angleDelta);
+      // int selectedAngle = (int)randomReal(0, numAngles);
+      expandAngle(molIdx, *angle, expandDist);
+
+      // Do an MC test for delta tuning
+      // Note: Failing does NOT mean we rollback
+      newEnergy = calcIntraMolecularEnergy(molIdx);
+      if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
+        sb->numAcceptedAngleMoves++;
+      }
+      currentEnergy = newEnergy;
+    }
+    indexes.clear();
+  }
+
+  // TODO: Put dihedral movements here
 
   // Tweak the deltas to acheive 40% intramolecular acceptance ratio
   // FIXME: Make interval configurable
-  if (sb->stepNum != 0 && (sb->stepNum % 1000) == 0) {
+  if (ENABLE_TUNING && sb->stepNum != 0 && (sb->stepNum % 1000) == 0) {
     Real bondRatio = (Real)sb->numAcceptedBondMoves / sb->numBondMoves;
     Real angleRatio = (Real)sb->numAcceptedAngleMoves / sb->numAngleMoves;
     Real diff;
@@ -499,8 +570,6 @@ void SimCalcs::intramolecularMove(int molIdx) {
     sb->numAcceptedAngleMoves = 0;
     sb->numAngleMoves = 0;
   }
-
-  currentEnergy = newEnergy;
 }
 
 void SimCalcs::saveBonds(int molIdx) {
