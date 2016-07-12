@@ -7,12 +7,12 @@
 #include "GPUCopy.h"
 #include "SimulationStep.h"
 
-#define VERBOSE true
+#define VERBOSE false
 #define ENABLE_BOND 1
 #define ENABLE_ANGLE 1
 #define ENABLE_DIHEDRAL 0
 #define ENABLE_TUNING true
-#define RATIO_MARGIN 0.02
+#define RATIO_MARGIN 0.0001
 #define TARGET_RATIO 0.4
 
 /** Construct a new SimulationStep from a SimBox pointer */
@@ -471,7 +471,7 @@ void SimCalcs::intramolecularMove(int molIdx) {
   saveAngles(molIdx);
   // Max with one to avoid divide by zero if no intra moves
   int numMoveTypes = max(ENABLE_BOND + ENABLE_ANGLE + ENABLE_DIHEDRAL, 1);
-  Real intraScaleFactor = 0.25 + (0.75 / (numMoveTypes));
+  Real intraScaleFactor = 0.25 + (0.75 / (Real)(numMoveTypes));
   Real scaleFactor;
   std::set<int> indexes;
 
@@ -489,7 +489,7 @@ void SimCalcs::intramolecularMove(int molIdx) {
       numBondsToMove = (int)randomReal(2, numBonds);
       numBondsToMove = min(numBondsToMove, sb->maxIntraMoves);
     }
-    scaleFactor = 0.25 + (0.75 / numBondsToMove) * intraScaleFactor;
+    scaleFactor = 0.25 + (0.75 / (Real)numBondsToMove) * intraScaleFactor;
     sb->numBondMoves += numBondsToMove;
 
     // Select the indexes of the bonds to move
@@ -500,17 +500,16 @@ void SimCalcs::intramolecularMove(int molIdx) {
     // Move and test each bond
     for (auto bondIdx = indexes.begin(); bondIdx != indexes.end(); bondIdx++) {
       Real stretchDist = scaleFactor * randomReal(-bondDelta, bondDelta);
-      // int selectedBond = (int)randomReal(0, numBonds);
       stretchBond(molIdx, *bondIdx, stretchDist);
 
-      // Do an MC test for delta tuning
-      // Note: Failing does NOT mean we rollback
-      newEnergy = calcIntraMolecularEnergy(molIdx);
-      if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
-        sb->numAcceptedBondMoves++;
-      }
-      currentEnergy = newEnergy;
     }
+    // Do an MC test for delta tuning
+    // Note: Failing does NOT mean we rollback
+    newEnergy = calcIntraMolecularEnergy(molIdx);
+    if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
+      sb->numAcceptedBondMoves += numBondsToMove;
+    }
+    currentEnergy = newEnergy;
     indexes.clear();
   }
 
@@ -521,7 +520,7 @@ void SimCalcs::intramolecularMove(int molIdx) {
       numAnglesToMove = (int)randomReal(2, numAngles);
       numAnglesToMove = min(numAnglesToMove, sb->maxIntraMoves);
     }
-    scaleFactor = 0.25 + (0.75 / numAnglesToMove) * intraScaleFactor;
+    scaleFactor = 0.25 + (0.75 / (Real)numAnglesToMove) * intraScaleFactor;
     sb->numAngleMoves += numAnglesToMove;
 
     // Select the indexes of the bonds to move
@@ -532,17 +531,15 @@ void SimCalcs::intramolecularMove(int molIdx) {
     // Move and test each angle
     for (auto angle = indexes.begin(); angle != indexes.end(); angle++) {
       Real expandDist = scaleFactor * randomReal(-angleDelta, angleDelta);
-      // int selectedAngle = (int)randomReal(0, numAngles);
       expandAngle(molIdx, *angle, expandDist);
-
-      // Do an MC test for delta tuning
-      // Note: Failing does NOT mean we rollback
-      newEnergy = calcIntraMolecularEnergy(molIdx);
-      if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
-        sb->numAcceptedAngleMoves++;
-      }
-      currentEnergy = newEnergy;
     }
+    // Do an MC test for delta tuning
+    // Note: Failing does NOT mean we rollback
+    newEnergy = calcIntraMolecularEnergy(molIdx);
+    if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
+      sb->numAcceptedAngleMoves += numAnglesToMove;
+    }
+    currentEnergy = newEnergy;
     indexes.clear();
   }
 
