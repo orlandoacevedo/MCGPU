@@ -181,6 +181,9 @@ class SimBox {
     */
    int numAcceptedBondMoves;
 
+   /** True if at least one bond in the SimBox can be moved */
+   bool hasFlexibleBonds = false;
+
   // ----- Angle Information -----
 
   /**
@@ -213,6 +216,9 @@ class SimBox {
     * this simulation. Used for intrmolecular delta tuning.
     */
   int numAcceptedAngleMoves;
+
+  // True if at least one angle in the SimBox can be moved
+  bool hasFlexibleAngles = false;
 
   // ----- Dihedral Information (Currently unused) -----
 

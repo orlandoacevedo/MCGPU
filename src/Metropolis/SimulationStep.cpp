@@ -8,6 +8,7 @@
 #include "SimulationStep.h"
 
 #define VERBOSE false
+#define ENABLE_INTRA true
 #define ENABLE_BOND 1
 #define ENABLE_ANGLE 1
 #define ENABLE_DIHEDRAL 0
@@ -22,7 +23,7 @@ SimulationStep::SimulationStep(SimBox *box) {
 
 Real SimulationStep::calcMoleculeEnergy(int currMol, int startMol) {
   return calcMolecularEnergyContribution(currMol, startMol) +
-         calcIntraMolecularEnergy(currMol);
+         (ENABLE_INTRA ? calcIntraMolecularEnergy(currMol) : 0);
 }
 
 Real SimulationStep::calcIntraMolecularEnergy(int molIdx) {
@@ -86,47 +87,49 @@ SimBox* SimCalcs::sb;
 int SimCalcs::on_gpu;
 
 Real SimCalcs::calcIntraMolecularEnergy(int molIdx) {
-  int** moleculeData = GPUCopy::moleculeDataPtr();
+  int** moleculeData = sb->moleculeData;
   int molStart = moleculeData[MOL_START][molIdx];
   int molEnd = molStart + moleculeData[MOL_LEN][molIdx];
   int molType = moleculeData[MOL_TYPE][molIdx];
-  Real** aCoords = GPUCopy::atomCoordinatesPtr();
-  Real** atomData = GPUCopy::atomDataPtr();
+  Real** aCoords = sb->atomCoordinates;
+  Real** atomData = sb->atomData;
 
   Real out = 0.0;
-  out += angleEnergy(molIdx);
-  out += bondEnergy(molIdx);
+  if (sb->hasFlexibleAngles) out += angleEnergy(molIdx);
+  if (sb->hasFlexibleBonds) out += bondEnergy(molIdx);
 
   // Calculate intramolecular LJ and Coulomb energy if necessary
-  for (int i = molStart; i < molEnd; i++) {
-    for (int j = i + 1; j < molEnd; j++) {
-      Real fudgeFactor = 1.0;
-      for (int k = 0; ; k++) {
-        int val = sb->excludeAtoms[molType][i - molStart][k];
-        if (val == -1) {
-          break;
-        } else if (val == j - molStart) {
-          fudgeFactor = 0.0;
-          break;
-        }
-      }
-      if (fudgeFactor > 0.0) {
+  if (sb->hasFlexibleBonds || sb->hasFlexibleAngles) {
+    for (int i = molStart; i < molEnd; i++) {
+      for (int j = i + 1; j < molEnd; j++) {
+        Real fudgeFactor = 1.0;
         for (int k = 0; ; k++) {
-          int val = sb->fudgeAtoms[molType][i - molStart][k];
+          int val = sb->excludeAtoms[molType][i - molStart][k];
           if (val == -1) {
             break;
           } else if (val == j - molStart) {
-            fudgeFactor = 0.5;
+            fudgeFactor = 0.0;
             break;
           }
         }
-      }
-      if (fudgeFactor > 0.0) {
-        Real r2 = calcAtomDistSquared(i, j, aCoords, sb->size);
-        Real r = sqrt(r2);
-        Real energy = calcLJEnergy(i, j, r2, atomData);
-        energy += calcChargeEnergy(i, j, r, atomData);
-        out += fudgeFactor * energy;
+        if (fudgeFactor > 0.0) {
+          for (int k = 0; ; k++) {
+            int val = sb->fudgeAtoms[molType][i - molStart][k];
+            if (val == -1) {
+              break;
+            } else if (val == j - molStart) {
+              fudgeFactor = 0.5;
+              break;
+            }
+          }
+        }
+        if (fudgeFactor > 0.0) {
+          Real r2 = calcAtomDistSquared(i, j, aCoords, sb->size);
+          Real r = sqrt(r2);
+          Real energy = calcLJEnergy(i, j, r2, atomData);
+          energy += calcChargeEnergy(i, j, r, atomData);
+          out += fudgeFactor * energy;
+        }
       }
     }
   }
@@ -134,13 +137,14 @@ Real SimCalcs::calcIntraMolecularEnergy(int molIdx) {
 }
 
 Real SimCalcs::angleEnergy(int molIdx) {
-  int** moleculeData = GPUCopy::moleculeDataPtr();
+  int** moleculeData = sb->moleculeData;
+  Real* angleSizes = sb->angleSizes;
   Real out = 0;
   int angleStart = moleculeData[MOL_ANGLE_START][molIdx];
   int angleEnd = angleStart + moleculeData[MOL_ANGLE_COUNT][molIdx];
   for (int i = angleStart; i < angleEnd; i++) {
     if ((bool) sb->angleData[ANGLE_VARIABLE][i]) {
-      Real diff = sb->angleData[ANGLE_EQANGLE][i] - sb->angleSizes[i];
+      Real diff = sb->angleData[ANGLE_EQANGLE][i] - angleSizes[i];
       out += sb->angleData[ANGLE_KANGLE][i] * diff * diff;
     }
   }
@@ -148,8 +152,8 @@ Real SimCalcs::angleEnergy(int molIdx) {
 }
 
 void SimCalcs::expandAngle(int molIdx, int angleIdx, Real expandDeg) {
-  int** moleculeData = GPUCopy::moleculeDataPtr();
-  Real* angleSizes = GPUCopy::anglesPtr();
+  int** moleculeData = sb->moleculeData;
+  Real* angleSizes = sb->angleSizes;
   int bondStart = moleculeData[MOL_BOND_START][molIdx];
   int bondEnd = bondStart + moleculeData[MOL_BOND_COUNT][molIdx];
   int angleStart = moleculeData[MOL_ANGLE_START][molIdx];
@@ -158,7 +162,7 @@ void SimCalcs::expandAngle(int molIdx, int angleIdx, Real expandDeg) {
   int end1 = (int)sb->angleData[ANGLE_A1_IDX][angleStart + angleIdx];
   int end2 = (int)sb->angleData[ANGLE_A2_IDX][angleStart + angleIdx];
   int mid = (int)sb->angleData[ANGLE_MID_IDX][angleStart + angleIdx];
-  Real** aCoords = GPUCopy::atomCoordinatesPtr();
+  Real** aCoords = sb->atomCoordinates;
 
 
   // Create a disjoint set of the atoms in the molecule
@@ -238,11 +242,12 @@ void SimCalcs::expandAngle(int molIdx, int angleIdx, Real expandDeg) {
 
 Real SimCalcs::bondEnergy(int molIdx) {
   Real out = 0;
+  Real* bondLengths = sb->bondLengths;
   int bondStart = sb->moleculeData[MOL_BOND_START][molIdx];
   int bondEnd = bondStart + sb->moleculeData[MOL_BOND_COUNT][molIdx];
   for (int i = bondStart; i < bondEnd; i++) {
     if ((bool) sb->bondData[BOND_VARIABLE][i]) {
-      Real diff = sb->bondData[BOND_EQDIST][i] - sb->bondLengths[i];
+      Real diff = sb->bondData[BOND_EQDIST][i] - bondLengths[i];
       out += sb->bondData[BOND_KBOND][i] * diff * diff;
     }
   }
@@ -250,14 +255,14 @@ Real SimCalcs::bondEnergy(int molIdx) {
 }
 
 void SimCalcs::stretchBond(int molIdx, int bondIdx, Real stretchDist) {
-  Real* bondLengths = GPUCopy::bondsPtr();
+  Real* bondLengths = sb->bondLengths;
   int bondStart = sb->moleculeData[MOL_BOND_START][molIdx];
   int bondEnd = bondStart + sb->moleculeData[MOL_BOND_COUNT][molIdx];
   int startIdx = sb->moleculeData[MOL_START][molIdx];
   int molSize = sb->moleculeData[MOL_LEN][molIdx];
   int end1 = (int)sb->bondData[BOND_A1_IDX][bondStart + bondIdx];
   int end2 = (int)sb->bondData[BOND_A2_IDX][bondStart + bondIdx];
-  Real** aCoords = GPUCopy::atomCoordinatesPtr();
+  Real** aCoords = sb->atomCoordinates;
 
   for (int i = 0; i < molSize; i++) {
     sb->unionFindParent[i] = i;
@@ -415,7 +420,7 @@ void SimCalcs::rotateZ(int aIdx, Real angleDeg, Real** aCoords) {
 void SimCalcs::changeMolecule(int molIdx) {
   // Intermolecular moves first, to save proper rollback positions
   intermolecularMove(molIdx);
-  intramolecularMove(molIdx);
+  if (ENABLE_INTRA) intramolecularMove(molIdx);
 }
 
 void SimCalcs::intermolecularMove(int molIdx) {
@@ -479,11 +484,13 @@ void SimCalcs::intramolecularMove(int molIdx) {
 
   // TODO (blm): allow max to be configurable
   int numBonds = sb->moleculeData[MOL_BOND_COUNT][molIdx];
+  int bondStart = sb->moleculeData[MOL_BOND_START][molIdx];
   int numAngles = sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
+  int angleStart = sb->moleculeData[MOL_ANGLE_START][molIdx];
   Real bondDelta = sb->maxBondDelta, angleDelta = sb->maxAngleDelta;
 
   // Handle bond moves
-  if (ENABLE_BOND) {
+  if (ENABLE_BOND && sb->hasFlexibleBonds) {
     int numBondsToMove = sb->moleculeData[MOL_BOND_COUNT][molIdx];
     if (numBondsToMove > 3) {
       numBondsToMove = (int)randomReal(2, numBonds);
@@ -500,8 +507,9 @@ void SimCalcs::intramolecularMove(int molIdx) {
     // Move and test each bond
     for (auto bondIdx = indexes.begin(); bondIdx != indexes.end(); bondIdx++) {
       Real stretchDist = scaleFactor * randomReal(-bondDelta, bondDelta);
-      stretchBond(molIdx, *bondIdx, stretchDist);
-
+      if (sb->bondData[BOND_VARIABLE][bondStart + *bondIdx]) {
+        stretchBond(molIdx, *bondIdx, stretchDist);
+      }
     }
     // Do an MC test for delta tuning
     // Note: Failing does NOT mean we rollback
@@ -514,7 +522,7 @@ void SimCalcs::intramolecularMove(int molIdx) {
   }
 
   // Handle angle movements
-  if (ENABLE_ANGLE) {
+  if (ENABLE_ANGLE && sb->hasFlexibleAngles) {
     int numAnglesToMove = sb->moleculeData[MOL_ANGLE_COUNT][molIdx];
     if (numAnglesToMove > 3) {
       numAnglesToMove = (int)randomReal(2, numAngles);
@@ -531,7 +539,9 @@ void SimCalcs::intramolecularMove(int molIdx) {
     // Move and test each angle
     for (auto angle = indexes.begin(); angle != indexes.end(); angle++) {
       Real expandDist = scaleFactor * randomReal(-angleDelta, angleDelta);
-      expandAngle(molIdx, *angle, expandDist);
+      if (sb->angleData[ANGLE_VARIABLE][angleStart + *angle]) {
+        expandAngle(molIdx, *angle, expandDist);
+      }
     }
     // Do an MC test for delta tuning
     // Note: Failing does NOT mean we rollback
@@ -545,7 +555,7 @@ void SimCalcs::intramolecularMove(int molIdx) {
 
   // TODO: Put dihedral movements here
 
-  // Tweak the deltas to acheive 40% intramolecular acceptance ratio
+  // Tune the deltas to acheive 40% intramolecular acceptance ratio
   // FIXME: Make interval configurable
   if (ENABLE_TUNING && sb->stepNum != 0 && (sb->stepNum % 1000) == 0) {
     Real bondRatio = (Real)sb->numAcceptedBondMoves / sb->numBondMoves;
@@ -570,9 +580,9 @@ void SimCalcs::intramolecularMove(int molIdx) {
 }
 
 void SimCalcs::saveBonds(int molIdx) {
-  int** moleculeData = GPUCopy::moleculeDataPtr();
-  Real* bondLengths = GPUCopy::bondsPtr();
-  Real* rbBondLengths = GPUCopy::rollBackBondsPtr();
+  int** moleculeData = sb->moleculeData;
+  Real* bondLengths = sb->bondLengths;
+  Real* rbBondLengths = sb->rollBackBondLengths;
   int start = moleculeData[MOL_BOND_START][molIdx];
   int count = moleculeData[MOL_BOND_COUNT][molIdx];
 
@@ -582,9 +592,9 @@ void SimCalcs::saveBonds(int molIdx) {
 }
 
 void SimCalcs::saveAngles(int molIdx) {
-  int** moleculeData = GPUCopy::moleculeDataPtr();
-  Real* angleSizes = GPUCopy::anglesPtr();
-  Real* rbAngleSizes = GPUCopy::rollBackAnglesPtr();
+  int** moleculeData = sb->moleculeData;
+  Real* angleSizes = sb->angleSizes;
+  Real* rbAngleSizes = sb->rollBackAngleSizes;
   int start = moleculeData[MOL_ANGLE_START][molIdx];
   int count = moleculeData[MOL_ANGLE_COUNT][molIdx];
 
@@ -636,14 +646,16 @@ void SimCalcs::rollback(int molIdx) {
     }
   }
 
-  rollbackAngles(molIdx);
-  rollbackBonds(molIdx);
+  if (ENABLE_INTRA) {
+    rollbackAngles(molIdx);
+    rollbackBonds(molIdx);
+  }
 }
 
 void SimCalcs::rollbackBonds(int molIdx) {
-  int** moleculeData = GPUCopy::moleculeDataPtr();
-  Real* bondLengths = GPUCopy::bondsPtr();
-  Real* rbBondLengths = GPUCopy::rollBackBondsPtr();
+  int** moleculeData = sb->moleculeData;
+  Real* bondLengths = sb->bondLengths;
+  Real* rbBondLengths = sb->rollBackBondLengths;
   int start = moleculeData[MOL_BOND_START][molIdx];
   int count = moleculeData[MOL_BOND_COUNT][molIdx];
 
@@ -653,9 +665,9 @@ void SimCalcs::rollbackBonds(int molIdx) {
 }
 
 void SimCalcs::rollbackAngles(int molIdx) {
-  int** moleculeData = GPUCopy::moleculeDataPtr();
-  Real* angleSizes = GPUCopy::anglesPtr();
-  Real* rbAngleSizes = GPUCopy::rollBackAnglesPtr();
+  int** moleculeData = sb->moleculeData;
+  Real* angleSizes = sb->angleSizes;
+  Real* rbAngleSizes = sb->rollBackAngleSizes;
   int start = moleculeData[MOL_ANGLE_START][molIdx];
   int count = moleculeData[MOL_ANGLE_COUNT][molIdx];
 

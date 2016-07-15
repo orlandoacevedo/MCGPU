@@ -113,16 +113,16 @@ void ZmatrixScanner::parseLine(string line, int numOfLines) {
 
   stringstream ss;
 
-  //check if line contains correct format
+  // Check if line contains correct format
   int format = checkFormat(line);
 
   if(format == 1) {
-    //read in strings in columns and store the data in temporary variables
+    // Read in strings in columns and store the data in temporary variables
     ss << line;
     ss >> atomID >> atomType >> oplsA >> oplsB >> bondWith >> bondDistance
        >> angleWith >> angleMeasure >> dihedralWith >> dihedralMeasure;
 
-	  //setup structures for permanent encapsulation
+	  // Setup structures for permanent encapsulation
     Atom lineAtom;
     Bond lineBond;
     Angle lineAngle;
@@ -135,7 +135,8 @@ void ZmatrixScanner::parseLine(string line, int numOfLines) {
       lineAtom.y = 0;
       lineAtom.z = 0;
     } else {
-      lineAtom = createAtom(atoi(atomID.c_str()), -1, -1, -1, -1, -1, -1, atomType);
+      // Dummy atom, only used for geometry purposes
+      lineAtom = createAtom(atoi(atomID.c_str()), -1, -1, -1, -1, -1, 0, atomType);
     }
 
 	  atomVector.push_back(lineAtom);
@@ -426,7 +427,7 @@ vector<Molecule> ZmatrixScanner::buildMolecule(int startingID) {
       dihedCopy[a] = moleculePattern[i].dihedrals[a];
     }
 
-    //calculate and add array of Hops to the molecule
+    // Calculate and add array of Hops to the molecule
     vector<Hop> calculatedHops;
     calculatedHops = calculateHops(moleculePattern[i]);
     int numOfHops = calculatedHops.size();
@@ -518,7 +519,7 @@ void ZmatrixScanner::addImpliedAngles(vector<Angle>& angleVector,
   vector<Angle> toAdd;
   for (int i = 0; i < angleVector.size(); i++) {
     for (int j = i + 1; j < angleVector.size(); j++) {
-      if (angleVector[i].commonAtom == angleVector[i].commonAtom) {
+      if (angleVector[i].commonAtom == angleVector[j].commonAtom) {
         Angle angle1 = angleVector[i], angle2 = angleVector[j];
         int a1 = 0, a2 = 0;
 
