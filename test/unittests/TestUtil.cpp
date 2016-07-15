@@ -44,12 +44,8 @@ void createConfigFile(std::string MCGPU, std::string fileName,
 		configFile.close();
 }
 
-std::string getMCGPU_path () {
-	char *path = (char*) malloc(4096);
-	size_t size = 4096;
-	path = getcwd(path, size);
-	//std::string directory = get_current_dir_name();
-	std::string directory(path);
+std::string getMCGPU_path() {
+	std::string directory = get_cwd();
 	std::string mc ("MCGPU");
 	std::size_t found = directory.rfind(mc);
 
@@ -98,23 +94,22 @@ std::string buildCommand(std::string MCGPU, std::string configFile, std::string 
 	}
 
 	if(errorExpected) {
-		ss << "-i 10000 > " << MCGPU << "bin/" << outputName << " 2>&1 ";	//If we expect an error, pipe cerr to a textfile where it can be read.
+    // If we expect an error, pipe cerr to a textfile where it can be read.
+		ss << "-i 10000 > " << MCGPU << "bin/" << outputName << " 2>&1 ";
 	} else {
-		ss << "--name " << outputName << " -i 10000 ";							//If we do not expect an error, simply give the name for the results file.
+    // If we do not expect an error, simply give the name for the results file.
+		ss << "--name " << outputName << " -i 10000 ";
 	}
 	std::string output = ss.str();
-  // std::cout << "RUNNING: " << output << std::endl;
 	return output;
 }
 
+// FIXME: MCGPU parameter no longer necessary
 double getEnergyResult(std::string MCGPU, std::string resultsFile) {
-	std::string dir;
-	if(inDebugMode())
-		dir = "bin/debug/";
-	else
-		dir = "bin/";
+  // Simulation results will always be in the current working directory
+  std::string currDir = get_cwd();
 
-	std::ifstream infile(std::string(MCGPU + dir + resultsFile).c_str());
+	std::ifstream infile((currDir + "/" + resultsFile).c_str());
 	std::size_t found;
 
 	for(std::string line; getline(infile, line);) {
@@ -142,4 +137,13 @@ std::string getErrorResult(std::string MCGPU, std::string errorFile) {
         }
     }
 	return "ERROR: COULD NOT PARSE ERROR FILE!";
+}
+
+std::string get_cwd() {
+  char *path = (char *)malloc(4096);
+  size_t size = 4096;
+  path = getcwd(path, size);
+  std::string currDir(path);
+  free(path);
+  return currDir;
 }

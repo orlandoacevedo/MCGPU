@@ -102,4 +102,7 @@ double getEnergyResult(std::string MCGPU, std::string resultsFile);
  */
 std::string getErrorResult(std::string MCGPU, std::string errorFile);
 
+/** Simple wrapper to obtain the current working directory */
+std::string get_cwd();
+
 #endif
