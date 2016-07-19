@@ -34,13 +34,14 @@ TEST(MethanolTest, FrontToEndIntegrationTest)
     std::stringstream ss;    
 	ss << MCGPU << "/bin/metrosim "
        << " " // don't forget a space between the path and the arguments
-       << MCGPU << "/test/unittests/Integration/MethanolTest/MethanolTest.config -s --name methanolCPU -k";
+       << MCGPU << "/test/unittests/Integration/MethanolTest/MethanolTest.config "
+                   "-s --name methanolCPU -k > /dev/null";
 	
     // Launch MCGPU application in serial, expect output files in /MCGPU/ directory   
 	system(ss.str().c_str());
 	
-	double expected = -1900;
-	double energyResult = getEnergyResult(MCGPU, "methanolCPU.results");
+	double expected = 91;
+	double energyResult = getEnergyResult("methanolCPU.results");
 	
 	// Clean up
 	remove(  std::string(MCGPU + "/test/unittests/Integration/MethanolTest/MethanolTest.config").c_str());

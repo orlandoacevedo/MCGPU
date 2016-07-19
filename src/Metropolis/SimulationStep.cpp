@@ -7,11 +7,12 @@
 #include "GPUCopy.h"
 #include "SimulationStep.h"
 
-#define VERBOSE false
+#define VERBOSE true
 #define ENABLE_INTRA true
 #define ENABLE_BOND 1
 #define ENABLE_ANGLE 1
 #define ENABLE_DIHEDRAL 0
+
 #define ENABLE_TUNING true
 #define RATIO_MARGIN 0.0001
 #define TARGET_RATIO 0.4
