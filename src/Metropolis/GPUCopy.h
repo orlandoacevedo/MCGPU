@@ -13,10 +13,12 @@ namespace GPUCopy {
   Real** rollBackCoordinatesPtr();
   Real** atomCoordinatesPtr();
 
-  Real* bondsPtr();
+  Real** bondDataPtr();
+  Real* bondLengthsPtr();
   Real* rollBackBondsPtr();
 
-  Real* anglesPtr();
+  Real** angleDataPtr();
+  Real* angleSizesPtr();
   Real* rollBackAnglesPtr();
 
   int* primaryIndexesPtr();

@@ -121,6 +121,16 @@ void Simulation::run() {
   SimBox* sb = builder.build(box);
   GPUCopy::setParallel(parallel);
 
+  // FIXME: Cancel the simulation if we're attempting bond-angle on GPU
+  if (ENABLE_INTRA && (sb->hasFlexibleBonds || sb->hasFlexibleAngles)) {
+    if (parallel) {
+      std::cout << "ERROR: Cannot perform intramolecular calculations and "
+                << "movements on the GPU at this time. Please switch to the "
+                << "CPU by running with the '-s' flag." << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+
   SimulationStep *simStep;
   if (args.strategy == Strategy::BruteForce) {
     log.verbose("Using brute force strategy for energy calculations");

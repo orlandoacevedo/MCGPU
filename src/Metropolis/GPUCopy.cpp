@@ -24,17 +24,27 @@ int** d_moleculeData = NULL;
 Real* h_size = NULL;
 Real* d_size = NULL;
 
+// Angle values
+
+Real** h_angleData = NULL;
+Real** d_angleData = NULL;
+
 Real* h_angleSizes = NULL;
 Real* d_angleSizes = NULL;
+
+Real* h_rollBackAngleSizes = NULL;
+Real* d_rollBackAngleSizes = NULL;
+
+// Bond values
+
+Real** h_bondData = NULL;
+Real** d_bondData = NULL;
 
 Real* h_bondLengths = NULL;
 Real* d_bondLengths = NULL;
 
 Real* h_rollBackBondLengths = NULL;
 Real* d_rollBackBondLengths = NULL;
-
-Real* h_rollBackAngleSizes = NULL;
-Real* d_rollBackAngleSizes = NULL;
 
 void GPUCopy::setParallel(bool in) { parallel = in; }
 
@@ -58,7 +68,11 @@ int** GPUCopy::moleculeDataPtr() {
   return parallel ? d_moleculeData : h_moleculeData;
 }
 
-Real* GPUCopy::bondsPtr() {
+Real** GPUCopy::bondDataPtr() {
+  return parallel ? d_bondData : h_bondData;
+}
+
+Real* GPUCopy::bondLengthsPtr() {
   return parallel ? d_bondLengths : h_bondLengths;
 }
 
@@ -66,7 +80,11 @@ Real* GPUCopy::rollBackBondsPtr() {
   return parallel ? d_rollBackBondLengths : h_rollBackBondLengths;
 }
 
-Real* GPUCopy::anglesPtr() {
+Real** GPUCopy::angleDataPtr() {
+  return parallel ? d_angleData : h_angleData;
+}
+
+Real* GPUCopy::angleSizesPtr() {
   return parallel ? d_angleSizes : h_angleSizes;
 }
 
@@ -83,29 +101,31 @@ void GPUCopy::copyIn(SimBox *sb) {
   h_rollBackCoordinates = sb->rollBackCoordinates;
   h_size = sb->size;
   h_primaryIndexes = sb->primaryIndexes;
+  h_bondData = sb->bondData;
   h_bondLengths = sb->bondLengths;
   h_rollBackBondLengths = sb->rollBackBondLengths;
+  h_angleData = sb->angleData;
   h_angleSizes = sb->angleSizes;
   h_rollBackAngleSizes = sb->rollBackAngleSizes;
   if (!parallel) { return; }
 
 #ifdef _OPENACC
-  d_moleculeData = (int**)acc_malloc(MOL_DATA_SIZE * sizeof(int *));
+  d_moleculeData = (int**)acc_malloc(MOL_DATA_SIZE * sizeof(int*));
   assert(d_moleculeData != NULL);
   for (int row = 0; row < MOL_DATA_SIZE; row++) {
     int *h_moleculeData_row = sb->moleculeData[row];
-    int *d_moleculeData_row = (int *)acc_copyin(h_moleculeData_row,
-                                                sb->numMolecules * sizeof(int));
+    int *d_moleculeData_row = (int*)acc_copyin(h_moleculeData_row,
+                                               sb->numMolecules * sizeof(int));
     assert(d_moleculeData_row != NULL);
     #pragma acc parallel deviceptr(d_moleculeData)
     d_moleculeData[row] = d_moleculeData_row;
   }
 
-  d_atomData = (Real**)acc_malloc(ATOM_DATA_SIZE * sizeof(Real *));
+  d_atomData = (Real**)acc_malloc(ATOM_DATA_SIZE * sizeof(Real*));
   assert(d_atomData != NULL);
   for (int row = 0; row < ATOM_DATA_SIZE; row++) {
-    Real *h_atomData_row = sb->atomData[row];
-    Real *d_atomData_row = (Real *)acc_copyin(h_atomData_row, sb->numAtoms * sizeof(Real));
+    Real* h_atomData_row = sb->atomData[row];
+    Real* d_atomData_row = (Real*)acc_copyin(h_atomData_row, sb->numAtoms * sizeof(Real));
     assert(d_atomData_row != NULL);
     #pragma acc parallel deviceptr(d_atomData)
     d_atomData[row] = d_atomData_row;
@@ -114,8 +134,8 @@ void GPUCopy::copyIn(SimBox *sb) {
   d_atomCoordinates = (Real**)acc_malloc(NUM_DIMENSIONS * sizeof(Real *));
   assert(d_atomCoordinates != NULL);
   for (int row = 0; row < NUM_DIMENSIONS; row++) {
-    Real *h_atomCoordinates_row = sb->atomCoordinates[row];
-    Real *d_atomCoordinates_row = (Real *)acc_copyin(h_atomCoordinates_row, sb->numAtoms * sizeof(Real));
+    Real* h_atomCoordinates_row = sb->atomCoordinates[row];
+    Real* d_atomCoordinates_row = (Real *)acc_copyin(h_atomCoordinates_row, sb->numAtoms * sizeof(Real));
     assert(d_atomCoordinates_row != NULL);
     #pragma acc parallel deviceptr(d_atomCoordinates)
     d_atomCoordinates[row] = d_atomCoordinates_row;
@@ -124,26 +144,46 @@ void GPUCopy::copyIn(SimBox *sb) {
   d_rollBackCoordinates = (Real**)acc_malloc(NUM_DIMENSIONS * sizeof(Real *));
   assert(d_rollBackCoordinates != NULL);
   for (int row = 0; row < NUM_DIMENSIONS; row++) {
-    Real *h_rollBackCoordinates_row = sb->rollBackCoordinates[row];
-    Real *d_rollBackCoordinates_row = (Real *)acc_copyin(h_rollBackCoordinates_row, sb->largestMol * sizeof(Real));
+    Real* h_rollBackCoordinates_row = sb->rollBackCoordinates[row];
+    Real* d_rollBackCoordinates_row = (Real *)acc_copyin(h_rollBackCoordinates_row, sb->largestMol * sizeof(Real));
     assert(d_rollBackCoordinates_row != NULL);
     #pragma acc parallel deviceptr(d_rollBackCoordinates)
     d_rollBackCoordinates[row] = d_rollBackCoordinates_row;
   }
 
-  d_primaryIndexes = (int *)acc_copyin(sb->primaryIndexes, sb->numPIdxes * sizeof(int));
+  d_primaryIndexes = (int*)acc_copyin(sb->primaryIndexes, sb->numPIdxes * sizeof(int));
 
-  d_size = (Real *)acc_copyin(sb->size, NUM_DIMENSIONS * sizeof(Real));
+  d_size = (Real*)acc_copyin(sb->size, NUM_DIMENSIONS * sizeof(Real));
 
-  d_angleSizes = (Real *)acc_copyin(sb->angleSizes,
-                                    sb->numAngles * sizeof(Real *));
-  d_rollBackAngleSizes = (Real *)acc_copyin(sb->rollBackAngleSizes,
-                                            sb->numAngles * sizeof(Real *));
+  d_angleData = (Real**)acc_malloc(ANGLE_DATA_SIZE * sizeof(Real*));
+  assert(d_angleData != NULL);
+  for (int row = 0; row < ANGLE_DATA_SIZE; row++) {
+    Real *h_angleDataRow = sb->angleData[row];
+    Real *d_angleDataRow = (Real*)acc_copyin(h_angleDataRow, sb->numAngles * sizeof(Real));
+    assert(d_angleDataRow != NULL);
+    #pragma acc parallel deviceptr(d_angleData)
+    d_angleData[row] = d_angleDataRow;
+  }
 
-  d_bondLengths = (Real *)acc_copyin(sb->bondLengths, 
-                                     sb->numBonds * sizeof(Real *));
-  d_rollBackBondLengths = (Real *)acc_copyin(sb->rollBackBondLengths, 
-                                             sb->numBonds * sizeof(Real *));
+  d_angleSizes = (Real*)acc_copyin(sb->angleSizes,
+                                   sb->numAngles * sizeof(Real));
+  d_rollBackAngleSizes = (Real*)acc_copyin(sb->rollBackAngleSizes,
+                                           sb->numAngles * sizeof(Real));
+
+  d_bondData = (Real**)acc_malloc(BOND_DATA_SIZE * sizeof(Real*));
+  assert(d_bondData != NULL);
+  for (int row = 0; row < BOND_DATA_SIZE; row++) {
+    Real *h_bondDataRow = sb->bondData[row];
+    Real *d_bondDataRow = (Real*)acc_copyin(h_bondDataRow, sb->numBonds * sizeof(Real));
+    assert(d_bondDataRow != NULL);
+    #pragma acc parallel deviceptr(d_bondData)
+    d_bondData[row] = d_bondDataRow;
+  }
+
+  d_bondLengths = (Real*)acc_copyin(sb->bondLengths, 
+                                    sb->numBonds * sizeof(Real));
+  d_rollBackBondLengths = (Real*)acc_copyin(sb->rollBackBondLengths, 
+                                            sb->numBonds * sizeof(Real));
 #endif
 }
 

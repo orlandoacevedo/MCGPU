@@ -11,6 +11,16 @@
 #include "SimBox.h"
 #include "Metropolis/Utilities/MathLibrary.h"
 
+#define VERBOSE true
+#define ENABLE_INTRA false
+#define ENABLE_BOND 1
+#define ENABLE_ANGLE 1
+#define ENABLE_DIHEDRAL 0
+
+#define ENABLE_TUNING true
+#define RATIO_MARGIN 0.0001
+#define TARGET_RATIO 0.4
+
 class SimulationStep {
  public:
   /** Construct a new SimulationStep object from a SimBox pointer */
