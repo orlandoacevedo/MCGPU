@@ -1,0 +1,3 @@
+The sole purpose of this file is to insure that git does not remove this directory,
+despite not containing any tracked files. Test config, state, and pdb files are
+placed in this directory when tests are run.

@@ -8,6 +8,8 @@ SimBoxBuilder::SimBoxBuilder(bool useNLC, SBScanner* sbData_in) {
 }
 
 SimBox* SimBoxBuilder::build(Box* box) {
+  // TODO (blm): Make this command line/config file configurable
+  sb->maxIntraMoves = 15;
   initEnvironment(box->environment);
   addMolecules(box->molecules, box->environment->primaryAtomIndexArray->size());
   addPrimaryIndexes(box->environment->primaryAtomIndexArray);
@@ -24,10 +26,19 @@ void SimBoxBuilder::initEnvironment(Environment* environment) {
   sb->size[Z_COORD] = environment->z;
   sb->cutoff = environment->cutoff;
   sb->temperature = environment->temp;
+  sb->kT = sb->temperature * kBoltz;
   sb->maxTranslate = environment->maxTranslation;
   sb->maxRotate = environment->maxRotation;
   sb->numAtoms = environment->numOfAtoms;
   sb->numMolecules = environment->numOfMolecules;
+  sb->maxBondDelta = environment->maxBondDelta;
+  sb->maxAngleDelta = environment->maxAngleDelta;
+
+  sb->stepNum = 0;
+  sb->numBondMoves = 0;
+  sb->numAcceptedBondMoves = 0;
+  sb->numAngleMoves = 0;
+  sb->numAcceptedAngleMoves = 0;
 }
 
 void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
@@ -69,9 +80,11 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
   sb->bondData = new Real*[BOND_DATA_SIZE];
   sb->angleData = new Real*[ANGLE_DATA_SIZE];
   sb->bondLengths = new Real[nBonds];
+  sb->rollBackBondLengths = new Real[nBonds];
   sb->unionFindParent = new int[largestMolecule];
   sb->largestMol = largestMolecule;
   sb->angleSizes = new Real[nAngles];
+  sb->rollBackAngleSizes = new Real[nAngles];
 
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
     sb->atomCoordinates[i] = new Real[sb->numAtoms];
@@ -99,7 +112,6 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
   std::map<int, std::string*> idToName;
 
   for (int i = 0; i < sb->numMolecules; i++) {
-
     sb->moleculeData[MOL_START][i] = atomIdx;
     sb->moleculeData[MOL_LEN][i] = molecules[i].numOfAtoms;
     sb->moleculeData[MOL_TYPE][i] = molecules[i].type;
@@ -108,6 +120,7 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
     sb->moleculeData[MOL_ANGLE_START][i] = angleIdx;
     sb->moleculeData[MOL_ANGLE_COUNT][i] = molecules[i].numOfAngles;
 
+    // Store all the atom data for the molecule
     for (int j = 0; j < molecules[i].numOfAtoms; j++) {
       Atom a = molecules[i].atoms[j];
       idToIdx[a.id] = atomIdx;
@@ -121,6 +134,7 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
       atomIdx++;
     }
 
+    // Store all the bond data for the molecule
     for (int j = 0; j < molecules[i].numOfBonds; j++) {
       Bond b = molecules[i].bonds[j];
       sb->bondData[BOND_A1_IDX][bondIdx] = idToIdx[b.atom1];
@@ -128,12 +142,24 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
       std::string name1 = *(idToName[b.atom1]);
       std::string name2 = *(idToName[b.atom2]);
       sb->bondData[BOND_KBOND][bondIdx] = sbData->getKBond(name1, name2);
+      // FIXME: Not sure how/if this is being handled
+      if (sb->bondData[BOND_KBOND][bondIdx] == -1) {
+        // std::cerr << "ERROR: Failed to calculate force constant for bond "
+        //           << bondIdx << std::endl;
+      }
       sb->bondData[BOND_EQDIST][bondIdx] = sbData->getEqBondDist(name1, name2);
+      // FIXME: Not sure how/if this is being handled
+      if (sb->bondData[BOND_EQDIST][bondIdx] == -1) {
+        // std::cerr << "ERROR: Failed to calculate equilibrium distance for bond "
+        //           << bondIdx << std::endl;
+      }
       sb->bondLengths[bondIdx] = b.distance;
       sb->bondData[BOND_VARIABLE][bondIdx] = b.variable;
+      sb->hasFlexibleBonds |= b.variable;
       bondIdx++;
     }
 
+    // Store all the angle data for the molecule
     for (int j = 0; j < molecules[i].numOfAngles; j++) {
       Angle a = molecules[i].angles[j];
       sb->angleData[ANGLE_A1_IDX][angleIdx] = idToIdx[a.atom1];
@@ -143,9 +169,20 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
       std::string a2Name = *(idToName[a.atom2]);
       std::string midName = *(idToName[a.commonAtom]);
       sb->angleData[ANGLE_KANGLE][angleIdx] = sbData->getKAngle(a1Name, midName, a2Name);
+      // FIXME: Not sure how/if this is being handled
+      if (sb->angleData[ANGLE_KANGLE][angleIdx] == -1) {
+        // std::cerr << "ERROR: Failed to calculate force constant for angle "
+        //           << angleIdx << std::endl;
+      }
       sb->angleData[ANGLE_EQANGLE][angleIdx] = sbData->getEqAngle(a1Name, midName, a2Name);
+      // FIXME: Not sure how/if this is being handled
+      if (sb->angleData[ANGLE_EQANGLE][angleIdx] == -1) {
+        // std::cerr << "ERROR: Failed to calculate equilibrium angle for angle "
+        //           << angleIdx << std::endl;
+      }
       sb->angleSizes[angleIdx] = a.value;
       sb->angleData[ANGLE_VARIABLE][angleIdx] = a.variable;
+      sb->hasFlexibleAngles |= a.variable;
       angleIdx++;
     }
 
@@ -161,6 +198,8 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
         excludeCount[j] = 0;
         fudgeCount[j] = 0;
       }
+
+      // Count the number of atoms that will be excluded
       for (int j = 0; j < molecules[i].numOfBonds; j++) {
         int idx1 = idToIdx[molecules[i].bonds[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].bonds[j].atom2] - startIdx;
@@ -177,6 +216,8 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           excludeCount[idx2]++;
         }
       }
+
+      // Count the number of atoms that will be fudged
       for (int j = 0; j < molecules[i].numOfHops; j++) {
         int idx1 = idToIdx[molecules[i].hops[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].hops[j].atom2] - startIdx;
@@ -186,12 +227,16 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           fudgeCount[idx2]++;
         }
       }
+
+      // Build the exclusion and fudge matrix
       for (int j = 0; j < numOfAtoms; j++) {
         sb->excludeAtoms[type][j] = new int[excludeCount[j] + 1];
         sb->fudgeAtoms[type][j] = new int[fudgeCount[j] + 1];
-        excludeCount[j] = 0;
-        fudgeCount[j] = 0;
+        excludeCount[j] = -1;
+        fudgeCount[j] = -1;
       }
+
+      // Exclude two atoms if they're joined by a bond
       for (int j = 0; j < molecules[i].numOfBonds; j++) {
         int idx1 = idToIdx[molecules[i].bonds[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].bonds[j].atom2] - startIdx;
@@ -200,6 +245,8 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           sb->excludeAtoms[type][idx2][++excludeCount[idx2]] = idx1;
         }
       }
+
+      // Exclude two atoms if they're joined by an angle
       for (int j = 0; j < molecules[i].numOfAngles; j++) {
         int idx1 = idToIdx[molecules[i].angles[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].angles[j].atom2] - startIdx;
@@ -208,6 +255,8 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
           sb->excludeAtoms[type][idx2][++excludeCount[idx2]] = idx1;
         }
       }
+
+      // Fudge two atoms if they're separated by exactly 3 hops
       for (int j = 0; j < molecules[i].numOfHops; j++) {
         int idx1 = idToIdx[molecules[i].hops[j].atom1] - startIdx;
         int idx2 = idToIdx[molecules[i].hops[j].atom2] - startIdx;
@@ -218,6 +267,7 @@ void SimBoxBuilder::addMolecules(Molecule* molecules, int numTypes) {
         }
       }
 
+      // End the exclude and fudge list with a -1 flag
       for (int j = 0; j < numOfAtoms; j++) {
         sb->excludeAtoms[type][j][++excludeCount[j]] = -1;
         sb->fudgeAtoms[type][j][++fudgeCount[j]] = -1;

@@ -37,6 +37,9 @@ int metrosim::run(int argc, char** argv) {
 		} else {
 			fprintf(stdout, "%d GPU device(s) found; running on GPU.\n",
                     numDevices);
+      // FIXME (blm)
+      fprintf(stdout, "WARNING: Not all features support GPU offloading at "
+                      "this time. Results may be inaccurate.\n");
 			args.simulationMode = SimulationMode::Parallel;
 		}
 	}

@@ -13,45 +13,66 @@
 
 typedef unsigned int ID;
 
+const double kBoltz = 0.00198717;
 
 class SimBox {
+ public:
+  /**
+   * The current step in the simulation. Used for intramolecular delta tweaking
+   */
+  int stepNum;
 
-public:
-  // BEGINNING OF MEMBER VARIABLES
-
-  // Basic environment conditions.
+  // ----- Basic Environment Conditions -----
 
   /**
-   * Real[3]. Holds the box's dimensions.
+   * Real[3] Holds the box's dimensions.
    */
-  Real*   size;
+  Real* size;
 
   /**
    * Holds the box's temperature.
    */
-  Real    temperature;
+  Real temperature;
+
+  /**
+   * Holds tempeture value for Monte Carlo calculations
+   */
+  Real kT;
 
   /**
    * Holds the box's cutoff distance.
    */
-  Real    cutoff;
+  Real cutoff;
 
   /**
    * Holds the maximum translation of a molecule.
    */
-  Real    maxTranslate;
+  Real maxTranslate;
 
   /**
    * Holds the maximum rotation of a molecule (in degrees).
    */
-  Real    maxRotate;
+  Real maxRotate;
+
+  /**
+   * Holds the absolute value of the maximum change allowed in a bond
+   */
+  Real maxBondDelta;
+
+  /**
+   * Holds the absolute value of the maximum change allowed in an angle
+   */
+  Real maxAngleDelta;
 
   /**
    * Holds the number of steps to run.
    */
   int numSteps;
 
-  // Item sizes
+  /** Holds the maximum number of intramolecular moves to make in a step */
+  int maxIntraMoves;
+
+  // ----- Item Sizes -----
 
   /**
    * The number of molecules in the box.
@@ -67,7 +88,6 @@ public:
    * The number of atoms in the largest molecule.
    */
   int largestMol;
-
 
   /**
    * The number of primary indexes in the box.
@@ -89,7 +109,7 @@ public:
    */
   int numDihedrals;
 
-  // Molecule information
+  // ----- Molecule Information -----
 
   /**
    * int[MOL_DATA_SIZE][numMolecules]
@@ -105,19 +125,19 @@ public:
    */
   int* primaryIndexes;
 
-  // Atom information
+  // ----- Atom information -----
 
   /**
    * Real[3][numAtoms]
-   * Holds the coordinates of every atom in the box. Which atom belongs to which
-   *     molecule is specified in moleculeData.
+   * Holds the coordinates of every atom in the box. Which atom belongs to
+   * which molecule is specified in moleculeData.
    */
   Real** atomCoordinates;
 
   /**
    * Real[3][# of atoms in largest molecule]
    * Holds the previous coordinates of every atom in the most recently moved
-   *      molecule. Used when rolling back a molecule following a rejected step.
+   * molecule. Used when rolling back a molecule following a rejected step.
    */
   Real** rollBackCoordinates;
 
@@ -126,74 +146,95 @@ public:
    * Holds constant information about every atom, including sigma, epsilon, and
    *     the atom's charge.
    */
-  Real**  atomData;
+  Real** atomData;
 
-  // Bond information -- Currently unused.
+  // ----- Bond information -----
 
   /**
    * Real[numBonds]
    * Holds the length of every bond in the box.
    */
-  Real*   bondLengths;
+  Real* bondLengths;
+
+  /**
+   * Real[numBonds]
+   * Holds the previous lengths of all the bonds in the simulation box
+   */
+  Real* rollBackBondLengths;
 
   /**
    * Real [BOND_DATA_SIZE][numBonds]
    * Holds data about every bond in the box, including the endpoints, the
-   *     force constant, and the equilibrium distance.
+   * force constant, and the equilibrium distance.
    */
-   Real**  bondData;
+   Real** bondData;
 
    /**
-    * Holds the index of the most recently changed bond.
+    * The number of intramolecular moves that have stretched a bond in this
+    * simulation. Used for intrmolecular delta tuning.
     */
-   int changedBond;
+   int numBondMoves;
 
    /**
-    * Holds the previous length of the most recently changed bond.
+    * The number of intrmolecular bond moves that have passed an MC test after
+    * occuring. Used for intrmolecular delta tuning.
     */
-   Real prevBond;
+   int numAcceptedBondMoves;
 
-  // Angle information -- Currently unused.
+   /** True if at least one bond in the SimBox can be moved */
+   bool hasFlexibleBonds = false;
+
+  // ----- Angle Information -----
 
   /**
    * Real [numAngles]
    * Holds the size of every angle in the box, in degrees.
    */
-  Real*   angleSizes;
+  Real* angleSizes;
+
+  /**
+   * Real[numAngles]
+   * Holds the previous anlge sizes of the angles in the simulation box
+   */
+  Real* rollBackAngleSizes;
 
   /**
    * Real[ANGLE_DATA_SIZE][numAngles]
    * Holds data about every angle in the box, including the endpoints, central
-   *     atom, force constant, and the equilibrium angle.
+   * atom, force constant, and the equilibrium angle.
    */
-  Real**  angleData;
+  Real** angleData;
+
+   /**
+    * The number of intramolecular moves that have altered an angle in this
+    * simulation. Used for intrmolecular delta tuning.
+    */
+  int numAngleMoves;
+
+   /**
+    * The number of intramolecular angle moves that have passed an MC test in
+    * this simulation. Used for intrmolecular delta tuning.
+    */
+  int numAcceptedAngleMoves;
+
+  // True if at least one angle in the SimBox can be moved
+  bool hasFlexibleAngles = false;
+
+  // ----- Dihedral Information (Currently unused) -----
 
   /**
-   * Holds the index of the most recently changed angle.
-   */
-  int changedAngle;
-
-  /**
-   * Holds the previous measurement of the most recently changed angle, in
-   *     degrees.
-   */
-  Real prevAngle;
-
-  // Dihedral information -- Currently unused.
-
-  /**
-   * Real [numDihedrals]
+   * Real[numDihedrals]
    * Holds the size of every dihedral in the box.
    */
-  Real*   dihedralSizes;
+  Real* dihedralSizes;
 
   /**
    * Real[?][numDihedrals]
    * Will hold data about every dihedral in the box. Currently unimplemented.
    */
-  const Real**  dihedralData;
+  const Real** dihedralData;
 
-  //NLC information.
+  // ----- NLC information -----
 
   /**
    * True if NLC is being used, false otherwise.
@@ -214,7 +255,7 @@ public:
 
   /**
    * Points to NLC_Node[numMolecules]
-   * Used only for allocation / deallocation of memory for the NLC linked cells.
+   * Used only for (de)allocation of memory for the NLC linked cells.
    */
   NLC_Node* nlc_heap;
 
@@ -231,8 +272,8 @@ public:
   NLC_Node**** neighborCells;
 
   /**
-   * Points to the node before the node just examined, or
-   *     to the node just examined if that node is the head of its linked list.
+   * Points to the node before the node just examined, or to the node just
+   * examined if that node is the head of its linked list.
    */
   NLC_Node* prevNode;
 
@@ -245,21 +286,21 @@ public:
   /**
    * int[atoms in largest molecule]
    * Used for performing union-find calculations to find what half of a bond or
-   *     angle a molecule is in.
+   * angle a molecule is in.
    */
    int* unionFindParent;
 
   /**
    * int[# of molecule types][# atoms in each type][# of atoms to exclude]
    * Holds information for which intra molecular pairwise LJ and Coloumb
-   *     interactions to not calculate.
+   * interactions to not calculate.
    */
   int*** excludeAtoms;
 
   /**
    * int[# of molecule types][# atoms in each type][# of atoms to half]
    * Holds information for which intra molecular pairwise LJ and Coloumb
-   *     interactions to multiply by the fudge factor.
+   * interactions to multiply by the fudge factor.
    */
   int*** fudgeAtoms;
 
@@ -278,7 +319,8 @@ public:
    *
    * @param molIdx The index of the molecule to keep inside the box.
    */
-  void keepMoleculeInBox(int molIdx, Real** aCoords, int** molData, int* pIdxes, Real* bsize);
+  void keepMoleculeInBox(int molIdx, Real** aCoords, int** molData,
+                         int* pIdxes, Real* bsize);
 
   /**
    * Given a distance, makes the distance periodic to mitigate distances greater
@@ -326,7 +368,8 @@ public:
    * @param rotZ The amount of rotation around the z-axis that is done.
    */
   #pragma acc routine seq
-  void rotateAtom(int aIdx, int pivotIdx, Real rotX, Real rotY, Real rotZ, Real** aCoords);
+  void rotateAtom(int aIdx, int pivotIdx, Real rotX, Real rotY, Real rotZ,
+                  Real** aCoords);
 
   /**
    * Given an atom and an amount to rotate, rotates about the x-axis.
@@ -355,8 +398,10 @@ public:
   /**
    * calcSystemEnergy Determines the total energy of the box
    *
-   * @param subLJ Initial Lennard - Jones energy. Final L-J energy passed out by reference.
-   * @param subCharge Initial Coulomb energy. Final Coulomb energy passed out by reference.
+   * @param subLJ Initial Lennard - Jones energy. Final L-J energy passed out
+   * by reference.
+   * @param subCharge Initial Coulomb energy. Final Coulomb energy passed out
+   * by reference.
    * @return The total energy of the box.
    */
   Real calcSystemEnergy(Real &subLJ, Real &subCharge);
@@ -364,13 +409,17 @@ public:
   /**
    * calcMolecularEnergyContribution Determines the energy contribution of a particular molecule.
    *
-   * @param subLJ Initial Lennard - Jones energy. Final L-J energy passed out by reference.
-   * @param subCharge Initial Coulomb energy. Final Coulomb energy passed out by reference.
+   * @param subLJ Initial Lennard - Jones energy. Final L-J energy passed out
+   * by reference.
+   * @param subCharge Initial Coulomb energy. Final Coulomb energy passed out
+   * by reference.
    * @param currMol The index of the molecule to calculate the contribution of.
-   * @param startMol The index of the molecule to begin searching from to determine interaction energies.
+   * @param startMol The index of the molecule to begin searching from to
+   * determine interaction energies.
    * @return The total energy of the box (discounts initial lj / charge energy)
    */
-  Real calcMolecularEnergyContribution(Real &subLJ, Real &subCharge, int currMol, int startMol);
+  Real calcMolecularEnergyContribution(Real &subLJ, Real &subCharge,
+                                       int currMol, int startMol);
 
   /**
    * moleculesInRange Determines whether or not two molecule's primaryIndexes are

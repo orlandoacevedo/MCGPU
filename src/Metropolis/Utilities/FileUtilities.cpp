@@ -4,6 +4,7 @@
 #include "StructLibrary.h"
 #include "Metropolis/Box.h"
 #include "Metropolis/SimulationArgs.h"
+#include "MathLibrary.h"
 
 #include <exception>
 #include <stdexcept>
@@ -16,7 +17,7 @@ using std::ifstream;
 #define DEFAULT_STEP_COUNT 100
 
 bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep,
-                 long* steps) {
+                 long* steps, SBScanner* sbScanner) {
   if (box == NULL) { // If box is null, print an error and return.
     std::cerr << "Error: loadBoxData(): Box is NULL" << std::endl;
     return false;
@@ -24,7 +25,6 @@ bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep,
 
   Environment* enviro;
   vector<Molecule> moleculeVector;
-  SBScanner sb_scanner;
 
   // Build from config/z-matrix.
   if (simArgs.fileType == InputFile::Configuration) {
@@ -54,12 +54,11 @@ bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep,
     }
 
     // Getting bond and angle data from oplsaa.sb file.
-    sb_scanner = SBScanner();
     std::string sb_path = config_scanner.getOplsusaparPath();
     std::size_t slash_index= sb_path.find_last_of('/');
     sb_path = sb_path.substr(0, slash_index);
 
-    if(!sb_scanner.readInSB(sb_path + "/oplsaa.sb")) {
+    if(!sbScanner->readInSB(sb_path + "/oplsaa.sb")) {
       std::cerr << "Error: loadBoxData(): Could not read OPLS SB file"
                 << std::endl;
       return false;
@@ -103,7 +102,7 @@ bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep,
     box->environment = new Environment(enviro);
 
     // Build the box's data.
-    if (!buildBoxData(enviro, moleculeVector, box, sb_scanner)) {
+    if (!buildBoxData(enviro, moleculeVector, box, *sbScanner)) {
       std::cerr << "Error: loadBoxData(): Could not build box data" << std::endl;
       return false;
     }
@@ -149,7 +148,7 @@ bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep,
     box->environment = new Environment(enviro);
 
     // Populate the box with data.
-    if (!fillBoxData(enviro, moleculeVector, box, sb_scanner)) {
+    if (!fillBoxData(enviro, moleculeVector, box, *sbScanner)) {
       std::cerr << "Error: loadBoxData(): Could not build box data"
                 << std::endl;
       return false;
@@ -165,7 +164,7 @@ bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep,
 
 
 bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box,
-                 SBScanner& sb_scanner) {
+                 SBScanner& sbScanner) {
   // If the vector of molecules has no contents, print an error and return
   if (!enviro || !box || molecVec.size() < 1) {
     std::cerr << "Error: fillBoxData(): Could not fill molecule data."
@@ -279,7 +278,7 @@ bool fillBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box,
 }
 
 bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box,
-                  SBScanner& sb_scanner) {
+                  SBScanner& sbScanner) {
 
   // Convert molecule vectors into an array
   //int moleculeIndex = 0;
@@ -440,8 +439,10 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box,
       box->molecules[j].angles[k] = molec1.angles[k];
       int a1Idx = molec1.angles[k].atom1;
       int a2Idx = molec1.angles[k].atom2;
-      box->molecules[j].angles[k].commonAtom = getCommonAtom(bondVector,
-                                                             a1Idx, a2Idx);
+      if (box->molecules[j].angles[k].commonAtom != 0) {
+        box->molecules[j].angles[k].commonAtom = getCommonAtom(bondVector,
+                                                               a1Idx, a2Idx);
+      }
     }
 
 
@@ -524,6 +525,19 @@ bool buildBoxData(Environment* enviro, vector<Molecule>& molecVec, Box* box,
               << std::endl;
     return false;
   }
+
+  // Now that we have XYZ coordinates, compute the values of any implicit
+  // angles.
+  for (int angle = 0; angle < box->angleCount; angle++) {
+    if (box->angles[angle].value == 0) {
+      // Calculate the correct angle value base on the XYZ coordinates
+      Angle a = box->angles[angle];
+      Atom *atoms = box->atoms;
+      box->angles[angle].value = getAngle(atoms[a.atom1], atoms[a.commonAtom],
+                                          atoms[a.atom2]);
+    }
+  }
+
 
   return true;
 }

@@ -37,8 +37,9 @@
 Simulation::Simulation(SimulationArgs simArgs) {
   args = simArgs;
   stepStart = 0;
+  sbScanner = new SBScanner();
 
-  box = SerialCalcs::createBox(args, &stepStart, &simSteps);
+  box = SerialCalcs::createBox(args, &stepStart, &simSteps, sbScanner);
   if (box == NULL) {
     std::cerr << "Error: Unable to initialize simulation Box" << std::endl;
     exit(EXIT_FAILURE);
@@ -59,8 +60,9 @@ Simulation::~Simulation() {
 }
 
 void Simulation::run() {
-  if (!args.simulationName.empty())
+  if (!args.simulationName.empty()) {
     std::cout << "Simulation Name: " << args.simulationName << std::endl;
+  }
 
   for (int molIdx = 0; molIdx < box->environment->numOfMolecules; molIdx++) {
     box->keepMoleculeInBox(molIdx);
@@ -78,9 +80,7 @@ void Simulation::run() {
   Real new_charge = 0, old_charge = 0;
 
   Real energy_LRC = SerialCalcs::calcEnergy_LRC(box);
-  //Real intraMolEnergy = SerialCalcs::calcIntraMolecularEnergy(box, lj_energy, charge_energy);
 
-  Real kT = kBoltz * box->getEnvironment()->temp;
   int accepted = 0;
   int rejected = 0;
 
@@ -110,16 +110,27 @@ void Simulation::run() {
   function_time_start = clock();
 
   if(args.verboseOutput) {
-    log = Logger(VERBOSE);
+    log = Logger(Verbose);
   } else {
-    log = Logger(NON_VERBOSE);
+    log = Logger(Info);
   }
 
   // Build SimBox below
-  SimBoxBuilder builder = SimBoxBuilder(args.useNeighborList, new SBScanner());
+  SimBoxBuilder builder = SimBoxBuilder(args.useNeighborList, sbScanner);
   bool parallel = args.simulationMode == SimulationMode::Parallel;
   SimBox* sb = builder.build(box);
   GPUCopy::setParallel(parallel);
+
+  // FIXME: Cancel the simulation if we're attempting bond-angle on GPU
+  if (ENABLE_INTRA && (sb->hasFlexibleBonds || sb->hasFlexibleAngles)) {
+    if (parallel) {
+      std::cout << "ERROR: Cannot perform intramolecular calculations and "
+                << "movements on the GPU at this time. Please switch to the "
+                << "CPU by running with the '-s' flag." << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+
   SimulationStep *simStep;
   if (args.strategy == Strategy::BruteForce) {
     log.verbose("Using brute force strategy for energy calculations");
@@ -133,7 +144,7 @@ void Simulation::run() {
     simStep = new BruteForceStep(sb);
   }
   GPUCopy::copyIn(sb);
-  // SimCalcs::setSB(sb);
+
   //Calculate original starting energy for the entire system
   if (oldEnergy == 0) {
     if (parallel) {
@@ -199,28 +210,16 @@ void Simulation::run() {
     int changeIdx = simStep->chooseMolecule(sb);
 
     // Calculate the energy before translation
-    oldEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0);
+    oldEnergyCont = simStep->calcMoleculeEnergy(changeIdx, 0);
 
     // Perturb the molecule
     simStep->changeMolecule(changeIdx, sb);
 
     // Calculate the new energy after translation
-    newEnergyCont = simStep->calcMolecularEnergyContribution(changeIdx, 0);
+    newEnergyCont = simStep->calcMoleculeEnergy(changeIdx, 0);
 
     // Compare new energy and old energy to decide if we should accept or not
-    bool accept = false;
-
-    if (newEnergyCont < oldEnergyCont) {
-      // Always accept decrease in energy
-      accept = true;
-    } else {
-      // Otherwise use statistics + random number to determine weather to
-      // accept increase in energy
-      Real x = exp(-(newEnergyCont - oldEnergyCont) / kT);
-      accept = x >= randomReal(0.0, 1.0);
-    }
-
-    if (accept) {
+    if (SimCalcs::acceptMove(oldEnergyCont, newEnergyCont)) {
       accepted++;
       oldEnergy_sb += newEnergyCont - oldEnergyCont;
       lj_energy += new_lj - old_lj;
@@ -229,6 +228,7 @@ void Simulation::run() {
       rejected++;
       simStep->rollback(changeIdx, sb);
     }
+    sb->stepNum++;
   }
   delete(simStep);
   endTime = clock();

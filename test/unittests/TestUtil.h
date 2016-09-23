@@ -87,12 +87,12 @@ std::string getMCGPU_path ();
 std::string buildCommand(std::string MCGPU, std::string configFile, std::string outputName, bool series, bool neighborlist, bool errorExpected, std::string working_path);
 
 /**
- * Examines a result file to determine the final energy.
- * @param MCGPU The path to MCGPU's root.
+ * Examines a result file to determine the final energy. Results file is
+ * assumed to be in the current working directory.
  * @param resultsFile The name of the results file.
  * @return The final energy.
  */
-double getEnergyResult(std::string MCGPU, std::string resultsFile);
+double getEnergyResult(std::string resultsFile);
 
 /**
  * Examines a file that cerr was piped to and returns what function call the error occurred in.
@@ -101,5 +101,8 @@ double getEnergyResult(std::string MCGPU, std::string resultsFile);
  * @return The function the error occurred in.
  */
 std::string getErrorResult(std::string MCGPU, std::string errorFile);
+
+/** Simple wrapper to obtain the current working directory */
+std::string get_cwd();
 
 #endif

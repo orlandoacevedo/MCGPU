@@ -12,10 +12,9 @@
 #include "Box.h"
 #include "Utilities/Logger.h"
 #include "SimBox.h"
+#include "Utilities/FileUtilities.h"
 
 #define OUT_INTERVAL 100
-
-const double kBoltz = 0.00198717;
 
 class Simulation
 {
@@ -44,6 +43,9 @@ class Simulation
 
     /** The object that logs simulation events */
     Logger log;
+
+    /** Pointer to the SB Scanner used to create the box */
+    SBScanner *sbScanner;
 
     /** Writes the final state of the application to a PDB file */
     int writePDB(Environment sourceEnvironment,

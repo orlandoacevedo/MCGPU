@@ -1,4 +1,5 @@
 #include "Metropolis/Utilities/FileUtilities.h"
+#include "TestUtil.h"
 #include "gtest/gtest.h"
 
 /**
@@ -23,7 +24,7 @@ TEST (IOTests, ConfigScan) {
   }
   std::string MCGPU = directory;
 
-  string configPath = MCGPU;
+  string configPath = getMCGPU_path();
   configPath.append("test/unittests/ConfigurationTest.config");
   string oplsPath = "path/to/opla.par/file";
   string zMatrixPath = "path/to/zMatrix/file";

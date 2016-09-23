@@ -100,7 +100,7 @@ CC := pgc++
 ifeq ($(CC),pgc++)
 	CFLAGS := --c++11
 else
-	CFLAGS := 
+	CFLAGS := -std=c++11
 endif
 
 # Defines the types of files that the Makefile knows how to compile

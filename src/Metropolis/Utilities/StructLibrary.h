@@ -1,10 +1,4 @@
-/*
-	Contains all structs and methods for simulation objects (atom,molecule,etc.)
-
-	Author: Nathan Coleman
-	Last Changed: March 10, 2014 by Albert Wallace
-	Previously Changed: Feb 19, Feb 26, Feb 28, Mar 03, Mar 05, Mar 06, Mar 07. [By Albert]
-*/
+/** Contains all structs and methods for simulation objects */
 
 #ifndef STRUCTLIBRARY_H
 #define STRUCTLIBRARY_H
@@ -20,41 +14,33 @@
 
 
 struct NLC_Node {
-	int index; // The molecule index that this node holds.
-	struct NLC_Node* next; // The next node in this NLC chain.
+  int index; // The molecule index that this node holds.
+  struct NLC_Node* next; // The next node in this NLC chain.
 
-	NLC_Node() {};
+  NLC_Node() {};
 };
 
-/**
- * This struct contains data about the bond between two atoms.
- */
+/** This struct contains data about the bond between two atoms. */
 struct BondData {
+  /** The force constant of this bond. */
+  Real kBond;
 
-	/**
-	 * The force constant of this bond.
-	 */
-	Real kBond;
+  /** The equilibrium bond distance of this bond. */
+  Real eqBondDist;
 
-	/**
-	 * The equilibrium bond distance of this bond.
-	 */
-	Real eqBondDist;
+  /** Default constructor. Used when creating a map to bondData. */
+  BondData() {}
 
-	/**
-	 * Default constructor. Used when creating a map to bondData.
-	 */
-	BondData() {}
-
-	/**
-	 * Preferred constructor. Initializes variables.
-	 * @param init_kBond The value to initialize the bond's force constant to.
-	 * @param init_eqBondDist The value to initialize the bond's equilibrium distance to.
-	 */
-	BondData(Real init_kBond, Real init_eqBondDist) {
-		kBond = init_kBond;
-		eqBondDist = init_eqBondDist;
-	}
+  /**
+   * Preferred constructor. Initializes variables.
+   * @param init_kBond The value to initialize the bond's force constant to.
+   * @param init_eqBondDist The value to initialize the bond's equilibrium
+   * distance to.
+   */
+  BondData(Real init_kBond, Real init_eqBondDist) {
+    kBond = init_kBond;
+    eqBondDist = init_eqBondDist;
+  }
 };
 
 /**
@@ -62,221 +48,173 @@ struct BondData {
  */
 struct AngleData {
 
-	/**
-	 * The force constant of the angle.
-	 */
-	Real kAngle;
+  /** The force constant of the angle. */
+  Real kAngle;
 
-	/**
-	 * The equilibrium size of the angle formed by the three atoms.
-	 * This is measured in degrees.
-	 */
-	Real eqAngle;
+  /**
+   * The equilibrium size of the angle formed by the three atoms.
+   * This is measured in degrees.
+   */
+  Real eqAngle;
 
-	/**
-	 * Default constructor for angleData. Used when creating a map to angleData.
-	 */
-	AngleData() {}
+  /**
+   * Default constructor for angleData. Used when creating a map to angleData.
+   */
+  AngleData() {}
 
-	/**
-	 * Preferred constructor for angleData. Initializes variables.
-	 * @param init_kAngle The value to initialize the angle's force constant to.
-	 * @param init_eqAngle The value to initialize the angle's size to.
-	 */
-	AngleData(Real init_kAngle, Real init_eqAngle) {
-		kAngle = init_kAngle;
-		eqAngle = init_eqAngle;
-	}
+  /**
+   * Preferred constructor for angleData. Initializes variables.
+   * @param init_kAngle The value to initialize the angle's force constant to.
+   * @param init_eqAngle The value to initialize the angle's size to.
+   */
+  AngleData(Real init_kAngle, Real init_eqAngle) {
+    kAngle = init_kAngle;
+    eqAngle = init_eqAngle;
+  }
 };
 
 /**
-	Used in box consturction. The tables are used to look up hop values between
-	two atom pairs. A table is created for each different type of molecule in the simulation
+ * Used in box consturction. The tables are used to look up hop values between
+ * two atom pairs. A table is created for each different type of molecule in
+ * the simulation
 */
-struct Table
-{
+struct Table {
 
-    int **hopTable;
+  int **hopTable;
 
-    Table()
-    {
-    }
+  Table() { }
 
-    Table(int **table) //constructor with parameters
-	{
-	   hopTable = table;
-	}
+  Table(int **table) {
+    hopTable = table;
+  }
 };
 
 
-/*!
-  Structure to respresent bonds between atoms in a molecule.
-*/
-struct Bond
-{
-    /*!
-       The first atom in the bond.
-    */
-    int atom1;
-    /*!
-       The second atom in the bond.
-    */
-    int atom2;
+/** Structure to respresent bonds between atoms in a molecule.  */
+struct Bond {
+  /** The first atom in the bond. */
+  int atom1;
 
-    /*!
-       The length of the bond.
-    */
-    Real distance;
-    /*!
-       Bool indicating if the bond can be varied.
-    */
-    bool variable;
+  /** The second atom in the bond. */
+  int atom2;
 
-	/**
-	 * The force constant K of the bond.
-	 */
-	Real forceConstant;
+  /** The length of the bond. */
+  Real distance;
 
-	/**
-	 * The equilibrium bond distance of this bond.
-	 */
-	Real eqBondDist;
+  /** Bool indicating if the bond can be varied.  */
+  bool variable;
 
-	/**
-	 * Parameterless constructor for the Bond struct.
-	 */
-    Bond()
-	{
-    	atom1 = 0;
-    	atom2 = 0;
-    	distance = 0;
-    	variable = true;
-	}
+  /** The force constant K of the bond. */
+  Real forceConstant;
 
-    /**
-	 * Standard constructor for the Bond struct.
-	 * @param a1 The first atom in the Bond.
-	 * @param a2 The second atom in thee Bond.
-	 * @param distance The bond distacne.
-	 * @param varied True if the bond can be varied, false otherwise.
-	 */
-    Bond(int a1, int a2, Real dist, bool varied)
-	{
-        atom1 = a1;
-        atom2 = a2;
-        distance = dist;
-        variable = varied;
-	}
+  /** The equilibrium bond distance of this bond. */
+  Real eqBondDist;
 
+  /** Parameterless constructor for the Bond struct. */
+  Bond() {
+    atom1 = 0;
+    atom2 = 0;
+    distance = 0;
+    variable = true;
+  }
+
+  /**
+   * Standard constructor for the Bond struct.
+   * @param a1 The first atom in the Bond.
+   * @param a2 The second atom in thee Bond.
+   * @param distance The bond distacne.
+   * @param varied True if the bond can be varied, false otherwise.
+   */
+  Bond(int a1, int a2, Real dist, bool varied) {
+    atom1 = a1;
+    atom2 = a2;
+    distance = dist;
+    variable = varied;
+  }
 };
 
 
-/*!
-  Structure representing an angle between two atoms in a molecule.
-  A geometric angle is defined using three points(atoms).  Only the end
-  points are listed here.  It is up to the programmer to find the third
-  atom in the angle.
-*/
-struct Angle
-{
-    /*!
-    the first atom in the angle
-    */
+/**
+ * Structure representing an angle between two atoms in a molecule.
+ * A geometric angle is defined using three points(atoms).  Only the end
+ * points are listed here.  It is up to the programmer to find the third
+ * atom in the angle.
+ */
+struct Angle {
+    /** The first atom in the angle */
     int atom1;
 
-    /*!
-    the second atom in the angle
-    */
+    /** The second atom in the angle */
     int atom2;
 
-		/**
-		 * The index of the common atom in the angle.
-		 */
-	  int commonAtom;
+    /** * The index of the common atom in the angle.  */
+    int commonAtom;
 
-    /*!
-    the angle between the atoms; used to be "value"
-    */
+    /** The angle between the atoms; used to be "value" */
     Real value;
 
-    /*!
-    if the angle is variable
-    */
+    /** True if the angle is variable */
     bool variable;
 
-	/**
-	 * The equilibrium angle of this set of atoms.
-	 */
-	Real eqAngle;
+  /** The equilibrium angle of this set of atoms. */
+  Real eqAngle;
 
-	/**
-	 * The force constant k of this angle.
-	 */
-	Real forceConstant;
+  /**
+   * The force constant k of this angle.
+   */
+  Real forceConstant;
 
-    Angle()
-	{
-    	atom1 = 0;
-    	atom2 = 0;
-			commonAtom = 0;
-    	value = 0;
-    	variable = true;
-	}
+  Angle() {
+    atom1 = 0;
+    atom2 = 0;
+    commonAtom = 0;
+    value = 0;
+    variable = true;
+  }
 
 
-    Angle(int a1, int a2, Real val, bool varied)
-	{
-    	atom1 = a1;
-    	atom2 = a2;
-			commonAtom = 0;
-    	value = val;
-    	variable = varied;
-	}
+  Angle(int a1, int a2, Real val, bool varied) {
+    atom1 = a1;
+    atom2 = a2;
+    commonAtom = 0;
+    value = val;
+    variable = varied;
+  }
 };
 
 /**
-  Structure representing a dihedral in the atom.  A dihedral is the angle created
-  by two planes.  The structure is defined using two atoms.  It is up to the programmer
-  to find the other two atoms needed to define two planes.
-*/
-struct Dihedral
-{
-    /**
-    the first atom in the dihedral
-    */
+ * Structure representing a dihedral in the atom.  A dihedral is the angle
+ * created by two planes.  The structure is defined using two atoms. 
+ * It is up to the programmer to find the other two atoms needed to define two
+ * planes.
+ */
+struct Dihedral {
+    /** The first atom in the dihedral */
     int atom1;
 
-    /**
-      the second atom in the dihedral
-    */
+    /** The second atom in the dihedral */
     int atom2;
 
-    /**
-    the distance between the atoms; used to be "value"
-    */
+    /** The distance between the atoms; used to be "value" */
     Real value;
 
-    /**
-    if the distance between atoms is variable
-    */
+    /** True if the distance between atoms is variable */
     bool variable;
 
-    Dihedral()
-	{
-    	atom1 = 0;
-    	atom2 = 0;
-    	value = 0;
-    	variable = true;
-	}
+    Dihedral() {
+      atom1 = 0;
+      atom2 = 0;
+      value = 0;
+      variable = true;
+  }
 
 
-    Dihedral(int a1, int a2, Real val, bool varied)
-	{
-    	atom1 = a1;
-    	atom2 = a2;
-    	value = val;
-    	variable = varied;
-	}
+    Dihedral(int a1, int a2, Real val, bool varied) {
+      atom1 = a1;
+      atom2 = a2;
+      value = val;
+      variable = varied;
+  }
 };
 
 
@@ -285,30 +223,28 @@ struct Dihedral
   used in the fudge factor, for total energy calculations
 */
 //This HOP structure is only used as a placeholder; we don't do anything with it.
-struct Hop
-{
-    /**
-    the starting atom
-    */
-    int atom1;
-    /**
-     the ending atom
-    */
-	int atom2;
-    /**
-    the number of nodes between start and finish
-    */
-	int hop;
+struct Hop {
+  /**
+  the starting atom
+  */
+  int atom1;
+  /**
+   the ending atom
+  */
+  int atom2;
 
-	Hop()
-    {
-		atom1 = 0;
-		atom2 = 0;
-		hop = 0;
-	}
+  /**
+  the number of nodes between start and finish
+  */
+  int hop;
 
-    Hop(int atom1In, int atom2In, int hopsIn)
-    {
+  Hop() {
+    atom1 = 0;
+    atom2 = 0;
+    hop = 0;
+  }
+
+    Hop(int atom1In, int atom2In, int hopsIn) {
         atom1 = atom1In;
         atom2 = atom2In;
         hop = hopsIn;
@@ -318,116 +254,123 @@ struct Hop
 /**
   Structure used to represent the 4 Fourier Coeficients
 */
-struct Fourier
-{
+struct Fourier {
     Real vValues[4];
 };
 
-struct Atom
-{
-	std::string *name;
-	Real x, y, z, sigma, epsilon, charge;
-	unsigned long id;
-	//std::map<std::string, BondData> bonds;
-	//std::map<std::string, std::map<std::string, AngleData> > angles;
+struct Atom {
+  std::string *name;
+  Real x, y, z, sigma, epsilon, charge;
+  unsigned long id;
+  //std::map<std::string, BondData> bonds;
+  //std::map<std::string, std::map<std::string, AngleData> > angles;
 
-	Atom()
+  Atom()
     {
-		name = new std::string("000");
-		x = 0;
-		y = 0;
-		z = 0;
-		sigma = 0;
-		epsilon = 0;
-		charge = 0;
-		id = 0;
-	}
+    name = new std::string("000");
+    x = 0;
+    y = 0;
+    z = 0;
+    sigma = 0;
+    epsilon = 0;
+    charge = 0;
+    id = 0;
+  }
 
-	Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, std::string inName = "")
-	{
-		x = inX;
-		y = inY;
-		z = inZ;
-		sigma = inSigma;
-		epsilon = inEpsilon;
-		charge = inCharge;
-		name = new std::string(inName);
+  Atom(unsigned long inID, Real inX, Real inY, Real inZ, Real inSigma = 0, Real inEpsilon = 0, Real inCharge = 0, std::string inName = "")
+  {
+    x = inX;
+    y = inY;
+    z = inZ;
+    sigma = inSigma;
+    epsilon = inEpsilon;
+    charge = inCharge;
+    name = new std::string(inName);
         id = inID;
-	}
+  }
 
 
 };
 
 struct Environment
 {
-	Real x, y, z, cutoff, temp, maxTranslation, maxRotation;
-	int numOfAtoms;
-	int numOfMolecules; //this line was added in by Albert to make IOUtilities compile
-	std::string* primaryAtomIndexConfigLine;
-	int primaryAtomIndexDefinitions;
-	int primaryAtomIndex;
-	std::vector< std::vector<int>* >* primaryAtomIndexArray;
-	int randomseed; //--Albert
+  Real x, y, z, cutoff, temp, maxTranslation, maxRotation;
+  Real maxBondDelta, maxAngleDelta;
+  int numOfAtoms;
+  int numOfMolecules; //this line was added in by Albert to make IOUtilities compile
+  std::string* primaryAtomIndexConfigLine;
+  int primaryAtomIndexDefinitions;
+  int primaryAtomIndex;
+  std::vector< std::vector<int>* >* primaryAtomIndexArray;
+  int randomseed;
 
-	Environment() //constructor/initialize all values to 0 or some other default, where applicable
-	{
-		x = 0.0;
-		y = 0.0;
-		z = 0.0;
-		cutoff = 0.0;
-		temp = 0.0;
-		maxTranslation = 0.0;
-		maxRotation = 0.0;
-		numOfAtoms = 0;
-		numOfMolecules = 0;
-		primaryAtomIndexConfigLine = new std::string("0");
-		primaryAtomIndexDefinitions = 0;
-		primaryAtomIndex = 0;
-		primaryAtomIndexArray = new std::vector< std::vector<int>* >;
-		randomseed = 0;
-	}
+  /**
+   * Constructor/initialize all values to 0 or some other default, where
+   * applicable
+   */
+  Environment() {
+    x = 0.0;
+    y = 0.0;
+    z = 0.0;
+    cutoff = 0.0;
+    temp = 0.0;
+    maxTranslation = 0.0;
+    maxRotation = 0.0;
+    numOfAtoms = 0;
+    numOfMolecules = 0;
+    primaryAtomIndexConfigLine = new std::string("0");
+    primaryAtomIndexDefinitions = 0;
+    primaryAtomIndex = 0;
+    primaryAtomIndexArray = new std::vector< std::vector<int>* >;
+    randomseed = 0;
 
-    Environment(Environment* environment)
-    {
-        if (!environment)
-        {
-            std::cerr << "Error: Environment(): Copy constructor given NULL argument" << std::endl;
-        }
+    // Taken from Chrys Woods' slide deck
+    maxBondDelta = 0.06;
+    maxAngleDelta = 3.1;
+  }
 
-        x = environment->x;
-        y = environment->y;
-        z = environment->z;
-        cutoff = environment->cutoff;
-        temp = environment->temp;
-        maxTranslation = environment->maxTranslation;
-        maxRotation = environment->maxRotation;
-        numOfAtoms = environment->numOfAtoms;
-        numOfMolecules = environment->numOfMolecules;
-        primaryAtomIndexConfigLine = environment->primaryAtomIndexConfigLine;
-	   primaryAtomIndexDefinitions = environment->primaryAtomIndexDefinitions;
-	   primaryAtomIndex = environment->primaryAtomIndex;
-	   primaryAtomIndexArray = (environment->primaryAtomIndexArray);
-	   randomseed = environment->randomseed;
+  Environment(Environment* environment) {
+    if (!environment) {
+      std::cerr << "Error: Environment(): Copy constructor given NULL argument"
+                << std::endl;
     }
+
+    x = environment->x;
+    y = environment->y;
+    z = environment->z;
+    cutoff = environment->cutoff;
+    temp = environment->temp;
+    maxTranslation = environment->maxTranslation;
+    maxRotation = environment->maxRotation;
+    maxBondDelta = environment->maxBondDelta;
+    maxAngleDelta = environment->maxAngleDelta;
+    numOfAtoms = environment->numOfAtoms;
+    numOfMolecules = environment->numOfMolecules;
+    primaryAtomIndexConfigLine = environment->primaryAtomIndexConfigLine;
+    primaryAtomIndexDefinitions = environment->primaryAtomIndexDefinitions;
+    primaryAtomIndex = environment->primaryAtomIndex;
+    primaryAtomIndexArray = (environment->primaryAtomIndexArray);
+    randomseed = environment->randomseed;
+  }
 
 };
 
 struct Molecule
 {
-	int type;
-	/*
-	The number of atoms in the molecule.
-	*/
-	int numOfAtoms;
-	/*
-	The identification number for a given molecule. Previously referred to as simply "ID".
-	*/
-	int id;
-	/*
-	The array representing the collection of atoms in the molecule.
-	*/
-	Atom *atoms;
-	/**
+  int type;
+  /*
+  The number of atoms in the molecule.
+  */
+  int numOfAtoms;
+  /*
+  The identification number for a given molecule. Previously referred to as simply "ID".
+  */
+  int id;
+  /*
+  The array representing the collection of atoms in the molecule.
+  */
+  Atom *atoms;
+  /**
     the number of bonds in the molecule
     */
     int numOfBonds;
@@ -442,8 +385,8 @@ struct Molecule
     /**
     the number of Hops or pairs of atoms that are less than 4 nodes away
     */
-	 int numOfHops;
-	/**
+   int numOfHops;
+  /**
     array of bonds of the atoms in the molecule.
     */
     Bond *bonds;
@@ -465,39 +408,39 @@ struct Molecule
     */
     Molecule(int idIn, int typeIn, Atom *atomsIn, Angle *anglesIn, Bond *bondsIn, Dihedral *dihedralsIn, Hop *hopsIn, int atomCount, int angleCount, int bondCount, int dihedralCount, int hopCount)
     {
-		id = idIn;
-		type = typeIn;
+    id = idIn;
+    type = typeIn;
 
-		atoms = atomsIn;
-		angles = anglesIn;
-		bonds = bondsIn;
-		dihedrals = dihedralsIn;
-		hops = hopsIn;
+    atoms = atomsIn;
+    angles = anglesIn;
+    bonds = bondsIn;
+    dihedrals = dihedralsIn;
+    hops = hopsIn;
 
-		numOfAtoms = atomCount;
-		numOfAngles = angleCount;
-		numOfBonds = bondCount;
-		numOfDihedrals = dihedralCount;
-		numOfHops = hopCount;
-	}
+    numOfAtoms = atomCount;
+    numOfAngles = angleCount;
+    numOfBonds = bondCount;
+    numOfDihedrals = dihedralCount;
+    numOfHops = hopCount;
+  }
 
-	Molecule()
+  Molecule()
     {
-		id = 0;
-		type = 0;
+    id = 0;
+    type = 0;
 
-		atoms = new Atom[0];
-		angles = new Angle[0];
-		bonds = new Bond[0];
-		dihedrals = new Dihedral[0];
-		hops = new Hop[0];
+    atoms = new Atom[0];
+    angles = new Angle[0];
+    bonds = new Bond[0];
+    dihedrals = new Dihedral[0];
+    hops = new Hop[0];
 
-		numOfAtoms = 0;
-		numOfAngles = 0;
-		numOfBonds = 0;
-		numOfDihedrals = 0;
-		numOfHops = 0;
-	}
+    numOfAtoms = 0;
+    numOfAngles = 0;
+    numOfBonds = 0;
+    numOfDihedrals = 0;
+    numOfHops = 0;
+  }
 };
 
 

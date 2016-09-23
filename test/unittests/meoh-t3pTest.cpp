@@ -28,11 +28,12 @@ TEST(meoht3pTest, mol256) {
   system(buildMeohT3PCommand(MCGPU, testName + ".config", testName,
                              true, false, false).c_str());
   double expected = -2007.0;
-  double energyResult = getEnergyResult(MCGPU, testName + ".results");
+  double energyResult = getEnergyResult(testName + ".results");
   EXPECT_NEAR(expected, energyResult, 100);
 }
 
 // Test meoh-t3p with 256 molecules on the GPU
+#ifdef _OPENACC
 TEST(meoht3pTest, mol256_GPU) {
   std::string MCGPU = getMCGPU_path();
   std::string testName = "meoh-t3p256";
@@ -40,9 +41,10 @@ TEST(meoht3pTest, mol256_GPU) {
   system(buildMeohT3PCommand(MCGPU, testName + ".config", testName,
                              false, false, false).c_str());
   double expected = -2007.0;
-  double energyResult = getEnergyResult(MCGPU, testName + ".results");
+  double energyResult = getEnergyResult(testName + ".results");
   EXPECT_NEAR(expected, energyResult, 100);
 }
+#endif
 
 // Test meoh-t3p with 500 molecules
 TEST(meoht3pTest, mol500) {
@@ -52,11 +54,12 @@ TEST(meoht3pTest, mol500) {
   system(buildMeohT3PCommand(MCGPU, testName + ".config", testName,
                              true, false, false).c_str());
   double expected = -3148.0;
-  double energyResult = getEnergyResult(MCGPU, testName + ".results");
+  double energyResult = getEnergyResult(testName + ".results");
   EXPECT_NEAR(expected, energyResult, 100);
 }
 
 // Test meoh-t3p with 500 molecules on the GPU
+#ifdef _OPENACC
 TEST(meoht3pTest, mol500_GPU) {
   std::string MCGPU = getMCGPU_path();
   std::string testName = "meoh-t3p500";
@@ -64,9 +67,10 @@ TEST(meoht3pTest, mol500_GPU) {
   system(buildMeohT3PCommand(MCGPU, testName + ".config", testName,
                              false, false, false).c_str());
   double expected = -3148.0;
-  double energyResult = getEnergyResult(MCGPU, testName + ".results");
+  double energyResult = getEnergyResult(testName + ".results");
   EXPECT_NEAR(expected, energyResult, 100);
 }
+#endif
 
 // Test meoh-t3p with 8788 molecules
 TEST(meoht3pTest, mol8788) {
@@ -75,12 +79,13 @@ TEST(meoht3pTest, mol8788) {
   createMeohT3PConfigFile(MCGPU, testName + ".config", 85.57, 8788);
   system(buildMeohT3PCommand(MCGPU, testName + ".config", testName,
                              true, false, false).c_str());
-  double expected = -13219.0;
-  double energyResult = getEnergyResult(MCGPU, testName + ".results");
+  double expected = -14118;
+  double energyResult = getEnergyResult(testName + ".results");
   EXPECT_NEAR(expected, energyResult, 100);
 }
 
 // Test meoh-t3p with 8788 molecules on the GPU
+#ifdef _OPENACC
 TEST(meoht3pTest, mol8788_GPU) {
   std::string MCGPU = getMCGPU_path();
   std::string testName = "meoh-t3p8788";
@@ -88,6 +93,7 @@ TEST(meoht3pTest, mol8788_GPU) {
   system(buildMeohT3PCommand(MCGPU, testName + ".config", testName,
                              false, false, false).c_str());
   double expected = -13219.0;
-  double energyResult = getEnergyResult(MCGPU, testName + ".results");
+  double energyResult = getEnergyResult(testName + ".results");
   EXPECT_NEAR(expected, energyResult, 100);
 }
+#endif
