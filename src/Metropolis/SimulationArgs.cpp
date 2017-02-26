@@ -6,6 +6,8 @@ SimulationStrategy Strategy::fromString(std::string type) {
     return Strategy::BruteForce;
   } else if (type == "prox" || type == "proximity-matrix") {
     return Strategy::ProximityMatrix;
+  } else if (type == "nlc" || type == "neighbor-linked-cell") {
+    return Strategy::NLC;
   } else {
     return Strategy::Unknown;
   }

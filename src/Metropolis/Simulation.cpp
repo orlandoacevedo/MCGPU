@@ -19,6 +19,7 @@
 #include "SimulationArgs.h"
 #include "SimulationStep.h"
 #include "BruteForceStep.h"
+#include "NLCStep.h"
 #include "ProximityMatrixStep.h"
 #include "Box.h"
 #include "Metropolis/Utilities/MathLibrary.h"
@@ -138,6 +139,9 @@ void Simulation::run() {
   } else if (args.strategy == Strategy::ProximityMatrix) {
     log.verbose("Using proximity matrix strategy for energy calculations");
     simStep = new ProximityMatrixStep(sb);
+  } else if (args.strategy == Strategy::NLC) {
+    log.verbose("Using NLC strategy for energy calculations");
+    simStep = new NLCStep(sb);
   } else {
     log.verbose("No energy calculation strategy specified, defaulting to "
                 "brute force");
