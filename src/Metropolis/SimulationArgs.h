@@ -46,6 +46,7 @@ namespace Strategy {
     BruteForce,
     ProximityMatrix,
     NLC,
+    Verlet,
     Unknown
   };
 
