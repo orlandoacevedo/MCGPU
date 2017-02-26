@@ -150,9 +150,6 @@ Verlet* VerletCalcs::createVerlet() {
 }
 
 void VerletCalcs::fillVerlet(Verlet * verlet) {
-
-
-
   int numMolecules = SimCalcs::sb->numMolecules;
 
   Real* bSize = GPUCopy::sizePtr();
@@ -189,14 +186,19 @@ void VerletCalcs::fillVerlet(Verlet * verlet) {
 void VerletCalcs::updateVerlet(int molIdx, Verlet * v) {
 
 
+  Real* bSize = GPUCopy::sizePtr();
   int* pIdxes = GPUCopy::primaryIndexesPtr();
   int** molData = GPUCopy::moleculeDataPtr();
   Real** atomCoords = GPUCopy::atomCoordinatesPtr();
 
   int atom = pIdxes[molData[MOL_PIDX_START][molIdx]];
-  Real dx = atomCoords[X_COORD][atom] - v->startingLocation[X_COORD][molIdx];
-  Real dy = atomCoords[Y_COORD][atom] - v->startingLocation[Y_COORD][molIdx];
-  Real dz = atomCoords[Z_COORD][atom] - v->startingLocation[Z_COORD][molIdx];
+  Real dx = SimCalcs::makePeriodic(atomCoords[X_COORD][atom] -
+    v->startingLocation[X_COORD][molIdx], X_COORD, bSize);
+  Real dy = SimCalcs::makePeriodic(atomCoords[Y_COORD][atom] -
+    v->startingLocation[Y_COORD][molIdx], Y_COORD, bSize);
+  Real dz = SimCalcs::makePeriodic(atomCoords[Z_COORD][atom] -
+    v->startingLocation[Z_COORD][molIdx], Z_COORD, bSize);
+
   Real dist = dx * dx + dy * dy + dz * dz;
   Real max = v->maxMove * v->maxMove;
   if (dist > max) {
