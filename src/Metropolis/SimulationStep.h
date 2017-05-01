@@ -235,6 +235,13 @@ namespace SimCalcs {
    */
   void changeMolecule(int molIdx);
 
+
+  bool acceptVolumeMove(Real deltaE, Real oldVolume);
+
+  void resizeBox(Real factor);
+
+  Real calcDirectEwaldSum(int radius);
+
   /**
    * Given a molecule to move, randomly rotates and translates the molecule.
    * Saves the old position in case of a rollback.

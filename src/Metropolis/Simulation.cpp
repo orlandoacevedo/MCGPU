@@ -79,7 +79,10 @@ void Simulation::run() {
   Real new_lj = 0, old_lj = 0;
   Real new_charge = 0, old_charge = 0;
 
-  Real energy_LRC = SerialCalcs::calcEnergy_LRC(box);
+  Real oldEnergy_LRC = SerialCalcs::calcEnergy_LRC(box);
+  Real newEnergy_LRC = 0;
+
+  Real newEnergy_Ewald = 0;
 
   int accepted = 0;
   int rejected = 0;
@@ -163,7 +166,7 @@ void Simulation::run() {
     }
     oldEnergy_sb = simStep->calcSystemEnergy(lj_energy, charge_energy,
                                              sb->numMolecules);
-    oldEnergy_sb += energy_LRC;
+    oldEnergy_sb += oldEnergy_LRC;
   }
   function_time_end = clock();
   GPUCopy::copyOut(sb);
@@ -185,6 +188,7 @@ void Simulation::run() {
     baseStateFile.append("untitled");
   }
 
+  Real oldEnergy_Ewald = SimCalcs::calcDirectEwaldSum(0);
   // ----- Main simulation loop -----
   for (int move = stepStart; move < (stepStart + simSteps); move++) {
     new_lj = 0, old_lj = 0, new_charge = 0, old_charge = 0;
@@ -206,6 +210,16 @@ void Simulation::run() {
       log.verbose("");
     }
 
+    newEnergy_Ewald = SimCalcs::calcDirectEwaldSum(0);
+
+    SimCalcs::resizeBox(1.0);
+    newEnergy_LRC = SerialCalcs::calcEnergy_LRC(box);
+    oldEnergy_sb = simStep->calcSystemEnergy(lj_energy, charge_energy,
+                                             sb->numMolecules);
+    oldEnergy_sb += newEnergy_LRC - oldEnergy_LRC;
+    oldEnergy_LRC = newEnergy_LRC;
+    oldEnergy_Ewald = newEnergy_Ewald;
+    /*
     // Randomly select index of a molecule for changing
     int changeIdx = simStep->chooseMolecule(sb);
 
@@ -227,8 +241,11 @@ void Simulation::run() {
     } else {
       rejected++;
       simStep->rollback(changeIdx, sb);
-    }
-    sb->stepNum++;
+    } */
+
+
+    break;
+    sb->stepNum++; 
   }
   delete(simStep);
   endTime = clock();
@@ -250,7 +267,8 @@ void Simulation::run() {
   fprintf(stdout, "LJ-Energy Subtotal: %.3f\n", lj_energy);
   fprintf(stdout, "Charge Energy Subtotal: %.3f\n", charge_energy);
 
-  fprintf(stdout, "Energy Long-range Correction: %.3f\n", energy_LRC);
+  fprintf(stdout, "Energy Long-range Correction: %.3f\n", oldEnergy_LRC);
+  fprintf(stdout, "Ewald Energy: %.3f\n", oldEnergy_Ewald);
   //fprintf(stdout, "Intramolecular Energy: %.3f\n", intraMolEnergy);
 
   fprintf(stdout, "Final Energy: %.3f\n", currentEnergy);

@@ -427,6 +427,97 @@ void SimCalcs::changeMolecule(int molIdx) {
   if (ENABLE_INTRA) intramolecularMove(molIdx);
 }
 
+Real SimCalcs::calcDirectEwaldSum(int cutRadius) {
+  Real sum = 0;
+  Real ** aCoords = GPUCopy::atomCoordinatesPtr();
+  Real ** aData = GPUCopy::atomDataPtr();
+  int numAtoms = sb->numAtoms;
+  Real * bSize = GPUCopy::sizePtr();
+  Real cutoff = sb->cutoff;
+
+  for (int i = 0; i < numAtoms; i++) {
+    // Skip Dummy Atoms
+    if (aData[ATOM_SIGMA][i] < 0.0) continue;
+    for (int j = 0; j < numAtoms; j++) {
+      // Skip Dummy Atoms
+      if (aData[ATOM_SIGMA][j] < 0.0) continue;
+      Real qij = aData[ATOM_CHARGE][i] * aData[ATOM_CHARGE][j];
+      Real dx = makePeriodic(aCoords[X_COORD][i] - aCoords[X_COORD][j],
+          X_COORD, bSize);
+      Real dy = makePeriodic(aCoords[Y_COORD][i] - aCoords[Y_COORD][j],
+          Y_COORD, bSize);
+      Real dz = makePeriodic(aCoords[Z_COORD][i] - aCoords[Z_COORD][j],
+          Z_COORD, bSize);
+
+      for (int nx = -cutRadius; nx <= cutRadius; nx++) {
+        for (int ny = -cutRadius; ny <= cutRadius; ny++) {
+          for (int nz = -cutRadius; nz <= cutRadius; nz++) {
+            if (nx * nx + ny * ny + nz*nz <= cutRadius * cutRadius) {
+              if (!(nx == 0 && ny == 0 && nz == 0 &&
+                dx * dx + dy * dy + dz * dz <= cutoff * cutoff)) {
+
+                Real ndx = nx * bSize[X_COORD] + dx;
+                Real ndy = ny * bSize[Y_COORD] + dy;
+                Real ndz = nz * bSize[Z_COORD] + dz;
+
+                sum += qij / sqrt(ndx * ndx + ndy*ndy + ndz * ndz);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Multiply by 1 / 4 pi epsilon, divide by 2.
+  return sum * 332.06 * 0.5; 
+}
+
+bool SimCalcs::acceptVolumeMove(Real deltaE, Real oldVolume) {
+  Real newVolume = 1.0;
+  Real* bSize = GPUCopy::sizePtr();
+  Real pressure = 1.0;
+
+  for (int i = 0; i < NUM_DIMENSIONS; i++) {
+    newVolume *= bSize[i];
+  }
+
+  Real prob = sb->numMolecules * (log(newVolume) - log(oldVolume));
+  prob -= (deltaE + pressure * (newVolume - oldVolume)) / (sb->kT);
+  prob = exp(prob);
+  return prob >= randomReal(0.0, 1.0);
+}
+
+void SimCalcs::resizeBox(Real factor) {
+  Real* bSize = GPUCopy::sizePtr();
+  int* pIdxes = GPUCopy::primaryIndexesPtr();
+  int** molData = GPUCopy::moleculeDataPtr();
+  Real** aCoords = GPUCopy::atomCoordinatesPtr();
+  int numMols = sb->numMolecules;
+
+  for (int i = 0; i < numMols; i++) {
+    int pIdx = pIdxes[molData[MOL_PIDX_START][i]];
+
+    int molStart = sb->moleculeData[MOL_START][i];
+    int molLen = sb->moleculeData[MOL_LEN][i];
+
+    for (int j = 0; j < NUM_DIMENSIONS; j++) {
+      Real mid = bSize[j] / 2.0;
+      Real vecFromMid = aCoords[j][pIdx] - mid;
+      Real newVecFromMid = factor * vecFromMid;
+      Real diff = (newVecFromMid - vecFromMid) / 2.0;
+
+      for (int k = molStart; k < molStart + molLen; k++) {
+        aCoords[j][k] += diff;
+      }
+    }
+  }
+
+  for (int i = 0; i < NUM_DIMENSIONS; i++) {
+    bSize[i] *= factor;
+  }
+}
+
 void SimCalcs::intermolecularMove(int molIdx) {
   Real maxT = sb->maxTranslate;
   Real maxR = sb->maxRotate;
