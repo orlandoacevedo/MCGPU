@@ -473,10 +473,9 @@ Real SimCalcs::calcDirectEwaldSum(int cutRadius) {
   return sum * 332.06 * 0.5; 
 }
 
-bool SimCalcs::acceptVolumeMove(Real deltaE, Real oldVolume) {
+bool SimCalcs::acceptVolumeMove(Real deltaE, Real oldVolume, Real pressure) {
   Real newVolume = 1.0;
   Real* bSize = GPUCopy::sizePtr();
-  Real pressure = 1.0;
 
   for (int i = 0; i < NUM_DIMENSIONS; i++) {
     newVolume *= bSize[i];
@@ -611,7 +610,7 @@ void SimCalcs::intramolecularMove(int molIdx) {
     // Do an MC test for delta tuning
     // Note: Failing does NOT mean we rollback
     newEnergy = calcIntraMolecularEnergy(molIdx);
-    if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
+    if (SimCalcs::acceptMove(newEnergy - currentEnergy)) {
       sb->numAcceptedBondMoves += numBondsToMove;
     }
     currentEnergy = newEnergy;
@@ -643,7 +642,7 @@ void SimCalcs::intramolecularMove(int molIdx) {
     // Do an MC test for delta tuning
     // Note: Failing does NOT mean we rollback
     newEnergy = calcIntraMolecularEnergy(molIdx);
-    if (SimCalcs::acceptMove(currentEnergy, newEnergy)) {
+    if (SimCalcs::acceptMove(newEnergy - currentEnergy)) {
       sb->numAcceptedAngleMoves += numAnglesToMove;
     }
     currentEnergy = newEnergy;
@@ -792,14 +791,14 @@ int SimCalcs::find(int atomIdx) {
   }
 }
 
-bool SimCalcs::acceptMove(Real oldEnergy, Real newEnergy) {
+bool SimCalcs::acceptMove(Real deltaE) {
     // Always accept decrease in energy
-    if (newEnergy < oldEnergy) {
+    if (deltaE < 0) {
       return true;
     }
 
     // Otherwise use random number to determine weather to accept
-    return exp(-(newEnergy - oldEnergy) / sb->kT) >=
+    return exp(-(deltaE) / sb->kT) >=
         randomReal(0.0, 1.0);
 }
 

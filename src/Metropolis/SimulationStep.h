@@ -236,7 +236,7 @@ namespace SimCalcs {
   void changeMolecule(int molIdx);
 
 
-  bool acceptVolumeMove(Real deltaE, Real oldVolume);
+  bool acceptVolumeMove(Real deltaE, Real oldVolume, Real pressure);
 
   void resizeBox(Real factor);
 
@@ -380,7 +380,7 @@ namespace SimCalcs {
    * @param oldEnergy the total molecular energy prior to the move
    * @param newEnergy the total molecular energy proceeding the move
    */
-  bool acceptMove(Real oldEnergy, Real newEnergy);
+  bool acceptMove(Real deltaE);
 
   /** Set the current SimBox instance for this namespace */
   void setSB(SimBox* sb);

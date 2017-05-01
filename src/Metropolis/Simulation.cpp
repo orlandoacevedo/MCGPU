@@ -30,6 +30,7 @@
 #include "SimBox.h"
 #include "SimBoxBuilder.h"
 #include "GPUCopy.h"
+#include "Ensemble.h"
 
 #define RESULTS_FILE_DEFAULT "run"
 #define RESULTS_FILE_EXT ".results"
@@ -146,6 +147,16 @@ void Simulation::run() {
                 "brute force");
     simStep = new BruteForceStep(sb);
   }
+
+  Ensemble *ensemble;
+  if (args.ensemble == "npt") {
+    log.verbose("Using NPT ensemble");
+    ensemble = new NPTEnsemble(box->environment->pressure, args.volumeInterval);
+  } else {
+    log.verbose("Using NVT ensemble");
+    ensemble = new NVTEnsemble();
+  }
+
   GPUCopy::copyIn(sb);
 
   //Calculate original starting energy for the entire system
@@ -188,7 +199,14 @@ void Simulation::run() {
     baseStateFile.append("untitled");
   }
 
-  Real oldEnergy_Ewald = SimCalcs::calcDirectEwaldSum(0);
+
+  Real oldEnergy_Ewald = 0.0;
+
+  if (args.ewaldRadius > 0) {
+    oldEnergy_Ewald = SimCalcs::calcDirectEwaldSum(args.ewaldRadius);
+  }
+
+
   // ----- Main simulation loop -----
   for (int move = stepStart; move < (stepStart + simSteps); move++) {
     new_lj = 0, old_lj = 0, new_charge = 0, old_charge = 0;
@@ -210,16 +228,7 @@ void Simulation::run() {
       log.verbose("");
     }
 
-    newEnergy_Ewald = SimCalcs::calcDirectEwaldSum(0);
-
-    SimCalcs::resizeBox(1.0);
-    newEnergy_LRC = SerialCalcs::calcEnergy_LRC(box);
-    oldEnergy_sb = simStep->calcSystemEnergy(lj_energy, charge_energy,
-                                             sb->numMolecules);
-    oldEnergy_sb += newEnergy_LRC - oldEnergy_LRC;
-    oldEnergy_LRC = newEnergy_LRC;
-    oldEnergy_Ewald = newEnergy_Ewald;
-    /*
+    ensemble->update();
     // Randomly select index of a molecule for changing
     int changeIdx = simStep->chooseMolecule(sb);
 
@@ -233,7 +242,7 @@ void Simulation::run() {
     newEnergyCont = simStep->calcMoleculeEnergy(changeIdx, 0);
 
     // Compare new energy and old energy to decide if we should accept or not
-    if (SimCalcs::acceptMove(oldEnergyCont, newEnergyCont)) {
+    if (ensemble->accept(newEnergyCont - oldEnergyCont)) {
       accepted++;
       oldEnergy_sb += newEnergyCont - oldEnergyCont;
       lj_energy += new_lj - old_lj;
@@ -241,12 +250,11 @@ void Simulation::run() {
     } else {
       rejected++;
       simStep->rollback(changeIdx, sb);
-    } */
+    }
 
-
-    break;
     sb->stepNum++; 
   }
+
   delete(simStep);
   endTime = clock();
   writePDB(box->getEnvironment(), box->getMolecules(), sb);

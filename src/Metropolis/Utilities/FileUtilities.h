@@ -155,6 +155,15 @@ class ConfigScanner {
   /** The name of the strategy to use */
   string strategy;
 
+  /** The name of the ensemble to use */
+  string ensemble;
+
+  /** The spherical ewald radius */
+  int ewaldRadius;
+
+  /** The interval at which to perform volume moves */
+  int volumeInterval;
+
   void throwScanError(string message);
   void parsePrimaryIndexDefinitions(string definitions);
 
@@ -170,6 +179,15 @@ class ConfigScanner {
    * constructor.
    */
   bool readInConfig(string configpath);
+
+  /** @return the ensemble chosen */
+  string getEnsemble();
+
+  /** @return the ewald radius chosen */
+  int getEwaldRadius();
+
+  /** @return the volume interval chosen */
+  int getVolumeInterval();
 
   /** @return the environment variable in this ConfigScanner */
   Environment* getEnviro();
