@@ -75,6 +75,9 @@ struct SimulationArgs {
   /** An optional name given to the current simulation run by the user. */
   std::string simulationName;
 
+  /** The ensemble to use. */
+  std::string ensemble;
+
   /** Determines whether to run on the CPU or the GPU. */
   SimulationModeType simulationMode;
 
@@ -99,6 +102,10 @@ struct SimulationArgs {
 
   /** The number of simultion steps between updating the neighborlist */
   int neighborListInterval;
+
+  int ewaldRadius;
+
+  int volumeInterval;
 
   /**
    * The number of simulation steps between status updates printed to

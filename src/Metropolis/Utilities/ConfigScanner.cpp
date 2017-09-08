@@ -198,6 +198,25 @@ bool ConfigScanner::readInConfig(string configpath) {
       enviro.maxBondDelta = atof(value.c_str());
     } else if (key == "max-angle-delta") {
       enviro.maxAngleDelta = atof(value.c_str());
+    } else if (key == "ensemble") {
+      if (value.length() > 0) {
+        ensemble = value;
+      }
+    } else if (key == "pressure" ) {
+      if (value.length() > 0) {
+        enviro.pressure= atof(value.c_str());
+      } else {
+        throwScanError("Configuration file not well formed. Missing environment pressure value.");
+        return false;
+      }
+    } else if (key == "ewald-radius") {
+      if (value.length() > 0) {
+        ewaldRadius = atoi(value.c_str());
+      }
+    } else if (key == "volume-interval") {
+      if (value.length() > 0) {
+        volumeInterval = atoi(value.c_str());
+      }
     } else {
       throwScanError("Unexpected key encountered: " + key);
       return false;
@@ -287,4 +306,16 @@ string ConfigScanner::getSimulationName() {
 
 string ConfigScanner::getStrategy() {
   return strategy;
+}
+
+string ConfigScanner::getEnsemble() {
+  return ensemble;
+}
+
+int ConfigScanner::getEwaldRadius() {
+  return ewaldRadius;
+}
+
+int ConfigScanner::getVolumeInterval() {
+  return volumeInterval;
 }

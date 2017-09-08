@@ -303,6 +303,7 @@ struct Environment
   int primaryAtomIndex;
   std::vector< std::vector<int>* >* primaryAtomIndexArray;
   int randomseed;
+  Real pressure;
 
   /**
    * Constructor/initialize all values to 0 or some other default, where
