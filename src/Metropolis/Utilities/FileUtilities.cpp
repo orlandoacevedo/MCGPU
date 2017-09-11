@@ -42,6 +42,11 @@ bool loadBoxData(SimulationArgs& simArgs, Box* box, long* startStep,
       simArgs.simulationName = config_scanner.getSimulationName();
     }
 
+    simArgs.ensemble = config_scanner.getEnsemble();
+    simArgs.ewaldRadius = config_scanner.getEwaldRadius();
+    simArgs.volumeInterval = config_scanner.getVolumeInterval();
+
+
     if (!config_scanner.getStrategy().empty() &&
         simArgs.strategy == Strategy::Default) {
       simArgs.strategy = Strategy::fromString(config_scanner.getStrategy());
