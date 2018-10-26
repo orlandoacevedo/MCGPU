@@ -1,7 +1,7 @@
 MCGPU (Monte Carlo on Graphics Processing Units)
 ===============================================================
 
-##Requirements
+## Requirements
  * [PGI Accelerator C/C++ Compiler with OpenACC](https://www.pgroup.com/resources/accel.htm) *or*
    [OpenACC Toolkit](https://developer.nvidia.com/openacc-toolkit) (free for academic use)
     * *Note*: If you are using the Alabama Supercomputer Center's Dense Memory Cluster (DMC), type ```module load pgi``` to load the PGI compilers.
@@ -10,7 +10,7 @@ MCGPU (Monte Carlo on Graphics Processing Units)
     * By default, the PGI compilers target Fermi-generation GPUs (Compute Capability 2.0) and higher
  * Linux operating system
 
-##Build
+## Build
 ```
 git clone git://github.com/orlandoacevedo/MCGPU.git
 cd MCGPU/
@@ -31,8 +31,9 @@ make CC=g++
 
 If you compile with GCC, you **cannot** run in parallel mode.
 
-##Run
-###To Run a Simulation on a Local Machine:
+## Run
+
+To Run a Simulation on a Local Machine:
 ```
 cd /path/to/MCGPU/
 bin/metrosim [configuration file] [options]
@@ -61,7 +62,7 @@ bin/metrosim resources/exampleFiles/indole4000.config -s --name indole4000 -n 10
 ```
 runs a simulation on the CPU (```-s```), for 1000 steps, printing status information every 100 steps.
 
-###To Run a Simulation on the Alabama Supercomputer Center's DMC:
+## To Run a Simulation on the Alabama Supercomputer Center's DMC:
 ```
 cd /path/to/MCGPU/
 run_gpu demo_script.txt
@@ -90,7 +91,7 @@ Your standard out for your job will be written to
 <jobname>.o<job number>
 ```
 
-###To Run a Simulation on the Alabama Supercomputer Center in debug mode:
+## To Run a Simulation on the Alabama Supercomputer Center in debug mode:
 ```
 gpu_interactive
 
@@ -105,7 +106,7 @@ cd bin/
 
 For more information, see the Alabama Supercomputer Center manual.
 
-##Visualizing PDB Files
+## Visualizing PDB Files
 
 At the end of the simulation, MCGPU produces a PDB file, which can be loaded
 into a visualization program to view the box.  Recommended PDB viewers
@@ -117,7 +118,7 @@ include:
 
 * [RasMol](http://www.openrasmol.org/)
 
-##Running Automated Tests
+## Running Automated Tests
 ```
 cd /path/to/MCGPU/
 make          # Build the metrosim binary first (required by metrotest)
@@ -126,7 +127,6 @@ cd bin/
 ./metrotest   # Will take several minutes
 ```
 
-##Profiling
 ### For CPU profiling:
 For CPU profiling, build metrosim with profiling enabled, run it (which will
 produce a file called gmon.out), and then use gprof to view the resulting
@@ -149,12 +149,12 @@ kernel launch (so only run this with a very few time steps).
 The NVIDIA Visual Profiler, nvvp, is highly recommended and provides much more
 detailed information that the nvprof commands above.
 
-##Running With Multiple Solvents
+## Running With Multiple Solvents
 MCGPU currently supports the simulation of two solvents within one z-matrix file where separate solvents are separated by TERZ.
 
 When using multiple solvents, the primary index array (Configuration File line 30), must contain at least one primary index array for each molecule, with the arrays enclosed in brackets and comma separated. For example [2],[1,3] represents the primary index structure for two molecules where the first molecule (defined above TERZ) has the primary index of '2' and the second molecule (defined below TERZ) has the primary indexes of '1' and '3'.
 
-##Available Command-line Options
+## Available Command-line Options
  * `--serial (-s)`: Runs simulation on CPU
  * `--parallel (-p)`: Runs simulation on GPU
  * `--name <title>`: Specifies the name of the simulation that will be run.
@@ -169,7 +169,7 @@ To view documentation for all command-line flags available, use the --help flag:
 ./metrosim --help
 ```
 
-##Configuration File
+## Configuration File
 Configuration files are used to configure a simulation. They are formatted
 according to the [INI](https://en.wikipedia.org/wiki/INI_file) format.
 Command-line options override values given in this file. An example
